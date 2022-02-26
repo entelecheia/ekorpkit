@@ -1,5 +1,6 @@
 import os
 from setuptools import setup, find_packages
+import versioneer
 
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8') as f:
@@ -46,7 +47,8 @@ def get_extra_requires(path, add_all=True):
 about = get_about()
 setup(
     name="eKorpkit",
-    version=about['version'],
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author=about['author'],
     url='https://github.com/entelecheia/eKorpkit',
     description=about['description'],
@@ -56,6 +58,7 @@ setup(
     extras_require=get_extra_requires('requirements-extra.txt'),
     keywords=[],
     packages=find_packages(),
+    python_requires='>=3.6',
     include_package_data=True,
     entry_points = {
         'console_scripts': ['ekorpkit=ekorpkit.cli:hydra_main'],
