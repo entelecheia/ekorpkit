@@ -8,4 +8,4 @@ git commit --allow-empty -m "Release $RELEASE"
 git tag -a $RELEASE -m "Version $RELEASE"
 
 # Push
-git push upstream --tags
+git push --tags
