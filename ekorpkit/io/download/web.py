@@ -7,7 +7,6 @@ import zipfile
 from tqdm import tqdm
 from urllib import request
 from omegaconf import OmegaConf
-from .best_download import download_file
 
 
 GOOGLE_DRIVE_URL = "https://docs.google.com/uc?export=download"
@@ -108,7 +107,7 @@ def web_download_un7z(url, zip_path, corpus_name="", force_download=False):
     if (not force_download) and os.path.exists(data_path):
         print(f"[eKorpkit] Corpus `{corpus_name}` is already extracted at {data_path}")
         return None
-    data_root = os.path.dirname(zip_path)
+    # data_root = os.path.dirname(zip_path)
     with py7zr.SevenZipFile(zip_path, mode="r") as z:
         z.extractall()
     print(f"un7z {data_path}")
@@ -149,7 +148,7 @@ def google_download_un7z(file_id, zip_path, corpus_name="", force_download=False
     if (not force_download) and os.path.exists(data_path):
         print(f"[eKorpkit] Corpus `{corpus_name}` is already extracted at {data_path}")
         return None
-    data_root = os.path.dirname(zip_path)
+    # data_root = os.path.dirname(zip_path)
     with py7zr.SevenZipFile(zip_path, mode="r") as z:
         z.extractall(path=data_path)
     print(f"un7z {data_path}")
