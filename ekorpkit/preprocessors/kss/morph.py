@@ -32,8 +32,13 @@ class MorphExtractor(object):
     def pos(self, text):
         if self.backend in ["mecab-python3", "fugashi"]:
             from ekorpkit.tokenizers.mecab import MeCab
+
             try:
-                self.mecab = MeCab(dicdir=self.dicdir, userdic_path=self.userdic_path, backend=self.backend)
+                self.mecab = MeCab(
+                    dicdir=self.dicdir,
+                    userdic_path=self.userdic_path,
+                    backend=self.backend,
+                )
             except ImportError:
                 raise ImportError(
                     "\n"
@@ -44,7 +49,5 @@ class MorphExtractor(object):
                 "Wrong backend ! currently, we only support `fugashi`, `mecab-python3`, `none` backend."
             )
         return [
-            Eojeol(eojeol, pos[1])
-            for pos in self.mecab.pos(text)
-            for eojeol in pos[0]
+            Eojeol(eojeol, pos[1]) for pos in self.mecab.pos(text) for eojeol in pos[0]
         ]

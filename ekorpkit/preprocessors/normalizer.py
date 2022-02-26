@@ -6,25 +6,44 @@ import re
 from .hanja import translate as hanja2hangle
 from .hangle import compose, decompose
 
-doublespace_pattern = re.compile('\s+')
-repeatchars_pattern = re.compile('(\w)\\1{2,}')
-number_pattern = re.compile('[0-9]')
-punctuation_pattern = re.compile('[,\.\?\!]')
-symbol_pattern = re.compile('[()\[\]\{\}`]')
-hangle_pattern = re.compile('[ㄱ-ㅎㅏ-ㅣ가-힣]')
-alphabet_pattern = re.compile('[a-zA-Z]')
+doublespace_pattern = re.compile("\s+")
+repeatchars_pattern = re.compile("(\w)\\1{2,}")
+number_pattern = re.compile("[0-9]")
+punctuation_pattern = re.compile("[,\.\?\!]")
+symbol_pattern = re.compile("[()\[\]\{\}`]")
+hangle_pattern = re.compile("[ㄱ-ㅎㅏ-ㅣ가-힣]")
+alphabet_pattern = re.compile("[a-zA-Z]")
 
-hangle_filter = re.compile('[^ㄱ-ㅎㅏ-ㅣ가-힣]')
-hangle_number_filter = re.compile('[^ㄱ-ㅎㅏ-ㅣ가-힣0-9]')
-text_filter = re.compile('[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"\'\(\)\[\]\{\}+\-\\\/\*×%]')
+hangle_filter = re.compile("[^ㄱ-ㅎㅏ-ㅣ가-힣]")
+hangle_number_filter = re.compile("[^ㄱ-ㅎㅏ-ㅣ가-힣0-9]")
+text_filter = re.compile("[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"'\(\)\[\]\{\}+\-\\\/\*×%]")
 # text_filter = re.compile('[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"\'-()\[\]\{\}]')
-text_filter_for_lrgraph = re.compile('[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&\"\'-()\[\]\{\}]')
+text_filter_for_lrgraph = re.compile("[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&\"'-()\[\]\{\}]")
 
 
 #: Control characters.
 CONTROLS = {
-    '\u0001', '\u0002', '\u0003', '\u0004', '\u0005', '\u0006', '\u0007', '\u0008', '\u000e', '\u000f', '\u0011',
-    '\u0012', '\u0013', '\u0014', '\u0015', '\u0016', '\u0017', '\u0018', '\u0019', '\u001a', '\u001b',
+    "\u0001",
+    "\u0002",
+    "\u0003",
+    "\u0004",
+    "\u0005",
+    "\u0006",
+    "\u0007",
+    "\u0008",
+    "\u000e",
+    "\u000f",
+    "\u0011",
+    "\u0012",
+    "\u0013",
+    "\u0014",
+    "\u0015",
+    "\u0016",
+    "\u0017",
+    "\u0018",
+    "\u0019",
+    "\u001a",
+    "\u001b",
 }
 # There are further control characters, but they are instead replaced with a space by unicode normalization
 # '\u0009', '\u000a', '\u000b', '\u000c', '\u000d', '\u001c',  '\u001d', '\u001e', '\u001f'
@@ -32,94 +51,93 @@ CONTROLS = {
 
 #: Hyphen and dash characters.
 HYPHENS = {
-    '-',  # \u002d Hyphen-minus
-    '‐',  # \u2010 Hyphen
-    '‑',  # \u2011 Non-breaking hyphen
-    '⁃',  # \u2043 Hyphen bullet
-    '‒',  # \u2012 figure dash
-    '–',  # \u2013 en dash
-    '—',  # \u2014 em dash
-    '―',  # \u2015 horizontal bar
+    "-",  # \u002d Hyphen-minus
+    "‐",  # \u2010 Hyphen
+    "‑",  # \u2011 Non-breaking hyphen
+    "⁃",  # \u2043 Hyphen bullet
+    "‒",  # \u2012 figure dash
+    "–",  # \u2013 en dash
+    "—",  # \u2014 em dash
+    "―",  # \u2015 horizontal bar
 }
 
 #: Minus characters.
 MINUSES = {
-    '-',  # \u002d Hyphen-minus
-    '−',  # \u2212 Minus
-    '－',  # \uff0d Full-width Hyphen-minus
-    '⁻',  # \u207b Superscript minus
+    "-",  # \u002d Hyphen-minus
+    "−",  # \u2212 Minus
+    "－",  # \uff0d Full-width Hyphen-minus
+    "⁻",  # \u207b Superscript minus
 }
 
 #: Plus characters.
 PLUSES = {
-    '+',  # \u002b Plus
-    '＋',  # \uff0b Full-width Plus
-    '⁺',  # \u207a Superscript plus
+    "+",  # \u002b Plus
+    "＋",  # \uff0b Full-width Plus
+    "⁺",  # \u207a Superscript plus
 }
 
 #: Slash characters.
 SLASHES = {
-    '/',  # \u002f Solidus
-    '⁄',  # \u2044 Fraction slash
-    '∕',  # \u2215 Division slash
+    "/",  # \u002f Solidus
+    "⁄",  # \u2044 Fraction slash
+    "∕",  # \u2215 Division slash
 }
 
 #: Tilde characters.
 TILDES = {
-    '~',  # \u007e Tilde
-    '˜',  # \u02dc Small tilde
-    '⁓',  # \u2053 Swung dash
-    '∼',  # \u223c Tilde operator
-    '∽',  # \u223d Reversed tilde
-    '∿',  # \u223f Sine wave
-    '〜',  # \u301c Wave dash
-    '～',  # \uff5e Full-width tilde
+    "~",  # \u007e Tilde
+    "˜",  # \u02dc Small tilde
+    "⁓",  # \u2053 Swung dash
+    "∼",  # \u223c Tilde operator
+    "∽",  # \u223d Reversed tilde
+    "∿",  # \u223f Sine wave
+    "〜",  # \u301c Wave dash
+    "～",  # \uff5e Full-width tilde
 }
 
 #: Apostrophe characters.
 APOSTROPHES = {
     "'",  # \u0027
-    '’',  # \u2019
-    '՚',  # \u055a
-    'Ꞌ',  # \ua78b
-    'ꞌ',  # \ua78c
-    '＇',  # \uff07
+    "’",  # \u2019
+    "՚",  # \u055a
+    "Ꞌ",  # \ua78b
+    "ꞌ",  # \ua78c
+    "＇",  # \uff07
 }
 
 #: Single quote characters.
 SINGLE_QUOTES = {
     "'",  # \u0027
-    '‘',  # \u2018
-    '’',  # \u2019
-    '‚',  # \u201a
-    '‛',  # \u201b
-
+    "‘",  # \u2018
+    "’",  # \u2019
+    "‚",  # \u201a
+    "‛",  # \u201b
 }
 
 #: Double quote characters.
 DOUBLE_QUOTES = {
     '"',  # \u0022
-    '“',  # \u201c
-    '”',  # \u201d
-    '„',  # \u201e
-    '‟',  # \u201f
+    "“",  # \u201c
+    "”",  # \u201d
+    "„",  # \u201e
+    "‟",  # \u201f
 }
 
 #: Accent characters.
 ACCENTS = {
-    '`',  # \u0060
-    '´',  # \u00b4
+    "`",  # \u0060
+    "´",  # \u00b4
 }
 
 #: Prime characters.
 PRIMES = {
-    '′',  # \u2032
-    '″',  # \u2033
-    '‴',  # \u2034
-    '‵',  # \u2035
-    '‶',  # \u2036
-    '‷',  # \u2037
-    '⁗',  # \u2057
+    "′",  # \u2032
+    "″",  # \u2033
+    "‴",  # \u2034
+    "‵",  # \u2035
+    "‶",  # \u2036
+    "‷",  # \u2037
+    "⁗",  # \u2057
 }
 
 #: Quote characters, including apostrophes, single quotes, double quotes, accents and primes.
@@ -127,100 +145,269 @@ QUOTES = APOSTROPHES | SINGLE_QUOTES | DOUBLE_QUOTES | ACCENTS | PRIMES
 
 #: Uppercase and lowercase greek letters.
 GREEK = {
-    'Α',  # \u0391
-    'Β',  # \u0392
-    'Γ',  # \u0393
-    'Δ',  # \u0394
-    'Ε',  # \u0395
-    'Ζ',  # \u0396
-    'Η',  # \u0397
-    'Θ',  # \u0398
-    'Ι',  # \u0399
-    'Κ',  # \u039a
-    'Λ',  # \u039b
-    'Μ',  # \u039c
-    'Ν',  # \u039d
-    'Ξ',  # \u039e
-    'Ο',  # \u039f
-    'Π',  # \u03a0
-    'Ρ',  # \u03a1
-    'Σ',  # \u03a3
-    'Τ',  # \u03a4
-    'Υ',  # \u03a5
-    'Φ',  # \u03a6
-    'Χ',  # \u03a7
-    'Ψ',  # \u03a8
-    'Ω',  # \u03a9
-    'α',  # \u03b1
-    'β',  # \u03b2
-    'γ',  # \u03b3
-    'δ',  # \u03b4
-    'ε',  # \u03b5
-    'ζ',  # \u03b6
-    'η',  # \u03b7
-    'θ',  # \u03b8
-    'ι',  # \u03b9
-    'κ',  # \u03ba
-    'λ',  # \u03bb
-    'μ',  # \u03bc
-    'ν',  # \u03bd
-    'ξ',  # \u03be
-    'ο',  # \u03bf
-    'π',  # \u03c0
-    'ρ',  # \u03c1
-    'σ',  # \u03c3
-    'τ',  # \u03c4
-    'υ',  # \u03c5
-    'φ',  # \u03c6
-    'χ',  # \u03c7
-    'ψ',  # \u03c8
-    'ω',  # \u03c9
+    "Α",  # \u0391
+    "Β",  # \u0392
+    "Γ",  # \u0393
+    "Δ",  # \u0394
+    "Ε",  # \u0395
+    "Ζ",  # \u0396
+    "Η",  # \u0397
+    "Θ",  # \u0398
+    "Ι",  # \u0399
+    "Κ",  # \u039a
+    "Λ",  # \u039b
+    "Μ",  # \u039c
+    "Ν",  # \u039d
+    "Ξ",  # \u039e
+    "Ο",  # \u039f
+    "Π",  # \u03a0
+    "Ρ",  # \u03a1
+    "Σ",  # \u03a3
+    "Τ",  # \u03a4
+    "Υ",  # \u03a5
+    "Φ",  # \u03a6
+    "Χ",  # \u03a7
+    "Ψ",  # \u03a8
+    "Ω",  # \u03a9
+    "α",  # \u03b1
+    "β",  # \u03b2
+    "γ",  # \u03b3
+    "δ",  # \u03b4
+    "ε",  # \u03b5
+    "ζ",  # \u03b6
+    "η",  # \u03b7
+    "θ",  # \u03b8
+    "ι",  # \u03b9
+    "κ",  # \u03ba
+    "λ",  # \u03bb
+    "μ",  # \u03bc
+    "ν",  # \u03bd
+    "ξ",  # \u03be
+    "ο",  # \u03bf
+    "π",  # \u03c0
+    "ρ",  # \u03c1
+    "σ",  # \u03c3
+    "τ",  # \u03c4
+    "υ",  # \u03c5
+    "φ",  # \u03c6
+    "χ",  # \u03c7
+    "ψ",  # \u03c8
+    "ω",  # \u03c9
 }
 
 #: Names of greek letters spelled out as words.
 GREEK_WORDS = {
-    'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi',
-    'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega', 'alpha', 'beta', 'gamma', 'delta',
-    'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lamda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho', 'sigma',
-    'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega'
+    "Alpha",
+    "Beta",
+    "Gamma",
+    "Delta",
+    "Epsilon",
+    "Zeta",
+    "Eta",
+    "Theta",
+    "Iota",
+    "Kappa",
+    "Lambda",
+    "Mu",
+    "Nu",
+    "Xi",
+    "Omicron",
+    "Pi",
+    "Rho",
+    "Sigma",
+    "Tau",
+    "Upsilon",
+    "Phi",
+    "Chi",
+    "Psi",
+    "Omega",
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "epsilon",
+    "zeta",
+    "eta",
+    "theta",
+    "iota",
+    "kappa",
+    "lamda",
+    "mu",
+    "nu",
+    "xi",
+    "omicron",
+    "pi",
+    "rho",
+    "sigma",
+    "tau",
+    "upsilon",
+    "phi",
+    "chi",
+    "psi",
+    "omega",
 }
 
 #: Words that should not be capitalized in titles.
 SMALL = {
-    'a', 'an', 'and', 'as', 'at', 'but', 'by', 'en', 'for', 'if', 'in', 'of', 'on', 'or', 'the', 'to', 'v', 'v', 'via',
-    'vs', 'vs'
+    "a",
+    "an",
+    "and",
+    "as",
+    "at",
+    "but",
+    "by",
+    "en",
+    "for",
+    "if",
+    "in",
+    "of",
+    "on",
+    "or",
+    "the",
+    "to",
+    "v",
+    "v",
+    "via",
+    "vs",
+    "vs",
 }
 
 #: Words that should not be capitalized in names.
 NAME_SMALL = {
-    'abu', 'bon', 'bin', 'da', 'dal', 'de', 'del', 'der', 'de', 'di', u'dí', 'ibn', 'la', 'le', 'san', 'st', 'ste',
-    'van', 'vel', 'von', 'y'
+    "abu",
+    "bon",
+    "bin",
+    "da",
+    "dal",
+    "de",
+    "del",
+    "der",
+    "de",
+    "di",
+    u"dí",
+    "ibn",
+    "la",
+    "le",
+    "san",
+    "st",
+    "ste",
+    "van",
+    "vel",
+    "von",
+    "y",
 }
 
 # This isn't every possible TLD, just the most common, to avoid false positives.
 TLDS = {
-    'aero', 'asia', 'biz', 'cat', 'com', 'coop', 'edu', 'eu', 'gov', 'info', 'int', 'jobs', 'mil', 'mobi', 'museum',
-    'name', 'net', 'org', 'pro', 'tel', 'travel', 'xxx', 'ad', 'as', 'ar', 'au', 'br', 'bz', 'ca', 'cc', 'cd', 'co',
-    'ch', 'cn', 'de', 'dj', 'es', 'fr', 'fm', 'it', 'io', 'jp', 'la', 'ly', 'me', 'ms', 'nl', 'no', 'nu', 'ru', 'sc',
-    'se', 'sr', 'su', 'tk', 'tv', 'uk', 'us', 'ws'
+    "aero",
+    "asia",
+    "biz",
+    "cat",
+    "com",
+    "coop",
+    "edu",
+    "eu",
+    "gov",
+    "info",
+    "int",
+    "jobs",
+    "mil",
+    "mobi",
+    "museum",
+    "name",
+    "net",
+    "org",
+    "pro",
+    "tel",
+    "travel",
+    "xxx",
+    "ad",
+    "as",
+    "ar",
+    "au",
+    "br",
+    "bz",
+    "ca",
+    "cc",
+    "cd",
+    "co",
+    "ch",
+    "cn",
+    "de",
+    "dj",
+    "es",
+    "fr",
+    "fm",
+    "it",
+    "io",
+    "jp",
+    "la",
+    "ly",
+    "me",
+    "ms",
+    "nl",
+    "no",
+    "nu",
+    "ru",
+    "sc",
+    "se",
+    "sr",
+    "su",
+    "tk",
+    "tv",
+    "uk",
+    "us",
+    "ws",
 }
 
 #: A variety of numbers, spelled out as words.
 NUMBERS = {
-    'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve',
-    'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'thirty', 'forty',
-    'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'thousand', 'million', 'billion', 'trillion'
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+    "twenty",
+    "thirty",
+    "forty",
+    "fifty",
+    "sixty",
+    "seventy",
+    "eighty",
+    "ninety",
+    "hundred",
+    "thousand",
+    "million",
+    "billion",
+    "trillion",
 }
-LEFT_PARENTHESES = {'(', '[', '{', '&lt;'}
-RIGHT_PARENTHESES = {')', ']', '}', '&gt;'}
+LEFT_PARENTHESES = {"(", "[", "{", "&lt;"}
+RIGHT_PARENTHESES = {")", "]", "}", "&gt;"}
 #: Regular expression that matches email addresses.
-EMAIL_RE = re.compile(r'([\w\-\.\+%]+@(\w[\w\-]+\.)+[\w\-]+)', re.I | re.U)
+EMAIL_RE = re.compile(r"([\w\-\.\+%]+@(\w[\w\-]+\.)+[\w\-]+)", re.I | re.U)
 #: Regular expression that matches DOIs.
-DOI_RE = re.compile(r'^10\.\d{4,9}/[-\._;()/:A-Z0-9]+$', re.U)
+DOI_RE = re.compile(r"^10\.\d{4,9}/[-\._;()/:A-Z0-9]+$", re.U)
 #: Regular expression that matches ISSNs.
-ISSN_RE = re.compile(r'^\d{4}-\d{3}[\dX]$', re.U)
+ISSN_RE = re.compile(r"^\d{4}-\d{3}[\dX]$", re.U)
 #: Regular expression that matches control characters not allowed in XML.
-CONTROL_RE = re.compile('[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\u10000-\u10FFFF]+')
+CONTROL_RE = re.compile(
+    "[^\u0020-\uD7FF\u0009\u000A\u000D\uE000-\uFFFD\u10000-\u10FFFF]+"
+)
 
 
 # def get_encoding(input_string, guesses=None, is_html=False):
@@ -255,11 +442,13 @@ def levenshtein(s1, s2, allow_substring=False):
         lev[0][j] = 0 if allow_substring else j
     for i in range(len1):
         for j in range(len2):
-            lev[i + 1][j + 1] = min(lev[i][j + 1] + 1, lev[i + 1][j] + 1, lev[i][j] + (s1[i] != s2[j]))
+            lev[i + 1][j + 1] = min(
+                lev[i][j + 1] + 1, lev[i + 1][j] + 1, lev[i][j] + (s1[i] != s2[j])
+            )
     return min(lev[len1]) if allow_substring else lev[len1][len2]
 
 
-def bracket_level(text, open={'(', '[', '{'}, close={')', ']', '}'}):
+def bracket_level(text, open={"(", "[", "{"}, close={")", "]", "}"}):
     """Return 0 if string contains balanced brackets or no brackets."""
     level = 0
     for c in text:
@@ -272,7 +461,7 @@ def bracket_level(text, open={'(', '[', '{'}, close={')', ']', '}'}):
 
 def is_punct(text):
     for char in text:
-        if not unicodedata.category(char).startswith('P'):
+        if not unicodedata.category(char).startswith("P"):
             return False
     else:
         return True
@@ -289,14 +478,14 @@ def is_ascii(text):
 def like_url(text):
     if len(text) < 1:
         return False
-    if text.startswith('http://'):
+    if text.startswith("http://"):
         return True
-    elif text.startswith('www.') and len(text) >= 5:
+    elif text.startswith("www.") and len(text) >= 5:
         return True
-    if len(text) < 2 or text[0] == '.' or text[-1] == '.' or '.' not in text:
+    if len(text) < 2 or text[0] == "." or text[-1] == "." or "." not in text:
         return False
-    tld = text.rsplit('.', 1)[1].split(':', 1)[0]
-    if tld.endswith('/'):
+    tld = text.rsplit(".", 1)[1].split(":", 1)[0]
+    if tld.endswith("/"):
         return True
     if tld.isalpha() and tld in TLDS:
         return True
@@ -304,11 +493,11 @@ def like_url(text):
 
 
 def like_number(text):
-    text = text.replace(',', '').replace('.', '')
+    text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
-    if text.count('/') == 1:
-        num, denom = text.split('/')
+    if text.count("/") == 1:
+        num, denom = text.split("/")
         if like_number(num) and like_number(denom):
             return True
     if text in NUMBERS:
@@ -317,32 +506,32 @@ def like_number(text):
 
 
 def word_shape(text):
-    prev_m = ''
+    prev_m = ""
     seq = 0
     shape = []
     for c in text:
         if c.isdigit():
-            m = 'd'  # Digits
+            m = "d"  # Digits
         elif c in GREEK:
-            m = 'g'  # Greek letters
+            m = "g"  # Greek letters
         elif c.isalpha():
-            m = 'X' if c.isupper() else 'x'  # Uppercase or lowercase alphabetical
+            m = "X" if c.isupper() else "x"  # Uppercase or lowercase alphabetical
         elif c in QUOTES:
             m = "'"  # Quotes and apostrophes
-        elif c in {':', ';'}:
-            m = ':'  # Colons and semicolons
-        elif c in {'!', '?', '.'}:
-            m = '.'  # Sentence ends
-        elif c in {'(', '[', '{', ')', ']', '}'}:
-            m = 'b'  # Brackets
-        elif c in {'°', '%'}:
-            m = 'u'  # units
-        elif c in {'■', '◼', '●', '▲', '○', '◆', '▼', '⧫', '△', '◇', '▽', '⬚', '□'}:
-            m = 'l'  # list markers
-        elif c in {',', '$', '&', '-'}:
+        elif c in {":", ";"}:
+            m = ":"  # Colons and semicolons
+        elif c in {"!", "?", "."}:
+            m = "."  # Sentence ends
+        elif c in {"(", "[", "{", ")", "]", "}"}:
+            m = "b"  # Brackets
+        elif c in {"°", "%"}:
+            m = "u"  # units
+        elif c in {"■", "◼", "●", "▲", "○", "◆", "▼", "⧫", "△", "◇", "▽", "⬚", "□"}:
+            m = "l"  # list markers
+        elif c in {",", "$", "&", "-"}:
             m = c  # Stay the same
         else:
-            m = '*'  # Everything else, symbols etc: {'=', '+', '*', '_', '|', '@', '×', '÷', '±', '<', '≤', '>', '≥', '≦', '≡', '≅', '≈', '≃', '≲', '→', '←', '⇄', '≪', '≫', '↔', '≠', '∝', '∈', '⇌', '⇋', '⋯', '~', '·', '•', '√', '⊃', '∑', '∏', '®', '∞', '∂', '∫', '∇', '∧', '⟨', '⟩'}
+            m = "*"  # Everything else, symbols etc: {'=', '+', '*', '_', '|', '@', '×', '÷', '±', '<', '≤', '>', '≥', '≦', '≡', '≅', '≈', '≃', '≲', '→', '←', '⇄', '≪', '≫', '↔', '≠', '∝', '∈', '⇌', '⇋', '⋯', '~', '·', '•', '√', '⊃', '∑', '∏', '®', '∞', '∂', '∫', '∇', '∧', '⟨', '⟩'}
         if m == prev_m:
             seq += 1
         else:
@@ -350,37 +539,47 @@ def word_shape(text):
             prev_m = m
         if seq < 3:
             shape.append(m)
-    return ''.join(shape)
+    return "".join(shape)
 
-def normalize(doc, hanja2hangle=True, no_alphabets=False, no_numbers=False, 
-    no_punctuations=False, no_symbols=False, remove_repeats=0,
-    text_pattern = '[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"\'-()\[\]\{\}]'
-    ):
+
+def normalize(
+    doc,
+    hanja2hangle=True,
+    no_alphabets=False,
+    no_numbers=False,
+    no_punctuations=False,
+    no_symbols=False,
+    remove_repeats=0,
+    text_pattern="[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"'-()\[\]\{\}]",
+):
     text_filter = re.compile(text_pattern)
     if hanja2hangle:
         doc = hanja_to_hangle(doc)
-    doc = text_filter.sub(' ', doc)
+    doc = text_filter.sub(" ", doc)
     if no_alphabets:
-        doc = alphabet_pattern.sub(' ', doc)
+        doc = alphabet_pattern.sub(" ", doc)
     if no_numbers:
-        doc = number_pattern.sub(' ', doc)
+        doc = number_pattern.sub(" ", doc)
     if no_punctuations:
-        doc = punctuation_pattern.sub(' ', doc)
+        doc = punctuation_pattern.sub(" ", doc)
     if no_symbols:
-        doc = symbol_pattern.sub(' ', doc)
+        doc = symbol_pattern.sub(" ", doc)
     if remove_repeats > 0:
-        doc = repeatchars_pattern.sub('\\1' * remove_repeats, doc)
+        doc = repeatchars_pattern.sub("\\1" * remove_repeats, doc)
 
-    return doublespace_pattern.sub(' ', doc).strip()
+    return doublespace_pattern.sub(" ", doc).strip()
+
 
 def remove_doublespace(sent):
-    return doublespace_pattern.sub(' ', sent)
+    return doublespace_pattern.sub(" ", sent)
+
 
 def repeat_normalize(sent, num_repeats=2):
     if num_repeats > 0:
-        sent = repeatchars_pattern.sub('\\1' * num_repeats, sent)
-    sent = doublespace_pattern.sub(' ', sent)
+        sent = repeatchars_pattern.sub("\\1" * num_repeats, sent)
+    sent = doublespace_pattern.sub(" ", sent)
     return sent.strip()
+
 
 def emoticon_normalize(sent, num_repeats=2):
     if not sent:
@@ -402,62 +601,69 @@ def emoticon_normalize(sent, num_repeats=2):
     sent_ = []
     last_idx = len(idxs) - 1
     for i, (idx, c) in enumerate(zip(idxs, sent)):
-        if (i > 0 and i < last_idx) and (idxs[i-1] == 0 and idx == 2 and idxs[i+1] == 1):
+        if (i > 0 and i < last_idx) and (
+            idxs[i - 1] == 0 and idx == 2 and idxs[i + 1] == 1
+        ):
             cho, jung, jong = decompose(c)
-            if (cho == sent[i-1]) and (jung == sent[i+1]) and (jong == ' '):
+            if (cho == sent[i - 1]) and (jung == sent[i + 1]) and (jong == " "):
                 sent_.append(cho)
                 sent_.append(jung)
             else:
                 sent_.append(c)
-        elif (i < last_idx) and (idx == 2) and (idxs[i+1] == 0):
+        elif (i < last_idx) and (idx == 2) and (idxs[i + 1] == 0):
             cho, jung, jong = decompose(c)
-            if (jong == sent[i+1]):
-                sent_.append(compose(cho, jung, ' '))
+            if jong == sent[i + 1]:
+                sent_.append(compose(cho, jung, " "))
                 sent_.append(jong)
-        elif (i > 0) and (idx == 2 and idxs[i-1] == 0):
+        elif (i > 0) and (idx == 2 and idxs[i - 1] == 0):
             cho, jung, jong = decompose(c)
-            if (cho == sent[i-1]):
+            if cho == sent[i - 1]:
                 sent_.append(cho)
                 sent_.append(jung)
         else:
             sent_.append(c)
-    return repeat_normalize(''.join(sent_), num_repeats)
+    return repeat_normalize("".join(sent_), num_repeats)
+
 
 def hanja_to_hangle(sent):
-    return hanja2hangle(sent, "substitution") 
+    return hanja2hangle(sent, "substitution")
+
 
 def only_hangle(sent):
     sent = hanja_to_hangle(sent)
-    return doublespace_pattern.sub(' ',hangle_filter.sub(' ', sent)).strip()
+    return doublespace_pattern.sub(" ", hangle_filter.sub(" ", sent)).strip()
+
 
 def only_hangle_number(sent):
     sent = hanja_to_hangle(sent)
-    return doublespace_pattern.sub(' ',hangle_number_filter.sub(' ', sent)).strip()
+    return doublespace_pattern.sub(" ", hangle_number_filter.sub(" ", sent)).strip()
+
 
 def only_text(sent):
     sent = hanja_to_hangle(sent)
-    return doublespace_pattern.sub(' ',text_filter.sub(' ', sent)).strip()
+    return doublespace_pattern.sub(" ", text_filter.sub(" ", sent)).strip()
+
 
 def remain_hangle_on_last(eojeol):
     matchs = list(hangle_pattern.finditer(eojeol))
     if not matchs:
-        return ''
+        return ""
     last_index = matchs[-1].span()[1]
     return eojeol[:last_index].strip()
 
+
 def normalize_sent_for_lrgraph(sent):
     sent = hanja_to_hangle(sent)
-    sent = text_filter_for_lrgraph.sub(' ', sent)
-    sent = symbol_pattern.sub(' ', sent)
+    sent = text_filter_for_lrgraph.sub(" ", sent)
+    sent = symbol_pattern.sub(" ", sent)
     sent_ = [remain_hangle_on_last(eojeol) for eojeol in sent.split()]
     sent_ = [eojeol for eojeol in sent_ if eojeol]
     if not sent_:
-        return ''
-    return ' '.join(sent_)
+        return ""
+    return " ".join(sent_)
 
 
-
-class BaseNormalizer():
+class BaseNormalizer:
     """Abstract normalizer class from which all normalizers inherit.
     Subclasses must implement a ``normalize()`` method.
     """
@@ -483,38 +689,39 @@ class Normalizer(BaseNormalizer):
     on normal forms: http://docs.python.org/2/library/unicodedata.html#unicodedata.normalize
     """
 
-    def __init__(self, 
-                normalization_form='NFKC', 
-                unescape_html="auto",
-                remove_terminal_escapes=True,
-                fix_encoding=True,
-                restore_byte_a0=True,
-                replace_lossy_sequences=True,
-                decode_inconsistent_utf8=True,
-                fix_c1_controls=True,
-                fix_latin_ligatures=True,
-                fix_character_width=True,
-                uncurl_quotes=True,
-                fix_line_breaks=True,
-                fix_surrogates=True,
-                remove_control_chars=True,
-                fix_hyphens=False, 
-                fix_ellipsis=False,
-                fix_slashes=False, 
-                fix_tildes=False,
-                strip=True, 
-                fix_whitespaces=False, 
-                collapse_whitespaces=False, 
-                replace_tabs=True,
-                num_spaces_for_tab=4,
-                hanja2hangle=True,
-                fix_emoticons=False,
-                num_repeats=2,
-                single_quotes_only=False,
-                regular_parentheses_only=False,
-                max_decode_length=1000000,
-                **kwargs                
-        ):
+    def __init__(
+        self,
+        normalization_form="NFKC",
+        unescape_html="auto",
+        remove_terminal_escapes=True,
+        fix_encoding=True,
+        restore_byte_a0=True,
+        replace_lossy_sequences=True,
+        decode_inconsistent_utf8=True,
+        fix_c1_controls=True,
+        fix_latin_ligatures=True,
+        fix_character_width=True,
+        uncurl_quotes=True,
+        fix_line_breaks=True,
+        fix_surrogates=True,
+        remove_control_chars=True,
+        fix_hyphens=False,
+        fix_ellipsis=False,
+        fix_slashes=False,
+        fix_tildes=False,
+        strip=True,
+        fix_whitespaces=False,
+        collapse_whitespaces=False,
+        replace_tabs=True,
+        num_spaces_for_tab=4,
+        hanja2hangle=True,
+        fix_emoticons=False,
+        num_repeats=2,
+        single_quotes_only=False,
+        regular_parentheses_only=False,
+        max_decode_length=1000000,
+        **kwargs
+    ):
         """
         :param string form: Normal form for unicode normalization.
         :param bool strip: Whether to strip whitespace from start and end.
@@ -541,7 +748,7 @@ class Normalizer(BaseNormalizer):
         self.single_quotes_only = single_quotes_only
         self.regular_parentheses_only = regular_parentheses_only
         self.replace_tabs = replace_tabs
-        self.replacement_spaces = ' ' * num_spaces_for_tab
+        self.replacement_spaces = " " * num_spaces_for_tab
 
         self.ftfy_cfg = TextFixerConfig(
             unescape_html=unescape_html,
@@ -575,7 +782,7 @@ class Normalizer(BaseNormalizer):
         # Strip out any control characters (they occasionally creep in somehow)
         if self.remove_control_chars:
             for control in CONTROLS:
-                text = text.replace(control, '')
+                text = text.replace(control, "")
 
         # if self.fix_line_breaks:
         #     text = text.replace('\u2028', '\n').replace('\u2029', '\n').replace('\r\n', '\n').replace('\r', '\n')
@@ -584,44 +791,48 @@ class Normalizer(BaseNormalizer):
         if self.fix_hyphens:
             # TODO: Better normalization of em/en dashes to '--' if surrounded by spaces or start/end?
             for hyphen in HYPHENS | MINUSES:
-                text = text.replace(hyphen, '-')
-            text = text.replace('\u00ad', '')
+                text = text.replace(hyphen, "-")
+            text = text.replace("\u00ad", "")
 
         # Normalize all quotes and primes to ascii apostrophe and quotation mark
         if self.uncurl_quotes:
             for double_quote in DOUBLE_QUOTES:
                 text = text.replace(double_quote, '"')  # \u0022
-            for single_quote in (SINGLE_QUOTES | APOSTROPHES | ACCENTS):
+            for single_quote in SINGLE_QUOTES | APOSTROPHES | ACCENTS:
                 text = text.replace(single_quote, "'")  # \u0027
-            text = text.replace('′', "'")     # \u2032 prime
-            text = text.replace('‵', "'")     # \u2035 reversed prime
-            text = text.replace('″', "''")    # \u2033 double prime
-            text = text.replace('‶', "''")    # \u2036 reversed double prime
-            text = text.replace('‴', "'''")   # \u2034 triple prime
-            text = text.replace('‷', "'''")   # \u2037 reversed triple prime
-            text = text.replace('⁗', "''''")  # \u2057 quadruple prime
+            text = text.replace("′", "'")  # \u2032 prime
+            text = text.replace("‵", "'")  # \u2035 reversed prime
+            text = text.replace("″", "''")  # \u2033 double prime
+            text = text.replace("‶", "''")  # \u2036 reversed double prime
+            text = text.replace("‴", "'''")  # \u2034 triple prime
+            text = text.replace("‷", "'''")  # \u2037 reversed triple prime
+            text = text.replace("⁗", "''''")  # \u2057 quadruple prime
 
         if self.fix_ellipsis:
-            text = text.replace('…', '...').replace(' . . . ', ' ... ')  # \u2026
+            text = text.replace("…", "...").replace(" . . . ", " ... ")  # \u2026
 
         if self.fix_slashes:
             for slash in SLASHES:
-                text = text.replace(slash, '/')
+                text = text.replace(slash, "/")
 
         if self.fix_tildes:
             for tilde in TILDES:
-                text = text.replace(tilde, '~')
+                text = text.replace(tilde, "~")
 
         if self.replace_tabs:
-            text = text.replace('\t', self.replacement_spaces)
+            text = text.replace("\t", self.replacement_spaces)
 
         # Collapse all whitespace down to a single space
         if self.fix_whitespaces:
             # Normalize unusual whitespace not caught by unicodedata
-            text = text.replace('\u000b', ' ').replace('\u000c', ' ').replace(u'\u0085', ' ')
+            text = (
+                text.replace("\u000b", " ")
+                .replace("\u000c", " ")
+                .replace(u"\u0085", " ")
+            )
         if self.collapse_whitespaces:
             # text = ' '.join(text.split())
-            text = re.sub(r' +', ' ', text)
+            text = re.sub(r" +", " ", text)
 
         if self.strip:
             text = text.strip()
@@ -632,9 +843,9 @@ class Normalizer(BaseNormalizer):
         # Convert all brackets to regular parentheses
         if self.regular_parentheses_only:
             for ob in LEFT_PARENTHESES:
-                text = text.replace(ob, '(')
+                text = text.replace(ob, "(")
             for cb in RIGHT_PARENTHESES:
-                text = text.replace(cb, ')')
+                text = text.replace(cb, ")")
 
         if self.hanja2hangle:
             text = hanja_to_hangle(text)
@@ -643,10 +854,24 @@ class Normalizer(BaseNormalizer):
             text = emoticon_normalize(text, num_repeats=self.num_repeats)
         return text
 
+
 #: Default normalize that canonicalizes unicode and fixes whitespace.
-base_normalize = Normalizer(strip=True, fix_whitespaces=False, fix_hyphens=False, uncurl_quotes=False, fix_ellipsis=False)
+base_normalize = Normalizer(
+    strip=True,
+    fix_whitespaces=False,
+    fix_hyphens=False,
+    uncurl_quotes=False,
+    fix_ellipsis=False,
+)
 #: More aggressive normalize that also standardizes hyphens, and quotes.
-strict_normalize = Normalizer(strip=True, fix_whitespaces=False, fix_hyphens=True, uncurl_quotes=True, fix_ellipsis=True, fix_tildes=True)
+strict_normalize = Normalizer(
+    strip=True,
+    fix_whitespaces=False,
+    fix_hyphens=True,
+    uncurl_quotes=True,
+    fix_ellipsis=True,
+    fix_tildes=True,
+)
 
 
 # class ExcessNormalizer(Normalizer):

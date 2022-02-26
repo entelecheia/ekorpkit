@@ -12,35 +12,27 @@ from guesslang.model import DATASET
 
 LOGGER = logging.getLogger(__name__)
 LOGGING_CONFIG = {
-    'version': 1,
-    'formatters': {
-        'simple': {
-            'format': '{asctime} {name} {levelname} {message}',
-            'datefmt': '%H:%M:%S',
-            'style': '{'
+    "version": 1,
+    "formatters": {
+        "simple": {
+            "format": "{asctime} {name} {levelname} {message}",
+            "datefmt": "%H:%M:%S",
+            "style": "{",
         }
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'level': logging.DEBUG,
-            'formatter': 'simple',
-            'stream': 'ext://sys.stdout'
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": logging.DEBUG,
+            "formatter": "simple",
+            "stream": "ext://sys.stdout",
         }
     },
-    'loggers': {
-        'guesslang': {
-            'level': logging.DEBUG,
-            'handlers': ['console'],
-            'propagate': 0
-        }
+    "loggers": {
+        "guesslang": {"level": logging.DEBUG, "handlers": ["console"], "propagate": 0}
     },
-    'root': {
-        'level': logging.DEBUG,
-        'handlers': ['console'],
-        'propagate': 0
-    },
-    'disable_existing_loggers': False
+    "root": {"level": logging.DEBUG, "handlers": ["console"], "propagate": 0},
+    "disable_existing_loggers": False,
 }
 
 
@@ -51,7 +43,7 @@ def main() -> None:
     parser = _build_argument_parser()
     args = parser.parse_args()
     if args.train and (not args.model or not args.steps):
-        parser.error('--model and --steps are required when using --train')
+        parser.error("--model and --steps are required when using --train")
 
     # Setup loggers
     logging_level = logging.DEBUG if args.debug else logging.INFO
@@ -59,66 +51,66 @@ def main() -> None:
     logging.config.dictConfig(logging_config)
 
     # Load the programming language guessing model
-    LOGGER.debug(f'Arguments: {args}')
+    LOGGER.debug(f"Arguments: {args}")
     guess = Guess(args.model)
 
     try:
         if args.list_supported:
             # List the supported programming languages
-            languages = ', '.join(guess.supported_languages)
-            print(f'Supported programming languages: {languages}')
+            languages = ", ".join(guess.supported_languages)
+            print(f"Supported programming languages: {languages}")
 
         elif args.train:
             # Train from source code files
-            LOGGER.debug(f'Train model and save result to: {args.model}')
+            LOGGER.debug(f"Train model and save result to: {args.model}")
             accuracy = guess.train(args.train, max_steps=args.steps)
-            print(f'Trained model accuracy is {accuracy:.2%}')
+            print(f"Trained model accuracy is {accuracy:.2%}")
 
         else:
             # Guess source code language
-            LOGGER.debug(f'Guess the source code of: {args.filename}')
+            LOGGER.debug(f"Guess the source code of: {args.filename}")
             content = _read_file(args.filename)
             if args.probabilities:
                 # List all the detection probabilities
                 scores = guess.probabilities(content)
-                texts = (f' {name:20} {score:6.2%}' for name, score in scores)
-                table = '\n'.join(texts)
-                print(f'Language name       Probability\n{table}')
+                texts = (f" {name:20} {score:6.2%}" for name, score in scores)
+                table = "\n".join(texts)
+                print(f"Language name       Probability\n{table}")
             else:
                 # Print the source code programming language name
                 # if it is successfully detected
                 language_name = guess.language_name(content)
                 if not language_name:
-                    language_name = 'Unknown'
-                print(f'Programming language: {language_name}')
+                    language_name = "Unknown"
+                print(f"Programming language: {language_name}")
 
-        LOGGER.debug('Exit OK')
+        LOGGER.debug("Exit OK")
 
     except GuesslangError:
-        LOGGER.critical('Failed!')
+        LOGGER.critical("Failed!")
         sys.exit(1)
 
     except KeyboardInterrupt:
-        LOGGER.critical('Cancelled!')
+        LOGGER.critical("Cancelled!")
         sys.exit(2)
 
 
 def _build_argument_parser() -> ArgumentParser:
     parser = ArgumentParser(description=__doc__)
     parser.add_argument(
-        'filename',
-        type=FileType('r'),
+        "filename",
+        type=FileType("r"),
         default=sys.stdin,
-        nargs='?',
+        nargs="?",
         help="""
             source code file.
             Reads from the standard input (stdin) if no file is given
         """,
     )
     parser.add_argument(
-        '-p',
-        '--probabilities',
-        action='store_true',
+        "-p",
+        "--probabilities",
+        action="store_true",
         default=False,
         help="""
             show match probability of a given source code
@@ -126,26 +118,26 @@ def _build_argument_parser() -> ArgumentParser:
         """,
     )
     parser.add_argument(
-        '-l',
-        '--list-supported',
-        action='store_true',
+        "-l",
+        "--list-supported",
+        action="store_true",
         default=False,
-        help='list the supported programming languages',
+        help="list the supported programming languages",
     )
     parser.add_argument(
-        '--train',
-        metavar='TRAINING_DIRECTORY',
+        "--train",
+        metavar="TRAINING_DIRECTORY",
         help=f"""
             train from a directory containing source code files.
             The source files should be split in 3 directories named:
             {', '.join(DATASET.values())}.
 
             --model and --steps values should be provided when using --train
-        """
+        """,
     )
     parser.add_argument(
-        '--steps',
-        metavar='TRAINING_STEPS',
+        "--steps",
+        metavar="TRAINING_STEPS",
         type=int,
         help="""
             number of steps training steps. The model accuracy
@@ -153,30 +145,30 @@ def _build_argument_parser() -> ArgumentParser:
         """,
     )
     parser.add_argument(
-        '--model',
-        metavar='MODEL_DIR',
-        help='custom Guesslang trained model directory',
+        "--model",
+        metavar="MODEL_DIR",
+        help="custom Guesslang trained model directory",
     )
     parser.add_argument(
-        '-d',
-        '--debug',
+        "-d",
+        "--debug",
         default=False,
-        action='store_true',
-        help='show debug messages',
+        action="store_true",
+        help="show debug messages",
     )
     return parser
 
 
 def _update_config(config: Dict[str, Any], level: int) -> Dict[str, Any]:
     logging_config = deepcopy(config)
-    logging_config['root']['level'] = level
-    logging_config['loggers']['guesslang']['level'] = level
+    logging_config["root"]["level"] = level
+    logging_config["loggers"]["guesslang"]["level"] = level
     return logging_config
 
 
 def _read_file(input_file: TextIO) -> str:
     if input_file is sys.stdin:
-        LOGGER.debug('Write your source code here. End with CTR^D')
+        LOGGER.debug("Write your source code here. End with CTR^D")
         content = input_file.read()
     else:
         content = input_file.read()
@@ -185,5 +177,5 @@ def _read_file(input_file: TextIO) -> str:
     return content
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

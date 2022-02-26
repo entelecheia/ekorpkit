@@ -16,18 +16,19 @@ from tensorflow.python.training.tracking.tracking import AutoTrackable
 LOGGER = logging.getLogger(__name__)
 
 DATASET = {
-    ModeKeys.TRAIN: 'train',
-    ModeKeys.EVAL: 'valid',
-    ModeKeys.PREDICT: 'test',
+    ModeKeys.TRAIN: "train",
+    ModeKeys.EVAL: "valid",
+    ModeKeys.PREDICT: "test",
 }
 
 
 class HyperParameter:
     """Model hyper parameters"""
+
     BATCH_SIZE = 100
     NB_TOKENS = 10000
     VOCABULARY_SIZE = 5000
-    EMBEDDING_SIZE = max(10, int(VOCABULARY_SIZE**0.5))
+    EMBEDDING_SIZE = max(10, int(VOCABULARY_SIZE ** 0.5))
     DNN_HIDDEN_UNITS = [512, 32]
     DNN_DROPOUT = 0.5
     N_GRAM = 2
@@ -35,6 +36,7 @@ class HyperParameter:
 
 class Training:
     """Model training parameters"""
+
     SHUFFLE_BUFFER = HyperParameter.BATCH_SIZE * 10
     CHECKPOINT_STEPS = 1000
     LONG_TRAINING_STEPS = 10 * CHECKPOINT_STEPS
@@ -48,13 +50,13 @@ def load(saved_model_dir: str) -> AutoTrackable:
 
 
 def build(model_dir: str, labels: List[str]) -> Estimator:
-    """Build a Tensorflow text classifier """
+    """Build a Tensorflow text classifier"""
     config = tf.estimator.RunConfig(
         model_dir=model_dir,
         save_checkpoints_steps=Training.CHECKPOINT_STEPS,
     )
     categorical_column = tf.feature_column.categorical_column_with_hash_bucket(
-        key='content',
+        key="content",
         hash_bucket_size=HyperParameter.VOCABULARY_SIZE,
     )
     dense_column = tf.feature_column.embedding_column(
@@ -92,7 +94,7 @@ def train(estimator: Estimator, data_root_dir: str, max_steps: int) -> Any:
         throttle_secs=throttle_secs,
     )
 
-    LOGGER.debug('Train the model')
+    LOGGER.debug("Train the model")
     results = tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
     training_metrics = results[0]
     return training_metrics
@@ -107,7 +109,7 @@ def save(estimator: Estimator, saved_model_dir: str) -> None:
 
         Path(saved_model_dir).mkdir(exist_ok=True)
         export_path = Path(export_dir.decode()).absolute()
-        for path in export_path.glob('*'):
+        for path in export_path.glob("*"):
             shutil.move(str(path), saved_model_dir)
 
 
@@ -120,14 +122,14 @@ def test(
     values = {language: 0 for language in mapping.values()}
     matches = {language: deepcopy(values) for language in values}
 
-    LOGGER.debug('Test the model')
+    LOGGER.debug("Test the model")
     input_function = _build_input_fn(data_root_dir, ModeKeys.PREDICT)
     for test_item in input_function():
         content = test_item[0]
         label = test_item[1].numpy()[0].decode()
 
-        result = saved_model.signatures['predict'](content)
-        predicted = result['classes'].numpy()[0][0].decode()
+        result = saved_model.signatures["predict"](content)
+        predicted = result["classes"].numpy()[0][0].decode()
 
         label_language = mapping[label]
         predicted_language = mapping[predicted]
@@ -137,16 +139,14 @@ def test(
 
 
 def predict(
-    saved_model: AutoTrackable,
-    mapping: Dict[str, str],
-    text: str
+    saved_model: AutoTrackable, mapping: Dict[str, str], text: str
 ) -> List[Tuple[str, float]]:
     """Infer a Tensorflow saved model"""
     content_tensor = tf.constant([text])
-    predicted = saved_model.signatures['serving_default'](content_tensor)
+    predicted = saved_model.signatures["serving_default"](content_tensor)
 
-    numpy_floats = predicted['scores'][0].numpy()
-    extensions = predicted['classes'][0].numpy()
+    numpy_floats = predicted["scores"][0].numpy()
+    extensions = predicted["classes"][0].numpy()
 
     probability_values = (float(value) for value in numpy_floats)
     languages = (mapping[ext.decode()] for ext in extensions)
@@ -161,7 +161,7 @@ def _build_input_fn(
     mode: ModeKeys,
 ) -> Callable[[], tf.data.Dataset]:
     """Generate an input fonction for a Tensorflow model"""
-    pattern = str(Path(data_root_dir).joinpath(DATASET[mode], '*'))
+    pattern = str(Path(data_root_dir).joinpath(DATASET[mode], "*"))
 
     def input_function() -> tf.data.Dataset:
         dataset = tf.data.Dataset
@@ -182,8 +182,8 @@ def _serving_input_receiver_fn() -> tf.estimator.export.ServingInputReceiver:
     """Function to serve model for predictions."""
 
     content = tf.compat.v1.placeholder(tf.string, [None])
-    receiver_tensors = {'content': content}
-    features = {'content': tf.map_fn(_preprocess_text, content)}
+    receiver_tensors = {"content": content}
+    features = {"content": tf.map_fn(_preprocess_text, content)}
 
     return tf.estimator.export.ServingInputReceiver(
         receiver_tensors=receiver_tensors,
@@ -194,7 +194,7 @@ def _serving_input_receiver_fn() -> tf.estimator.export.ServingInputReceiver:
 def _read_file(filename: str) -> Tuple[tf.Tensor, tf.Tensor]:
     """Read a source file, return the content and the extension"""
     data = tf.io.read_file(filename)
-    label = tf.strings.split([filename], '.').values[-1]
+    label = tf.strings.split([filename], ".").values[-1]
     return data, label
 
 
@@ -204,14 +204,14 @@ def _preprocess(
 ) -> Tuple[Dict[str, tf.Tensor], tf.Tensor]:
     """Process input data as part of a workflow"""
     data = _preprocess_text(data)
-    return {'content': data}, label
+    return {"content": data}, label
 
 
 def _preprocess_text(data: tf.Tensor) -> tf.Tensor:
     """Feature engineering"""
-    padding = tf.constant(['']*HyperParameter.NB_TOKENS)
+    padding = tf.constant([""] * HyperParameter.NB_TOKENS)
     data = tf.strings.bytes_split(data)
     data = tf.strings.ngrams(data, HyperParameter.N_GRAM)
     data = tf.concat((data, padding), axis=0)
-    data = data[:HyperParameter.NB_TOKENS]
+    data = data[: HyperParameter.NB_TOKENS]
     return data

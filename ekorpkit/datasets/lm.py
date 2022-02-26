@@ -24,83 +24,94 @@ class Archive:
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
         self.i = 0
-        
-        self.fh = open(self.output_dir + '/current_chunk_incomplete', 'wb')
+
+        self.fh = open(self.output_dir + "/current_chunk_incomplete", "wb")
         self.cctx = zstandard.ZstdCompressor(level=compression_level, threads=8)
         self.compressor = self.cctx.stream_writer(self.fh)
-        
-    
+
     def add_data(self, data, meta={}):
-        self.compressor.write(json.dumps({'text': data, 'meta': meta}).encode('UTF-8') + b'\n')
-    
-    def commit(self, archive_name='default'):
-        fname = self.output_dir + '/data_' + str(self.i) + '_time' + str(int(time.time())) + '_' + archive_name + '.jsonl.zst'
+        self.compressor.write(
+            json.dumps({"text": data, "meta": meta}).encode("UTF-8") + b"\n"
+        )
+
+    def commit(self, archive_name="default"):
+        fname = (
+            self.output_dir
+            + "/data_"
+            + str(self.i)
+            + "_time"
+            + str(int(time.time()))
+            + "_"
+            + archive_name
+            + ".jsonl.zst"
+        )
         self.compressor.flush(zstandard.FLUSH_FRAME)
-        
+
         self.fh.flush()
         self.fh.close()
-        os.rename(self.output_dir + '/current_chunk_incomplete', fname)
-        self.fh = open(self.output_dir + '/current_chunk_incomplete', 'wb')
+        os.rename(self.output_dir + "/current_chunk_incomplete", fname)
+        self.fh = open(self.output_dir + "/current_chunk_incomplete", "wb")
         self.compressor = self.cctx.stream_writer(self.fh)
 
         self.i += 1
 
 
-
-
 def dummy_meta(xs):
     return ((x, {}) for x in xs)
+
 
 class Dataset(abc.ABC):
     @abc.abstractmethod
     def name(self):
-        """ Human-readable name of the dataset """
+        """Human-readable name of the dataset"""
         pass
 
     @abc.abstractmethod
     def documents(self):
-        """ A generator producing all documents in the dataset. """
+        """A generator producing all documents in the dataset."""
         pass
 
     @abc.abstractmethod
     def clean(self):
-        """ Remove any dataset files. """
+        """Remove any dataset files."""
         pass
-    
+
     def size(self):
-        """ Return an estimate of the dataset size. Implementations may use a faster, less accurate estimate. """
+        """Return an estimate of the dataset size. Implementations may use a faster, less accurate estimate."""
 
         size = sum(map(utf8len, tqdm(self.documents())))
-        print('size', self.name(), size)
+        print("size", self.name(), size)
         return size
-    
+
     def num_docs(self):
-        """ Return an estimate of the number of documents in the dataset. Implementations may use a faster, less accurate estimate. """
+        """Return an estimate of the number of documents in the dataset. Implementations may use a faster, less accurate estimate."""
 
         size = len(list(map(lambda x: None, tqdm(self.documents()))))
-        print('docs', self.name(), size)
+        print("docs", self.name(), size)
         return size
-    
+
     def shuffled(self):
-        """ Datasets where the source is already shuffled should override this to return True so that it isn't shuffled again. """
+        """Datasets where the source is already shuffled should override this to return True so that it isn't shuffled again."""
         return False
 
 
 class HFDS(Dataset):
     def __init__(self, **args):
-        self.name = args['name']
-        self.path = args['path']
-        self.subset = args['subset']
-        self.split = args['split']
-        self.download_mode = args['download_mode']
-        self.cache_dir = args['cache_dir']
-        self.streaming = args['streaming']
+        self.name = args["name"]
+        self.path = args["path"]
+        self.subset = args["subset"]
+        self.split = args["split"]
+        self.download_mode = args["download_mode"]
+        self.cache_dir = args["cache_dir"]
+        self.streaming = args["streaming"]
 
     def name(self):
         return self.name
 
     def _load(self):
-        self.dataset = load_dataset(self.name, self.subset, download_mode=self.download_mode)
+        self.dataset = load_dataset(
+            self.name, self.subset, download_mode=self.download_mode
+        )
 
     def documents(self):
         self._load()
@@ -111,7 +122,6 @@ class HFDS(Dataset):
     def clean(self):
         if not self.streaming:
             self.dataset.cleanup_cache_files()
-    
 
 
 def take(n, iter):
@@ -123,6 +133,7 @@ def take(n, iter):
             break
     return ret
 
+
 def mk_table(datasets, train_chars, latex=None, print_latex=False):
     values = []
 
@@ -131,22 +142,72 @@ def mk_table(datasets, train_chars, latex=None, print_latex=False):
     for dataset, weight in datasets:
         size = dataset.size()
         relative_weight = size * weight / total_weight
-        values.append([dataset.name(), size, '{:.2%}'.format(relative_weight), '{:.4f}'.format(train_chars / size * relative_weight), size * weight, humanbytes(size / dataset.num_docs(), 'KiB')])
-    
+        values.append(
+            [
+                dataset.name(),
+                size,
+                "{:.2%}".format(relative_weight),
+                "{:.4f}".format(train_chars / size * relative_weight),
+                size * weight,
+                humanbytes(size / dataset.num_docs(), "KiB"),
+            ]
+        )
+
     values.sort(key=lambda x: -x[4])
-    values.append(['**Total**', "", "", "", sum([x[4] for x in values]), humanbytes(sum([x[1] for x in values]) / sum(x[0].num_docs() for x in datasets), 'KiB')])
-    values = [[x[0], humanbytes(x[1], 'GiB') if x[1] else "", x[2], x[3], humanbytes(x[4], 'GiB'), x[5]] for x in values]
+    values.append(
+        [
+            "**Total**",
+            "",
+            "",
+            "",
+            sum([x[4] for x in values]),
+            humanbytes(
+                sum([x[1] for x in values]) / sum(x[0].num_docs() for x in datasets),
+                "KiB",
+            ),
+        ]
+    )
+    values = [
+        [
+            x[0],
+            humanbytes(x[1], "GiB") if x[1] else "",
+            x[2],
+            x[3],
+            humanbytes(x[4], "GiB"),
+            x[5],
+        ]
+        for x in values
+    ]
 
     writer = MarkdownTableWriter()
     writer.table_name = "The Pile™"
-    writer.headers = ["Component", "Raw Size", "Weight", "Epochs", "Effective Size", "Mean Document Size"]
+    writer.headers = [
+        "Component",
+        "Raw Size",
+        "Weight",
+        "Epochs",
+        "Effective Size",
+        "Mean Document Size",
+    ]
     writer.value_matrix = values
 
     if print_latex:
         rows = []
         for row in values[:-1]:
-            rows.append("        " + " & ".join(map(lambda x: str(x).replace('%', r'\%'), row)) + r" \\")
-        totalrow = " & ".join(map(lambda x: r'\textbf{%s}' % str(x).replace('%', r'\%') if x else "", values[-1][1:])) + r" \\"
+            rows.append(
+                "        "
+                + " & ".join(map(lambda x: str(x).replace("%", r"\%"), row))
+                + r" \\"
+            )
+        totalrow = (
+            " & ".join(
+                map(
+                    lambda x: r"\textbf{%s}" % str(x).replace("%", r"\%") if x else "",
+                    values[-1][1:],
+                )
+            )
+            + r" \\"
+        )
         latex = latex.format(rows="\n".join(rows), totalrow=totalrow)
         print(latex)
     return writer.dumps()
@@ -155,10 +216,10 @@ def mk_table(datasets, train_chars, latex=None, print_latex=False):
 def dataset_tqdm(dset):
     if isinstance(dset, LMDS):
         return dset.documents()
-    pbar = tqdm(total=dset.size(), unit='B', unit_scale=True, unit_divisor=1024)
+    pbar = tqdm(total=dset.size(), unit="B", unit_scale=True, unit_divisor=1024)
     for doc in dset.documents():
         pbar.update(utf8len(doc))
-        yield doc 
+        yield doc
 
 
 class Profiler:
@@ -181,11 +242,19 @@ class Profiler:
             self.time_per_dataset[name][1] += 1
 
             if self.i % 100000 == 0:
-                times = [(dsname, total, ct) for dsname, (total, ct) in self.time_per_dataset.items()]
+                times = [
+                    (dsname, total, ct)
+                    for dsname, (total, ct) in self.time_per_dataset.items()
+                ]
                 times.sort(key=lambda x: x[1])
                 for name, total, ct in times:
-                    print(name.ljust(22), '{:.8f}'.format(total / ct), str(ct).rjust(8), '{:.4f}'.format(total))
-            
+                    print(
+                        name.ljust(22),
+                        "{:.8f}".format(total / ct),
+                        str(ct).rjust(8),
+                        "{:.4f}".format(total),
+                    )
+
             return doc
 
 
@@ -195,7 +264,7 @@ class LMDS(Dataset):
         self.dataset_bytes = dataset_bytes
         self.profile = profile
         self.rnd = random.Random(42)
-    
+
     def name(self):
         return "Custom Pile"
 
@@ -210,11 +279,12 @@ class LMDS(Dataset):
             relative_weight = weight * dataset.num_docs() / total_weight
             datasets.append((dataset.name(), dataset))
             weights.append(relative_weight)
-        
+
         # yield from dataset until right number of bytes
         total_bytes = 0
-        pbar = tqdm(total=self.dataset_bytes, unit='B', unit_scale=True, unit_divisor=1024)
-
+        pbar = tqdm(
+            total=self.dataset_bytes, unit="B", unit_scale=True, unit_divisor=1024
+        )
 
         profiler = Profiler(profile=self.profile)
         while True:
@@ -226,7 +296,7 @@ class LMDS(Dataset):
                 total_bytes += size
                 pbar.update(size)
 
-                meta['pile_set_name'] = name
+                meta["pile_set_name"] = name
 
                 yield doc, meta
 
@@ -234,8 +304,9 @@ class LMDS(Dataset):
                     return
 
     def clean(self):
-        for dataset, _ in self.datasets: dataset.clean()
-    
+        for dataset, _ in self.datasets:
+            dataset.clean()
+
     def size(self):
         return self.dataset_bytes
 
@@ -245,7 +316,7 @@ class LimitedDataset(Dataset):
         self.dataset = dataset
         self.limit_size = limit_size
         self.rnd = random.Random(42)
-    
+
     def name(self):
         return self.dataset.name() + " (truncated)"
 
@@ -261,24 +332,21 @@ class LimitedDataset(Dataset):
 
             if numer <= 0 or denom <= 0:
                 break
-    
+
     def clean(self):
         self.dataset.clean()
-    
+
     def size(self):
         return self.limit_size
-
-
-
-
 
 
 def sample_from_sets(datasets, n_docs):
     random.seed(42)
     for dset, _ in datasets:
         print(dset.name())
-        fname = 'dataset_samples/{}.json'.format(dset.name().replace(' ', '_'))
-        if os.path.exists(fname): continue
+        fname = "dataset_samples/{}.json".format(dset.name().replace(" ", "_"))
+        if os.path.exists(fname):
+            continue
 
         n = dset.num_docs()
 
@@ -287,30 +355,31 @@ def sample_from_sets(datasets, n_docs):
 
         docs = []
         for i, (doc, meta) in enumerate(dset.documents()):
-            if i > max(indices): break
+            if i > max(indices):
+                break
             if i in indices:
                 docs.append((doc, meta))
                 pbar.update(1)
-        
+
         try:
-            os.mkdir('dataset_samples')
+            os.mkdir("dataset_samples")
         except:
             pass
 
-        with open(fname, 'w') as fh:
+        with open(fname, "w") as fh:
             json.dump(docs, fh)
 
         pbar.close()
 
 
 def build_pile(**args):
-	args = OmegaConf.create(args)
+    args = OmegaConf.create(args)
 
-	if args.output_dir:
-		os.makedirs(args.output_dir, exist_ok=True)
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
 
-	with change_directory(args.output_dir):
-		main(args)
+    with change_directory(args.output_dir):
+        main(args)
 
 
 def main(args):
@@ -319,7 +388,7 @@ def main(args):
         datasets = []
         for dataset in args.datasets:
             dataset = instantiate(dataset)
-            datasets.append((dataset, 1.))
+            datasets.append((dataset, 1.0))
 
     random.seed(42)
 
@@ -339,18 +408,21 @@ def main(args):
     if args.force_download:
         for dset, _ in datasets:
             dset._download()
-    
+
     if args.limit:
         size_limit = parse_size(args.limit)
         lmd = LimitedDataset(lmd, size_limit)
 
     if args.make_lmd:
-        assert not (args.interleave_output and args.chunk) # can't chunk and interleave
+        assert not (args.interleave_output and args.chunk)  # can't chunk and interleave
 
         if args.interleave_output:
-            ars = [Archive('pile_pass1/chunk{}'.format(i)) for i in range(args.interleave_output)]
+            ars = [
+                Archive("pile_pass1/chunk{}".format(i))
+                for i in range(args.interleave_output)
+            ]
         else:
-            ar = Archive('pile_output')
+            ar = Archive("pile_output")
 
         if args.chunk:
             chunk_size = parse_size(args.chunk)
@@ -359,20 +431,20 @@ def main(args):
         for doc, meta in lmd.documents():
             if args.interleave_output:
                 ar = random.choice(ars)
-            
+
             ar.add_data(doc, meta)
-                
+
             cursize += len(doc)
             if args.chunk and cursize > chunk_size:
                 # interleave will not be on
                 cursize = 0
                 ar.commit(archive_name=args.using)
-        
+
         if args.interleave_output:
-            for ar in ars: ar.commit(archive_name=args.using)
+            for ar in ars:
+                ar.commit(archive_name=args.using)
         else:
             ar.commit(archive_name=args.using)
 
     if args.make_dataset_samples:
         sample_from_sets(datasets, args.make_dataset_samples)
-    

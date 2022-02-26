@@ -355,7 +355,6 @@ class Postprocessor(object):
         return results
 
 
-
 def empty(obj, dim=1) -> bool:
     assert dim in [1, 2], "only 1 or 2 dimension iterable is supported."
 
@@ -414,7 +413,9 @@ def length_constraints(
     max_recover_step,
 ):
     if len(text) > max_recover_length and max_recover_step > 0:
-        logging.warning(f"Too long text! turn off quotes calibration! text len:{len(text)}")
+        logging.warning(
+            f"Too long text! turn off quotes calibration! text len:{len(text)}"
+        )
         max_recover_step = 0
 
     return max_recover_step

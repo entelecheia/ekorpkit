@@ -15,7 +15,9 @@ from nltk.util import ngrams
 
 
 class MinHashDeduper:
-    def __init__(self, num_perm: int = 128, threshold: float = 0.5, ngram_size: int = 5):
+    def __init__(
+        self, num_perm: int = 128, threshold: float = 0.5, ngram_size: int = 5
+    ):
 
         self.num_perm = num_perm
         self.threshold = threshold
@@ -49,15 +51,15 @@ class MinHashDeduper:
         for i, doc in enumerate(data):
             m = MinHash(num_perm=self.num_perm)
             for ngram in ngrams(doc, self.ngram_size):
-                m.update(''.join(ngram).encode('utf-8'))
+                m.update("".join(ngram).encode("utf-8"))
             signatures.append(m)
-            self.lsh.insert(f'm{i}', m)
-        
+            self.lsh.insert(f"m{i}", m)
+
         neighbors = []
         for i, doc in enumerate(data):
             result = self.lsh.query(signatures[i])
             neighbors.append([int(x[1:]) for x in result])
-        
+
         return get_group_indices(neighbors)
 
 
@@ -186,8 +188,6 @@ def group(x: str, patterns: str) -> List[int]:
     return result
 
 
-        
-
 def get_group_indices(neighbors: List[List[int]]) -> List[int]:
     """Based on the nearest neighbors, find the group/cluster index for each element.
 
@@ -206,7 +206,7 @@ def get_group_indices(neighbors: List[List[int]]) -> List[int]:
         for j in n:
             finder.union(i, j)
 
-    return [finder.find(i) for i in range(len(neighbors))]        
+    return [finder.find(i) for i in range(len(neighbors))]
 
 
 """This module implements an union find or disjoint set data structure.
@@ -240,6 +240,7 @@ complexity:
       <http://en.wikipedia.org/wiki/Ackermann_function#Inverse>`_.
 
 """
+
 
 class UF:  # pragma: no cover
     """An implementation of union find data structure.
@@ -302,4 +303,3 @@ class UF:  # pragma: no cover
     def __repr__(self):
         """Representation of the union find object."""
         return "UF(" + str(self) + ")"
-
