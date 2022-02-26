@@ -1,0 +1,23 @@
+os:
+  MODIN_ENGINE: ray
+  MODIN_CPUS: ${oc.select:..distributed_framework.num_workers,50}
+  # MODIN_OUT_OF_CORE: 'true'
+  # MALLOC_TRIM_THRESHOLD_: 65536
+  WANDB_API_KEY:
+distributed_framework: 
+  backend: joblib
+  initialize: true
+  num_workers: ${oc.select:num_workers,50}
+ray:
+  num_cpus: ${oc.select:..distributed_framework.num_workers,50}
+  # _plasma_directory: /tmp
+dask:
+  # memory_limit: 10GB
+  n_workers: ${oc.select:..distributed_framework.num_workers,50}
+batcher:
+  procs: ${oc.select:..distributed_framework.num_workers,50}
+  minibatch_size: 1_000
+  backend: ${..distributed_framework.backend}
+  task_num_cpus: 1
+  task_num_gpus: 0
+  verbose: 10

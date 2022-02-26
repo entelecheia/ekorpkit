@@ -9,3 +9,5 @@ chardet
 rehash
 requests
 numba
+scipy
+pytablewriter

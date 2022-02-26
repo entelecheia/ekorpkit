@@ -11,8 +11,6 @@ from pytablewriter.style import Style
 from pathlib import Path
 from ekorpkit.utils.func import humanbytes, get_modified_time
 import ekorpkit
-import plotly.express as px
-import plotly.graph_objects as go
 
 
 def info_docs(**args):
@@ -160,10 +158,13 @@ def save_sample_text(data_file_dir, sample_text_path, sample_max_lines=None):
 
 
 def make_figure(infos, fig_filepath):
+    # import plotly.express as px
+    import plotly.graph_objects as go
+
     values = []
-    KB = float(1024)
-    MB = float(KB ** 2)  # 1,048,576
-    GB = float(KB ** 3)  # 1,073,741,824
+    # KB = float(1024)
+    # MB = float(KB ** 2)  # 1,048,576
+    # GB = float(KB ** 3)  # 1,073,741,824
 
     total_size = sum([x.size_in_bytes for x in infos])
     total_size_en = sum([x.size_in_bytes for x in infos if x.lang == "en"])
@@ -191,7 +192,7 @@ def make_figure(infos, fig_filepath):
 
     names = list(df.Name)
     weight = list(df.Weight)
-    sizes = [round(x / GB, 3) for x in list(df.Size)]
+    # sizes = [round(x / GB, 3) for x in list(df.Size)]
     langs = list(df.Language)
     # print(sizes)
 
@@ -219,7 +220,6 @@ def make_figure(infos, fig_filepath):
 
 
 def make_table(infos, table_cfg):
-    import pandas as pd
 
     df = pd.DataFrame(infos)
     eval_before = table_cfg.get("eval_before", None)

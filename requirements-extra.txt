@@ -49,7 +49,7 @@ zstandard				: fetch
 pymongo					: database
 
 # py-markdown-table		: doc
-pytablewriter			: doc
+# pytablewriter			: doc
 plotly					: doc
 kaleido					: doc
 rich					: doc

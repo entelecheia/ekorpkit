@@ -27,18 +27,22 @@ OmegaConf.register_new_resolver(
 def listup(**args):
     ekorpkit_dir = os.path.dirname(os.path.abspath(__file__))
     corpus_info = {}
-    for name in args["corpus"]["preset"]["corpora"]:
-        info_path = f"{ekorpkit_dir}/resource/corpora/{name}.yaml"
+    for name in args["corpus"]["preset"]["corpus"]:
+        info_path = f"{ekorpkit_dir}/resources/corpora/{name}.yaml"
         info = OmegaConf.load(info_path)
         corpus_info[name] = info
     make_table(corpus_info.values(), args["info"]["table"])
 
 
 def about(**args):
+    from . import __version__
     cfg = OmegaConf.create(args)
     args = cfg.about.app
-    print(f"\neKorpkit=={args.version}")
-    print("Execute `ekorpkit --help` to see what eKorpkit provides")
+    print()
+    for k, v in args.items():
+        print(f"{k:11} : {v}")
+    print(f"{'version':11} : {__version__}")
+    print("\nExecute `ekorpkit --help` to see what eKorpkit provides")
     # print(cfg)
 
 
@@ -101,7 +105,7 @@ def stop_environ(cfg, verbose=False):
             if ray.is_initialized():
                 ray.shutdown()
                 if verbose:
-                    msg.info(f"shutting down ray")
+                    msg.info("shutting down ray")
 
         # elif modin_engine == 'dask':
         #     from dask.distributed import Client
