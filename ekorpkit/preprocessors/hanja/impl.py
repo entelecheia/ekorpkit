@@ -41,7 +41,12 @@ def split_hanja(text):
 
 
 def is_valid_mode(mode):
-    if mode in ("substitution", "combination-text", "combination-text-reversed", "combination-html"):
+    if mode in (
+        "substitution",
+        "combination-text",
+        "combination-text-reversed",
+        "combination-html",
+    ):
         return True
     elif mode == "combination":
         warnings.warn(

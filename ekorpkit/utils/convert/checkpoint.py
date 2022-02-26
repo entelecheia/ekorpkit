@@ -23,13 +23,20 @@ from pathlib import Path
 
 import torch
 
-from transformers import ElectraConfig, ElectraForMaskedLM, ElectraForPreTraining, load_tf_weights_in_electra
+from transformers import (
+    ElectraConfig,
+    ElectraForMaskedLM,
+    ElectraForPreTraining,
+    load_tf_weights_in_electra,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def convert_tf_checkpoint_to_pytorch(tf_checkpoint_path, config_file, pytorch_dump_path, model_type, load_weights_func):
+def convert_tf_checkpoint_to_pytorch(
+    tf_checkpoint_path, config_file, pytorch_dump_path, model_type, load_weights_func
+):
     # Initialise PyTorch model
     config = ElectraConfig.from_json_file(config_file)
     print("Building PyTorch model from configuration: {}".format(str(config)))
@@ -39,7 +46,9 @@ def convert_tf_checkpoint_to_pytorch(tf_checkpoint_path, config_file, pytorch_du
     elif model_type == "generator":
         model = ElectraForMaskedLM(config)
     else:
-        raise ValueError("The discriminator_or_generator argument should be either 'discriminator' or 'generator'")
+        raise ValueError(
+            "The discriminator_or_generator argument should be either 'discriminator' or 'generator'"
+        )
 
     # Load weights from tf checkpoint
     globals()[load_weights_func](
@@ -51,9 +60,10 @@ def convert_tf_checkpoint_to_pytorch(tf_checkpoint_path, config_file, pytorch_du
     torch.save(model.state_dict(), pytorch_dump_path)
 
 
-def load_tf2_weights_in_electra(model, config, tf_checkpoint_path, discriminator_or_generator="discriminator"):
-    """ Load tf checkpoints in a pytorch model.
-    """
+def load_tf2_weights_in_electra(
+    model, config, tf_checkpoint_path, discriminator_or_generator="discriminator"
+):
+    """Load tf checkpoints in a pytorch model."""
     try:
         import re
         import numpy as np
@@ -74,11 +84,17 @@ def load_tf2_weights_in_electra(model, config, tf_checkpoint_path, discriminator
     for name, shape in init_vars:
 
         m_names = name.split("/")
-        if name == '_CHECKPOINTABLE_OBJECT_GRAPH' or m_names[0] in ['global_step', 'temperature', 'save_counter', 'phase', 'step']:
-            logger.info(f' - Skipping non-model layer {name}')
+        if name == "_CHECKPOINTABLE_OBJECT_GRAPH" or m_names[0] in [
+            "global_step",
+            "temperature",
+            "save_counter",
+            "phase",
+            "step",
+        ]:
+            logger.info(f" - Skipping non-model layer {name}")
             continue
-        if 'optimizer' in name:
-            logger.info(f' - Skipping optimization layer {name}')
+        if "optimizer" in name:
+            logger.info(f" - Skipping optimization layer {name}")
             continue
 
         array = tf.train.load_variable(tf_path, name)
@@ -87,7 +103,7 @@ def load_tf2_weights_in_electra(model, config, tf_checkpoint_path, discriminator
         # convet layer/num to layer_num
         m = re.search(r"layer\/\d+", name)
         if m:
-            name = name.replace(m.group(0), m.group(0).replace('/','_'))
+            name = name.replace(m.group(0), m.group(0).replace("/", "_"))
 
         # remove variable name ending: .ATTRIBUTES/VARIABLE_VALUE
         name = name.replace("/.ATTRIBUTES/VARIABLE_VALUE", "")
@@ -104,27 +120,41 @@ def load_tf2_weights_in_electra(model, config, tf_checkpoint_path, discriminator
                     logger.info(f"Skipping generator: {original_name}")
                     continue
             elif discriminator_or_generator == "generator":
-                if name.startswith("model/discriminator/") and not name.startswith("model/discriminator/electra/embeddings"):
+                if name.startswith("model/discriminator/") and not name.startswith(
+                    "model/discriminator/electra/embeddings"
+                ):
                     logger.info(f"Skipping discriminator: {original_name}")
                     continue
-                elif name.startswith("electra/") and not name.startswith("electra/embeddings/"):
+                elif name.startswith("electra/") and not name.startswith(
+                    "electra/embeddings/"
+                ):
                     logger.info(f"Skipping discriminator: {original_name}")
                     continue
                 elif name.startswith("generator/"):
                     name = name.replace("generator/", "electra/")
             # in case, tensorflow version is higher than 2.0.0, change the names
-            if name.startswith("model/discriminator/") or name.startswith("model/generator/"):
+            if name.startswith("model/discriminator/") or name.startswith(
+                "model/generator/"
+            ):
                 name = name.replace("model/discriminator/", "")
                 name = name.replace("model/generator/", "")
                 name = name.replace("bert_output", "output")
                 name = name.replace("dense_output", "output")
                 name = name.replace("self_attention", "self")
-                name = name.replace("/embeddings/position_embeddings/embeddings", "/embeddings/position_embeddings")
-                name = name.replace("/embeddings/token_type_embeddings/embeddings", "/embeddings/token_type_embeddings")
+                name = name.replace(
+                    "/embeddings/position_embeddings/embeddings",
+                    "/embeddings/position_embeddings",
+                )
+                name = name.replace(
+                    "/embeddings/token_type_embeddings/embeddings",
+                    "/embeddings/token_type_embeddings",
+                )
                 name = name.replace("/embeddings/weight", "/embeddings/word_embeddings")
 
             name = name.replace("dense_1", "dense_prediction")
-            name = name.replace("generator_predictions/output_bias", "generator_lm_head/bias")
+            name = name.replace(
+                "generator_predictions/output_bias", "generator_lm_head/bias"
+            )
 
             name = name.split("/")
             # adam_v and adam_m are variables used in AdamWeightDecayOptimizer to calculated m and v
@@ -132,7 +162,15 @@ def load_tf2_weights_in_electra(model, config, tf_checkpoint_path, discriminator
             # model_names = dir(model)
             # logger.info(model_names)
             for m_name in name:
-                if m_name not in ['model', '.OPTIMIZER_SLOT', 'optimizer', 'base_optimizer', 'v', '.ATTRIBUTES', 'VARIABLE_VALUE']:
+                if m_name not in [
+                    "model",
+                    ".OPTIMIZER_SLOT",
+                    "optimizer",
+                    "base_optimizer",
+                    "v",
+                    ".ATTRIBUTES",
+                    "VARIABLE_VALUE",
+                ]:
                     # logger.info(f'processing {m_name} from {name}')
                     if re.fullmatch(r"[A-Za-z]+_\d+", m_name):
                         scope_names = re.split(r"_(\d+)", m_name)

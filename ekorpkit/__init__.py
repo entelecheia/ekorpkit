@@ -1,4 +1,3 @@
-# from .corpora.loader import Corpora
-# from .datasets.loader import Datasets
-# from .config import conf
-# from .tokenizers.mecab import MeCab
+from . import _version
+
+__version__ = _version.get_versions()["version"]
