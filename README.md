@@ -8,7 +8,7 @@ This package does not support downloading corpus files.
 
 The eKorpkit Corpus is a large, diverse, bilingual (ko/en) language modelling dataset.
 
-![ekorpkit corpus](./docs/figs/ekorpkit_corpus.png)
+![ekorpkit corpus](https://github.com/entelecheia/ekorpkit/blob/main/docs/figs/ekorpkit_corpus.png?raw=true)
 
 ## [CLI Configuration](./docs/cli/README.md)
 
