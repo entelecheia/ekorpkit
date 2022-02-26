@@ -3,8 +3,6 @@ import omegaconf
 from hydra.utils import instantiate
 from pathlib import Path
 
-from ..preprocessors.segmenter import PySBDSegmenter, NLTKSegmenter, SimpleSegmenter
-
 
 def _load_dataset(
     data_files,
@@ -145,7 +143,7 @@ class ShardingDataset:
                 print(f"Shuffling {name} dataset.")
                 self.datasets[name] = self.datasets[name].shuffle(self.seed)
 
-        print(f"End: Loading Datasets.")
+        print("End: Loading Datasets.")
 
     def segment_articles_into_sentences(self):
         if not self.datasets:
@@ -187,8 +185,8 @@ class ShardingDataset:
         print("Start: Init Output Files")
         for name in self.output_files:
             assert (
-                len(self.output_files[name]) is 0
-            ), "Internal storage self.output_files already contains data. This function is intended to be used by the constructor only."
+                len(self.output_files[name]) == 0
+            ), "Internal storage self.output_files already contains data."
 
             for i in range(self.n_shards[name]):
                 filename = (

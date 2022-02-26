@@ -5,7 +5,7 @@ import pandas as pd
 from multiprocessing import Pool
 from omegaconf import OmegaConf
 from glob import glob
-from ekorpkit.io.download.best_download import download_file
+from ekorpkit.io.download.web import web_download, google_download_un7z
 
 
 class Wiki:
@@ -62,12 +62,6 @@ class Wiki:
         globals()[self.args.dump._target_](
             self.url, self.dump_file, self.name, self.force_download
         )
-
-
-def download_best(url, dump_file, name, force_download):
-    print(f"Downloading {name} from {url} to {dump_file}")
-    if not os.path.exists(dump_file) or force_download:
-        download_file(url, local_file=dump_file)
 
 
 def work(document):

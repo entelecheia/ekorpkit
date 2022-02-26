@@ -1,3 +1,5 @@
+.pre-commit-config.yaml
+.pre-commit-config.yaml
 *_tmp_*
 tmp
 package-lock.json
