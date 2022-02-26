@@ -1,0 +1,35 @@
+input_text: 
+In this study , we demonstrate that the HSE regulon is active in C . albicans cells infecting the kidney .
+
+target_text: 
+In this study , we demonstrate that the HSE regulon is active in spieces* C . albicans *spieces cells infecting the kidney .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Protozoa were grown for a 4 - month period and samples were taken in the last two months on days 1 , 7 , 35 and 57 .
+
+target_text: 
+Protozoa were grown for a 4 - month period and samples were taken in the last two months on days 1 , 7 , 35 and 57 .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+There is also a need for studies that investigate how genetic susceptibility is associated with clinical outcome measures , including treatment response and tumour relapse .
+
+target_text: 
+There is also a need for studies that investigate how genetic susceptibility is associated with clinical outcome measures , including treatment response and tumour relapse .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+A Gram - staining - positive , coccoid to rod - shaped bacterium , designated strain YC6903 ( T ) , was isolated from a halophytic plant ( Carex scabrifolia Steud . ) collected from sand dunes at Namhae Island , Korea , and its taxonomic position was investigated by using a polyphasic approach .
+
+target_text: 
+A Gram - staining - positive , coccoid to rod - shaped bacterium , designated strain spieces* YC6903 *spieces ( T ) , was isolated from a halophytic plant ( spieces* Carex scabrifolia *spieces Steud . ) collected from sand dunes at Namhae Island , Korea , and its taxonomic position was investigated by using a polyphasic approach .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+2 .
+
+target_text: 
+2 .
+
+----------------------------------------------------------------------------------------------------

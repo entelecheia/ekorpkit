@@ -1,0 +1,35 @@
+input_text: 
+They calculated risk ratios for dichotomous outcomes and weighted mean differences for continuous outcomes .
+
+target_text: 
+They calculated risk ratios for dichotomous outcomes and weighted mean differences for continuous outcomes .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Hydroxytyrosol ameliorates oxidative stress and mitochondrial dysfunction in doxorubicin - induced cardiotoxicity in rats with breast cancer .
+
+target_text: 
+Hydroxytyrosol ameliorates oxidative stress and disease* mitochondrial dysfunction *disease in doxorubicin - induced disease* cardiotoxicity *disease in rats with disease* breast cancer *disease .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Subjects received propranolol either by mouth for 48 hours before PPA or as a rapid intravenous infusion after PPA .
+
+target_text: 
+Subjects received propranolol either by mouth for 48 hours before PPA or as a rapid intravenous infusion after PPA .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+To better correlate the biochemical and the pharmacological effects , we studied the action of abecarnil on [ 35S ] TBPS binding , exploratory motility and on isoniazid - induced biochemical and pharmacological effects in mice .
+
+target_text: 
+To better correlate the biochemical and the pharmacological effects , we studied the action of abecarnil on [ 35S ] TBPS binding , exploratory motility and on isoniazid - induced biochemical and pharmacological effects in mice .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Five days after SE , CCR2 staining in neurons and glial cells was examined using imunohistochemical analyses .
+
+target_text: 
+Five days after disease* SE *disease , CCR2 staining in neurons and glial cells was examined using imunohistochemical analyses .
+
+----------------------------------------------------------------------------------------------------

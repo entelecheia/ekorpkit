@@ -1,0 +1,6 @@
+defaults:
+  - /method: fillna
+
+apply_to: ${oc.select:..apply_to, text}
+fill_with: ''
+verbose: ${oc.select:..verbose, true}

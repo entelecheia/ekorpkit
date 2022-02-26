@@ -1,0 +1,11 @@
+defaults:
+  - /method: filter_length
+  - /method/len_bytes: default
+  - /method/len_words: default
+
+apply_to: ${oc.select:..apply_to, text}
+min_length: 3
+max_length: 
+len_func: len_bytes
+verbose: ${oc.select:..verbose, true}
+use_batcher: ${oc.select:..use_batcher, true}

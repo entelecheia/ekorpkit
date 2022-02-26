@@ -1,0 +1,6 @@
+defaults:
+  - /method: replace_regex
+
+apply_to: ${oc.select:..apply_to, text}
+patterns:
+verbose: ${oc.select:..verbose, true}

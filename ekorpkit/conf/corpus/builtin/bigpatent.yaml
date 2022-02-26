@@ -1,0 +1,66 @@
+defaults:
+  - _build
+  - /fetch/downloader: _gdrive_untar
+  - /pipeline/normalize/normalizer: formal_en
+  - /pipeline/segment/segmenter: pysbd
+  - /fetch/loader/decompressor: gzip
+  - override /fetch/loader/parser: jsonlines
+
+name: bigpatent
+fullname: 'BigPatent - U.S. Patent Documents'
+description: 'BIGPATENT, consisting of 1.3 million records of U.S. patent documents
+  along with human written abstractive summaries.
+  Each US patent application is filed under a Cooperative Patent Classification
+  (CPC) code. There are nine such classification categories:
+  A (Human Necessities), B (Performing Operations; Transporting),
+  C (Chemistry; Metallurgy), D (Textiles; Paper), E (Fixed Constructions),
+  F (Mechanical Engineering; Lightning; Heating; Weapons; Blasting),
+  G (Physics), H (Electricity), and
+  Y (General tagging of new or cross-sectional technology)'
+license: 35 USC 2
+homepage: https://evasharma.github.io/bigpatent/
+lang: en
+category: formal
+domain: patent
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    publication_number: str
+
+fetch:
+  data_sources:
+    train: bigPatentData/train.tar.gz
+    test: bigPatentData/test.tar.gz
+    val: bigPatentData/val.tar.gz
+
+  loader:
+    multiprocessing_at: _load_archive
+    filetype: gz
+    data:
+      field: 
+      item:
+        publication_number: publication_number
+        text: 
+          - abstract
+          - description
+
+pipeline:
+  _transform_:
+    # - aggregate_columns
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - filter_length
+    - segment
+    - drop_duplicates
+
+  filter_length:
+    min_length: 30
+    # max_length: 10_000

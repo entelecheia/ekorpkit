@@ -1,0 +1,35 @@
+input_text: 
+RETRACTED : Effects of nanometer - sized silver materials on survival response of Caspian roach ( Rutilus rutilus caspicus ) .
+
+target_text: 
+RETRACTED : Effects of nanometer - sized chem* silver *chem materials on survival response of Caspian roach ( Rutilus rutilus caspicus ) .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+The exploitation of and targeted interference with regular RNA turnover described here may constitute a general route for small RNAs to rapidly activate both coding and noncoding genes .
+
+target_text: 
+The exploitation of and targeted interference with regular RNA turnover described here may constitute a general route for small RNAs to rapidly activate both coding and noncoding genes .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Photoinitiators used in food packaging ink , such as 2 - isopropylthioxanthon ( 2 - ITX ) , have been shown to migrate into food and beverages .
+
+target_text: 
+Photoinitiators used in food packaging ink , such as chem* 2 - isopropylthioxanthon *chem ( chem* 2 - ITX *chem ) , have been shown to migrate into food and beverages .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Dietary obesity was shown to activate the proliferation of effector memory CD4 ( + ) T cells in adipose tissue .
+
+target_text: 
+Dietary obesity was shown to activate the proliferation of effector memory CD4 ( + ) T cells in adipose tissue .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Besides highlighting endocrine effects , a number of metabolic studies provide strong support for the idea that reactive species of BPA are formed in vitro and in vivo that can form covalent adducts with nucleophilic macromolecules and / or produce oxidative stress .
+
+target_text: 
+Besides highlighting endocrine effects , a number of metabolic studies provide strong support for the idea that reactive species of chem* BPA *chem are formed in vitro and in vivo that can form covalent adducts with nucleophilic macromolecules and / or produce oxidative stress .
+
+----------------------------------------------------------------------------------------------------

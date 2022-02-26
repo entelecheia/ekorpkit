@@ -1,0 +1,7 @@
+defaults:
+  - /method: aggregate_columns
+
+onto: text
+groupby:
+separator: '\n\n'
+verbose: ${oc.select:..verbose, true}

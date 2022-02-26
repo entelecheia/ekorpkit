@@ -1,0 +1,8 @@
+defaults:
+  - /method: save_samples
+
+apply_to: ${oc.select:..apply_to, text}
+num_samples_to_save: 2
+smaple_file_prfix:
+sample_length_to_print: 1000
+verbose: ${oc.select:..verbose, true}

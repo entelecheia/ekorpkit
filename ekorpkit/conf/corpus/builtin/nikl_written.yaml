@@ -1,0 +1,64 @@
+defaults:
+  - _build
+  - /pipeline/normalize/normalizer: formal_ko
+  - /pipeline/segment/segmenter: kss
+
+name: nikl_written
+fullname: NIKL Wrtten Text Corpus
+description: NIKL Wrtten Text Corpus
+license: National Institute of the Korean Language Corpus - Wrtten
+homepage: https://corpus.korean.go.kr
+version: 1.0.0
+lang: ko
+category: formal
+domain: mixed
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    doc_id: str
+    title: str
+    author: str
+    publisher: str
+    date: str
+    category: str
+
+fetch:    
+  data_dir: ${dir.archive}/datasets/source/nikl
+  data_sources: 
+    train: 
+      - NIKL_WRITTEN(v1.0).zip
+  loader:
+    filetype: json
+    data:
+      field: document
+      item:
+        doc_id: id
+        title: metadata.title
+        author: metadata.author
+        publisher: metadata.publisher
+        date: metadata.date
+        text: 
+          - paragraph[*].form
+      item_separator: '\n'
+    meta:
+      field: metadata
+      item:
+        category: category
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 10

@@ -1,0 +1,8 @@
+defaults:
+  - /method: load_dataframe
+
+filepath:
+filetype:
+data_dir: ${oc.select:task.data_dir, .}
+data_file:
+verbose: ${oc.select:..verbose, true}

@@ -1,0 +1,52 @@
+defaults:
+  - _build
+  - /fetch/downloader: _web
+  - /pipeline/normalize/normalizer: formal_en
+  - override /fetch/loader/parser: email
+
+name: enron_mail
+fullname: Enron Email Corpus
+lang: en
+category: email
+domain: econ
+description: Enron Email Dataset
+license: 
+homepage: https://www.cs.cmu.edu/~./enron/
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    date: str
+    subject: str
+    text: str
+
+fetch:
+  data_sources: 
+    train: '*.tar.gz'
+  downloader:
+    urls:
+      enron_mail_20150507.tar.gz: https://www.cs.cmu.edu/~./enron/enron_mail_20150507.tar.gz
+  loader:
+    multiprocessing_at: _load_archive
+    filetype: 
+    data:
+      field: 
+      item:
+        date: date
+        subject: subject
+        text: body
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - filter_length
+    # - segment
+    - drop_duplicates

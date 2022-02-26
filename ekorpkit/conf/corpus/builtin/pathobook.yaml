@@ -1,0 +1,40 @@
+defaults:
+  - _build
+  - /pipeline/normalize/normalizer: formal_en
+  - /pipeline/segment/segmenter: pysbd
+  - /fetch/downloader: pathobook
+  - override /fetch/loader: csv
+
+name: pathobook
+lang: en
+category: formal
+domain: bio
+fullname: Pathology Book Corpus
+description: Pathology Textbook Corpus
+license: 
+homepage: 
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    chapter: str
+
+fetch:
+  data_dir:  ${dir.dataset}/source/${.name}
+  data_sources: 
+    train: ${..downloader.output_file}
+
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - filter_length
+    - segment

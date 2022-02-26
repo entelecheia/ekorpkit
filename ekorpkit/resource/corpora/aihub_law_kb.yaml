@@ -1,0 +1,29 @@
+name: aihub_law_kb
+fullname: AiHub Law Knowledge Base
+lang: ko
+category: law
+description: AIHub/KB/Law
+license: Attribution-NonCommercial (CC-By-NC v3)
+homepage: https://aihub.or.kr
+version: 1.0.0
+num_docs: 17330
+num_segments: 23073
+num_sents: 52677
+num_words: 934777
+size_in_bytes: 10408424
+size_in_human_bytes: 9.93 MiB
+data_files_modified: '2022-01-28 05:27:03'
+info_updated: '2022-02-04 07:27:24'
+data_files:
+  train: aihub_law_kb-train.parquet
+meta_files:
+  train: null
+column_info:
+  keys:
+    id: id
+    text:
+    - text
+  data:
+    id: int
+    text: str
+  meta: null

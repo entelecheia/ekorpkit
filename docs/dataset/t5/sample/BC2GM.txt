@@ -1,0 +1,35 @@
+input_text: 
+The effect of water deprivation for 19 h on renal Na excretion of conscious adrenalectomized ( ADX ) sheep maintained on a constant intravenous infusion of aldosterone and cortisol ( ADX - constant steroid sheep ) was investigated .
+
+target_text: 
+The effect of water deprivation for 19 h on renal Na excretion of conscious adrenalectomized ( ADX ) sheep maintained on a constant intravenous infusion of aldosterone and cortisol ( ADX - constant steroid sheep ) was investigated .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+The p73pct1 / p85cdc10 complex binds both in vitro and in vivo to MCB but not SCB or E2F sites .
+
+target_text: 
+The gene* p73pct1 *gene / gene* p85cdc10 *gene complex binds both in vitro and in vivo to gene* MCB *gene but not gene* SCB *gene or gene* E2F sites *gene .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+We have isolated three mutant alleles of CDC4 ( cdc4 - 10 , cdc4 - 11 , and cdc4 - 16 ) which suppress the nuclear division defect of cdc20 - 1 cells .
+
+target_text: 
+We have isolated three mutant alleles of gene* CDC4 *gene ( gene* cdc4 - 10 *gene , gene* cdc4 - 11 *gene , and gene* cdc4 - 16 *gene ) which suppress the nuclear division defect of gene* cdc20 - 1 *gene cells .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Therefore more active and tolerable salvage regimens are needed .
+
+target_text: 
+Therefore more active and tolerable salvage regimens are needed .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+MutY is an adenine - DNA glycosylase with specificity for mismatches involving 8 - oxoguanine ( oG . A ) or guanine ( G . A ) .
+
+target_text: 
+gene* MutY *gene is an gene* adenine - DNA glycosylase *gene with specificity for mismatches involving 8 - oxoguanine ( oG . A ) or guanine ( G . A ) .
+
+----------------------------------------------------------------------------------------------------

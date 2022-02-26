@@ -1,0 +1,52 @@
+defaults:
+  - _build
+  - /fetch/downloader: kowiki
+  - /pipeline/normalize/normalizer: formal_ko
+  - /pipeline/segment/segmenter: kss
+  - override /fetch/loader/parser: jsonlines
+
+name: kowiki
+fullname: Korean Wikipedia Corpus
+description: 위키백과, 우리 모두의 백과사전
+license: 'CC Attribution / Share-Alike 3.0'
+homepage: https://ko.wikipedia.org
+version: 1.0.0
+lang: ko
+category: formal
+domain: general
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    curid: str
+    url: str
+    title: str
+
+fetch:
+  data_sources:
+    train: '**/*'
+  loader:
+    data:
+      field: 
+      item:
+        curid: id
+        url: url
+        title: title
+        text: text
+
+pipeline:        
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 30

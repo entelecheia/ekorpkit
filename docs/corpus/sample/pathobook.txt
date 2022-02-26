@@ -1,0 +1,10 @@
+Cancer is the second leading cause of death in the United States; only cardiovascular diseases exact a higher toll. 
+Even more agonizing than the mortality rate is the emotional and physical suffering inflicted by cancers. 
+Patients and the public often ask, "When will there be a cure for this scourge?" 
+The answer to this simple question is difficult, because cancer is not one disease but many disorders with widely different natural histories and responses to treatments. 
+Some cancers, such as Hodgkin lymphoma, are curable, whereas others, such as pancreatic adenocarcinoma, are virtually always fatal. 
+The only hope for controlling cancer lies in learning more about its causes and pathogenesis. 
+Fortunately, great strides have been made in understanding its molecular basis and some good news has emerged: cancer mortality for both men and women in the United States declined during the last decade of the twentieth century and has continued its downward course in the twenty-first. 
+In this chapter, we describe the vocabulary of tumor biology and pathology and then review the morphologic characteristics that define neoplasia and allow benign and malignant tumors to be identified and distinguished. 
+Also reviewed is the epidemiology of cancer, which provides a measure of the impact of cancer on human populations as well as clues to its environmental causes, insights that have led to effective prevention campaigns against certain cancers. 
+Building on this foundation, we then discuss the biologic properties of tumors and the molecular basis of carcinogenesis, emphasizing the critical role that genetic alterations play in the development of neoplasia

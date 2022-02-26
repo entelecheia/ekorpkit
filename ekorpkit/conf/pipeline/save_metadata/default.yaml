@@ -1,0 +1,8 @@
+defaults:
+  - /method: save_metadata
+
+filepath:
+filetype:
+column_info: ${oc.select:corpus.column_info, null}
+split_name:
+verbose: ${oc.select:..verbose, true}

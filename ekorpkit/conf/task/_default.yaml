@@ -1,0 +1,3 @@
+name:
+num_workers: ${oc.select:num_workers,1}
+verbose: ${oc.select:..verbose, true}

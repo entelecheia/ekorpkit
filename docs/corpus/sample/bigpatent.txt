@@ -1,0 +1,5 @@
+a steering lock assembly an assembly housing includes a non - linear passage that receives a cam shaft and / or cam pin . 
+the non - linear passage provides a steering lock assembly that is shorter than steering lock assemblies having an assembly housing with a linear passage for receiving the cam shaft and cam pin .
+----------------------------------------------------------------------------------------------------
+the present invention relates to an apparatus and method for measuring the volume of a flowing media . 
+the apparatus includes a pulse sensor and a temperature sensor wherein the temperature sensor and the pulse sensor are utilized to provide data for calculating the volume of the flowing media .

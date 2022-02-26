@@ -1,0 +1,42 @@
+eval_before:
+  effective_size: 'size_in_bytes * 3'
+sort_key: size_in_bytes
+calculate_weights_of: 
+  weight: num_examples
+aggregate:
+  - index: agg_total
+    group_by: 
+    sum: num_examples
+    names: 
+      name: '**Total**'
+      weight: 100
+convert_to_humanbytes:
+  - size_in_bytes
+format_columns:
+  weight: '{x:.2f}%'
+make_links:
+  column: name
+  link_format: '[{x}](.info/{x}.md)'
+headers:
+  name: Name
+  task: Task
+  domain: Domain
+  lang: Language
+  num_examples: '# Examples'
+  weight: Weight
+  size_in_bytes: Size
+styles:
+  - align: left
+    thousand_separator:
+  - align: center
+    thousand_separator:
+  - align: center
+    thousand_separator:
+  - align: center
+    thousand_separator:
+  - align: right
+    thousand_separator: ','
+  - align: right
+    thousand_separator: ',' 
+  - align: right
+    thousand_separator: ','     

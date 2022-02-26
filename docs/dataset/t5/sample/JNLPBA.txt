@@ -1,0 +1,35 @@
+input_text: 
+Since the AES proteins are part of a set of transcriptional repressors encoded by the Enhancer of split [ E ( spl ) ] genes , and since these repressors are activated to suppress cell differentiation in response to Notch receptors signalling , the AES peptides may represent a novel class of self - antigens that deserve further consideration as tumor Ag in epithelial cancers .
+
+target_text: 
+Since the gene* AES proteins *gene are part of a set of transcriptional repressors encoded by the gene* Enhancer of split [ E ( spl ) ] genes *gene , and since these repressors are activated to suppress cell differentiation in response to gene* Notch receptors *gene signalling , the AES peptides may represent a novel class of gene* self - antigens *gene that deserve further consideration as gene* tumor Ag *gene in epithelial cancers .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Interleukin - 12 ( IL - 12 ) is a cytokine that exhibits pleiotropic effects on lymphocytes and natural killer cells and has been shown to have promise for the immunotherapy of cancer .
+
+target_text: 
+gene* Interleukin - 12 *gene ( gene* IL - 12 *gene ) is a gene* cytokine *gene that exhibits pleiotropic effects on lymphocytes and natural killer cells and has been shown to have promise for the immunotherapy of cancer .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+PMA - but not TG - induced IL - 2R alpha is inhibited by the PKC inhibitor H7 , whereas TG - but not PMA - induced IL - 2R alpha was inhibited by cholera toxin , forskolin and 1 , 9 - dideoxy forskolin .
+
+target_text: 
+gene* PMA - but not TG - induced IL - 2R alpha *gene is inhibited by the gene* PKC *gene inhibitor H7 , whereas gene* TG - but not PMA - induced IL - 2R alpha *gene was inhibited by cholera toxin , forskolin and 1 , 9 - dideoxy forskolin .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+1 , 25 - Dihydroxyvitamin D3 receptors in peripheral blood mononuclear cells from patients with renal insufficiency .
+
+target_text: 
+gene* 1 , 25 - Dihydroxyvitamin D3 receptors *gene in peripheral blood mononuclear cells from patients with renal insufficiency .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Diamide plus BSO - induced thiol / disulfide imbalance was associated with a biphasic increase in neutrophil adhesion to HUVECs with peak responses observed at 15 minutes ( phase 1 ) and 240 minutes ( phase 2 ) .
+
+target_text: 
+Diamide plus BSO - induced thiol / disulfide imbalance was associated with a biphasic increase in neutrophil adhesion to HUVECs with peak responses observed at 15 minutes ( phase 1 ) and 240 minutes ( phase 2 ) .
+
+----------------------------------------------------------------------------------------------------

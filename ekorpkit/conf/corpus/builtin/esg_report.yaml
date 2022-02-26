@@ -1,0 +1,42 @@
+defaults:
+  - _build
+  - /fetch/downloader: esg_report
+  - /pipeline/normalize/normalizer: formal_ko
+  - /pipeline/segment/segmenter: kss
+  - override /fetch/loader: csv
+
+name: esg_report 
+fullname: Korean ESG Reports
+lang: ko
+category: formal
+domain: econ
+description: ESG Reports Corpus
+license: All Rights Reserved. 
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+    split: 
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    doc_id: str
+    filename: str
+
+fetch:
+  data_sources:
+    train: ${..downloader.output_file}
+
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:
+    - normalize
+    - segment
+    - filter_length
+    - drop_duplicates
+

@@ -1,0 +1,9 @@
+defaults:
+  - /method: save_dataframe
+
+filepath:
+filetype:
+task_dir: corpus_csv
+output_dir: ${oc.select:task.output_dir, .}/${.task_dir}
+output_file:
+verbose: ${oc.select:..verbose, true}

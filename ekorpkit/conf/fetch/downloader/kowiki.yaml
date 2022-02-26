@@ -1,0 +1,5 @@
+defaults:
+  - enwiki
+
+dump:
+  url: https://dumps.wikimedia.org/kowiki/latest/kowiki-latest-pages-articles.xml.bz2

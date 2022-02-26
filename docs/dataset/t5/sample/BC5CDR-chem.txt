@@ -1,0 +1,35 @@
+input_text: 
+Acute renal insufficiency after high - dose melphalan in patients with primary systemic amyloidosis during stem cell transplantation .
+
+target_text: 
+Acute renal insufficiency after high - dose chem* melphalan *chem in patients with primary systemic amyloidosis during stem cell transplantation .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+RESULTS : Pupillary dilation resulted in a statistically significant deterioration in CT and HCVA only .
+
+target_text: 
+RESULTS : Pupillary dilation resulted in a statistically significant deterioration in CT and HCVA only .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+METHOD : Case report .
+
+target_text: 
+METHOD : Case report .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+The dose of aspirin used in the RCTs varied , which prevented the estimation of the most appropriate dose for primary prevention .
+
+target_text: 
+The dose of chem* aspirin *chem used in the RCTs varied , which prevented the estimation of the most appropriate dose for primary prevention .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+CONCLUSIONS : The results give further support to the hypothesis that NO plays a role in motor behavior control and suggest that it may take part in the synaptic changes produced by antipsychotic treatment .
+
+target_text: 
+CONCLUSIONS : The results give further support to the hypothesis that chem* NO *chem plays a role in motor behavior control and suggest that it may take part in the synaptic changes produced by antipsychotic treatment .
+
+----------------------------------------------------------------------------------------------------

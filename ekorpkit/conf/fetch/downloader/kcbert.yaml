@@ -1,0 +1,8 @@
+defaults:
+  - _web
+
+urls:
+  kcbert-train.tar.gzaa: https://github.com/Beomi/KcBERT/releases/download/TrainData_v1/kcbert-train.tar.gzaa
+  kcbert-train.tar.gzab: https://github.com/Beomi/KcBERT/releases/download/TrainData_v1/kcbert-train.tar.gzab
+  kcbert-train.tar.gzac: https://github.com/Beomi/KcBERT/releases/download/TrainData_v1/kcbert-train.tar.gzac
+extract_command: 'cat kcbert-train.tar.gz* | tar -zxvpf -'

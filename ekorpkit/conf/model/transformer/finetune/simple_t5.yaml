@@ -1,0 +1,11 @@
+defaults:
+  - default
+  - config: t5
+  - prediction: t5
+
+_target_: ekorpkit.models.transformer.SimpleTrainerT5
+model_class: mixed
+cuda_device: 0
+_pipeline_:
+  - train
+  - predict

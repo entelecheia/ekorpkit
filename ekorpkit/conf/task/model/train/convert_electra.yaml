@@ -1,0 +1,21 @@
+# @package _global_
+defaults:
+  - /model/electra: base
+  - /model/pretrained: electra-discriminator
+  # - override /tokenizer: bert_wordpiece
+  - override /task/func: convert_electra
+
+task:
+  train:
+    convert_electra:
+      checkpoints_dir:
+      checkpoint_files:
+      torch_output_dir: ${oc.select:model.pretrained.model_dir,}
+      max_seq_length: 512
+      vocab_file: ${oc.select:tokenizer.output_dir,.}/vocab.txt
+      vocab_size: ${oc.select:tokenizer.vocab_size,32000}
+      load_weights_func:
+        _target_: load_tf2_weights_in_electra
+      tokenizer:
+        do_lower_case: ${tokenizer.do_lower_case}
+        model_max_length: ${..max_seq_length}

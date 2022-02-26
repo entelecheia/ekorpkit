@@ -1,0 +1,58 @@
+defaults:
+  - _build
+  - /pipeline/normalize/normalizer: formal_ko
+  - /pipeline/segment/segmenter: kss
+  - override /fetch/loader/parser: plaintext
+
+name: bigkinds
+fullname: Korean News Dataset from Big Kinds
+description: Korean News Dataset from Big Kinds
+license: 
+homepage: https://www.bigkinds.or.kr
+version: 1.0.0
+lang: ko
+category: formal
+domain: news
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    filename: str
+    # code: str
+    # date: str
+
+fetch:
+  data_sources:
+    train: '*.zip'
+  loader:
+    multiprocessing_at: _load_archive
+    decode_before_parse: true
+    filetype: 
+    data:
+      field: 
+      item:
+        filename: filename
+        text: text
+
+pipeline:
+  _transform_:
+    # - eval_columns
+    - reset_index
+  _preprocess_:  
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 10
+
+  eval_columns:
+    expressions: 
+      date: filename.str.split('.').str[1]
+      code: filename.str.split('.').str[0]

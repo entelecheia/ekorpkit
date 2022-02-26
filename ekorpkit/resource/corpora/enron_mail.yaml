@@ -1,0 +1,27 @@
+name: enron_mail
+fullname: Enron Email Corpus
+lang: en
+category: econ
+description: Enron Email Dataset
+homepage: https://www.cs.cmu.edu/~./enron/
+version: 1.0.0
+num_docs: 517350
+num_segments: 4331284
+num_sents: 17084408
+num_words: 134088460
+size_in_bytes: 947998158
+size_in_human_bytes: 904.08 MiB
+data_files_modified: '2022-01-14 06:42:52'
+info_updated: '2022-02-04 07:27:24'
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    date: str
+    subject: str
+    text: str

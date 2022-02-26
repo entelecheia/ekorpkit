@@ -1,0 +1,3 @@
+defaults:
+  - discriminator: base
+  - generator: base

@@ -1,0 +1,35 @@
+input_text: 
+The products of these reactions were likewise subcloned into the PCR II TA vector and evaluated by dideoxy - sequencing .
+
+target_text: 
+The products of these reactions were likewise subcloned into the PCR II TA vector and evaluated by dideoxy - sequencing .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Discussion
+
+target_text: 
+Discussion
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+104 , 939 < FFFD > 945 .
+
+target_text: 
+104 , 939 < FFFD > 945 .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Similarly , co - occurrence of transcription factor binding motifs is observed in gene promoters .
+
+target_text: 
+Similarly , co - occurrence of transcription factor binding motifs is observed in gene promoters .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Child / descendant domains score higher than the self hit for 21 . 8 % of sequences with both types of hits .
+
+target_text: 
+Child / descendant domains score higher than the self hit for 21 . 8 % of sequences with both types of hits .
+
+----------------------------------------------------------------------------------------------------

@@ -1,0 +1,40 @@
+defaults:
+  - _default
+  - /pipeline: dataframe_pipeline
+  - /pipeline/normalize/normalizer: formal_en
+  - /pipeline/segment/segmenter: pysbd
+  - override /cmd@_global_: dataframe_pipeline
+
+name: dataframe_pipeline
+
+pipeline:
+  _pipeline_:
+    - load_dataframe
+    - normalize
+    - filter_length
+    - split_dataframe
+    # - segment
+    # - concat_dataframes
+    # - drop_duplicates
+    - save_dataframe
+  load_dataframe:
+    data_dir: ${oc.select:corpus.data_dir, ${dir.corpus}}
+    data_file: pmc_noncomm/pmc_noncomm-train.parquet
+  save_dataframe:
+    output_dir: ${dir.project}/dataframe/tmp
+    output_file: ${..load_dataframe.data_file}
+  split_dataframe:
+    num_splits: 10
+  filter_length:
+    min_length: 30
+    max_length: 10_000
+  drop_duplicates:
+    apply_to:
+      - text
+  segment:
+    segmenter:
+      merge_lines: true
+      merge_level: article
+      verbose: true
+      max_split_length: 11_000
+  

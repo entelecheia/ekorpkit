@@ -1,0 +1,61 @@
+defaults:
+  - _build
+  - /pipeline/normalize/normalizer: formal_ko
+  - /pipeline/segment/segmenter: kss_merge_article
+  - override /fetch/loader/parser: html_to_json
+
+name: kaist
+lang: ko
+category: formal
+domain: general
+fullname: KAIST Raw corpus
+description: KAIST Corpus consist of 70,000,000 words Korean raw texts which were extracted from various genre such as novel, non-literature, article etc.
+license: MIT License
+homepage: http://semanticweb.kaist.ac.kr
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    filename: str
+    version: str
+    title: str
+    author: str
+    date: str
+    publisher: str
+    kdc: str
+
+fetch:
+  data_sources:
+    train: SWRC.zip
+  loader:
+    multiprocessing_at: _load_archive
+    filetype: 
+    data:
+      field: 
+      item:
+        filename: filename
+        version: version
+        title: title
+        author: author
+        date: date
+        publisher: publisher
+        kdc: kdc
+        text: tdmsfiletext
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 10

@@ -1,0 +1,52 @@
+defaults:
+  - _build
+  - /fetch/downloader: enwiki
+  - /pipeline/normalize/normalizer: formal_en
+  - /pipeline/segment/segmenter: pysbd
+  - override /fetch/loader/parser: jsonlines
+
+name: enwiki
+fullname: English Wikipedia Corpus
+description: Wikipedia
+lang: en
+category: formal
+domain: general
+license: 'CC Attribution / Share-Alike 3.0'
+homepage: https://en.wikipedia.org
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    curid: str
+    url: str
+    title: str
+
+fetch:
+  data_sources:
+    train: '**/*'
+  loader:
+    data:
+      field: 
+      item:
+        curid: id
+        url: url
+        title: title
+        text: text
+
+pipeline:        
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 30

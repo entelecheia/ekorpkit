@@ -1,0 +1,10 @@
+We relate the theory of passport options with general principles from martingale theory as well as with
+the theory of Bessel processcs. 
+The calculation of the price of a passport option leads to an equality
+between two norms on continuous martingales. 
+We also solve the discrete time case for passport options.
+----------------------------------------------------------------------------------------------------
+El presente trabajo trata de determinar el potencial que subyace en la
+marca como instrumento generador de valor para el sector ovino vasco, y
+analiza en qué medida el sector está aprovechando ese potencial. 
+El

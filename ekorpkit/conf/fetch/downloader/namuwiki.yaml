@@ -1,0 +1,11 @@
+defaults:
+  - enwiki
+
+output_file: ${.name}${iif:${.compress},.csv.bz2,.csv}
+compress: true
+extract:
+  _target_: extract_namuwiki
+dump:
+  _target_: google_download_un7z
+  url: 1RQqeiAk-vrNToa66qHVQWKXPb-e_mKJ6
+  dump_file: ${..name}.json.7z

@@ -1,0 +1,5 @@
+name: verbcl
+description: 'VerbCL: A Dataset of Verbatim Quotes for Highlight Extraction in Case Law'
+license: 
+homepage: https://github.com/j-rossi-nl/verbcl
+version: 1.0.0

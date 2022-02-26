@@ -1,0 +1,2 @@
+_target_: ekorpkit.io.parse.json.load_json_to_list
+jpath_expression: '$.*'

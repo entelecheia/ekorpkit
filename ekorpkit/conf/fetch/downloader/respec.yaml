@@ -1,0 +1,7 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.download.rsync.rsync
+source: rsync://rsync.repec.org/RePEc-ReDIF/
+options: '-va --include "*/" --include="*.rdf" --include="*.redif" --exclude="*"'
+# rsync -va --include "*/" --include="*.rdf" --include="*.redif" --exclude="*" rsync://rsync.repec.org/RePEc-ReDIF/  RePEc

@@ -1,0 +1,5 @@
+defaults:
+  - /method: reset_index
+
+index_column_name: id
+verbose: ${oc.select:..verbose, true}

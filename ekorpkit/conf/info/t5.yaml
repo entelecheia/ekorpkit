@@ -1,0 +1,26 @@
+defaults:
+  - t5_build
+  - table: t5_info
+  - override /cmd@_global_: info
+
+name: t5
+data_dir: ${dir.dataset}/${.name}
+base_dir:
+info_source_dir: ekorpkit/conf/dataset/${.name}
+info_archive_dir: ekorpkit/resources/datasets/${.name}
+info_link_prefix: ../../../../${.info_archive_dir}
+builtins_path: ekorpkit/conf/dataset/preset/builtins.yaml
+doc_output_dir: docs/dataset/${.name}
+sample_output_dir: ${.doc_output_dir}/sample
+sample_max_lines:
+info_output_dir: ${.doc_output_dir}/info
+info_files: ${.data_dir}/**/info-*.yaml
+markdown_template: '# {name}\n
+  \n<!-- MARKDOWN-AUTO-DOCS:START (CODE:src={src_link}) -->
+  \n<!-- MARKDOWN-AUTO-DOCS:END -->\n'
+# markdown_template: '# {name}\n\n<!-- MARKDOWN-AUTO-DOCS:START (CODE:src={src_path}) -->\n<!-- MARKDOWN-AUTO-DOCS:END -->\n\n#### Sample text: 10 lines of the corpus\n\n<!-- MARKDOWN-AUTO-DOCS:START (CODE:src={sample_text_path}) -->\n<!-- MARKDOWN-AUTO-DOCS:END -->\n'
+# info_fig_file: docs/figs/ekorpkit_${.name}.png
+readme_md_file: ${.doc_output_dir}/README.md
+readme_md_template: '## Datasets for T5\n
+  \n{info_table}\n'
+  # \n![ekorpkit corpus](../figs/ekorpkit_${.name}.png)\n'

@@ -1,0 +1,32 @@
+defaults:
+  - override /cmd@_global_: extract_nouns
+
+output_dir: ${task.output_dir}
+filename_prefix: nouns_${corpus.name}
+extacted_nouns_file: ${.filename_prefix}_m${.max_noun_length}n${.min_noun_frequency}e${.min_eojeol_frequency}_extracted.csv
+filterd_nouns_file: ${.filename_prefix}_m${.max_noun_length}n${.min_noun_frequency}e${.min_eojeol_frequency}_filtered.txt
+stopwords_file: 
+addwords_file: 
+prebuilt_dic_dir: /workspace/data/resource/mecab-ko-dic-2.1.1-20180720
+prebuilt_dic_file_pattern: '*.csv'
+prebuilt_dic_files: 
+  - MAG.csv 
+  - MAJ.csv 
+  - MM.csv 
+  - NNB.csv 
+  - VA.csv 
+  - VV.csv 
+  - VX.csv 
+  - XR.csv 
+  - XSA.csv 
+  - XSN.csv 
+  - XSV.csv
+min_noun_frequency: 30
+min_eojeol_frequency: 20
+min_noun_length: 3
+max_noun_length: 15
+min_noun_score: 0.5
+min_keep_score: 0.6
+keep_noun_patten: '^[a-zA-Z&]*[ㄱ-ㅎㅏ-ㅣ가-힣&]+[a-zA-Z&]*$'
+filter_only: false
+save_as_pynori_userdict: false

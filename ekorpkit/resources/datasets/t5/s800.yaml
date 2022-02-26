@@ -1,0 +1,22 @@
+name: s800
+domain: biomed
+task: ner
+lang: en
+num_examples: 8193
+size_in_bytes: 1236526
+size_in_human_bytes: 1.18 MiB
+data_files_modified: '2022-02-26 03:03:11'
+info_updated: '2022-02-26 03:06:01'
+data_files:
+  train: s800-train.csv
+  dev: s800-dev.csv
+  test: s800-test.csv
+column_info:
+  keys:
+    id: id
+    text: input_text
+  data:
+    id: int
+    prefix: str
+    input_text: str
+    target_text: str

@@ -1,0 +1,60 @@
+defaults:
+  - _build
+  - /fetch/downloader: bok
+  - /pipeline/normalize/normalizer: formal_ko
+  - override /fetch/loader: csv
+
+name: bok_minutes
+fullname: BOK MPB Minutes
+lang: ko
+category: formal
+domain: econ
+description: BOK Minutes Corpus
+license: "Bank of Korea"
+homepage: https://www.bok.or.kr
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    mdate: str
+    rdate: str
+    filename: str
+
+
+fetch:
+  data_sources: 
+    train: ${..downloader.output_file}
+
+pipeline:
+  _transform_:
+    - combine_columns
+    - aggregate_columns
+    - reset_index
+  _preprocess_:
+    - fillna
+    - normalize
+    # - segment
+    # - replace_whitespace
+    # - replace_regex
+    - filter_length
+    - drop_duplicates
+
+  combine_columns:
+    into: text
+    columns:
+      - section
+      - text
+    separator: '\n'
+  aggregate_columns:
+    onto: text
+    groupby:
+      - mdate
+      - rdate
+      - filename
+    separator: '\n\n'

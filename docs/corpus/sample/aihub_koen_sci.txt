@@ -1,0 +1,3 @@
+Similarly, a ground member 630 may also be mounted on the second surface 625 of the second circuit board 620.
+----------------------------------------------------------------------------------------------------
+The cleaning robot 100 may obtain a distance value with an object located on a driving path.

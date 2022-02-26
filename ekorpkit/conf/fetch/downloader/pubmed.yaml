@@ -1,0 +1,6 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.fetch.loader.pubmed.PubMed
+subset: oa_comm
+# force_download: false

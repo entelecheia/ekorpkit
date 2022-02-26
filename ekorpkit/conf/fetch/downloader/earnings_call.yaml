@@ -1,0 +1,7 @@
+defaults:
+  - _default
+  
+_target_: ekorpkit.io.fetch.loader.seekingalpha.EarningsCall
+output_file: ${.name}.csv.bz2
+input_file: ${dir.archive}/datasets/source/byod/sa/earnings.tar
+filetype: .html

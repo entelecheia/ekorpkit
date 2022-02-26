@@ -1,0 +1,21 @@
+name: ${corpus.name}_bwp_${oc.select:.name_suffix,uncased}_v${.vocab_size}
+name_suffix: ${iif:${.do_lower_case},uncased,cased}
+train_files: 
+input_dir: ${corpus.corpus_dir}
+output_dir: ${dir.model}/tokenizers/${.name}
+model_type: bert
+clean_text: true
+handle_chinese_chars: false
+strip_accents: ${.do_lower_case}
+do_lower_case: true
+special_tokens:
+  - '[PAD]'
+  - '[UNK]'
+  - '[CLS]'
+  - '[SEP]'
+  - '[MASK]'
+unused_token_num: 994  
+wordpieces_prefix: '##'
+vocab_size: 32000
+limit_alphabet: 5000
+min_frequency: 2

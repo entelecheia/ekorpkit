@@ -1,0 +1,9 @@
+# defaults:
+#   - _web
+
+# urls:
+#   KCC150.txt.gz: http://nlp.kookmin.ac.kr/kcc/KCC150_Korean_sentences_UTF8.txt.gz
+#   KCCq28.zip: http://nlp.kookmin.ac.kr/kcc/KCCq28_Korean_sentences_UTF8_v2.zip
+#   KCC940.txt.gz:  http://nlp.kookmin.ac.kr/kcc/KCC940_Korean_sentences_UTF8_V2.txt.gz
+#   KCC460_EUCKR.txt.gz: http://203.246.112.72/kcc/KCC460_EUCKR.txt.gz
+# iconv -f CP949 -t UTF-8//IGNORE KCC460_EUCKR.txt > KCC460.txt

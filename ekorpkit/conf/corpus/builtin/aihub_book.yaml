@@ -1,0 +1,70 @@
+defaults:
+  - _build
+  - /pipeline/normalize/normalizer: formal_ko
+  - /pipeline/segment/segmenter: kss
+
+name: aihub_book
+fullname: AIHub Book Summary
+description: AIHub/도서자료 요약
+license: Attribution-NonCommercial (CC-By-NC v3)
+homepage: https://aihub.or.kr
+lang: ko
+category: book
+domain: mixed
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+    summary: str
+  meta:
+    id: int
+    passage_id: str
+    doc_type: str
+    doc_id: str
+    title: str
+    author: str
+    publisher: str
+    published_year: str
+    kdc_label: str
+    kdc_code: str
+    chapter: str
+
+fetch:
+  data_dir:  ${dir.archive}/datasets/source/aihub/도서자료 요약
+  data_sources: 
+    train: Training/[원천]도서요약_train.zip
+    test: Validation/[원천]도서요약_valid.zip
+  loader:
+    filetype: json
+    data:
+      field: 
+      item:
+        passage_id: passage_id
+        doc_type: metadata.doc_type
+        doc_id: metadata.doc_id
+        title: metadata.doc_name
+        author: metadata.author
+        publisher: metadata.publisher
+        published_year: metadata.published_year
+        kdc_label: metadata.kdc_label
+        kdc_code: metadata.kdc_code
+        chapter: chapter
+        text: 
+          - passage
+          - summary
+      item_separator: '\n\n'
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 10

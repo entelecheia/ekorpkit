@@ -1,0 +1,5 @@
+defaults:
+  - default
+
+_target_: ekorpkit.corpora.loader.Corpora
+data_dir: ${dir.corpus}

@@ -1,0 +1,32 @@
+name: esg_report
+fullname: Korean ESG Reports
+lang: ko
+category: econ
+description: ESG Reports Corpus
+license: All Rights Reserved.
+version: 1.0.0
+num_docs: 15586
+num_segments: 15586
+num_sents: 119058
+num_words: 2488615
+size_in_bytes: 25340170
+size_in_human_bytes: 24.17 MiB
+data_files_modified: '2022-02-04 01:35:15'
+meta_files_modified: '2022-01-18 04:56:13'
+info_updated: '2022-02-04 07:27:23'
+data_files:
+  train: esg_report-train.parquet
+meta_files:
+  train: meta-esg_report-train.parquet
+column_info:
+  keys:
+    id: id
+    text: text
+    split: null
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    doc_id: str
+    filename: str

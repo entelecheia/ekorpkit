@@ -1,0 +1,9 @@
+# @package _global_
+defaults:
+  - default
+  - override /tokenizer: bert_wordpiece
+
+task:
+  lmdata:
+    build_vocab:
+      _target_: ekorpkit.tasks.lmdata.build_vocab

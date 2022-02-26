@@ -1,0 +1,6 @@
+defaults:
+  - /method: remove_startswith
+
+apply_to: ${oc.select:..apply_to, text}
+startswith:
+verbose: ${oc.select:..verbose, true}

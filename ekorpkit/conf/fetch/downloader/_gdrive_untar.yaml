@@ -1,0 +1,6 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.download.web.download_from_gdrive_untar
+urls: 
+  bigPatentData.tar.gz: 1J3mucMFTWrgAYa3LuBZoLRR3CzzYD3fa

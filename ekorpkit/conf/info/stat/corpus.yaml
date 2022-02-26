@@ -1,0 +1,31 @@
+defaults:
+  - /method/len_wospc: default
+  - /method/len_bytes: default
+  - /method/len_words: default
+  - /method/len_segments: default
+  - /method/len_sents: default
+
+num_workers: ${oc.select:task.num_workers, 1}
+key_columns: ${oc.select:..key_columns, ''}
+num_columns:
+  num_bytes_wospc: len_wospc
+  num_bytes: len_bytes
+  num_words: len_words
+  num_sents: len_sents
+  num_segments: len_segments
+agg_funcs:
+  num_bytes_wospc: [sum]
+  num_bytes: [count, sum, median, max, min]
+  num_words: [sum, median, max, min]
+  num_sents: [sum, median]
+  num_segments: [sum, median]
+rename_columns:
+  num_bytes_count: num_docs
+  num_words_sum: num_words
+  num_sents_sum: num_sents
+  num_segments_sum: num_segments
+  num_bytes_wospc_sum: num_bytes_wospc
+  num_bytes_sum: num_bytes
+convert_to_humanbytes:
+  num_bytes_wospc: human_bytes_wospc
+  num_bytes: human_bytes

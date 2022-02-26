@@ -1,0 +1,11 @@
+name: ${oc.select:.builtin.name, null} 
+data_dir: ${oc.select:.builtin.data_dir, ${dir.corpus}}
+filetype: ${oc.select:.builtin.filetype, null}
+autoload: true
+verbose: ${oc.select:..verbose, true}
+segment_separator: ${oc.select:.builtin.segment_separator, '\n\n'}
+sentence_separator: ${oc.select:.builtin.sentence_separator, '\n'}
+column_info:
+  keys: ${oc.select:..builtin.column_info.keys, null}
+  data: ${oc.select:..builtin.column_info.data, null}
+  meta: ${oc.select:..builtin.column_info.meta, null}

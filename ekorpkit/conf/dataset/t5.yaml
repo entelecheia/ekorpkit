@@ -1,0 +1,10 @@
+defaults:
+  - default
+
+name: ${oc.select:.t5.name, ''}
+data_dir: ${oc.select:.t5.data_dir, ${dir.dataset}/t5}
+filetype: ${oc.select:.t5.filetype, .csv}
+autoload: true
+column_info:
+  keys: ${oc.select:..t5.column_info.keys, null}
+  data: ${oc.select:..t5.column_info.data, null}

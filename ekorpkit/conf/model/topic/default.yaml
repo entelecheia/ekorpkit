@@ -1,0 +1,24 @@
+_target_: ekorpkit.models.topic.TopicModel
+model_name:
+model_dir:
+output_dir:
+corpus_names:
+corpus_dir:
+text_key: text
+id_keys: 
+  - id
+  - chunk_no
+corpus_key_filename:
+num_workers: 0
+ngram_path:
+ngram_min_cf: 10
+ngram_min_df: 10
+ngram_max_len: 5
+ngram_max_cand: 5000
+ngram_min_score: -1
+ngram_normalized: true
+ngram_delimiter: _
+ngram_doc_path:
+stopwords_path:
+min_word_len: 2
+word_prior_path:

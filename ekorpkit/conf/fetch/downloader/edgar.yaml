@@ -1,0 +1,6 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.fetch.loader.edgar.EDGAR
+base_url: https://zenodo.org
+url: https://zenodo.org/record/5589195

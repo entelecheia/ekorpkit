@@ -1,0 +1,16 @@
+# @package _global_
+defaults:
+  - override /task/func: topic
+
+task:
+  export_samples:
+    corpus_names:
+    topic_nums:  
+    model_id: 
+    groupby_cols:
+      - corpus_filename
+      - id
+    num_samples_per_topic: 100
+    num_tests_per_topic: 20
+    num_exps_per_topic: 2
+    min_topic_ratio: 0.5

@@ -1,0 +1,3 @@
+model_type: t5
+model_name: SciFive-base-Pubmed
+model_uri: razent/SciFive-base-Pubmed

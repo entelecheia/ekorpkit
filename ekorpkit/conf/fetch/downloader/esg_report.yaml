@@ -1,0 +1,14 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.fetch.loader.esgreport.ESGReport
+input_path: ${.output_dir}/raw/*.txt
+output_dir: ${..data_dir}
+output_file: ${.name}${iif:${.compress},.csv.bz2,.csv}
+compress: true
+txt_info:
+  doc_id_prefix: 'esg_'
+  doc_id_format: ${.doc_id_prefix}{file_num:06d}_{seg_num:04d}
+  initial_file_num: 0
+  file_num_increment: 10    
+  segment_separator: '\n\n'

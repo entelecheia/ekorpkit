@@ -1,0 +1,4 @@
+name: eKorpkit
+author: entelecheia
+version: 0.1.1.1
+description: This package provides corpus management tools such as extraction, trasformation, and tokenization.

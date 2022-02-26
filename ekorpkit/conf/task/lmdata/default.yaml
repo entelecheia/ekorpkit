@@ -1,0 +1,7 @@
+# @package _global_
+defaults:
+  - override /task/func: lmdata
+
+task:
+  output_dir: ${dir.project}/data
+  subtask: ${oc.dict.keys:task.lmdata}

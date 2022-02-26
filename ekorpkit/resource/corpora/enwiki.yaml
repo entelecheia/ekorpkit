@@ -1,0 +1,27 @@
+name: enwiki
+fullname: English Wikipedia Corpus
+lang: en
+description: Wikipedia
+license: CC Attribution / Share-Alike 3.0
+homepage: https://en.wikipedia.org
+version: 1.0.0
+num_docs: 6386285
+num_segments: 6387926
+num_sents: 56894619
+num_words: 2401288893
+size_in_bytes: 14834952500
+size_in_human_bytes: 13.82 GiB
+data_files_modified: '2022-01-13 19:19:58'
+info_updated: '2022-02-04 07:27:23'
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    curid: str
+    url: str
+    title: str

@@ -1,0 +1,18 @@
+defaults:
+  - gdrive-conll
+
+name: bc4chemd
+category: biomed
+loader:
+  source_urls: 
+    train: 1_puElo_L_48utYXj3ZF3HyJ3VltrHk3I
+    dev: 1_sGGsw2RBqh6Stzuyac20s8o7htPk7af
+    test: 1_sCqymn3VOoEpLvbiRuTkz5e95hWvhGM
+  source_files:
+    train: train.txt
+    dev: dev.txt
+    test: test.txt
+  column_dtypes:
+    words: str
+    labels: str
+  sep: \t

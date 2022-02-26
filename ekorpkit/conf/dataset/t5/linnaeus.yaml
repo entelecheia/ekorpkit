@@ -1,0 +1,4 @@
+defaults:
+  - _scifive_finetune
+
+name: linnaeus

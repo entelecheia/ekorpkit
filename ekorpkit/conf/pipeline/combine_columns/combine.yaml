@@ -1,0 +1,7 @@
+defaults:
+  - /method: combine_columns
+
+into: text
+columns:
+separator: '\n'
+verbose: ${oc.select:..verbose, true}

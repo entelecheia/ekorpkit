@@ -1,0 +1,5 @@
+model_type: electra
+model_name: 
+model_dir: ${dir.model}/${.model_type}/${.model_name}
+model_checkpoint: 
+model_uri: ${.model_dir}/${iif:${.model_checkpoint},${.model_checkpoint}/,}discriminator

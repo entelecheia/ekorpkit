@@ -1,0 +1,28 @@
+name: earnings_call
+fullname: Seeking Alpha Earnings Transcripts
+lang: en
+category: econ
+description: Seeking Alpha Earnings Transcripts
+license: © 2021 Seeking Alpha
+homepage: https://seekingalpha.com/earnings/earnings-call-transcripts
+version: 1.0.0
+num_docs: 171025
+num_segments: 894582
+num_sents: 32457577
+num_words: 1162341031
+size_in_bytes: 6770632406
+size_in_human_bytes: 6.31 GiB
+data_files_modified: '2022-01-08 11:42:48'
+info_updated: '2022-02-04 07:27:23'
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    title: str
+    filename: str
+    nos: str

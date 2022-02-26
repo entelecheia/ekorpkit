@@ -1,0 +1,21 @@
+defaults:
+  - parser: json
+
+_target_: ekorpkit.io.load.data.load_data
+name: ${oc.select:..name,''}
+data_dir: ${oc.select:..data_dir, ''}
+data_souces: ${oc.select:..data_sources, ''}
+num_workers: ${oc.select:task.num_workers,100}
+decompressor:
+multiprocessing_at: load_data
+decode_before_parse: true
+filetype:
+limit: 
+data:
+  field: 
+  item:
+  item_separator: '\n\n'
+  explode: false
+meta:
+  field: 
+  item:

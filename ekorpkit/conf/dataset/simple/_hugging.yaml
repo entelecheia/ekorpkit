@@ -1,0 +1,11 @@
+defaults:
+  - default
+
+loader: 
+  _target_: ekorpkit.datasets.loader.load_hf_dataset
+  subset:
+  split:
+    train: train
+    dev: dev
+    test: test
+  column_mapping:

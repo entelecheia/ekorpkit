@@ -1,0 +1,30 @@
+defaults:
+  - override /cmd@_global_: lmdata
+
+_target_: ekorpkit.tasks.lmdata.sharding
+name: ${corpus.name}
+n_processes: 1
+corpus:
+  corpus_dir: ${corpus.corpus_dir}
+  corpus_files: ${oc.select:corpus.corpus_files,}
+  corpus_filetype: ${oc.select:corpus.corpus_filetype,'csv'}
+output:
+  output_dir: ${task.output_dir}/sharded_train_${..n_shards.train}_test_${..n_shards.test}_fraction_${..dataset.fraction_test_set}${iif:${..dataset.shuffle_dataset},_seed_${..dataset.seed},}/${..name}
+  name_prefix: ${.output_dir}/${..name}
+  identifier:
+    train: _train
+    test: _test
+  file_extension: .txt
+n_shards:
+  train:
+  test:
+dataset:
+  download_mode: reuse_dataset_if_exists
+  fraction_test_set: 0.1
+  min_tokens: 5
+  shuffle_dataset: true
+  seed: 123
+segmenter:
+  _target_: ekorpkit.models.preprocessor.segmenter.SimpleSegmenter
+  separator: '\n\n'
+  remove_newlines: true

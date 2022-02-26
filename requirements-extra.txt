@@ -1,0 +1,68 @@
+# FORMAT
+# Put your extra requirements here in the following format
+#
+# package[version_required]	: tag1, tag2, ...
+# ex) pip install -e .\[modin\]
+
+fugashi					: tokenize
+mecab_ko_dic			: tokenize
+pysbd					: tokenize
+pynori					: tokenize
+soynlp					: tokenize
+nltk					: tokenize
+sacremoses				: tokenize
+emoji					: tokenize
+sentencepiece			: tokenize
+
+tomotopy			  	: topic
+wordcloud				: topic
+pyLDAvis				: topic
+
+pyhwp					: parser
+wikiextractor			: parser
+namu-wiki-extractor		: parser
+pdfplumber				: parser
+mail-parser				: parser
+pubmed_parser			: parser
+jsonpath-ng				: parser
+beautifulsoup4			: parser
+html-to-json			: parser
+fasttext-langdetect		: parser
+
+simpletransformers		: transformers, model
+datasets				: transformers, dataset, model
+# torch					: transformers
+tensorflow				: transformers, model
+tf-nightly 				: transformers, model
+google-api-python-client	: transformers, model
+
+modin					: pandas
+ray						: pandas
+# dask					: pandas
+# swifter					: pandas
+
+# sysrsync				: fetch
+wget					: fetch
+py7zr					: fetch
+zstandard				: fetch
+
+pymongo					: database
+
+# py-markdown-table		: doc
+pytablewriter			: doc
+plotly					: doc
+kaleido					: doc
+rich					: doc
+matplotlib				: doc
+
+tensorflow-datasets		: dataset
+tensorflow-io			: dataset
+lsh 					: dataset
+orjson 					: dataset, parser
+datasketch 				: dataset
+pysimdjson				: dataset, parser
+p_tqdm					: dataset, parser
+joblib					: dataset, parser
+ftfy					: dataset, parser
+jsonlines				: dataset, parser
+# guesslang 				: dataset, parser

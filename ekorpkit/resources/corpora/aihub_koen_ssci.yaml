@@ -1,0 +1,42 @@
+name: aihub_koen_ssci
+fullname: AiHub Traslation - Social Science Field
+lang: ko
+category: translation
+description: AIHub Korean to English Translation Corpus - Social Science Field
+license: Attribution-NonCommercial (CC-By-NC v3)
+homepage: https://aihub.or.kr
+version: 1.0.0
+num_docs: 1361845
+num_docs_before_processing: 1361845
+num_segments: 1361845
+num_sents: 1361845
+num_words: 19104237
+size_in_bytes: 195549256
+num_bytes_before_processing: 195603504
+size_in_human_bytes: 186.49 MiB
+data_files_modified: '2022-02-21 09:17:03'
+meta_files_modified: '2022-02-21 09:16:59'
+info_updated: '2022-02-26 03:06:07'
+data_files:
+  train: aihub_koen_ssci-train.parquet
+  test: aihub_koen_ssci-test.parquet
+meta_files:
+  train: meta-aihub_koen_ssci-train.parquet
+  test: meta-aihub_koen_ssci-test.parquet
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    sn: str
+    file_name: str
+    data_set: stgr
+    domain: str
+    subdomain: str
+    source: str
+    style: str
+    english: str

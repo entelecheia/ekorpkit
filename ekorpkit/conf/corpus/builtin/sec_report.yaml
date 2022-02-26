@@ -1,0 +1,44 @@
+defaults:
+  - _build
+  - /fetch/downloader: sec_report
+  - /pipeline/normalize/normalizer: formal_ko
+  - /pipeline/segment/segmenter: kss
+  - override /fetch/loader: csv
+
+name: sec_report
+fullname: Korean Financial Analyst Report Corpus
+lang: ko
+category: formal
+domain: econ
+description: Analyst Reports Corpus
+license: All Rights Reserved.
+homepage: https://www.fnguide.com
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+    split: 
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    rid: str
+    rdate: str
+    type: str
+    subtype: str
+
+fetch:
+  data_sources:
+    train: ${..downloader.output_file}
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:
+    - normalize
+    - segment
+    - filter_length
+    - drop_duplicates
+

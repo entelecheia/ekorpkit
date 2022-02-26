@@ -1,0 +1,8 @@
+defaults:
+  - /method: explode_splits
+
+apply_to: text
+id_key: id
+split_key: sent_id
+separator: '\n'
+verbose: ${oc.select:..verbose, true}

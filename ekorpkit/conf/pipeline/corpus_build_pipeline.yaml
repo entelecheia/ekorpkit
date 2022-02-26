@@ -1,0 +1,33 @@
+defaults:
+  - combine_columns: combine
+  - aggregate_columns: aggregate
+  - rename_columns: rename
+  - eval_columns: default
+  - reset_index: reset
+  - save_metadata: default
+
+  - fillna: fillna
+  - normalize: normalize
+  - segment: segment
+  - replace_whitespace: whitespace
+  - replace_regex: regex
+  - remove_startswith: default
+  - filter_length: default
+  - drop_duplicates: drop
+  - save_samples: samples
+  - save_dataframe: default
+  
+_transform_:
+  - reset_index
+  - save_metadata
+_preprocess_:
+  - fillna
+  # - normalize
+  # - segment
+  # - replace_whitespace
+  # - replace_regex
+  - filter_length
+  - drop_duplicates
+apply_to: ${oc.select:..column_info.keys.text, text}
+use_batcher: true
+verbose: ${oc.select:..verbose, true}

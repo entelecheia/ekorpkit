@@ -1,0 +1,12 @@
+defaults:
+  - _default
+  
+_target_: ekorpkit.io.fetch.loader.bok.BOKMniutes
+output_file: ${.name}${iif:${.compress},.csv.bz2,.csv}
+scrap:
+  base_url: http://bok.or.kr
+  url: https://www.bok.or.kr/portal/bbs/B0000245/news.rss?menuNo=200761
+  from_date: 20171201
+  file_prefix: BOK
+  raw_hwp_dir: ${..output_dir}/raw/hwp
+  raw_txt_dir: ${..output_dir}/raw/txt

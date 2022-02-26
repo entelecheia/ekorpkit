@@ -1,0 +1,20 @@
+defaults:
+  - gdrive-conll
+
+name: bc5cdr
+category: biomed
+loader:
+  source_urls: 
+    train: 1aShIT1B_8MYt-Y5Z76JVGIWSyO44N24Y
+    dev: 1aSgBUC3L5kPgb0Bm4HA6E_PIQaGVTnAT
+    test: 1aSVI6zx39eHThykrgZX518QWzvOgUHBp
+  source_files:
+    train: train.txt
+    dev: dev.txt
+    test: test.txt
+  column_dtypes:
+    words: str
+    pos: str
+    chunk: str
+    labels: str
+  sep: \t

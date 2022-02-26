@@ -1,0 +1,56 @@
+defaults:
+  - _build
+  - /fetch/downloader: glassdoor
+  - /pipeline/normalize/normalizer: formal_en
+  - /pipeline/segment/segmenter: pysbd
+  - override /fetch/loader/parser: jsonlines
+
+name: gd_review
+fullname: Glassdoor Employee Reviews
+description: Glassdoor Employee Reviews
+license: Copyright © 2008-2021, Glassdoor, Inc.
+homepage: https://www.glassdoor.com
+version: 1.0.0
+lang: en
+category: informal
+domain: general
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    date: str
+    author: str
+    title: str
+    link: str
+
+fetch:
+  data_sources:
+    train: ${..downloader.output_file}
+  loader:
+    multiprocessing_at: parse_data
+    data:
+      field: 
+      item:
+        review_id: id
+        date: date
+        author: author
+        link: link
+        title: title
+        text: text
+
+pipeline:        
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 30

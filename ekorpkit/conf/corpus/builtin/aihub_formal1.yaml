@@ -1,0 +1,73 @@
+defaults:
+  - _build
+  - /pipeline/normalize/normalizer: formal_ko
+  - /pipeline/segment/segmenter: kss
+
+name: aihub_formal1
+fullname: AiHub Formal Corpus 1
+description: AiHub Professional Field Corpus (papers, law, patent, case, etc.)
+license: Attribution-NonCommercial (CC-By-NC v3)
+homepage: https://aihub.or.kr
+lang: ko
+category: formal
+domain: mixed
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    doc_no: int
+    title: str
+
+fetch:
+  data_dir:  ${dir.archive}/datasets/source/aihub/전문분야 말뭉치
+  data_sources: 
+    train: 
+      - Training/**/*.json
+      - Training/[라벨]training_논문.zip
+      - Training/[라벨]training_자치법규_조례.zip
+      - Training/[라벨]training_자치법규_행정규칙.zip
+      - Training/[라벨]training_법령제개정.zip
+      - Training/[라벨]training_판례.zip
+      - Training/[라벨]training_특허.zip
+      - Training/[라벨]training_자치법규_제개정문.zip
+      - Training/[라벨]training_행정규칙_제개정문.zip
+    test: 
+      - Validation/[라벨]validation_의안.zip
+      - Validation/[라벨]validation_논문.zip
+      - Validation/[라벨]validation_자치법규_조례.zip
+      - Validation/[라벨]validation_자치법규_행정규칙.zip
+      - Validation/[라벨]validation_법령제개정.zip
+      - Validation/[라벨]validation_판례.zip
+      - Validation/[라벨]validation_특허.zip
+      - Validation/[라벨]validation_자치법규_제개정문.zip
+      - Validation/[라벨]validation_행정규칙_제개정문.zip
+
+  loader:
+    multiprocessing_at: parse_json
+    filetype: json
+    data:
+      field: data
+      item:
+        doc_no: 'no'
+        title: title
+        filename: filename
+        text: rows[*].text
+      item_separator: '\n'
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 10

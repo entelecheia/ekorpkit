@@ -1,0 +1,43 @@
+name: aihub_paper
+fullname: AIHub Paper Summary
+lang: ko
+category: paper
+description: AIHub/논문자료 요약/논문
+license: Attribution-NonCommercial (CC-By-NC v3)
+homepage: https://aihub.or.kr
+version: 1.0.0
+num_docs: 98344
+num_docs_before_processing: 162341
+num_segments: 394811
+num_sents: 1802883
+num_words: 35556261
+size_in_bytes: 388087040
+num_bytes_before_processing: 632841221
+size_in_human_bytes: 370.11 MiB
+data_files_modified: '2022-02-21 10:02:21'
+meta_files_modified: '2022-02-21 09:59:10'
+info_updated: '2022-02-26 03:06:09'
+data_files:
+  train: aihub_paper-train.parquet
+  test: aihub_paper-test.parquet
+meta_files:
+  train: meta-aihub_paper-train.parquet
+  test: meta-aihub_paper-test.parquet
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    split: str
+    doc_type: str
+    doc_id: str
+    title: str
+    date: str
+    reg_no: str
+    ipc: str
+    issued_by: str
+    author: str

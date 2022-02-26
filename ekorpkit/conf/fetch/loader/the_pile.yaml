@@ -1,0 +1,35 @@
+_target_: ekorpkit.io.fetch.loader.pile.load_pile_data
+name: ${oc.select:..name, the_pile}
+data_dir: ${oc.select:..data_dir, ''}
+data_souces:
+  train: 
+    url: 'https://mystic.the-eye.eu/public/AI/pile/train/{}.jsonl.zst'
+    splits: 30
+    zfill: 2
+  test: 
+    url: 'https://mystic.the-eye.eu/public/AI/pile/test.jsonl.zst'
+  valid: 
+    url: 'https://mystic.the-eye.eu/public/AI/pile/val.jsonl.zst'
+subsets:
+  - Wikipedia (en)
+  - Pile-CC
+  - PubMed Abstracts
+  - StackExchange
+  - Github
+  - OpenWebText2
+  - ArXiv
+  - USPTO Backgrounds
+  - YoutubeSubtitles
+  - FreeLaw
+  - PubMed Central
+  - DM Mathematics
+  - HackerNews
+  - NIH ExPorter
+  - OpenSubtitles
+  - Enron Emails
+  - EuroParl
+  - Books3
+  - PhilPapers
+  - Gutenberg (PG-19)
+  - BookCorpus2
+  - Ubuntu IRC

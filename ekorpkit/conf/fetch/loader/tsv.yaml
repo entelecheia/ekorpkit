@@ -1,0 +1,7 @@
+_target_: ekorpkit.io.load.data.load_tsv_data
+name: ${oc.select:..name,''}
+data_dir: ${oc.select:..data_dir, ''}
+data_souces: ${oc.select:..data_sources, ''}
+data:
+  dtype:
+  sep: '\t'

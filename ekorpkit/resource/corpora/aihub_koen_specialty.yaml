@@ -1,0 +1,38 @@
+name: aihub_koen_specialty
+fullname: AiHub Traslation - Specialty Field
+lang: ko
+category: translation
+description: AIHub Korean to English Translation Corpus - Specialty Field
+license: Attribution-NonCommercial (CC-By-NC v3)
+homepage: https://aihub.or.kr
+version: 1.0.0
+num_docs: 1350000
+num_segments: 2700000
+num_sents: 2700000
+num_words: 57827652
+size_in_bytes: 444942628
+size_in_human_bytes: 424.33 MiB
+data_files_modified: '2022-01-29 09:24:04'
+meta_files_modified: '2022-01-29 09:23:57'
+info_updated: '2022-02-04 07:27:24'
+data_files:
+  train: aihub_koen_specialty-train.parquet
+  test: aihub_koen_specialty-test.parquet
+meta_files:
+  train: meta-aihub_koen_specialty-train.parquet
+  test: meta-aihub_koen_specialty-test.parquet
+column_info:
+  keys:
+    id: id
+    text:
+    - korean
+    - english
+  data:
+    id: int
+    korean: str
+    english: str
+  meta:
+    id: int
+    sid: str
+    field: str
+    difficulty: str

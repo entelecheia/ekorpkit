@@ -1,0 +1,18 @@
+architectures: 
+  - ElectraForMaskedLM
+attention_probs_dropout_prob: ${..discriminator.attention_probs_dropout_prob}
+embedding_size: ${..discriminator.embedding_size}
+hidden_act: ${..discriminator.hidden_act}
+hidden_dropout_prob: ${..discriminator.hidden_dropout_prob}
+hidden_size: 384
+initializer_range: ${..discriminator.initializer_range}
+intermediate_size: 1536
+layer_norm_eps: ${..discriminator.layer_norm_eps}
+max_position_embeddings: ${..discriminator.max_position_embeddings}
+model_type: ${..discriminator.model_type}
+num_attention_heads: 4
+num_hidden_layers: 24
+pad_token_id: ${..discriminator.pad_token_id}
+type_vocab_size: ${..discriminator.type_vocab_size}
+vocab_size: ${..discriminator.vocab_size}
+

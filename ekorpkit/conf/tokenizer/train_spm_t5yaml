@@ -1,0 +1,7 @@
+defaults:
+  - spm: t5
+
+name: ${corpus.name}_spm_v${.vocab_size}
+input_dir: ${oc.select:corpus.data_dir, .}
+input_file: ${oc.select:corpus.data_file, input.txt}
+output_dir: ${dir.model}/tokenizers/${.name}

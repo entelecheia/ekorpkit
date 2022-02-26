@@ -1,0 +1,16 @@
+defaults:
+   - /pipeline: corpus_task_pipeline
+
+_target_: ekorpkit.corpora.loader.do_corpus_tasks
+name: export_to_text
+verbose: ${oc.select:..verbose, true}
+
+pipeline:
+  _pipeline_:
+    - save_as_text
+  name: ${..name}
+  verbose: ${oc.select:..verbose, true}
+  apply_to: 
+    - text
+  save_as_text:
+    task_dir: corpus_txt

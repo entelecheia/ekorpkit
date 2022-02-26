@@ -1,0 +1,10 @@
+Countries don't own their Internet domains, ICANN says - privong http://www.computerworld.com.au/article/551289/countries_don_t_own_their_internet_domains_icann_says/ ====== tokenizerrr So instead the US is the only country that "owns" domain names, since ICANN is an American company? 
+If the domains aren't property then how can they be seized? 
+Is a distinction made between domain names and ccTLDs?
+edit: Downvotes? 
+Really? 
+For asking a question that seems perfectly on-topic.
+~~~ dragonwriter > So instead the US is the only country that "owns" domain names, since ICANN > is an American company?
+If you read the article instead of responding to the title, you would recognize that ICANN is saying no one "owns" ccTLDs, because they aren't property at all.
+~~~ tokenizerrr I have, and yes, they say that, but since they are an American company and thus can be compelled to do pretty much anything by the American goverment (through secret courts even, which we've been hearing more and more about) it seems reasonable to say that America owns them, and their bookkeeping.
+~~~ dragonwriter Their argument here is for why they _cannot_ be compelled to do certain things by American courts.

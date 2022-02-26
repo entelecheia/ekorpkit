@@ -1,0 +1,12 @@
+name:
+  - BC2GM
+  - BC4CHEMD
+  - BC5CDR-chem
+  - BC5CDR-disease
+  - JNLPBA
+  - linnaeus
+  - NCBI-disease
+  - s800
+data_dir: ${dir.dataset}/t5
+filetype: .csv
+autoload: true

@@ -1,0 +1,7 @@
+defaults:
+  - _default
+  - corpus: corpus_subtask
+  - override /cmd@_global_: corpus_task
+
+name: corpus_task
+output_dir: ${dir.data}/${project}/corpus

@@ -1,0 +1,41 @@
+name: us_equities_news
+fullname: US Historical Financial News Archive
+lang: en
+category: econ
+description: 'Historical Financial News Archive: This data represents the historical
+  news archive for the last 12 years of the US equities publicly traded on NYSE/NASDAQ
+  which still has a price higher than 10$ per share.'
+license: This dataset was collected from investing.com website which allows data usage
+  but with attribution of the author.
+homepage: https://www.kaggle.com/gennadiyr/us-equities-news-data
+version: 1.0.0
+num_docs: 221513
+num_segments: 428181
+num_sents: 1891815
+num_words: 131445308
+size_in_bytes: 773407145
+size_in_human_bytes: 737.58 MiB
+data_files_modified: '2022-01-22 10:15:48'
+meta_files_modified: '2022-01-22 10:14:53'
+info_updated: '2022-02-04 07:27:24'
+data_files:
+  train: us_equities_news-train.parquet
+meta_files:
+  train: meta-us_equities_news-train.parquet
+column_info:
+  keys:
+    id: id
+    text: text
+    split: null
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    ticker: str
+    title: str
+    category: str
+    release_date: str
+    provider: str
+    url: str
+    article_id: str

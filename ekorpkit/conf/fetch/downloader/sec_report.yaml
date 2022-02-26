@@ -1,0 +1,18 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.fetch.loader.secreport.SecReport
+output_file: ${.name}${iif:${.compress},.csv.bz2,.csv}
+compress: true
+limit: 0
+debug_mode: false
+normalize:
+  min_len: 10
+  min_words: 3
+  num_repeats: 2
+mongo:
+  collection: report_all
+  database: report
+  server: localhost
+  username:
+  password:

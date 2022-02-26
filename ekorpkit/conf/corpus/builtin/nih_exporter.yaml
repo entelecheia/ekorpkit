@@ -1,0 +1,79 @@
+defaults:
+  - _build
+  - /pipeline/normalize/normalizer: formal_en
+  - /pipeline/segment/segmenter: pysbd
+  - /fetch/downloader: nih_exporter
+  - override /fetch/loader: csv
+
+name: nih_exporter
+fullname: NIH ExPORTER Corpus
+description: NIH ExPORTER
+license: 
+homepage: https://exporter.nih.gov
+version: 1.0.0
+lang: en
+category: formal
+domain: bio
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    appl_id: str
+
+fetch:
+  data_sources:
+    train: 
+      - exporter/*.zip
+      - crisp/*.zip
+
+pipeline:
+  _transform_:
+    - rename_columns
+    - reset_index
+  _preprocess_:  
+    # - normalize
+    # - replace_regex
+    # - filter_length
+    - remove_startswith
+    - segment
+    - drop_duplicates
+
+  rename_columns:
+    new_names:
+      ABSTRACT_TEXT: text
+      APPLICATION_ID: appl_id
+
+  replace_regex:
+    patterns:
+      \s+: ' '
+
+  remove_startswith:
+    startswith:
+      - "? "
+      - "[unreadable] "
+      - "description (adapted from applicant's abstract):"
+      - "description (adapted from applicant's abstract)"
+      - "description (provided by applicant):"
+      - "description (provided by applicant)"
+      - "description (provided by the applicant):"
+      - "description (provided by the applicant)"
+      - "description: (provided by applicant)"
+      - "description (adapted from the applicant's abstract):"
+      - "description: (adapted from the investigator's abstract)"
+      - "description: (adapted from the applicant's abstract)"
+      - "description: (adapted from the investigator's abstract)"
+      - "description: (adapted from investigator's abstract)"
+      - "description: (adapted from applicant's abstract)"
+      - "description (adapted from investigator's abstract):"
+      - "description (adapted from the investigator's abstract):"
+      - "description (adapted from the applicant's abstract)"
+      - "project summary / abstract"
+      - "project summary (see instructions):"
+
+  filter_length:
+    min_length: 30

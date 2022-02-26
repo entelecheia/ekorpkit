@@ -1,0 +1,5 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.download.web.download_from_web
+urls:

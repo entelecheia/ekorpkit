@@ -1,0 +1,28 @@
+defaults:
+  - corpus_build
+  - table: corpus_info
+  - override /cmd@_global_: info
+
+name: corpus
+data_dir: ${dir.corpus}
+base_dir:
+info_source_dir: ekorpkit/conf/${.name}/builtin
+info_archive_dir: ekorpkit/resources/corpora
+info_link_prefix: ../../../${.info_archive_dir}
+builtins_path: ekorpkit/conf/${.name}/preset/builtins.yaml
+doc_output_dir: docs/${.name}
+sample_output_dir: ${.doc_output_dir}/sample
+sample_max_lines: 10
+info_output_dir: ${.doc_output_dir}/info
+info_files: ${.data_dir}/**/info-*.yaml
+markdown_template: '# {name}\n
+  \n[Sample]({sample_text_link})\n
+  \n<!-- MARKDOWN-AUTO-DOCS:START (CODE:src={src_link}) -->
+  \n<!-- MARKDOWN-AUTO-DOCS:END -->\n'
+# markdown_template: '# {name}\n\n<!-- MARKDOWN-AUTO-DOCS:START (CODE:src={src_path}) -->\n<!-- MARKDOWN-AUTO-DOCS:END -->\n\n#### Sample text: 10 lines of the corpus\n\n<!-- MARKDOWN-AUTO-DOCS:START (CODE:src={sample_text_path}) -->\n<!-- MARKDOWN-AUTO-DOCS:END -->\n'
+info_fig_file: docs/figs/ekorpkit_${.name}.png
+readme_md_file: ${.doc_output_dir}/README.md
+readme_md_template: '## The eKorpkit Corpus\n
+  \nThe eKorpkit Corpus is a large, diverse, multilingual (ko/en) language modelling dataset.\n
+  \n{info_table}\n
+  \n![ekorpkit corpus](../figs/ekorpkit_${.name}.png)\n'

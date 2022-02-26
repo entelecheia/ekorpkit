@@ -1,0 +1,9 @@
+defaults:
+  - _scifive_finetune
+
+name: NCBI-disease
+fetch:
+  loader:
+    data:
+      constants:
+        prefix: ncbi_disease_ner

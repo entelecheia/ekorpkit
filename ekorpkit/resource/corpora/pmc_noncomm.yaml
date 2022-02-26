@@ -1,0 +1,27 @@
+name: pmc_noncomm
+fullname: PubMed Central Open Access Corpus - Non-Commercial Use
+lang: en
+category: bio
+description: PMC OA Subset - Non-Commercial Use Only
+license: CC BY-NC, CC BY-NC-SA, CC BY-NC-ND
+homepage: https://www.ncbi.nlm.nih.gov
+version: 1.0.0
+num_docs: 6055952
+num_segments: 6055952
+num_sents: 6055952
+num_words: 1923596877
+size_in_bytes: 12754204910
+size_in_human_bytes: 11.88 GiB
+data_files_modified: '2022-01-13 07:33:02'
+info_updated: '2022-02-04 07:27:23'
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    section: str
+    filename: str

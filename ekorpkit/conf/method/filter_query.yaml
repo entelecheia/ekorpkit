@@ -1,0 +1,2 @@
+_target_: ekorpkit.utils.partial
+_partial_: ekorpkit.pipelines.pipe.filter_query

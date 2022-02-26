@@ -1,0 +1,10 @@
+defaults:
+  - default
+
+postprocess:
+  split_test_dev:
+    ratio:
+      dev:
+      test:
+    random_state: 1234
+    shuffle: true

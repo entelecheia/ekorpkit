@@ -1,0 +1,16 @@
+defaults:
+  - local-conll
+
+name: pathner
+category: biomed
+loader:
+  source_files:
+    train: train.txt
+    dev: dev.txt
+    test: test.txt
+  column_dtypes:
+    words: str
+    X1: str
+    X2: str
+    labels: str
+  sep: \t

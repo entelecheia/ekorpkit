@@ -1,0 +1,11 @@
+numpy
+tqdm
+openpyxl
+pandas
+wasabi
+hydra-core
+hydra_colorlog
+chardet
+rehash
+requests
+numba

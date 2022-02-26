@@ -1,0 +1,18 @@
+defaults:
+  - gdrive-conll
+
+name: ncbi-disease
+category: biomed
+loader:
+  source_urls: 
+    train: 1_ffUW3cf9GfA1XczIJVGmmEYQtBGkkG4
+    dev: 1_gOx9vOdQ6K0x9Uup55GHecVtF60OjeL
+    test: 1_fjIsoV1Tl2wd7FwrB5PnKMrCpBnhAtm
+  source_files:
+    train: train.txt
+    dev: dev.txt
+    test: test.txt
+  column_dtypes:
+    words: str
+    labels: str
+  sep: \t

@@ -1,0 +1,33 @@
+name: modu_news
+fullname: NIKL Newspaper Corpus
+lang: ko
+category: news
+description: National Institute of the Korean Language Corpus - Newspaper
+license: Korea Open Government License, Category 4
+homepage: https://corpus.korean.go.kr
+version: 2.0.0
+num_docs: 4116643
+num_segments: 4116643
+num_sents: 42653583
+num_words: 1142548284
+size_in_bytes: 12130403696
+size_in_human_bytes: 11.30 GiB
+data_files_modified: '2022-01-08 09:31:56'
+info_updated: '2022-02-04 07:27:24'
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    doc_id: str
+    title: str
+    author: str
+    publisher: str
+    date: str
+    topic: str
+    original_topic: str
+    category: str

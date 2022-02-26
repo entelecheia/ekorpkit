@@ -1,0 +1,6 @@
+_target_: ekorpkit.io.load.data.load_from_gcs
+name: 
+subset: 
+data_dir: ${oc.select:..data_dir, ''}
+data_souces: ${oc.select:..data_sources, ''}
+num_workers: ${oc.select:task.num_workers,100}

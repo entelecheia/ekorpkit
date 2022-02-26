@@ -1,0 +1,41 @@
+defaults:
+  - _build
+  - /pipeline/normalize/normalizer: formal_en
+  - override /fetch/loader: the_pile
+
+name: philpapers
+lang: en
+category: formal
+domain: academic
+fullname: The PhilPapers
+description: 'The PhilPapers dataset consists of open-access philosophy publications from an international database maintained by the Center for Digital Phi- losophy at the University of Western Ontario.'
+license: MIT License
+homepage: https://philpapers.org
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+
+
+fetch:
+  data_dir:  ${dir.archive}/datasets/source/the_pile
+  data_sources: 
+    train: train
+    test: test
+    valid: valid
+  loader:
+    name: PhilPapers
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - filter_length
+    - segment
+    - drop_duplicates
+

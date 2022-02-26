@@ -1,0 +1,31 @@
+name: modu_written
+fullname: NIKL Wrtten Text Corpus
+lang: ko
+category: formal
+description: NIKL Wrtten Text Corpus
+license: National Institute of the Korean Language Corpus - Wrtten
+homepage: https://corpus.korean.go.kr
+version: 1.0.0
+num_docs: 20188
+num_segments: 20188
+num_sents: 27335034
+num_words: 682765140
+size_in_bytes: 6962611396
+size_in_human_bytes: 6.48 GiB
+data_files_modified: '2022-01-08 07:00:43'
+info_updated: '2022-02-04 07:27:22'
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    doc_id: str
+    title: str
+    author: str
+    publisher: str
+    date: str
+    category: str

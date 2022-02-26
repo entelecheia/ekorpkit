@@ -1,0 +1,43 @@
+name: bigpatent
+fullname: BigPatent - U.S. Patent Documents
+lang: en
+category: patent
+description: 'BIGPATENT, consisting of 1.3 million records of U.S. patent documents
+  along with human written abstractive summaries. Each US patent application is filed
+  under a Cooperative Patent Classification (CPC) code. There are nine such classification
+  categories: A (Human Necessities), B (Performing Operations; Transporting), C (Chemistry;
+  Metallurgy), D (Textiles; Paper), E (Fixed Constructions), F (Mechanical Engineering;
+  Lightning; Heating; Weapons; Blasting), G (Physics), H (Electricity), and Y (General
+  tagging of new or cross-sectional technology)'
+homepage: https://evasharma.github.io/bigpatent/
+version: 1.0.0
+num_docs: 1234819
+num_segments: 2469638
+num_sents: 168279195
+num_words: 4584180450
+size_in_bytes: 24112859052
+size_in_human_bytes: 22.46 GiB
+data_files_modified: '2022-01-24 06:54:25'
+meta_files_modified: '2022-01-24 06:41:07'
+info_updated: '2022-02-04 07:27:23'
+data_files:
+  train: bigpatent-train.parquet
+  test: bigpatent-test.parquet
+  val: bigpatent-val.parquet
+meta_files:
+  train: meta-bigpatent-train.parquet
+  test: meta-bigpatent-test.parquet
+  val: meta-bigpatent-val.parquet
+column_info:
+  keys:
+    id: id
+    text:
+    - description
+    - abstract
+  data:
+    id: int
+    description: str
+    abstract: str
+  meta:
+    id: int
+    publication_number: str

@@ -1,0 +1,61 @@
+name: ${oc.select:..name,''} 
+info_file: info-${.name}.yaml
+info_list:
+  - name
+  - fullname
+  - lang
+  - category
+  - short_description
+  - description
+  - license
+  - homepage
+  - version
+  - num_docs
+  - num_docs_before_processing
+  - num_segments
+  - num_sents
+  - num_words
+  - size_in_bytes
+  - num_bytes_before_processing
+  - size_in_human_bytes
+  - data_files_modified
+  - meta_files_modified
+  - info_updated
+  - data_files
+  - meta_files
+  - column_info
+update_files_info:
+  data_files: data_file
+  meta_files: meta_file
+update_info:
+  - fullname
+  - lang
+  - category
+  - description
+  - license
+  - homepage
+  - version
+aggregate_info:  
+  num_sents: num_sents
+  num_segments: num_segments
+  num_words: num_words
+  num_docs: num_docs
+  size_in_bytes: num_bytes
+  num_docs_before_processing: num_docs_before_processing
+  num_bytes_before_processing: num_bytes_before_processing
+modified_info:
+  data_files_modified: data_file
+  meta_files_modified: meta_file
+key_columns: ${oc.select:..column_info.keys, ''}
+stat_before_processing:
+  num_columns:
+    num_bytes: len_bytes
+    num_sents: len_sents
+  agg_funcs:
+    num_bytes: [count, sum]
+    num_sents: [sum]
+  rename_columns:
+    num_bytes_count: num_docs_before_processing
+    num_bytes_sum: num_bytes_before_processing
+    num_sents_sum: num_sents
+  convert_to_humanbytes:

@@ -1,0 +1,46 @@
+name: aihub_patent_entire_sum
+fullname: AIHub Patent Entire Summary
+lang: ko
+category: patent
+description: AIHub/논문자료 요약/특허전체
+license: Attribution-NonCommercial (CC-By-NC v3)
+homepage: https://aihub.or.kr
+version: 1.0.0
+num_docs: 156270
+num_segments: 832975
+num_sents: 29331956
+num_words: 676155840
+size_in_bytes: 6898235146
+size_in_human_bytes: 6.42 GiB
+data_files_modified: '2022-01-26 11:50:22'
+meta_files_modified: '2022-01-25 11:12:13'
+info_updated: '2022-02-04 07:27:23'
+data_files:
+  train: aihub_patent_entire_sum-train.parquet
+  test: aihub_patent_entire_sum-test.parquet
+meta_files:
+  train: meta-aihub_patent_entire_sum-train.parquet
+  test: meta-aihub_patent_entire_sum-test.parquet
+column_info:
+  keys:
+    id: id
+    text:
+    - text
+    - summary
+    - section_text
+    - section_summary
+  data:
+    id: int
+    text: str
+    summary: str
+    section_text: str
+    section_summary: str
+  meta:
+    id: int
+    split: str
+    doc_type: str
+    doc_id: str
+    title: str
+    date: str
+    reg_no: str
+    ipc: str

@@ -1,0 +1,8 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.fetch.loader.pathobook.Pathobook
+input_path: ${.output_dir}/raw/*.txt
+output_file: ${.name}${iif:${.compress},.csv.bz2,.csv}
+compress: true
+chapter_info_path: ${.output_dir}/raw/chinfo.csv

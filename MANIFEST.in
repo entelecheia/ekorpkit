@@ -1,0 +1,4 @@
+recursive-include ekorpkit *.py
+recursive-include ekorpkit *.yaml
+global-exclude *.pyc
+global-exclude __pycache__

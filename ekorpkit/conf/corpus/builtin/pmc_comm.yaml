@@ -1,0 +1,64 @@
+defaults:
+  - _build
+  - /fetch/downloader: pubmed
+  - /pipeline/normalize/normalizer: formal_en_parantheses
+  - /pipeline/segment/segmenter: pysbd_merge_article
+  - override /fetch/loader/parser: pmc
+
+name: pmc_comm
+fullname: PubMed Central Open Access Corpus - Commercial Use
+description: PMC OA Subset - Commercial Use
+license: CC0, CC BY, CC BY-SA, and CC BY-ND
+homepage: https://www.ncbi.nlm.nih.gov
+version: 1.0.0
+lang: en
+category: academic
+domain: bio
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    section: str
+    filename: str
+
+fetch:
+  data_sources:
+    train: ${..downloader.subset}/*.tar.gz
+  downloader:
+    subset: oa_comm
+  loader:
+    # limit: 1
+    multiprocessing_at: _load_archive
+    decode_before_parse: false
+    filetype: xml
+    data:
+      field: 
+      item:
+        section: section
+        text: text
+        filename: filename
+
+pipeline:
+  _transform_:
+    # - aggregate_columns
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - filter_length
+    - segment
+    - drop_duplicates
+
+  # aggregate_columns:
+  #     onto: text
+  #     groupby:
+  #       - filename
+  #       - section
+  #     separator: '\n\n'
+  filter_length:
+    min_length: 30
+    max_length: 10_000

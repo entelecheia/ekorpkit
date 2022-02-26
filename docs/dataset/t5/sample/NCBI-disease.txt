@@ -1,0 +1,35 @@
+input_text: 
+As constitutional DNA was not available , a putative hereditary predisposition to T - PLL will require further investigation . .
+
+target_text: 
+As constitutional DNA was not available , a putative hereditary predisposition to disease* T - PLL *disease will require further investigation . .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+Three families shared microsatellite polymorphisms covering at most 19 cM , whereas the others shared smaller regions consistent with cross - over events during passage of this mutation through several generations .
+
+target_text: 
+Three families shared microsatellite polymorphisms covering at most 19 cM , whereas the others shared smaller regions consistent with cross - over events during passage of this mutation through several generations .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+C04107 is an anonymous microsatellite marker closely linked to CT .
+
+target_text: 
+C04107 is an anonymous microsatellite marker closely linked to disease* CT *disease .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+A mouse model for Prader - Willi syndrome imprinting - centre mutations .
+
+target_text: 
+A mouse model for disease* Prader - Willi syndrome *disease imprinting - centre mutations .
+
+----------------------------------------------------------------------------------------------------
+input_text: 
+These mice have been shown to reproduce the intergenerational and somatic instability of the 55 CTG repeat suggesting that surrounding sequences and the chromatin environment are involved in instability mechanisms .
+
+target_text: 
+These mice have been shown to reproduce the intergenerational and somatic instability of the 55 CTG repeat suggesting that surrounding sequences and the chromatin environment are involved in instability mechanisms .
+
+----------------------------------------------------------------------------------------------------

@@ -1,0 +1,7 @@
+# @package _global_
+_target_: ekorpkit.cli.listup
+
+defaults:
+  - /info/table: listup
+  - /corpus/preset: builtins
+  - /dataset/preset: builtins

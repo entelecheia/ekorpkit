@@ -1,0 +1,6 @@
+defaults:
+  - /method: filter_query
+
+apply_to: ${oc.select:..apply_to, text}
+query: 
+verbose: ${oc.select:..verbose, true}

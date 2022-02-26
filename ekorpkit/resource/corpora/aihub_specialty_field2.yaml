@@ -1,0 +1,38 @@
+name: aihub_specialty_field2
+fullname: AiHub Specialty Field Corpus 2
+lang: ko
+category: book
+description: AiHub Specialty Field Corpus (papers, patent, law, trial case, etc.)
+license: Attribution-NonCommercial (CC-By-NC v3)
+homepage: https://aihub.or.kr
+version: 1.0.0
+num_docs: 96009
+num_segments: 1520584
+num_sents: 1521667
+num_words: 64511688
+size_in_bytes: 681671843
+size_in_human_bytes: 650.09 MiB
+data_files_modified: '2022-01-28 23:29:56'
+meta_files_modified: '2022-01-28 23:29:45'
+info_updated: '2022-02-04 07:27:24'
+data_files:
+  train: aihub_specialty_field2-train.parquet
+  test: aihub_specialty_field2-test.parquet
+meta_files:
+  train: meta-aihub_specialty_field2-train.parquet
+  test: meta-aihub_specialty_field2-test.parquet
+column_info:
+  keys:
+    id: id
+    text:
+    - text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    doc_id: str
+    doc_type: str
+    title: str
+    date: str
+    filename: str

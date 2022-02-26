@@ -1,0 +1,5 @@
+# @package _global_
+defaults:
+  - override /about@_global_: default
+
+_target_: ekorpkit.cli.about

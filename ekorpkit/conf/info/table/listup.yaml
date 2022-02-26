@@ -1,0 +1,40 @@
+eval_before:
+  effective_size: 'size_in_bytes * 3'
+sort_key: size_in_bytes
+calculate_weights_of: 
+  weight: size_in_bytes
+aggregate:
+  - index: agg_1
+    group_by: lang
+    sum: size_in_bytes
+    names: [{'lang': 'en', 'name': 'English'}, {'lang': 'ko', 'name': 'Korean'}]
+  - index: agg_total
+    group_by: 
+    sum: size_in_bytes
+    names: 
+      name: '**Total**'
+      weight: 100
+convert_to_humanbytes:
+  - size_in_bytes
+format_columns:
+  weight: '{x:.2f}%'
+headers:
+  name: Name
+  fullname: Fullname
+  lang: Language
+  category: Category
+  size_in_bytes: Size
+  weight: Weight
+styles:
+  - align: left
+    thousand_separator:
+  - align: left
+    thousand_separator:
+  - align: center
+    thousand_separator:
+  - align: center
+    thousand_separator:
+  - align: right
+    thousand_separator: ','
+  - align: right
+    thousand_separator: ','

@@ -1,0 +1,9 @@
+defaults:
+  - /method: save_as_text
+
+apply_to: ${oc.select:..apply_to, text}
+task_dir: corpus_txt
+output_dir: ${oc.select:task.output_dir, .}/${.task_dir}
+output_file:
+doc_separator: \n\n
+verbose: ${oc.select:..verbose, true}
