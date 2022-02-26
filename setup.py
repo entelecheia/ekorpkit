@@ -51,11 +51,11 @@ def get_extra_requires(path, add_all=True):
 
 about = get_about()
 setup(
-    name="eKorpkit",
+    name="ekorpkit",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     author=about["author"],
-    url="https://github.com/entelecheia/eKorpkit",
+    url="https://github.com/entelecheia/ekorpkit",
     description=about["description"],
     long_description=long_description,
     long_description_content_type="text/markdown",
