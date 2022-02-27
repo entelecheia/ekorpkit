@@ -1,5 +1,5 @@
 # eKorpkit: A Corpus Management Toolkit
-![PyPI](https://img.shields.io/pypi/v/ekorpkit) [![CI](https://github.com/entelecheia/ekorpkit/actions/workflows/ci.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/ci.yaml) ![Codecov](https://img.shields.io/codecov/c/gh/entelecheia/ekorpkit) [![markdown-autodocs](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml)
+[![PyPI version](https://badge.fury.io/py/ekorpkit.svg)](https://badge.fury.io/py/ekorpkit) [![CI](https://github.com/entelecheia/ekorpkit/actions/workflows/ci.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/ci.yaml) ![Codecov](https://img.shields.io/codecov/c/gh/entelecheia/ekorpkit) [![markdown-autodocs](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml)
 
 This package provides corpus management tools such as extraction, transformation, and tokenization.
 This package does not support downloading corpus files.

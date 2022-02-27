@@ -21,7 +21,6 @@ template: |-
   ${hydra.help.header} 
   
   author: ${about.app.author}
-  version: ${about.app.version}
   description: ${about.app.description}
 
   ${hydra.help.app_name} Command Line Interface for Hydra

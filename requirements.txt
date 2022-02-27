@@ -10,4 +10,4 @@ rehash
 requests
 numba
 scipy
-pytablewriter
+pytablewriter>=0.64.0
