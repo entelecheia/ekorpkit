@@ -1,22 +1,22 @@
-name: release
+name: test-release
 
 on:
   push:
     branches:    
       - main
       - 'releases/**'
-    tags-ignore:        
+    tags:        
       - '*.*.*alpha*'
   pull_request:
     branches:    
       - main
       - 'releases/**'
-    tags-ignore:        
+    tags:
       - '*.*.*alpha*'
   workflow_dispatch:
 
 jobs:
-  release:
+  test:
     runs-on: "ubuntu-latest"
 
     steps:
@@ -35,27 +35,10 @@ jobs:
         shell: bash -l {0}
         run: python setup.py sdist bdist_wheel
 
-      - name: Publish package to PyPI
+      - name: Publish package to TestPyPI
         if: github.repository == 'entelecheia/ekorpkit' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-
-      - name: Changelog
-        uses: scottbrenner/generate-changelog-action@master
-        id: Changelog
-        env:
-          REPO: ${{ github.repository }}
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release v${{ github.ref }}
-          body: |
-            ${{ steps.Changelog.outputs.changelog }}
-          draft: false
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
