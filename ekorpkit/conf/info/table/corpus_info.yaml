@@ -20,7 +20,7 @@ format_columns:
   weight: '{x:.2f}%'
 make_links:
   column: name
-  link_format: '[{x}](.info/{x}.md)'
+  link_format: '[{x}](./info/{x}.md)'
 headers:
   name: Name
   lang: Language
