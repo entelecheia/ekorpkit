@@ -2,17 +2,17 @@ name: release
 
 on:
   push:
-    branches:    
-      - main
-      - 'releases/**'
+    # branches:    
+    #   - main
+    #   - 'releases/**'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
-  pull_request:
-    branches:    
-      - main
-      - 'releases/**'
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+  # pull_request:
+  #   branches:    
+  #     - main
+  #     - 'releases/**'
+  #   tags:
+  #     - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
 jobs:
@@ -57,7 +57,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release v${{ github.ref }}
+          release_name: v${{ github.ref }}
           body: |
             ${{ steps.Changelog.outputs.changelog }}
           draft: false

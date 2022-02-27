@@ -2,17 +2,17 @@ name: test-release
 
 on:
   push:
-    branches:    
-      - main
-      - 'releases/**'
+    # branches:    
+    #   - main
+    #   - 'releases/**'
     tags:        
-      - '*.*.*alpha*'
-  pull_request:
-    branches:    
-      - main
-      - 'releases/**'
-    tags:
-      - '*.*.*alpha*'
+      - '*.*.*[a-z]*'
+  # pull_request:
+  #   branches:    
+  #     - main
+  #     - 'releases/**'
+  #   tags:
+  #     - '*.*.*alpha*'
   workflow_dispatch:
 
 jobs:
