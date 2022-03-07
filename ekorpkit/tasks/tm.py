@@ -6,10 +6,9 @@ from pathlib import Path
 from timeit import default_timer as timer
 from omegaconf import OmegaConf
 from hydra.utils import instantiate
-
+from ..models.topic import TopicModel, IDF, ONE
 # from ..corpora.loader import eKorpkit, load_corpus_paths
 # from ..corpora import CORPUS_DF
-from ..models.topic import TopicModel, IDF, ONE
 
 
 def topic_model(**args):

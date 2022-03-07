@@ -238,7 +238,7 @@ class Segmenter:
             if self.verbose:
                 print(f"==> too long text: {len(text)}")
             text_chunk = text[: self.max_split_length]
-            next_chunk = text[self.max_split_length :]
+            next_chunk = text[self.max_split_length:]
             sentences = []
             split_iter = 0
             while len(text_chunk) > 0 and split_iter < self.max_split_iterations:
@@ -295,7 +295,7 @@ class Segmenter:
                 if offset.this_cum_len - span[0].prev_cum_len > max_length:
                     chunks.append(_get_chunk_with_offset(sentences, span))
                     if overlap:
-                        span = span[math.trunc(len(span) / 2) :]
+                        span = span[math.trunc(len(span) / 2):]
                     else:
                         span = []
 
@@ -382,11 +382,10 @@ class KSSSegmenter(Segmenter):
         self.use_heuristic = use_heuristic
         self.backend = backend
         self.kwargs = kwargs
-        seg = KSS(use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs)
+        self.seg = KSS(use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs)
         super().__init__(**kwargs)
 
     def segment(self, text):
-        from ekorpkit.preprocessors import KSS
-
-        seg = KSS(use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs)
-        return seg.segment(text)
+        # from ekorpkit.preprocessors import KSS
+        # seg = KSS(use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs)
+        return self.seg.segment(text)

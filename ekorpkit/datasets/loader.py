@@ -1,6 +1,6 @@
 import pandas as pd
 from omegaconf import OmegaConf
-from ekorpkit.utils.func import ordinal, elapsed_timer
+from ekorpkit.utils.func import elapsed_timer
 from .dataset import Dataset
 
 
@@ -33,6 +33,11 @@ class Datasets:
             self.splits[split] = pd.concat(
                 [ds.splits[split] for ds in self.datasets.values()], ignore_index=True
             )
+
+    def __getitem__(self, name):
+        if name not in self.datasets:
+            raise KeyError(f"{name} not in datasets")
+        return self.datasets[name]
 
 
 # class DatasetLoader:

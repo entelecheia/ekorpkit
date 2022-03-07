@@ -14,7 +14,7 @@ from wasabi import msg
 from collections import OrderedDict
 from omegaconf.listconfig import ListConfig
 from tqdm.auto import tqdm
-from ekorpkit.utils import ordinal, print_status
+from ekorpkit.utils import print_status
 from ekorpkit.io.file import get_filepaths, save_dataframe, load_dataframe
 
 

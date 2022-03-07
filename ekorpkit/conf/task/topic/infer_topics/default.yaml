@@ -1,0 +1,6 @@
+_name_: infer_topics
+iter: 100
+min_df: 5
+num_workers: ${oc.select:..num_workers, 0}
+output_dir: ${model.topic.output_dir}
+output_file:

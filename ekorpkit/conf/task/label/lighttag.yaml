@@ -1,0 +1,9 @@
+lighttag:
+    domain: ekon
+    server: https://${.domain}.lighttag.io/api/
+    api_base: ${.server}v1/
+    user: yj.lee@chu.ac.kr
+    pwd: zaire@DONKEY2unison
+wandb:
+    key: 3d6fcda4381d365661f9ca2ad248b80002170ac4
+    project: ESG-NLP

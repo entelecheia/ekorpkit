@@ -9,3 +9,4 @@ column_info:
   keys: ${oc.select:..builtin.column_info.keys, null}
   data: ${oc.select:..builtin.column_info.data, null}
   meta: ${oc.select:..builtin.column_info.meta, null}
+use_name_as_subdir: true
