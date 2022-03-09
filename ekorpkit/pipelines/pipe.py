@@ -225,7 +225,7 @@ def split_sampling(df, args):
     test_file = args.get("test_file", None)
     if train_file:
         filepath = f"{output_dir}/{train_file}"
-        save_dataframe(df, filepath, verbose=verbose)
+        save_dataframe(train, filepath, verbose=verbose)
     if test_file:
         filepath = f"{output_dir}/{test_file}"
         save_dataframe(test, filepath, verbose=verbose)
@@ -312,7 +312,9 @@ def sampling(df, args):
             )
         else:
             df_sample = df.groupby(groupby, group_keys=False).apply(
-                lambda x: x.sample(n=sample_size_per_group, random_state=random_state)
+                lambda x: x.sample(
+                    n=min(len(x), sample_size_per_group), random_state=random_state
+                )
             )
     df_sample.reset_index(drop=True, inplace=True)
     if columns_to_keep:
@@ -332,7 +334,9 @@ def sampling(df, args):
     output_file = args.get("output_file", None)
     if output_file:
         filepath = f"{output_dir}/{output_file}"
-        save_dataframe(df, filepath, verbose=verbose, columns_to_save=columns_to_keep)
+        save_dataframe(
+            df_sample, filepath, verbose=verbose, columns_to_save=columns_to_keep
+        )
 
     return df
 
@@ -386,7 +390,8 @@ def explode_splits(df, args):
     separator = codecs.decode(args["separator"], "unicode_escape")
     id_key = args.get("id_key", "id")
     split_key = args.get("split_key", "seg_id")
-
+    if isinstance(id_key, ListConfig):
+        id_key = list(id_key)
     if verbose:
         print(f"Exploding column: {args}")
 
@@ -509,6 +514,43 @@ def segment(df, args):
                 segmenter.segment_article,
                 df[key],
                 description=f"Splitting column: {key}",
+                verbose=verbose,
+                use_batcher=use_batcher,
+                minibatch_size=minibatch_size,
+            )
+            if verbose:
+                msg.good("\n >> elapsed time to segment: {}\n".format(elapsed()))
+    return df
+
+
+def chunk(df, args):
+    verbose = args.get("verbose", False)
+    use_batcher = args.get("use_batcher", True)
+    minibatch_size = args.get("minibatch_size", None)
+    apply_to = args.get("apply_to", "text")
+    if apply_to is None:
+        if verbose:
+            print("No columns specified")
+        return df
+    segmenter = args.get("segmenter", None)
+    if segmenter is None:
+        if verbose:
+            print("No segmenter specified")
+        return df
+    if isinstance(apply_to, str):
+        apply_to = [apply_to]
+    if verbose:
+        print(f"Chunking text: {args}")
+        print("instantiating segmenter")
+    segmenter = instantiate(segmenter)
+    for key in apply_to:
+        if verbose:
+            print(f"\nPreprocessing column: {key}")
+        with elapsed_timer(format_time=True) as elapsed:
+            df[key] = apply(
+                segmenter.chunk_article,
+                df[key],
+                description=f"Chunking column: {key}",
                 verbose=verbose,
                 use_batcher=use_batcher,
                 minibatch_size=minibatch_size,
@@ -870,6 +912,7 @@ def save_dataframe_pipe(df, args):
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
     dataframe_no = args.get("dataframe_no", None)
+    columns_to_save = args.get("columns_to_save", None)
 
     if df is None:
         msg.warn("Dataframe is None")
@@ -896,7 +939,7 @@ def save_dataframe_pipe(df, args):
         filename = f"{filename}{filetype}"
     filepath = f"{output_dir}/{filename}"
 
-    save_dataframe(df, filepath, filetype, verbose)
+    save_dataframe(df, filepath, filetype, verbose, columns_to_save=columns_to_save)
     return df
 
 
