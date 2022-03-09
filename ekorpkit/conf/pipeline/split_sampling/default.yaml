@@ -1,0 +1,12 @@
+defaults:
+  - /method: split_sampling
+
+stratify_on:
+random_state: 123
+test_size: 10
+groupby: ${.stratify_on}
+unique_key:
+output_dir: 
+train_file:
+test_file:
+verbose: ${oc.select:..verbose, true}

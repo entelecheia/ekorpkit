@@ -33,6 +33,8 @@ class Segmenter:
         filter_sentence_length=False,
         min_num_words=3,
         min_length=10,
+        chunk_size=300,
+        chunk_overlap=False,
         verbose=False,
         print_args=False,
         **kwargs,
@@ -69,6 +71,8 @@ class Segmenter:
         self.filter_sentence_length = filter_sentence_length
         self.min_num_words = min_num_words
         self.min_length = min_length
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
         self.verbose = verbose
         self.kwargs = kwargs
         if print_args:
@@ -92,6 +96,8 @@ class Segmenter:
             print(f"{self.filter_sentence_length = }")
             print(f"{self.min_num_words = }")
             print(f"{self.min_length = }")
+            print(f"{self.chunk_size = }")
+            print(f"{self.chunk_overlap = }")
             print(f"{self.verbose = }")
             print(f"{self.kwargs = }")
 
@@ -266,6 +272,45 @@ class Segmenter:
     def segment_articles(self, articles):
         return [self.segment_article(article) for article in articles]
 
+    def chunk_article(self, article):
+
+        if article is None:
+            return None
+
+        article = re.sub(
+            f"{self.in_segment_separator}+", self.in_segment_separator, article
+        )
+        if self.keep_segment:
+            in_segments = article.split(self.in_segment_separator)
+        else:
+            in_segments = [article]
+
+        segments = []
+        for i, segment in enumerate(in_segments):
+            segment = segment.strip()
+            segment = re.sub(
+                f"{self.in_sentence_separator}+", self.in_sentence_separator, segment
+            )
+            if len(segment) > 0:
+                sentences = segment.split(self.in_sentence_separator)
+
+                chunks = self.chunk(
+                    sentences,
+                    max_length=self.chunk_size,
+                    overlap=self.chunk_overlap,
+                )
+                if self.return_type != "list":
+                    chunks = [
+                        self.out_sentence_separator.join(chunk) for chunk in chunks
+                    ]
+                segments += chunks
+
+        return (
+            segments
+            if self.return_type == "list"
+            else self.out_segment_separator.join(segments)
+        )
+
     def chunk(
         self,
         sentences: list,
@@ -382,11 +427,12 @@ class KSSSegmenter(Segmenter):
         self.use_heuristic = use_heuristic
         self.backend = backend
         self.kwargs = kwargs
-        seg = KSS(use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs)
+        self.seg = KSS(
+            use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs
+        )
         super().__init__(**kwargs)
 
     def segment(self, text):
-        from ekorpkit.preprocessors import KSS
-
-        seg = KSS(use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs)
-        return seg.segment(text)
+        # from ekorpkit.preprocessors import KSS
+        # seg = KSS(use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs)
+        return self.seg.segment(text)

@@ -1,0 +1,18 @@
+name:
+  - esg_report
+  - modu_news
+  - sec_report
+data_dir: /workspace/projects/ekorpkit/data/projects/eKonPLM/data/corpora/corpus-csv-chunk
+use_name_as_subdir: false
+data_files:
+filetype: .csv
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    chunk_no: int
+    text: str
+autoload: true
+verbose: true

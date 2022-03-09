@@ -1,0 +1,11 @@
+_name_: label_topics
+rebuild: false
+use_pmiextractor: false
+min_cf: 10
+min_df: 5
+max_len: 5
+max_cand: 100
+smoothing: 1e-2
+mu: 0.25
+window_size: 100
+top_n: 10

@@ -4,4 +4,6 @@ defaults:
 onto: text
 groupby:
 separator: '\n\n'
+aggregations:
+reset_index: false
 verbose: ${oc.select:..verbose, true}

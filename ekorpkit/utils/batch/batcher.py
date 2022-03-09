@@ -49,7 +49,8 @@ class Batcher(object):
             Backend handle for sending tasks
 
     verbose: int
-            Verbosity level. Setting verbose > 0 will display additional information depending on the specific level set.
+            Verbosity level.
+            Setting verbose > 0 will display additional information depending on the specific level set.
     """
 
     def __init__(
@@ -139,7 +140,7 @@ class Batcher(object):
                 data[x * minibatch_size : min(len_data, (x + 1) * minibatch_size)]
                 for x in range(int(ceil(len_data / minibatch_size)))
             ]
-        ###if backend=="dask":  return self.backend_handle.scatter(data)
+        # if backend=="dask":  return self.backend_handle.scatter(data)
         return data
 
     def collect_batches(self, data, backend=None, sort=True):
@@ -241,7 +242,8 @@ class Batcher(object):
                 Number of GPUs to reserve per minibatch task for Ray
 
         verbose: int
-                Verbosity level. Setting verbose > 0 will display additional information depending on the specific level set.
+                Verbosity level.
+                Setting verbose > 0 will display additional information depending on the specific level set.
 
         Returns
         -------
@@ -344,7 +346,7 @@ class Batcher(object):
 
                 results = p_map(task, paral_params, num_cpus=procs)
             elif backend == "dask":
-                ###if not (input_split):  data= self.scatter(data)
+                # if not (input_split):  data= self.scatter(data)
                 results = [
                     self.backend_handle.submit(task, params)
                     for params in tqdm(paral_params, desc=description)
@@ -372,9 +374,6 @@ class Batcher(object):
                 pbar.update(len(results))
                 while len(paral_params) > 0:
                     # More tasks than available processors. Queue the task calls
-                    # if verbose > 5:
-                    # 	if len(paral_params) % (procs*2) == 0:
-                    # 		print(f" Queue the task calls, len(paral_params): {len(paral_params)}, len(results): {len(results)}")
                     done, remaining = self.backend_handle.wait(
                         uncompleted, timeout=60, fetch_local=False
                     )
@@ -433,12 +432,12 @@ class Batcher(object):
                 List of shuffled labels. This will only be returned when non-None
                 labels is passed
         """
-        if seed != None:
+        if seed is not None:
             random.seed(seed)
         index_shuf = list(range(len(texts)))
         random.shuffle(index_shuf)
         texts = [texts[x] for x in index_shuf]
-        if labels == None:
+        if labels is None:
             return texts
         labels = [labels[x] for x in index_shuf]
         return texts, labels

@@ -1,0 +1,12 @@
+_name_: train_model
+model_type: LDA
+save: true
+k: 30
+alpha: 0.1
+eta: 0.01
+tw: 1 # IDF: 1, ONE: 0, PMI: 2
+rm_top: 5
+eval_coherence: false
+set_word_prior: true
+iterations: 200
+interval: 50
