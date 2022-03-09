@@ -1,0 +1,12 @@
+defaults:
+   - /pipeline: corpus_task_pipeline
+
+_target_: ekorpkit.corpora.loader.do_corpus_tasks
+name: corpus_pipeline
+merge_metadata: true
+verbose: ${oc.select:..verbose, true}
+
+pipeline:
+  _pipeline_:
+  name: ${..name}
+  verbose: ${oc.select:..verbose, true}

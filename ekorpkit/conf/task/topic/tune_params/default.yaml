@@ -1,0 +1,23 @@
+_name_: tune_params
+model_type: LDA
+topics: 
+  - 30
+alphas:
+  - 0.01
+  - 0.1
+etas:
+  - 0.01
+sample_ratios:
+  - 1.0
+tws: 
+  - 1
+min_cf: 5
+rm_top: 0
+min_df: 0
+burn_in: 0
+interval: 50
+iterations: 1000
+seed: 
+eval_coherence: true
+save: false
+save_full: false

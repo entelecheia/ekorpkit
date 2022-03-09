@@ -1,0 +1,10 @@
+defaults:
+  - /method: melt
+
+id_vars:
+value_vars:
+var_name: variable
+value_name: value
+col_level:
+ignore_index: true
+verbose: ${oc.select:..verbose, true}

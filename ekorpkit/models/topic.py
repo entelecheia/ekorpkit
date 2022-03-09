@@ -1,39 +1,27 @@
-import argparse
 import os
 import sys
 import platform
 import random
 import itertools
 import pandas as pd
-import orjson as json
+import json
 import tomotopy as tp
 from pathlib import Path
 from collections import namedtuple
 from datetime import datetime
 from tqdm import tqdm
 import numpy as np
-from contextlib import contextmanager
-from timeit import default_timer
-from ..io.load.list import load_wordlist, save_wordlist
-
-# from ..corpora.loader import load_corpus_paths
-
-import logging
-
-logging.getLogger("matplotlib").setLevel(logging.WARNING)
 import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
 import pyLDAvis
-from wordcloud import WordCloud
+import logging
+from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.io.load.list import load_wordlist, save_wordlist
+from ekorpkit.io.file import save_dataframe, load_dataframe
 
+# from pprint import pprint
 
-@contextmanager
-def elapsed_timer():
-    start = default_timer()
-    elapser = lambda: default_timer() - start
-    yield lambda: elapser()
-    end = default_timer()
-    elapser = lambda: end - start
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
 def _get_font_name(set_font_for_matplot=True, font_path=None):
@@ -51,8 +39,8 @@ def _get_font_name(set_font_for_matplot=True, font_path=None):
         print(f"Font file does not exist at {font_path}")
         if platform.system() == "Linux":
             font_install_help = """
-            apt install fontconfig 
-            apt install fonts-nanum* 
+            apt install fontconfig
+            apt install fonts-nanum
             fc-list | grep -i nanum
             """
             print(font_install_help)
@@ -114,107 +102,49 @@ class TopicModel:
         model_name,
         model_dir,
         output_dir,
-        corpus_names=None,
-        corpus_dir=None,
-        text_key="text",
-        id_keys=["id", "chunk_no"],
-        corpus_key_filename=None,
         num_workers=0,
-        ngram_path=None,
-        ngram_min_cf=10,
-        ngram_min_df=10,
-        ngram_max_len=5,
-        ngram_max_cand=5000,
-        ngram_min_score=-1,
-        ngram_normalized=True,
-        ngram_delimiter="_",
-        ngram_doc_path=None,
-        stopwords_path=None,
-        min_word_len=2,
-        word_prior_path=None,
+        ngram=None,
+        files=None,
+        verbose=False,
+        **kwargs,
     ):
+        self.model_name = model_name
+        self.model_dir = Path(str(model_dir))
+        self.output_dir = Path(str(output_dir))
+        self.num_workers = num_workers
+        self.ngram = ngram
+        self.files = files
+        self.verbose = verbose
+
         self._raw_corpus = tp.utils.Corpus()
         self._raw_corpus_keys = None
         self.ngrams = None
-        self.ngram_min_cf = ngram_min_cf
-        self.ngram_min_df = ngram_min_df
-        self.ngram_max_len = ngram_max_len
-        self.ngram_max_cand = ngram_max_cand
-        self.ngram_min_score = ngram_min_score
-        self.ngram_normalized = ngram_normalized
-        self.ngram_delimiter = ngram_delimiter
-        self.num_workers = num_workers
         self._ngram_docs = None
-        self.min_word_len = min_word_len
         self.stopwords = []
         self.docs = None
         self.corpus = None
+        self.corpora = None
         self.sample_ratio = 1.0
         self.active_model_id = None
-        self.model_name = model_name
-        self.model_dir = Path(str(model_dir)) / model_name
-        self.output_dir = Path(str(output_dir)) / model_name
-        self.corpus_names = corpus_names
-        self.corpus_dir = Path(str(corpus_dir))
-        self.text_key = text_key
-        self.corpus_filename_col = "corpus_filename"
-        self.id_keys = [self.corpus_filename_col] + list(id_keys)
         self.model = None
         self.models = {}
         self.labels = []
 
-        self.summary_file = self.model_dir / "model_summary.csv"
+        self.summary_file = Path(self.files.summary)
         self.summaries = []
         if self.summary_file.is_file():
-            df = pd.read_csv(self.summary_file, index_col=0)
+            df = load_dataframe(self.summary_file, index_col=0)
             for row in df.itertuples():
                 self.summaries.append(ModelSummary(*row[1:]))
 
-        if corpus_key_filename is None:
-            self.corpus_key_path = self.model_dir / "{}-keys.csv".format(
-                self.model_name
-            )
-            self._raw_corpus_key_path = self.model_dir / "{}-raw_keys.csv".format(
-                self.model_name
-            )
-        else:
-            self.corpus_key_path = self.model_dir / "{}-keys.csv".format(
-                self.model_name
-            )
-            self._raw_corpus_key_path = self.model_dir / "{}-raw_keys.csv".format(
-                self.model_name
-            )
-
-        if ngram_path is None:
-            self.ngram_path = self.output_dir / "{}-ngram-candidates.csv".format(
-                self.model_name
-            )
-        else:
-            self.ngram_path = Path(ngram_path)
-
-        if ngram_doc_path is None:
-            self.ngram_doc_path = self.model_dir / "{}-ngram-docs.pkl".format(
-                self.model_name
-            )
-        else:
-            self.ngram_doc_path = Path(ngram_doc_path)
-
-        self.stopwords_path = self.output_dir / "{}-stopwords.txt".format(
-            self.model_name
-        )
-        if stopwords_path is None:
-            self._stopwords_path = self.stopwords_path
-        else:
-            self._stopwords_path = Path(stopwords_path)
-
-        self.word_prior_path = self.output_dir / "{}-word_prior.json".format(
-            self.model_name
-        )
-        if word_prior_path is None:
-            self._word_prior_path = self.word_prior_path
-        else:
-            self._word_prior_path = Path(word_prior_path)
-
+        self.corpus_key_path = Path(self.files.corpus_key)
+        self._raw_corpus_key_path = Path(self.files.raw_corpus_key)
+        self.ngram_candidates_path = Path(self.files.ngram_candidates)
+        self.ngram_docs_path = Path(self.files.ngram_docs)
+        self.stopwords_path = Path(self.files.stopwords)
+        self.default_stopwords_path = Path(self.files.default_stopwords)
+        self.default_word_prior_path = Path(self.files.default_word_prior)
+        self.word_prior_path = Path(self.files.word_prior)
         (self.model_dir).mkdir(exist_ok=True, parents=True)
         (self.output_dir / "figures/wc").mkdir(exist_ok=True, parents=True)
         (self.output_dir / "figures/train").mkdir(exist_ok=True, parents=True)
@@ -223,50 +153,40 @@ class TopicModel:
         (self.output_dir / "output/tune").mkdir(exist_ok=True, parents=True)
         (self.output_dir / "logs").mkdir(exist_ok=True, parents=True)
 
-    def _load_raw_corpus(self, reload=False):
-        def convert_to_token_list(row):
-            text = row[self.text_key]
-            if not isinstance(text, str):
-                return None
-            tokens = [w.strip() for w in text.split()]
-            return tokens
+    def _load_raw_corpus(self, reload_corpus=False):
 
-        if not self._raw_corpus or reload:
-            # corpus_paths = load_corpus_paths(self.corpus_dir, self.corpus_names, corpus_type='dataframe', corpus_filetype='csv')
+        if not self._raw_corpus or reload_corpus:
             self._raw_corpus = tp.utils.Corpus(tokenizer=tp.utils.SimpleTokenizer())
-            # with elapsed_timer() as elapsed:
-            #     key_dfs = []
-            #     for i_corpus, (corpus_name, corpus_file) in enumerate(corpus_paths):
-            #         print('Starting to load documents from {}'.format(corpus_file))
-            #         df = pd.read_csv(corpus_file, index_col=0)
-            #         df[self.corpus_filename_col] = Path(corpus_file).name
-            #         # df[self.text_key] = df.apply(convert_to_token_list, axis=1)
-            #         df = df.dropna(subset=[self.text_key])
-            #         key_dfs.append(df)
+            if self.corpora is None:
+                raise ValueError("corpora is not set")
+            with elapsed_timer() as elapsed:
+                self.corpora.load()
+                self.corpora.concat_corpora()
+                df = self.corpora._data
 
-            #     df = pd.concat(key_dfs, ignore_index=True, axis=0)
-            #     # self._raw_corpus = df[self.text_key].to_list()
-            #     self._raw_corpus_keys = df[self.id_keys].values.tolist()
-            #     self._raw_corpus.process(df[self.text_key].to_list())
+                self._raw_corpus_keys = df[self.corpora._id_keys].values.tolist()
+                self._raw_corpus.process(df[self.corpora._text_key].to_list())
 
-            #     df[self.id_keys].to_csv(self._raw_corpus_key_path, header=True)
-            #     print("Elapsed time is %.2f seconds" % elapsed() )
+                save_dataframe(
+                    df[self.corpora._id_keys],
+                    self._raw_corpus_key_path,
+                    verbose=self.verbose,
+                )
+                print("Elapsed time is %.2f seconds" % elapsed())
 
-    def extract_ngrams(
-        self,
-    ):
+    def extract_ngrams(self):
         if not self.ngrams:
             self._load_raw_corpus()
             assert self._raw_corpus, "Load a corpus first"
             with elapsed_timer() as elapsed:
                 print("Extracting ngram candidates")
                 self.ngrams = self._raw_corpus.extract_ngrams(
-                    min_cf=self.ngram_min_cf,
-                    min_df=self.ngram_min_df,
-                    max_len=self.ngram_max_len,
-                    max_cand=self.ngram_max_cand,
-                    min_score=self.ngram_min_score,
-                    normalized=self.ngram_normalized,
+                    min_cf=self.ngram.min_cf,
+                    min_df=self.ngram.min_df,
+                    max_len=self.ngram.max_len,
+                    max_cand=self.ngram.max_cand,
+                    min_score=self.ngram.min_score,
+                    normalized=self.ngram.normalized,
                     workers=self.num_workers,
                 )
                 # print(self.ngrams)
@@ -275,20 +195,20 @@ class TopicModel:
                     for cand in self.ngrams
                 ]
                 df = pd.DataFrame(ngram_list)
-                df.to_csv(self.ngram_path, header=True)
+                save_dataframe(df, self.ngram_candidates_path, verbose=self.verbose)
                 print("Elapsed time is %.2f seconds" % elapsed())
 
     def _load_ngram_docs(self, rebuild=False):
-        if self.ngram_doc_path.is_file() and not rebuild:
+        if self.ngram_docs_path.is_file() and not rebuild:
             with elapsed_timer() as elapsed:
                 print(
                     "Starting to load ngram documents from {}".format(
-                        self.ngram_doc_path
+                        self.ngram_docs_path
                     )
                 )
-                self._raw_corpus = tp.utils.Corpus().load(self.ngram_doc_path)
-                df = pd.read_csv(self._raw_corpus_key_path)
-                self._raw_corpus_keys = df[self.id_keys].values.tolist()
+                self._raw_corpus = tp.utils.Corpus().load(self.ngram_docs_path)
+                df = load_dataframe(self._raw_corpus_key_path)
+                self._raw_corpus_keys = df[self.corpora._id_keys].values.tolist()
                 # self._raw_corpus.load(self.ngram_doc_path)
                 print(f"{len(self._raw_corpus)} documents are loaded.")
                 print("Elapsed time is %.2f seconds" % elapsed())
@@ -296,15 +216,15 @@ class TopicModel:
             self.extract_ngrams()
             assert self.ngrams, "Load a ngrams first"
             print("Building ngram docs by concatenaing words in ngram list")
-            self._raw_corpus.concat_ngrams(self.ngrams, self.ngram_delimiter)
-            self._raw_corpus.save(self.ngram_doc_path)
+            self._raw_corpus.concat_ngrams(self.ngrams, self.ngram.delimiter)
+            self._raw_corpus.save(self.ngram_docs_path)
 
     def _load_stopwords(self):
         if self.stopwords_path.is_file():
             self.stopwords = load_wordlist(self.stopwords_path)
         else:
-            if self._stopwords_path.is_file():
-                self.stopwords = load_wordlist(self._stopwords_path)
+            if self.default_stopwords_path.is_file():
+                self.stopwords = load_wordlist(self.default_stopwords_path)
             else:
                 self.stopwords = ["."]
         save_wordlist(self.stopwords, self.stopwords_path)
@@ -315,8 +235,8 @@ class TopicModel:
                 self.word_prior = json.load(fp)
             print(self.word_prior)
         else:
-            if self._word_prior_path.is_file():
-                with open(self._word_prior_path, "r") as fp:
+            if self.default_word_prior_path.is_file():
+                with open(self.default_word_prior_path, "r") as fp:
                     self.word_prior = json.load(fp)
                 print(self.word_prior)
             else:
@@ -324,9 +244,11 @@ class TopicModel:
         with open(self.word_prior_path, "w") as fp:
             json.dump(self.word_prior, fp, ensure_ascii=False, indent=4)
 
-    def load_corpus(self, sample_ratio=None, reload=False, min_df=5):
+    def load_corpus(
+        self, sample_ratio=1.0, reload_corpus=False, min_df=5, min_word_len=2, **kwargs
+    ):
         sample_ratio = sample_ratio if sample_ratio else self.sample_ratio
-        if self.corpus and self.sample_ratio == sample_ratio and not reload:
+        if self.corpus and self.sample_ratio == sample_ratio and not reload_corpus:
             print("Corpus is already loaded w/ sample_ratio: {}".format(sample_ratio))
             return True
         else:
@@ -350,153 +272,98 @@ class TopicModel:
         n_skipped = 0
         for i_doc, doc in tqdm(enumerate(docs)):
             words = [
-                w
-                for w in doc
-                if w not in self.stopwords and len(w) >= self.min_word_len
+                w for w in doc if w not in self.stopwords and len(w) >= min_word_len
             ]
             if len(words) > min_df:
                 self.corpus.add_doc(words=words)
                 self.corpus_keys.append(self._raw_corpus_keys[i_doc])
             else:
                 print(
-                    f"Skipped - index={i_doc}, key={self._raw_corpus_keys[i_doc]}, words={list(doc)}"
+                    f"Skipped - index={i_doc}, key={self._raw_corpus_keys[i_doc]}, words={list(words)}"
                 )
                 n_skipped += 1
         print(f"Total {i_doc-n_skipped+1} documents are loaded.")
         print(f"Total {n_skipped} documents are removed from the corpus.")
-        df = pd.DataFrame(self.corpus_keys, columns=self.id_keys)
-        df[self.id_keys].to_csv(self.corpus_key_path, header=True)
+        df = pd.DataFrame(self.corpus_keys, columns=self.corpora._id_keys)
+        save_dataframe(
+            df[self.corpora._id_keys], self.corpus_key_path, verbose=self.verbose
+        )
 
-    def transform_topic_dists(
+    def infer_topics(
         self,
-        input_dir,
-        corpus_names,
-        export_dir,
-        compress=False,
-        column_evals=[],
-        aggregations=None,
-        groupby_cols=["id"],
-    ):
-
-        print("Transform topic distributions by performing evals and aggregations")
-        os.makedirs(os.path.abspath(export_dir), exist_ok=True)
-
-        # corpus_paths = load_corpus_paths(input_dir, corpus_names, corpus_type='dataframe', corpus_filetype='csv')
-        # for i_corpus, (corpus_name, corpus_file) in enumerate(corpus_paths):
-        #     print('Inferring topic distribution of documents from {}'.format(corpus_file))
-
-        #     df = pd.read_csv(corpus_file, index_col=0)
-        #     print(df.tail())
-        #     for eval in column_evals:
-        #         print('Performing eval: ', eval)
-        #         df.eval(eval, inplace=True)
-        #         print(df.tail())
-
-        #     if aggregations:
-        #         print('Aggregations: ', aggregations)
-        #         # function_str = "lambda x: 'a' + x"
-        #         # fn = eval(function_str)
-        #         df = df.groupby(groupby_cols).agg(aggregations)
-        #         # df.columns = [col[0] for col in df.columns]
-        #         df = df.reset_index()
-        #         print(df.tail())
-
-        #     corpus_filename = Path(corpus_file).name
-        #     corpus_filename = corpus_filename[:corpus_filename.find('.csv')]
-        #     filename = f'{corpus_filename}.csv' + ('.bz2' if compress else '')
-        #     output_path = f'{export_dir}/{filename}'
-        #     df.to_csv(output_path, header=True)
-        #     print(f'Corpus is saved as {output_path}')
-
-    def infer_corpus(
-        self,
-        input_dir,
-        corpus_names,
-        export_dir,
-        compress=False,
-        iter=100,
+        output_dir=None,
+        output_file=None,
+        iterations=100,
         min_df=5,
-        text_key="text",
-        id_keys=["id", "chunk_no"],
+        min_word_len=2,
         num_workers=0,
+        **kwargs,
     ):
 
         self._load_stopwords()
         assert self.stopwords, "Load stopwords first"
         assert self.model, "Model not found"
         print("Infer document out of the model")
-        os.makedirs(os.path.abspath(export_dir), exist_ok=True)
 
+        os.makedirs(os.path.abspath(output_dir), exist_ok=True)
         num_workers = num_workers if num_workers else 1
+        text_key = self.corpora._text_key
+        id_keys = self.corpora._id_keys
 
         def convert_to_token_list(row):
             doc = str(getattr(row, text_key))
             words = [
                 w
                 for w in doc.split()
-                if w not in self.stopwords and len(w) >= self.min_word_len
+                if w not in self.stopwords and len(w) >= min_word_len
             ]
             if len(words) > min_df:
                 return words
             else:
                 return None
 
-        # corpus_paths = load_corpus_paths(input_dir, corpus_names, corpus_type='dataframe', corpus_filetype='csv')
-        # for i_corpus, (corpus_name, corpus_file) in enumerate(corpus_paths):
-        #     print('Inferring topic distribution of documents from {}'.format(corpus_file))
+        if self.corpora is None:
+            raise ValueError("corpora is not set")
+        with elapsed_timer() as elapsed:
+            self.corpora.load()
+            self.corpora.concat_corpora()
+            df = self.corpora._data
+            df.dropna(subset=[text_key], inplace=True)
+            tp_docs = []
+            for row in df.itertuples():
+                text = convert_to_token_list(row)
+                doc = None
+                if text:
+                    doc = self.model.make_doc(text)
+                else:
+                    print("Empty text!\n", row)
+                    # df.drop(row.Index, inplace = True)
+                if doc:
+                    tp_docs.append(doc)
+                else:
+                    if text:
+                        print(":::::::::::: Empty doc\n", text)
+                    df.drop(row.Index, inplace=True)
+            df = df.dropna(subset=[text_key]).reset_index(drop=True)
+            print(df.tail())
 
-        #     df = pd.read_csv(corpus_file, index_col=0)
-        #     df.dropna(subset=[text_key], inplace=True)
-        #     # df[text_key] = df.apply(convert_to_token_list, axis=1)
-        #     # df = df.dropna(subset=[text_key]).reset_index(drop=True)
-        #     # print(df.tail())
-        #     tp_docs = []
-        #     for row in df.itertuples():
-        #         text = convert_to_token_list(row)
-        #         doc = None
-        #         if text:
-        #             doc = self.model.make_doc(text)
-        #         else:
-        #             print('Empty text!\n', row)
-        #             # df.drop(row.Index, inplace = True)
-        #         if doc:
-        #             tp_docs.append(doc)
-        #         else:
-        #             if text:
-        #                 print(':::::::::::: Empty doc\n', text)
-        #             df.drop(row.Index, inplace = True)
-        #     df = df.dropna(subset=[text_key]).reset_index(drop=True)
-        #     print(df.tail())
-        #     # topic_distributions, ll = self.model.infer(docs)
-        #     # for doc, topic_dist in zip(docs, topic_distributions):
-        #     #     print(doc)
-        #     #     print(topic_dist)
+            topic_dists, ll = self.model.infer(
+                tp_docs, workers=num_workers, iter=iterations
+            )
+            print(topic_dists[-1:], ll)
 
-        #     # tp_corpus = tp.utils.Corpus(tokenizer=tp.utils.SimpleTokenizer())
-        #     # tp_corpus.process(df[text_key].to_list())
-        #     topic_dists, ll = self.model.infer(tp_docs, workers=num_workers, iter=iter)
-        #     # topic_dist = []
-        #     # # print topic distributions of each document
-        #     # for doc in inferred_corpus:
-        #     #     topic_dist.append(doc.get_topic_dist())
-        #     print(topic_dists[-1:])
+            print(f"Total inferred: {len(topic_dists)}, from: {len(df.index)}")
+            if len(topic_dists) == len(df.index):
+                idx = range(len(topic_dists[0]))
+                df_infer = pd.DataFrame(topic_dists, columns=[f"topic{i}" for i in idx])
+                df_infer = pd.concat([df[id_keys], df_infer], axis=1)
+                output_path = f"{output_dir}/{output_file}"
+                save_dataframe(df_infer, output_path, verbose=self.verbose)
+                print(f"Corpus is saved as {output_path}")
+            else:
+                print("The number of inferred is not same as the number of input.")
 
-        #     print(f'Total inferred: {len(topic_dists)}, from: {len(df.index)}')
-        #     if len(topic_dists) == len(df.index):
-        #         idx = range(len(topic_dists[0]))
-        #         df_infer = pd.DataFrame(topic_dists, columns=[f'topic{i}' for i in idx])
-        #         # print(df_infer.tail())
-        #         df_infer = pd.concat([df[id_keys], df_infer], axis=1)
-        #         print(df_infer.tail())
-
-        #         corpus_filename = Path(corpus_file).name
-        #         corpus_filename = corpus_filename[:corpus_filename.find('.csv')]
-        #         filename = f'{corpus_filename}.csv' + ('.bz2' if compress else '')
-        #         output_path = f'{export_dir}/{filename}'
-        #         df_infer.to_csv(output_path, header=True)
-        #         print(f'Corpus is saved as {output_path}')
-        #     else:
-        #         print('The number of inferred is not same as the number of input.')
+            print("Elapsed time is %.2f seconds" % elapsed())
 
     def save_document_topic_dists(self):
         assert self.model, "Model not found"
@@ -507,9 +374,9 @@ class TopicModel:
         # print(topic_dists[-1:])
 
         if self.corpus_keys:
-            df = pd.DataFrame(self.corpus_keys, columns=self.id_keys)
+            df = pd.DataFrame(self.corpus_keys, columns=self.corpora._id_keys)
         elif self.corpus_key_path.is_file():
-            df = pd.read_csv(self.corpus_key_path, index_col=0)
+            df = load_dataframe(self.corpus_key_path, verbose=self.verbose)
         else:
             print("Corpus keys do not exist")
             return
@@ -519,110 +386,17 @@ class TopicModel:
             idx = range(len(topic_dists[0]))
             df_infer = pd.DataFrame(topic_dists, columns=[f"topic{i}" for i in idx])
             # print(df_infer.tail())
-            df_infer = pd.concat([df[self.id_keys], df_infer], axis=1)
+            df_infer = pd.concat([df[self.corpora._id_keys], df_infer], axis=1)
             print(df_infer.tail())
 
             filename = "{}-{}-topic_dists.csv".format(
                 self.model_name, self.active_model_id
             )
             output_path = f"{self.model_dir}/{filename}"
-            df_infer.to_csv(output_path, header=True)
+            save_dataframe(df_infer, output_path, verbose=self.verbose)
             print(f"Corpus is saved as {output_path}")
         else:
             print("The number of inferred is not same as the number of input.")
-
-    def export_samples(
-        self,
-        corpus_names,
-        topic_nums,
-        model_id,
-        groupby_cols=["corpus_filename", "id"],
-        num_samples_per_topic=100,
-        num_tests_per_topic=20,
-        num_exps_per_topic=2,
-        min_topic_ratio=0.5,
-    ):
-
-        groupby_cols = list(groupby_cols)
-        if model_id:
-            self.active_model_id = model_id
-        # model_type = self.active_model_id.split('.')[0]
-        k = int(self.active_model_id.split(".")[1][1:])
-
-        filename = "{}-{}-topic_dists.csv".format(self.model_name, self.active_model_id)
-        topic_dists_path = f"{self.model_dir}/{filename}"
-
-        df_dists = pd.read_csv(topic_dists_path, index_col=0)
-
-        topics = [f"topic{i}" for i in topic_nums]
-        cols = [f"topic{i}" for i in range(k)]
-        df_id = df_dists.groupby(groupby_cols)[cols].mean()
-        df_id = df_id.reset_index()
-
-        dfs_train = []
-        dfs_test = []
-        dfs_exp = []
-        num_train = num_samples_per_topic - num_tests_per_topic
-
-        for corpus_name in corpus_names:
-
-            df_cp = df_id.query(
-                "corpus_filename.str.startswith(@corpus_name)", engine="python"
-            )
-
-            for topic in topics:
-                df_sample = df_cp.query(f"{topic} > @min_topic_ratio", engine="python")
-                n = (
-                    len(df_sample.index)
-                    if len(df_sample.index) < num_samples_per_topic
-                    else num_samples_per_topic
-                )
-                df_sample = df_sample.sample(n=n)
-                dfs_train.append(df_sample[:num_train])
-                dfs_test.append(df_sample[num_train:])
-                dfs_exp.append(df_sample[:num_exps_per_topic])
-
-        df_train = pd.concat(dfs_train)
-        df_test = pd.concat(dfs_test)
-        df_exp = pd.concat(dfs_exp)
-        # df_train = df_train[groupby_cols]
-        # df_train = df_train.merge(df_dists, on=groupby_cols)
-        # df_test = df_test[groupby_cols]
-        # df_test = df_test.merge(df_dists, on=groupby_cols)
-        # df_exp = df_exp[groupby_cols]
-        # df_exp = df_exp.merge(df_dists, on=groupby_cols)
-
-        print(len(df_train.index), len(df_test.index), len(df_exp.index))
-
-        if not self.labels:
-            self.label_topics()
-        labels = {"topic{}".format(label["no"]): label["name"] for label in self.labels}
-
-        def top_topics(row):
-            top_t = row[topics].sort_values(ascending=False).head(5)
-            return ", ".join(
-                [f"{labels[s]}[{round(top_t[s]*100,0):.0f}%]" for s in top_t.index]
-            )
-
-        top_topic_col = "top_topics"
-        out_cols = groupby_cols[:] + [top_topic_col]
-        df_train[top_topic_col] = df_train.apply(top_topics, axis=1)
-        df_train = df_train[out_cols]
-        df_test[top_topic_col] = df_test.apply(top_topics, axis=1)
-        df_test = df_test[out_cols]
-        df_exp[top_topic_col] = df_exp.apply(top_topics, axis=1)
-        df_exp = df_exp[out_cols]
-
-        filename = "{}-{}-train.csv".format(self.model_name, self.active_model_id)
-        export_path = f"{self.output_dir}/{filename}"
-        df_train.to_csv(export_path, index=False)
-        filename = "{}-{}-test.csv".format(self.model_name, self.active_model_id)
-        export_path = f"{self.output_dir}/{filename}"
-        df_test.to_csv(export_path, index=False)
-        filename = "{}-{}-exp.csv".format(self.model_name, self.active_model_id)
-        export_path = f"{self.output_dir}/{filename}"
-        df_exp.to_csv(export_path, index=False)
-        print(df_exp.head())
 
     def tune_params(
         self,
@@ -749,6 +523,7 @@ class TopicModel:
         set_word_prior=False,
         save=True,
         save_full=True,
+        **kwargs,
     ):
 
         self.load_corpus(sample_ratio=sample_ratio)
@@ -940,7 +715,7 @@ class TopicModel:
         )
         self.summaries.append(entry)
         df = pd.DataFrame(self.summaries)
-        df.to_csv(self.summary_file)
+        save_dataframe(df, self.summary_file, index=True)
         return df_ll, entry
 
     def eval_coherence_value(
@@ -959,10 +734,10 @@ class TopicModel:
             print()
         return coh_values
 
-    def load_model(self, model_id=None, model_file=None, reload=False):
+    def load_model(self, model_id=None, model_file=None, reload_model=False, **kwargs):
         if model_id:
             self.active_model_id = model_id
-        if self.active_model_id in self.models and not reload:
+        if self.active_model_id in self.models and not reload_model:
             print("The model is already loaded.")
             return True
 
@@ -992,16 +767,21 @@ class TopicModel:
             self.model = None
             print("Model file not found")
 
-    def save_labels(self, names=None):
+    def save_labels(self, names=None, **kwargs):
+        if names is None:
+            print("No names are given")
+            return
+
         if not self.labels:
             self.label_topics()
-        if isinstance(names, dict):
-            for k in names:
-                self.labels[int(k)]["name"] = names[k]
-        label_file = "{}-{}-labels.csv".format(self.model_name, self.active_model_id)
+        for k in names:
+            self.labels[int(k)]["topic_name"] = names[k]
+            if self.verbose:
+                print(f"{k}: {names[k]}")
+        label_file = "{}-labels.csv".format(self.active_model_id)
         label_file = self.output_dir / label_file
         df = pd.DataFrame(self.labels)
-        df.to_csv(label_file, index=False)
+        save_dataframe(df, label_file, index=False, verbose=self.verbose)
 
     def label_topics(
         self,
@@ -1015,13 +795,14 @@ class TopicModel:
         mu=0.25,
         window_size=100,
         top_n=10,
+        **kwargs,
     ):
 
-        label_file = "{}-{}-labels.csv".format(self.model_name, self.active_model_id)
+        label_file = "{}-labels.csv".format(self.active_model_id)
         label_file = self.output_dir / label_file
         if label_file.is_file() and not rebuild:
             print("loading labels from {}".format(label_file))
-            df = pd.read_csv(label_file, index_col=None)
+            df = load_dataframe(label_file)
             self.labels = df.to_dict("records")
         else:
             assert self.model, "Model not found"
@@ -1066,9 +847,20 @@ class TopicModel:
                     word for word, prob in mdl.get_topic_words(k, top_n=top_n)
                 )
                 if use_pmiextractor:
-                    label = {"no": k, "name": name, "labels": lbls, "words": wrds}
+                    label = {
+                        "topic_no": k,
+                        "topic_num": f"topic{k}",
+                        "topic_name": name,
+                        "topic_labels": lbls,
+                        "topic_words": wrds,
+                    }
                 else:
-                    label = {"no": k, "name": name, "words": wrds}
+                    label = {
+                        "topic_no": k,
+                        "topic_num": f"topic{k}",
+                        "topic_name": name,
+                        "topic_words": wrds,
+                    }
                 labels.append(label)
                 for word, prob in mdl.get_topic_words(k, top_n=top_n):
                     print(word, prob, sep="\t")
@@ -1076,9 +868,9 @@ class TopicModel:
 
             self.labels = labels
             df = pd.DataFrame(self.labels)
-            df.to_csv(label_file, index=False)
+            save_dataframe(df, label_file, index=False, verbose=self.verbose)
 
-    def visualize(self):
+    def visualize(self, **kwargs):
         assert self.model, "Model not found"
         mdl = self.model
         topic_term_dists = np.stack([mdl.get_topic_word_dist(k) for k in range(mdl.k)])
@@ -1146,6 +938,7 @@ class TopicModel:
         nrows=1,
         dpi=300,
         save=True,
+        **kwargs,
     ):
         """Wrapper function that generates wordclouds for ALL topics of a tomotopy model
         ** Inputs **
@@ -1160,6 +953,7 @@ class TopicModel:
         #     topic_dict = self.get_topic_words()
         num_topics = self.model.k
         # wc = WordCloud(background_color="white")
+
         def save_fig():
             plt.subplots_adjust(
                 left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.00, hspace=0.00
@@ -1222,6 +1016,8 @@ class TopicModel:
 
         ** Returns **
         wordclouds as plots"""
+        from wordcloud import WordCloud
+
         assert self.model, "Model not found"
         mdl = self.model
         if not fontname:
@@ -1239,47 +1035,3 @@ class TopicModel:
             )
             out_file = str(self.output_dir / "figures/wc" / out_file)
             plt.savefig(out_file, bbox_inches=extent.expanded(1.1, 1.2))
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--process_mode", type=str, help="process mode")
-    parser.add_argument("--corpus_dir", type=str, help="Location of corpus files")
-    parser.add_argument("--model_dir", type=str, help="Location of model files")
-    parser.add_argument("--model_type", type=str, help="Type of the model")
-    parser.add_argument("--model_id", type=str, help="Name of the model")
-    parser.add_argument("--corpus", type=str, help="Name of the corpus")
-    parser.add_argument("--k", help="No. of topics", type=int, default=20)
-
-    args = parser.parse_args()
-    print(args)
-
-    tm = TopicModel(model_name=args.corpus)
-    if args.process_mode == "train-topic-model":
-        tm.train_model(model_type=args.model_type, k=args.k, burn_in=10, iterations=200)
-        # tm.visualize()
-    elif args.process_mode == "tune-topic-model":
-        tm.tune_params(
-            model_type=args.model_type,
-            topics=[30],
-            alphas=[0.01, 0.1],
-            etas=[0.01],
-            sample_ratios=[1.0],
-            tws=[IDF],
-            min_cf=5,
-            rm_top=0,
-            min_df=0,
-            burn_in=0,
-            interval=50,
-            iterations=1000,
-            seed=None,
-            eval_coherence=True,
-            save=False,
-            save_full=False,
-        )
-    elif args.process_mode == "analyse-topic-model":
-        tm.active_model_id = args.model_id
-        tm.load_model()
-        # tm.label_topics()
-        # tm.visualize()
-        tm.topic_wordclouds()

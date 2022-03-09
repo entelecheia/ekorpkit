@@ -2,4 +2,5 @@ defaults:
   - /method: reset_index
 
 index_column_name: id
+drop_index: false
 verbose: ${oc.select:..verbose, true}

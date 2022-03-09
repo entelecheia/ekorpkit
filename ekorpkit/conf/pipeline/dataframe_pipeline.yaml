@@ -15,6 +15,13 @@ defaults:
   - save_dataframe: default
   - concat_dataframes: default
   - split_dataframe: default
+  - eval_columns: default
+  - melt: default
+  - split_sampling: default
+  - sampling: default
+  - filter_query: default
+  - merge_dataframe: default
+  - top_values: default
   
 _pipeline_:
   - load_dataframe

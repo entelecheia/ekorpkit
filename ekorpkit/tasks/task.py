@@ -1,9 +1,55 @@
 from omegaconf import OmegaConf
-
-# from omegaconf.dictconfig import DictConfig
 from hydra.utils import instantiate
 from ..utils.func import elapsed_timer
 from wasabi import msg
+
+# from omegaconf.dictconfig import DictConfig
+
+
+def topic_tasks(**cfg):
+    args = OmegaConf.create(cfg)
+    corpus_cfg = args.corpus
+    model_cfg = args.model.topic
+    subtasks = args.task.topic
+    _subtasks_ = args.task.topic._subtasks_
+
+    with elapsed_timer(format_time=True) as elapsed:
+        model = instantiate(model_cfg, _recursive_=False)
+        model.corpora = instantiate(corpus_cfg, _recursive_=False)
+
+        for subtask in _subtasks_:
+            subtask_cfg = subtasks[subtask]
+            if "_target_" in subtask_cfg:
+                msg.info(f"Instantiate {subtask} ...")
+                instantiate(subtask_cfg, model=model, _recursive_=False)
+            elif "_name_" in subtask_cfg:
+                msg.info(f"Running model.{subtask} ...")
+                getattr(model, subtask)(**subtask_cfg)
+            else:
+                msg.fail(f"{subtask} is not a valid subtask")
+
+        print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+
+
+def corpora_tasks(**cfg):
+    args = OmegaConf.create(cfg)
+    corpus_cfg = args.corpus
+    subtasks = args.task.corpus
+    _subtasks_ = args.task.corpus._subtasks_
+
+    with elapsed_timer(format_time=True) as elapsed:
+        corpora = instantiate(corpus_cfg, _recursive_=False)
+        corpora.load()
+        corpora.concat_corpora()
+
+        for subtask in _subtasks_:
+            subtask_cfg = subtasks[subtask]
+            if "_target_" in subtask_cfg:
+                msg.info(f"Running {subtask} ...")
+                corpora.do_tasks(**subtask_cfg)
+            else:
+                msg.fail(f"{subtask} is not a valid subtask")
+        print(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
 
 def corpus_tasks(**cfg):

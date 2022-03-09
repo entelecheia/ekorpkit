@@ -1,0 +1,2 @@
+# @package _global_
+_target_: ekorpkit.tasks.task.topic_tasks

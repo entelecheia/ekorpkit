@@ -1,0 +1,9 @@
+_name_: topic_wordclouds
+ncols: 4
+nrows: 5
+topic_dict: 
+title_fontsize: 20
+title_color: green
+top_n: 100
+dpi: 300
+save: true

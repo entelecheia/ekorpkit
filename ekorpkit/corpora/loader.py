@@ -1,9 +1,9 @@
-from hydra.utils import instantiate
-from wasabi import msg
+# from hydra.utils import instantiate
+# from wasabi import msg
 from ekorpkit.pipelines.pipe import apply_pipeline
 import pandas as pd
 from omegaconf import OmegaConf
-from ekorpkit.utils.func import ordinal, elapsed_timer
+from ekorpkit.utils.func import elapsed_timer
 from .corpus import Corpus
 
 
@@ -17,29 +17,88 @@ class Corpora:
         self.data_dir = args.data_dir
         self.corpora = {}
         self._data = None
+        self._metadata = None
+        use_name_as_subdir = args.get("use_name_as_subdir", True)
+        self.verbose = args.get("verbose", False)
+        self.column_info = self.args.get("column_info", None)
+        if self.column_info:
+            self._keys = self.column_info["keys"]
+            for k in ["id", "text"]:
+                if isinstance(self._keys[k], str):
+                    self._keys[k] = [self._keys[k]]
+                else:
+                    self._keys[k] = list(self._keys[k])
+            self._id_keys = self._keys["id"]
+            self._data_keys = self.column_info.get("data", None)
+            self._meta_kyes = self.column_info.get("meta", None)
+        self._corpus_key = "corpus"
+        self._text_key = "text"
+        self._id_key = "id"
+        self._id_separator = "_"
 
         with elapsed_timer(format_time=True) as elapsed:
             for name in self.names:
                 print(f"processing {name}")
-                data_dir = f"{self.data_dir}/{name}"
+                if use_name_as_subdir:
+                    data_dir = f"{self.data_dir}/{name}"
+                else:
+                    data_dir = self.data_dir
                 args["data_dir"] = data_dir
                 args["name"] = name
                 corpus = Corpus(**args)
                 self.corpora[name] = corpus
             print(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
-    def concat_corpora(self):
-        self._data = pd.concat(
-            [corpus._data for corpus in self.corpora.values()], ignore_index=True
-        )
+    def load(self):
+        for corpus in self:
+            corpus.load()
+
+    def concat_corpora(self, append_corpus_name=True):
+        dfs = []
+        df_metas = []
+        if append_corpus_name:
+            if self._corpus_key not in self._id_keys:
+                self._id_keys.append(self._corpus_key)
+
+        for name in self.corpora:
+            df = self.corpora[name]._data
+            if append_corpus_name:
+                df[self._corpus_key] = name
+            dfs.append(df)
+            df_meta = self.corpora[name]._metadata
+            if df_meta is not None:
+                if append_corpus_name:
+                    df_meta[self._corpus_key] = name
+                df_metas.append(df_meta)
+        self._data = pd.concat(dfs, ignore_index=True)
+        if len(df_metas) > 0:
+            self._metadata = pd.concat(df_metas, ignore_index=True)
 
     def __iter__(self):
         for corpus in self.corpora.values():
             yield corpus
 
+    def __getitem__(self, name):
+        if name not in self.corpora:
+            raise KeyError(f"{name} not in corpora")
+        return self.corpora[name]
+
+    def do_tasks(self, pipeline=None, **kwargs):
+        verbose = kwargs.get("verbose", self.verbose)
+        merge_metadata = kwargs.get("merge_metadata", False)
+        if merge_metadata and self._metadata is not None:
+            df = pd.merge(self._metadata, self._data, on=self._id_keys)
+        else:
+            df = self._data
+        # update_args = {"corpus_name": self.name}
+        _pipeline_ = pipeline.get("_pipeline_", {})
+        df = apply_pipeline(df, _pipeline_, pipeline)
+        if verbose and df is not None:
+            print(df.head())
+
 
 def do_corpus_tasks(corpus, pipeline=None, **kwargs):
-    verbose = kwargs.get("verbose", False)
+    # verbose = kwargs.get("verbose", False)
     merge_metadata = kwargs.get("merge_metadata", False)
     if merge_metadata:
         df = pd.merge(corpus._metadata, corpus._data, on=corpus._id_key)
@@ -48,77 +107,3 @@ def do_corpus_tasks(corpus, pipeline=None, **kwargs):
     update_args = {"corpus_name": corpus.name}
     _pipeline_ = pipeline.get("_pipeline_", {})
     df = apply_pipeline(df, _pipeline_, pipeline, update_args=update_args)
-
-
-# class eKorpkit:
-#     """
-#     Examples::
-#         >>> from eKorpkit import eKorpkit
-#         >>> corpus = eKorpkit.load('esg_reports')
-#         >>> len(corpus.train.texts)
-#     """
-#     @classmethod
-#     def load(cls, name, corpus_dir=None,
-#             filename_pattern=None, load_light=False,
-#             id_keys=ID_KEYS, text_key=TEXT_KEY, meta_cols=None,
-#             **kwargs
-#             ):
-
-#         id_keys = id_keys if id_keys else ID_KEYS
-#         text_key = text_key if text_key else TEXT_KEY
-
-#         print(f'Loading corpus [{name}] from [{corpus_dir}]')
-
-#         corpus = DocCorpus(
-#                     name=name, corpus_dir=corpus_dir,
-#                     filename_pattern=filename_pattern,
-#                     load_light=load_light,
-#                     id_keys=id_keys, text_key=text_key, meta_cols=meta_cols
-#                 )
-#         return corpus
-
-#     @classmethod
-#     def exists(cls, name,
-#             corpus_dir=None,
-#             filename_pattern='.',
-#             ):
-
-#         paths = get_corpus_paths(corpus_dir, filename_pattern)
-#         return len(paths) > 0
-
-
-# def load_corpus_paths(corpus_names, corpus_dir,
-#         corpus_filetype=None, filename_pattern=None,
-#         **kwargs):
-
-#     corpus_dir = str(corpus_dir)
-#     if isinstance(corpus_names, str):
-#         corpus_names = [corpus_names]
-#     else:
-#         corpus_names = list(corpus_names)
-#     available = []
-#     if not corpus_filetype:
-#         corpus_filetype = 'csv'
-#     if corpus_names[0] == CORPUS_ALL:
-#         if not filename_pattern:
-#             filename_pattern = '.'
-#         for corpus_file in get_corpus_paths(corpus_dir, filename_pattern=filename_pattern, corpus_filetype=corpus_filetype):
-#             available.append((CORPUS_ALL, str(corpus_file)))
-#     else:
-#         for corpus_name in corpus_names:
-#             if not filename_pattern or filename_pattern == '.':
-#                 f_pattern = corpus_name
-#             else:
-#                 if filename_pattern.startswith(corpus_name):
-#                     f_pattern = filename_pattern
-#                 else:
-#                     f_pattern = corpus_name + filename_pattern
-#             for corpus_file in get_corpus_paths(corpus_dir, filename_pattern=f_pattern, corpus_filetype=corpus_filetype):
-#                 available.append((corpus_name, str(corpus_file)))
-#     if not available:
-#         raise ValueError(
-#             'Not found any proper corpus name. Check the `corpus` argument')
-#     print(f'{len(available)} corpus files are found.')
-#     for path in available:
-#         print(path)
-#     return sorted(available)

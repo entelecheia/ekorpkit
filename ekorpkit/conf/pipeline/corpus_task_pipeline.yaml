@@ -2,9 +2,13 @@ defaults:
   - filter_query: default
   - filter_length: default
   - explode_splits: default
+  - merge_dataframe: default
   - save_as_text: default
   - save_dataframe: default
-  
+  - aggregate_columns: aggregate
+  - segment: segment
+  - chunk: default
+
 _pipeline_:
 apply_to: 
   - text
