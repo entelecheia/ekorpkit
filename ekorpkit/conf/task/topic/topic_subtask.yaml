@@ -5,11 +5,15 @@ defaults:
   - visualize: default
   - label_topics: default
   - topic_wordclouds: default
-  # - export_processed: default
+  - infer_topics: default
+  - save_labels: default
+  # - /pipeline: topic_task_pipeline
 
 name: topic_subtask
+num_workers: ${oc.select:..num_workers, 0}
 verbose: ${oc.select:..verbose, true}
 _subtasks_:
-  - load_corpus
-  - train_model
-  # - export_processed
+  # - load_corpus
+  # - train_model
+# pipeline:
+#   _pipeline_:

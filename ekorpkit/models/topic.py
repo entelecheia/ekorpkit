@@ -17,6 +17,9 @@ import pyLDAvis
 import logging
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
+from ekorpkit.io.file import save_dataframe, load_dataframe
+
+# from pprint import pprint
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
@@ -130,7 +133,7 @@ class TopicModel:
         self.summary_file = Path(self.files.summary)
         self.summaries = []
         if self.summary_file.is_file():
-            df = pd.read_csv(self.summary_file, index_col=0)
+            df = load_dataframe(self.summary_file, index_col=0)
             for row in df.itertuples():
                 self.summaries.append(ModelSummary(*row[1:]))
 
@@ -151,12 +154,6 @@ class TopicModel:
         (self.output_dir / "logs").mkdir(exist_ok=True, parents=True)
 
     def _load_raw_corpus(self, reload_corpus=False):
-        def convert_to_token_list(row):
-            text = row[self.text_key]
-            if not isinstance(text, str):
-                return None
-            tokens = [w.strip() for w in text.split()]
-            return tokens
 
         if not self._raw_corpus or reload_corpus:
             self._raw_corpus = tp.utils.Corpus(tokenizer=tp.utils.SimpleTokenizer())
@@ -166,16 +163,18 @@ class TopicModel:
                 self.corpora.load()
                 self.corpora.concat_corpora()
                 df = self.corpora._data
-                # self._raw_corpus = df[self.text_key].to_list()
+
                 self._raw_corpus_keys = df[self.corpora._id_keys].values.tolist()
                 self._raw_corpus.process(df[self.corpora._text_key].to_list())
 
-                df[self.corpora._id_keys].to_csv(self._raw_corpus_key_path, header=True)
+                save_dataframe(
+                    df[self.corpora._id_keys],
+                    self._raw_corpus_key_path,
+                    verbose=self.verbose,
+                )
                 print("Elapsed time is %.2f seconds" % elapsed())
 
-    def extract_ngrams(
-        self,
-    ):
+    def extract_ngrams(self):
         if not self.ngrams:
             self._load_raw_corpus()
             assert self._raw_corpus, "Load a corpus first"
@@ -196,7 +195,7 @@ class TopicModel:
                     for cand in self.ngrams
                 ]
                 df = pd.DataFrame(ngram_list)
-                df.to_csv(self.ngram_candidates_path, header=True)
+                save_dataframe(df, self.ngram_candidates_path, verbose=self.verbose)
                 print("Elapsed time is %.2f seconds" % elapsed())
 
     def _load_ngram_docs(self, rebuild=False):
@@ -208,7 +207,7 @@ class TopicModel:
                     )
                 )
                 self._raw_corpus = tp.utils.Corpus().load(self.ngram_docs_path)
-                df = pd.read_csv(self._raw_corpus_key_path)
+                df = load_dataframe(self._raw_corpus_key_path)
                 self._raw_corpus_keys = df[self.corpora._id_keys].values.tolist()
                 # self._raw_corpus.load(self.ngram_doc_path)
                 print(f"{len(self._raw_corpus)} documents are loaded.")
@@ -286,136 +285,85 @@ class TopicModel:
         print(f"Total {i_doc-n_skipped+1} documents are loaded.")
         print(f"Total {n_skipped} documents are removed from the corpus.")
         df = pd.DataFrame(self.corpus_keys, columns=self.corpora._id_keys)
-        df[self.corpora._id_keys].to_csv(self.corpus_key_path, header=True)
-
-    def transform_topic_dists(
-        self,
-        input_dir,
-        corpus_names,
-        export_dir,
-        compress=False,
-        column_evals=[],
-        aggregations=None,
-        groupby_cols=["id"],
-    ):
-
-        print("Transform topic distributions by performing evals and aggregations")
-        os.makedirs(os.path.abspath(export_dir), exist_ok=True)
-
-        # corpus_paths = load_corpus_paths(input_dir, corpus_names, corpus_type='dataframe', corpus_filetype='csv')
-        # for i_corpus, (corpus_name, corpus_file) in enumerate(corpus_paths):
-        #     print('Inferring topic distribution of documents from {}'.format(corpus_file))
-
-        #     df = pd.read_csv(corpus_file, index_col=0)
-        #     print(df.tail())
-        #     for eval in column_evals:
-        #         print('Performing eval: ', eval)
-        #         df.eval(eval, inplace=True)
-        #         print(df.tail())
-
-        #     if aggregations:
-        #         print('Aggregations: ', aggregations)
-        #         # function_str = "lambda x: 'a' + x"
-        #         # fn = eval(function_str)
-        #         df = df.groupby(groupby_cols).agg(aggregations)
-        #         # df.columns = [col[0] for col in df.columns]
-        #         df = df.reset_index()
-        #         print(df.tail())
-
-        #     corpus_filename = Path(corpus_file).name
-        #     corpus_filename = corpus_filename[:corpus_filename.find('.csv')]
-        #     filename = f'{corpus_filename}.csv' + ('.bz2' if compress else '')
-        #     output_path = f'{export_dir}/{filename}'
-        #     df.to_csv(output_path, header=True)
-        #     print(f'Corpus is saved as {output_path}')
+        save_dataframe(
+            df[self.corpora._id_keys], self.corpus_key_path, verbose=self.verbose
+        )
 
     def infer_topics(
         self,
-        input_dir,
-        corpus_names,
-        export_dir,
-        compress=False,
-        iter=100,
+        output_dir=None,
+        output_file=None,
+        iterations=100,
         min_df=5,
+        min_word_len=2,
         num_workers=0,
+        **kwargs,
     ):
 
         self._load_stopwords()
         assert self.stopwords, "Load stopwords first"
         assert self.model, "Model not found"
         print("Infer document out of the model")
-        os.makedirs(os.path.abspath(export_dir), exist_ok=True)
 
+        os.makedirs(os.path.abspath(output_dir), exist_ok=True)
         num_workers = num_workers if num_workers else 1
+        text_key = self.corpora._text_key
+        id_keys = self.corpora._id_keys
 
-        # def convert_to_token_list(row):
-        #     doc = str(getattr(row, text_key))
-        #     words = [
-        #         w
-        #         for w in doc.split()
-        #         if w not in self.stopwords and len(w) >= self.min_word_len
-        #     ]
-        #     if len(words) > min_df:
-        #         return words
-        #     else:
-        #         return None
+        def convert_to_token_list(row):
+            doc = str(getattr(row, text_key))
+            words = [
+                w
+                for w in doc.split()
+                if w not in self.stopwords and len(w) >= min_word_len
+            ]
+            if len(words) > min_df:
+                return words
+            else:
+                return None
 
-        # corpus_paths = load_corpus_paths(input_dir, corpus_names, corpus_type='dataframe', corpus_filetype='csv')
-        # for i_corpus, (corpus_name, corpus_file) in enumerate(corpus_paths):
-        #     print('Inferring topic distribution of documents from {}'.format(corpus_file))
+        if self.corpora is None:
+            raise ValueError("corpora is not set")
+        with elapsed_timer() as elapsed:
+            self.corpora.load()
+            self.corpora.concat_corpora()
+            df = self.corpora._data
+            df.dropna(subset=[text_key], inplace=True)
+            tp_docs = []
+            for row in df.itertuples():
+                text = convert_to_token_list(row)
+                doc = None
+                if text:
+                    doc = self.model.make_doc(text)
+                else:
+                    print("Empty text!\n", row)
+                    # df.drop(row.Index, inplace = True)
+                if doc:
+                    tp_docs.append(doc)
+                else:
+                    if text:
+                        print(":::::::::::: Empty doc\n", text)
+                    df.drop(row.Index, inplace=True)
+            df = df.dropna(subset=[text_key]).reset_index(drop=True)
+            print(df.tail())
 
-        #     df = pd.read_csv(corpus_file, index_col=0)
-        #     df.dropna(subset=[text_key], inplace=True)
-        #     # df[text_key] = df.apply(convert_to_token_list, axis=1)
-        #     # df = df.dropna(subset=[text_key]).reset_index(drop=True)
-        #     # print(df.tail())
-        #     tp_docs = []
-        #     for row in df.itertuples():
-        #         text = convert_to_token_list(row)
-        #         doc = None
-        #         if text:
-        #             doc = self.model.make_doc(text)
-        #         else:
-        #             print('Empty text!\n', row)
-        #             # df.drop(row.Index, inplace = True)
-        #         if doc:
-        #             tp_docs.append(doc)
-        #         else:
-        #             if text:
-        #                 print(':::::::::::: Empty doc\n', text)
-        #             df.drop(row.Index, inplace = True)
-        #     df = df.dropna(subset=[text_key]).reset_index(drop=True)
-        #     print(df.tail())
-        #     # topic_distributions, ll = self.model.infer(docs)
-        #     # for doc, topic_dist in zip(docs, topic_distributions):
-        #     #     print(doc)
-        #     #     print(topic_dist)
+            topic_dists, ll = self.model.infer(
+                tp_docs, workers=num_workers, iter=iterations
+            )
+            print(topic_dists[-1:], ll)
 
-        #     # tp_corpus = tp.utils.Corpus(tokenizer=tp.utils.SimpleTokenizer())
-        #     # tp_corpus.process(df[text_key].to_list())
-        #     topic_dists, ll = self.model.infer(tp_docs, workers=num_workers, iter=iter)
-        #     # topic_dist = []
-        #     # # print topic distributions of each document
-        #     # for doc in inferred_corpus:
-        #     #     topic_dist.append(doc.get_topic_dist())
-        #     print(topic_dists[-1:])
+            print(f"Total inferred: {len(topic_dists)}, from: {len(df.index)}")
+            if len(topic_dists) == len(df.index):
+                idx = range(len(topic_dists[0]))
+                df_infer = pd.DataFrame(topic_dists, columns=[f"topic{i}" for i in idx])
+                df_infer = pd.concat([df[id_keys], df_infer], axis=1)
+                output_path = f"{output_dir}/{output_file}"
+                save_dataframe(df_infer, output_path, verbose=self.verbose)
+                print(f"Corpus is saved as {output_path}")
+            else:
+                print("The number of inferred is not same as the number of input.")
 
-        #     print(f'Total inferred: {len(topic_dists)}, from: {len(df.index)}')
-        #     if len(topic_dists) == len(df.index):
-        #         idx = range(len(topic_dists[0]))
-        #         df_infer = pd.DataFrame(topic_dists, columns=[f'topic{i}' for i in idx])
-        #         # print(df_infer.tail())
-        #         df_infer = pd.concat([df[id_keys], df_infer], axis=1)
-        #         print(df_infer.tail())
-
-        #         corpus_filename = Path(corpus_file).name
-        #         corpus_filename = corpus_filename[:corpus_filename.find('.csv')]
-        #         filename = f'{corpus_filename}.csv' + ('.bz2' if compress else '')
-        #         output_path = f'{export_dir}/{filename}'
-        #         df_infer.to_csv(output_path, header=True)
-        #         print(f'Corpus is saved as {output_path}')
-        #     else:
-        #         print('The number of inferred is not same as the number of input.')
+            print("Elapsed time is %.2f seconds" % elapsed())
 
     def save_document_topic_dists(self):
         assert self.model, "Model not found"
@@ -428,7 +376,7 @@ class TopicModel:
         if self.corpus_keys:
             df = pd.DataFrame(self.corpus_keys, columns=self.corpora._id_keys)
         elif self.corpus_key_path.is_file():
-            df = pd.read_csv(self.corpus_key_path, index_col=0)
+            df = load_dataframe(self.corpus_key_path, verbose=self.verbose)
         else:
             print("Corpus keys do not exist")
             return
@@ -445,103 +393,10 @@ class TopicModel:
                 self.model_name, self.active_model_id
             )
             output_path = f"{self.model_dir}/{filename}"
-            df_infer.to_csv(output_path, header=True)
+            save_dataframe(df_infer, output_path, verbose=self.verbose)
             print(f"Corpus is saved as {output_path}")
         else:
             print("The number of inferred is not same as the number of input.")
-
-    def export_samples(
-        self,
-        corpus_names,
-        topic_nums,
-        model_id,
-        groupby_cols=["corpus_filename", "id"],
-        num_samples_per_topic=100,
-        num_tests_per_topic=20,
-        num_exps_per_topic=2,
-        min_topic_ratio=0.5,
-    ):
-
-        groupby_cols = list(groupby_cols)
-        if model_id:
-            self.active_model_id = model_id
-        # model_type = self.active_model_id.split('.')[0]
-        k = int(self.active_model_id.split(".")[1][1:])
-
-        filename = "{}-{}-topic_dists.csv".format(self.model_name, self.active_model_id)
-        topic_dists_path = f"{self.model_dir}/{filename}"
-
-        df_dists = pd.read_csv(topic_dists_path, index_col=0)
-
-        topics = [f"topic{i}" for i in topic_nums]
-        cols = [f"topic{i}" for i in range(k)]
-        df_id = df_dists.groupby(groupby_cols)[cols].mean()
-        df_id = df_id.reset_index()
-
-        dfs_train = []
-        dfs_test = []
-        dfs_exp = []
-        num_train = num_samples_per_topic - num_tests_per_topic
-
-        for corpus_name in corpus_names:
-
-            df_cp = df_id.query(
-                "corpus_filename.str.startswith(@corpus_name)", engine="python"
-            )
-
-            for topic in topics:
-                df_sample = df_cp.query(f"{topic} > @min_topic_ratio", engine="python")
-                n = (
-                    len(df_sample.index)
-                    if len(df_sample.index) < num_samples_per_topic
-                    else num_samples_per_topic
-                )
-                df_sample = df_sample.sample(n=n)
-                dfs_train.append(df_sample[:num_train])
-                dfs_test.append(df_sample[num_train:])
-                dfs_exp.append(df_sample[:num_exps_per_topic])
-
-        df_train = pd.concat(dfs_train)
-        df_test = pd.concat(dfs_test)
-        df_exp = pd.concat(dfs_exp)
-        # df_train = df_train[groupby_cols]
-        # df_train = df_train.merge(df_dists, on=groupby_cols)
-        # df_test = df_test[groupby_cols]
-        # df_test = df_test.merge(df_dists, on=groupby_cols)
-        # df_exp = df_exp[groupby_cols]
-        # df_exp = df_exp.merge(df_dists, on=groupby_cols)
-
-        print(len(df_train.index), len(df_test.index), len(df_exp.index))
-
-        if not self.labels:
-            self.label_topics()
-        labels = {"topic{}".format(label["no"]): label["name"] for label in self.labels}
-
-        def top_topics(row):
-            top_t = row[topics].sort_values(ascending=False).head(5)
-            return ", ".join(
-                [f"{labels[s]}[{round(top_t[s]*100,0):.0f}%]" for s in top_t.index]
-            )
-
-        top_topic_col = "top_topics"
-        out_cols = groupby_cols[:] + [top_topic_col]
-        df_train[top_topic_col] = df_train.apply(top_topics, axis=1)
-        df_train = df_train[out_cols]
-        df_test[top_topic_col] = df_test.apply(top_topics, axis=1)
-        df_test = df_test[out_cols]
-        df_exp[top_topic_col] = df_exp.apply(top_topics, axis=1)
-        df_exp = df_exp[out_cols]
-
-        filename = "{}-{}-train.csv".format(self.model_name, self.active_model_id)
-        export_path = f"{self.output_dir}/{filename}"
-        df_train.to_csv(export_path, index=False)
-        filename = "{}-{}-test.csv".format(self.model_name, self.active_model_id)
-        export_path = f"{self.output_dir}/{filename}"
-        df_test.to_csv(export_path, index=False)
-        filename = "{}-{}-exp.csv".format(self.model_name, self.active_model_id)
-        export_path = f"{self.output_dir}/{filename}"
-        df_exp.to_csv(export_path, index=False)
-        print(df_exp.head())
 
     def tune_params(
         self,
@@ -860,7 +715,7 @@ class TopicModel:
         )
         self.summaries.append(entry)
         df = pd.DataFrame(self.summaries)
-        df.to_csv(self.summary_file)
+        save_dataframe(df, self.summary_file, index=True)
         return df_ll, entry
 
     def eval_coherence_value(
@@ -912,16 +767,21 @@ class TopicModel:
             self.model = None
             print("Model file not found")
 
-    def save_labels(self, names=None):
+    def save_labels(self, names=None, **kwargs):
+        if names is None:
+            print("No names are given")
+            return
+
         if not self.labels:
             self.label_topics()
-        if isinstance(names, dict):
-            for k in names:
-                self.labels[int(k)]["name"] = names[k]
-        label_file = "{}-{}-labels.csv".format(self.model_name, self.active_model_id)
+        for k in names:
+            self.labels[int(k)]["topic_name"] = names[k]
+            if self.verbose:
+                print(f"{k}: {names[k]}")
+        label_file = "{}-labels.csv".format(self.active_model_id)
         label_file = self.output_dir / label_file
         df = pd.DataFrame(self.labels)
-        df.to_csv(label_file, index=False)
+        save_dataframe(df, label_file, index=False, verbose=self.verbose)
 
     def label_topics(
         self,
@@ -938,11 +798,11 @@ class TopicModel:
         **kwargs,
     ):
 
-        label_file = "{}-{}-labels.csv".format(self.model_name, self.active_model_id)
+        label_file = "{}-labels.csv".format(self.active_model_id)
         label_file = self.output_dir / label_file
         if label_file.is_file() and not rebuild:
             print("loading labels from {}".format(label_file))
-            df = pd.read_csv(label_file, index_col=None)
+            df = load_dataframe(label_file)
             self.labels = df.to_dict("records")
         else:
             assert self.model, "Model not found"
@@ -987,9 +847,20 @@ class TopicModel:
                     word for word, prob in mdl.get_topic_words(k, top_n=top_n)
                 )
                 if use_pmiextractor:
-                    label = {"no": k, "name": name, "labels": lbls, "words": wrds}
+                    label = {
+                        "topic_no": k,
+                        "topic_num": f"topic{k}",
+                        "topic_name": name,
+                        "topic_labels": lbls,
+                        "topic_words": wrds,
+                    }
                 else:
-                    label = {"no": k, "name": name, "words": wrds}
+                    label = {
+                        "topic_no": k,
+                        "topic_num": f"topic{k}",
+                        "topic_name": name,
+                        "topic_words": wrds,
+                    }
                 labels.append(label)
                 for word, prob in mdl.get_topic_words(k, top_n=top_n):
                     print(word, prob, sep="\t")
@@ -997,7 +868,7 @@ class TopicModel:
 
             self.labels = labels
             df = pd.DataFrame(self.labels)
-            df.to_csv(label_file, index=False)
+            save_dataframe(df, label_file, index=False, verbose=self.verbose)
 
     def visualize(self, **kwargs):
         assert self.model, "Model not found"

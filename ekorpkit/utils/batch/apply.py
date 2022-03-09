@@ -5,7 +5,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 import pandas as pd
 from .batcher import Batcher
-from tqdm import tqdm
+
+# from tqdm import tqdm
 
 
 def decorator_apply(

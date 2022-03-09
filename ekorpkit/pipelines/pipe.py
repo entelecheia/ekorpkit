@@ -116,6 +116,8 @@ def eval_columns(df, args):
         print(f"Eval columns: {args}")
     for col, expr in expressions.items():
         df[col] = df.eval(expr)
+    if verbose:
+        print(df.tail())
     return df
 
 
@@ -136,12 +138,213 @@ def combine_columns(df, args):
     return df
 
 
+def melt(df, args):
+    verbose = args.get("verbose", False)
+    id_vars = args.get("id_vars", None)
+    value_vars = args.get("value_vars", None)
+    var_name = args.get("var_name", None)
+    value_name = args.get("value_name", None)
+    col_level = args.get("col_level", None)
+    ignore_index = args.get("ignore_index", True)
+    if id_vars is None:
+        if verbose:
+            print("No id_vars specified")
+        return df
+    if verbose:
+        print(f"Melting columns: {args}")
+    id_vars = list(id_vars)
+    if value_vars:
+        value_vars = list(value_vars)
+    df = df.melt(
+        id_vars=id_vars,
+        value_vars=value_vars,
+        var_name=var_name,
+        value_name=value_name,
+        col_level=col_level,
+        ignore_index=ignore_index,
+    )
+    if verbose:
+        print(df.head())
+    return df
+
+
+def split_sampling(df, args):
+    from sklearn.model_selection import train_test_split
+
+    verbose = args.get("verbose", False)
+    stratify_on = args.get("stratify_on", None)
+    random_state = args.get("random_state", 123)
+    groupby = args.get("groupby", stratify_on)
+    unique_key = args.get("unique_key", "id")
+    test_size = args.get("test_size", 0.2)
+    if isinstance(stratify_on, ListConfig):
+        stratify_on = list(stratify_on)
+    if isinstance(groupby, ListConfig):
+        groupby = list(groupby)
+    if verbose:
+        print(f"Split sampling: {args}")
+
+    if stratify_on is None:
+        train, test = train_test_split(
+            df, test_size=test_size, random_state=random_state
+        )
+    else:
+        train, test = train_test_split(
+            df, test_size=test_size, random_state=random_state, stratify=df[stratify_on]
+        )
+    train.reset_index(drop=True, inplace=True)
+    test.reset_index(drop=True, inplace=True)
+    if verbose:
+        print(f"Total rows: {len(df)}")
+        print(f"Train: {len(train)}")
+        print(f"Test: {len(test)}")
+
+        grp_all = (
+            df.groupby(groupby)[unique_key]
+            .count()
+            .rename("population")
+            .transform(lambda x: x / x.sum() * 100)
+        )
+        grp_train = (
+            train.groupby(groupby)[unique_key]
+            .count()
+            .rename("train")
+            .transform(lambda x: x / x.sum() * 100)
+        )
+        grp_test = (
+            test.groupby(groupby)[unique_key]
+            .count()
+            .rename("test")
+            .transform(lambda x: x / x.sum() * 100)
+        )
+        grp_dists = pd.concat([grp_all, grp_train, grp_test], axis=1)
+        print(grp_dists)
+
+    output_dir = args.get("output_dir", ".")
+    train_file = args.get("train_file", None)
+    test_file = args.get("test_file", None)
+    if train_file:
+        filepath = f"{output_dir}/{train_file}"
+        save_dataframe(df, filepath, verbose=verbose)
+    if test_file:
+        filepath = f"{output_dir}/{test_file}"
+        save_dataframe(test, filepath, verbose=verbose)
+
+    return df
+
+
+def top_values(df, args):
+    verbose = args.get("verbose", False)
+    groupby = args.get("groupby", None)
+    value_var = args.get("value_var", None)
+    value_label = args.get("value_label", None)
+    value_name = args.get("value_name", None)
+    value_separator = args.get("value_separator", ", ")
+    top_n = args.get("top_n", 5)
+    columns_to_keep = args.get("columns_to_keep", None)
+    use_batcher = args.get("use_batcher", True)
+    minibatch_size = args.get("minibatch_size", None)
+
+    if isinstance(groupby, ListConfig):
+        groupby = list(groupby)
+    if verbose:
+        print(f"Split sampling: {args}")
+
+    def label(row):
+        return f"{row[value_label]}[{round(row[value_var]*100,0):.0f}%]"
+
+    if value_label is not None and value_name is not None:
+        # df[value_name] = df.apply(label, axis=1)
+        df[value_name] = apply(
+            label,
+            df,
+            description="labeling",
+            verbose=verbose,
+            use_batcher=use_batcher,
+            minibatch_size=minibatch_size,
+        )
+
+    top_n_grp = (
+        df.sort_values(by=value_var, ascending=False)
+        .groupby(groupby)
+        .head(top_n)
+        .reset_index(drop=True)
+    )
+    top_n_grp = top_n_grp.sort_values(by=groupby)
+    top_n_grp = top_n_grp.groupby(groupby, as_index=False).agg(
+        {value_name: value_separator.join}
+    )
+    top_n_grp = top_n_grp[groupby + [value_name]]
+    df.drop(columns=value_name, inplace=True)
+    df = pd.merge(df, top_n_grp, on=groupby, how="left")
+    if columns_to_keep:
+        df = df[columns_to_keep]
+    if verbose:
+        print(df.head())
+
+    return df
+
+
+def sampling(df, args):
+    verbose = args.get("verbose", False)
+    random_state = args.get("random_state", 123)
+    groupby = args.get("groupby", None)
+    sample_size_per_group = args.get("sample_size_per_group", None)
+    value_var = args.get("value_var", None)
+    columns_to_keep = args.get("columns_to_keep", None)
+
+    if isinstance(groupby, ListConfig):
+        groupby = list(groupby)
+    if verbose:
+        print(f"Split sampling: {args}")
+
+    if groupby is None:
+        if sample_size_per_group < 1:
+            df_sample = df.sample(frac=sample_size_per_group, random_state=random_state)
+        else:
+            df_sample = df.sample(n=sample_size_per_group, random_state=random_state)
+    else:
+        if sample_size_per_group < 1:
+            df_sample = df.groupby(groupby, group_keys=False).apply(
+                lambda x: x.sample(
+                    frac=sample_size_per_group, random_state=random_state
+                )
+            )
+        else:
+            df_sample = df.groupby(groupby, group_keys=False).apply(
+                lambda x: x.sample(n=sample_size_per_group, random_state=random_state)
+            )
+    df_sample.reset_index(drop=True, inplace=True)
+    if columns_to_keep:
+        df_sample = df_sample[columns_to_keep]
+    if verbose:
+        print(f"Total rows: {len(df)}")
+        print(f"Sample: {len(df_sample)}")
+        print(df_sample.head())
+
+    if groupby is not None and verbose:
+        grp_all = df.groupby(groupby)[value_var].count().rename("population")
+        grp_sample = df_sample.groupby(groupby)[value_var].count().rename("sample")
+        grp_dists = pd.concat([grp_all, grp_sample], axis=1)
+        print(grp_dists)
+
+    output_dir = args.get("output_dir", ".")
+    output_file = args.get("output_file", None)
+    if output_file:
+        filepath = f"{output_dir}/{output_file}"
+        save_dataframe(df, filepath, verbose=verbose, columns_to_save=columns_to_keep)
+
+    return df
+
+
 def aggregate_columns(df, args):
     verbose = args.get("verbose", False)
     onto_column = args.get("onto", None)
-    if onto_column is None:
+    aggregations = args.get("aggregations", None)
+    reset_index = args.get("reset_index", False)
+    if onto_column is None and aggregations is None:
         if verbose:
-            print("No columns specified")
+            print("No columns or aggregations are specified")
         return df
     groupby_cloumns = args["groupby"]
     if groupby_cloumns is None:
@@ -155,10 +358,20 @@ def aggregate_columns(df, args):
     num_docs = df.shape[0]
     if verbose:
         print(f"Aggregating columns: {args}")
-    df[onto_column].fillna("", inplace=True)
-    df = df.groupby(groupby_cloumns, as_index=False).agg({onto_column: separator.join})
+    if aggregations:
+        if isinstance(aggregations, DictConfig):
+            aggregations = dict(aggregations)
+        df = df.groupby(groupby_cloumns, as_index=False).agg(aggregations)
+    else:
+        df[onto_column].fillna("", inplace=True)
+        df = df.groupby(groupby_cloumns, as_index=False).agg(
+            {onto_column: separator.join}
+        )
+    if reset_index:
+        df.reset_index(inplace=True)
     n_docs = df.shape[0]
     if verbose:
+        print(df.tail())
         print(f"{num_docs} documents aggregated into {n_docs} documents")
     return df
 
@@ -203,10 +416,15 @@ def rename_columns(df, args):
 
 def reset_index(df, args):
     verbose = args.get("verbose", False)
-    index_column_name = args.get("index_column_name", "id")
+    index_column_name = args.get("index_column_name", None)
+    if index_column_name is None:
+        index_column_name = "index"
+    drop_index = args.get("drop_index", False)
     if verbose:
         print(f"Resetting index: {args}")
-    df = df.reset_index().rename(columns={"index": index_column_name})
+    df = df.reset_index(drop=drop_index)
+    if not drop_index and index_column_name != "index":
+        df.rename(columns={"index": index_column_name}, inplace=True)
     return df
 
 
@@ -316,7 +534,7 @@ def replace_whitespace(df, args):
         if verbose:
             print(f"\nPreprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = df[key].str.replace("\s+", replace_with)
+            df[key] = df[key].str.replace(r"\s+", replace_with)
             if verbose:
                 msg.good(
                     "\n >> elapsed time to replace whitespace: {}\n".format(elapsed())
@@ -372,9 +590,8 @@ def remove_startswith(df, args):
             for starting_text in startswith:
                 print(f"Remove text starting with {starting_text} from [{key}]")
                 idx = df[key].str.lower().str.startswith(starting_text, na=False)
-                df.loc[idx, key] = (
-                    df.loc[idx, key].str[len(starting_text) :].str.strip()
-                )
+                start_pos = len(starting_text)
+                df.loc[idx, key] = df.loc[idx, key].str[start_pos:].str.strip()
             if verbose:
                 msg.good(
                     "\n >> elapsed time to remove startswith: {}\n".format(elapsed())
@@ -434,36 +651,33 @@ def filter_length(df, args, **kwargs):
                     print(
                         f"{(n_docs-df.shape[0])} documents removed due to length is greater than {max_length}"
                     )
-
+            if verbose:
+                msg.good("\n >> elapsed time to filter length: {}\n".format(elapsed()))
     return df
 
 
 def filter_query(df, args):
     verbose = args.get("verbose", False)
-    apply_to = args.get("apply_to", "text")
-    if apply_to is None:
-        if verbose:
-            print("No columns specified")
-        return df
-    if isinstance(apply_to, str):
-        apply_to = [apply_to]
     query = args.get("query", None)
     if query is None:
         if verbose:
             print("No query specified")
         return df
+    if isinstance(query, str):
+        query = [query]
 
     if verbose:
         print(f"Filtering by qeury: {args}")
-    for key in apply_to:
-        if verbose:
-            print(f"\nPreprocessing column: {key}")
-        with elapsed_timer(format_time=True) as elapsed:
-            n_docs = df.shape[0]
-            df = df.query(query, engine="python")
+    with elapsed_timer(format_time=True) as elapsed:
+        for qry in query:
             if verbose:
-                print(f"filtered {df.shape[0]} out of {n_docs} documents by {query}")
-
+                print(f"\nPreprocessing query: {qry}")
+            n_docs = df.shape[0]
+            df = df.query(qry, engine="python")
+            if verbose:
+                print(f"filtered {df.shape[0]} out of {n_docs} documents by {qry}")
+        if verbose:
+            msg.good("\n >> elapsed time to filter query: {}\n".format(elapsed()))
     return df
 
 
@@ -586,6 +800,38 @@ def concat_dataframes(dfs, args):
         if verbose:
             print("Returning original dataframe")
         return dfs
+
+
+def merge_dataframe(df=None, args=None):
+    if args is None:
+        raise ValueError("args must be specified")
+    verbose = args.get("verbose", False)
+    filepath = args.get("filepath", None)
+    data_dir = args.get("data_dir", None)
+    data_file = args.get("data_file", None)
+    how = args.get("how", "inner")
+    merge_on = args.get("merge_on", None)
+    if merge_on is None:
+        raise ValueError("merge_on must be specified")
+    if isinstance(merge_on, str):
+        merge_on = [merge_on]
+    else:
+        merge_on = list(merge_on)
+
+    if filepath:
+        filepaths = get_filepaths(filepath)
+    else:
+        filepaths = get_filepaths(data_file, data_dir)
+    if verbose:
+        print(f"Loading {len(filepaths)} dataframes from {filepaths}")
+    if len(filepaths) == 1:
+        df_to_merge = load_dataframe(filepaths[0], verbose=verbose)
+    else:
+        df_to_merge = pd.concat([load_dataframe(f, verbose=verbose) for f in filepaths])
+    df = df.merge(df_to_merge, how=how, on=merge_on)
+    if verbose:
+        print(df.tail())
+    return df
 
 
 def save_metadata(df, args):

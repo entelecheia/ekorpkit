@@ -62,10 +62,20 @@ def get_files_from_archive(archive_path, filetype=None):
     return files, archive_handle, open_func
 
 
-def save_dataframe(df, filepath, filetype=None, verbose=False, **kwargs):
+def save_dataframe(
+    df,
+    filepath,
+    filetype=None,
+    verbose=False,
+    index=False,
+    columns_to_save=None,
+    **kwargs,
+):
     if df is None:
         msg.warn("Dataframe is None")
         return df
+    if columns_to_save is not None:
+        df = df[columns_to_save]
     if verbose:
         print(df.tail())
 
@@ -77,7 +87,7 @@ def save_dataframe(df, filepath, filetype=None, verbose=False, **kwargs):
     print(f"\nSaving dataframe as {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype:
-            df.to_csv(filepath, index=False)
+            df.to_csv(filepath, index=index)
         elif "parquet" in filetype:
             df.to_parquet(filepath, compression="gzip", engine="pyarrow")
         else:
@@ -86,13 +96,13 @@ def save_dataframe(df, filepath, filetype=None, verbose=False, **kwargs):
             msg.good("\n >> elapsed time to save data: {}\n".format(elapsed()))
 
 
-def load_dataframe(filepath, filetype=None, verbose=False, **kwargs):
+def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwargs):
     print("Loading data from {}".format(filepath))
     if filetype is None:
         filetype = os.path.splitext(filepath)[1]
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype:
-            df = pd.read_csv(filepath, index_col=None, **kwargs)
+            df = pd.read_csv(filepath, index_col=index_col, **kwargs)
         elif "parquet" in filetype:
             df = pd.read_parquet(filepath, engine="pyarrow")
         else:

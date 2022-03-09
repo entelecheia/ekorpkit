@@ -2,6 +2,7 @@ defaults:
   - filter_query: default
   - filter_length: default
   - explode_splits: default
+  - merge_dataframe: default
   - save_as_text: default
   - save_dataframe: default
   

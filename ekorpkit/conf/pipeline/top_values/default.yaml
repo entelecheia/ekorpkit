@@ -1,0 +1,11 @@
+defaults:
+  - /method: top_values
+
+groupby: 
+value_var:
+value_label:
+value_name:
+value_separator: ', '
+top_n: 5
+columns_to_keep:
+verbose: ${oc.select:..verbose, true}

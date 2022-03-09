@@ -1,6 +1,7 @@
 defaults:
   - export_to_text: default
   - export_processed: default
+  - corpus_pipeline: default
 
 name: corpus_subtask
 verbose: ${oc.select:..verbose, true}

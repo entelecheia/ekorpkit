@@ -4,7 +4,7 @@ base_output_dir: ${dir.output}/topic
 model_name:
 model_dir: ${.base_model_dir}/${.model_name}
 output_dir: ${.base_output_dir}/${.model_name}
-num_workers: 0
+num_workers: ${oc.select:num_workers, 0}
 min_word_len: 2
 ngram:
   min_cf: 10

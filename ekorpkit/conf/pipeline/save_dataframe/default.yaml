@@ -1,6 +1,7 @@
 defaults:
   - /method: save_dataframe
 
+columns_to_save:
 filepath:
 filetype:
 task_dir: corpus_csv
