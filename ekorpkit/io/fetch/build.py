@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from omegaconf import OmegaConf
 from omegaconf.dictconfig import DictConfig
-from ekorpkit.utils.func import ordinal, elapsed_timer
+from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.utils.func import humanbytes, get_modified_time
 from ekorpkit.pipelines.stat import summary_stats
 from ekorpkit.pipelines.pipe import apply_pipeline
@@ -23,6 +23,14 @@ def build_corpus(**args):
 
 def build_t5(**args):
     cfg = args.get("dataset", {}).get("t5", None)
+    # print(cfg)
+    if cfg:
+        db = DatasetBuilder(**cfg)
+        db.build()
+
+
+def build_simple(**args):
+    cfg = args.get("dataset", {}).get("simple", None)
     # print(cfg)
     if cfg:
         db = DatasetBuilder(**cfg)

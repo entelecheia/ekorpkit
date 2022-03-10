@@ -1,0 +1,12 @@
+defaults:
+  - loader: csv
+
+name: ${oc.select:..name, ''}
+data_dir: ${dir.archive}/datasets/source/simple/${.name}
+data_sources:
+  train: 
+num_workers: ${oc.select:task.num_workers,100}
+force_download: false
+overwrite: false
+calculate_stats: false
+preprocess_text: false

@@ -1,0 +1,12 @@
+defaults:
+  - /fetch: simple
+  - /info: dataset_build
+  - /info/stat: dataset
+  - /pipeline: dataset_build_pipeline
+  - override /cmd@_global_: fetch_simple
+
+name: 
+category: general
+data_dir: ${dir.dataset}/simple/${.name}
+filetype: .csv
+verbose: ${oc.select:..verbose, true}

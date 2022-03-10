@@ -1,0 +1,17 @@
+defaults:
+  - /method/len_bytes: default
+  # - /method/len_words: default
+  # - /method/len_segments: default
+  # - /method/len_sents: default
+
+num_workers: ${oc.select:task.num_workers, 1}
+key_columns: ${oc.select:..key_columns, ''}
+num_columns:
+  num_bytes: len_bytes
+agg_funcs:
+  num_bytes: [count, sum, median, max, min]
+rename_columns:
+  num_bytes_count: num_examples
+  num_bytes_sum: num_bytes
+convert_to_humanbytes:
+  num_bytes: human_bytes

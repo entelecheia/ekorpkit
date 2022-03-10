@@ -88,23 +88,6 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
     return reduce(apply_pipe, pipeline_targets, df)
 
 
-def dataframe_pipeline(**cfg):
-    args = OmegaConf.create(cfg)
-    pipeline_args = args.task.get("pipeline", {})
-    process_pipeline = pipeline_args.get("_pipeline_", [])
-    if process_pipeline is None:
-        process_pipeline = []
-
-    if len(process_pipeline) > 0:
-        df = apply_pipeline(None, process_pipeline, pipeline_args)
-        if df is not None:
-            if isinstance(df, list):
-                df = pd.concat(df)
-            print(df.tail())
-        else:
-            print("No dataframe returned")
-
-
 def eval_columns(df, args):
     verbose = args.get("verbose", False)
     expressions = args.get("expressions", None)
@@ -176,7 +159,8 @@ def split_sampling(df, args):
     random_state = args.get("random_state", 123)
     groupby = args.get("groupby", stratify_on)
     unique_key = args.get("unique_key", "id")
-    test_size = args.get("test_size", 0.2)
+    test_size = args.get("test_size", 0.1)
+    dev_size = args.get("dev_size", None)
     if isinstance(stratify_on, ListConfig):
         stratify_on = list(stratify_on)
     if isinstance(groupby, ListConfig):
@@ -188,16 +172,31 @@ def split_sampling(df, args):
         train, test = train_test_split(
             df, test_size=test_size, random_state=random_state
         )
+        if dev_size:
+            train, dev = train_test_split(
+                train, test_size=dev_size, random_state=random_state
+            )
     else:
         train, test = train_test_split(
             df, test_size=test_size, random_state=random_state, stratify=df[stratify_on]
         )
+        if dev_size:
+            train, dev = train_test_split(
+                train,
+                test_size=dev_size,
+                random_state=random_state,
+                stratify=train[stratify_on],
+            )
     train.reset_index(drop=True, inplace=True)
     test.reset_index(drop=True, inplace=True)
+    if dev_size:
+        dev.reset_index(drop=True, inplace=True)
     if verbose:
         print(f"Total rows: {len(df)}")
         print(f"Train: {len(train)}")
         print(f"Test: {len(test)}")
+        if dev_size:
+            print(f"Dev: {len(dev)}")
 
         grp_all = (
             df.groupby(groupby)[unique_key]
@@ -218,17 +217,29 @@ def split_sampling(df, args):
             .transform(lambda x: x / x.sum() * 100)
         )
         grp_dists = pd.concat([grp_all, grp_train, grp_test], axis=1)
+        if dev_size:
+            grp_dev = (
+                dev.groupby(groupby)[unique_key]
+                .count()
+                .rename("dev")
+                .transform(lambda x: x / x.sum() * 100)
+            )
+            grp_dists = pd.concat([grp_dists, grp_dev], axis=1)
         print(grp_dists)
 
     output_dir = args.get("output_dir", ".")
     train_file = args.get("train_file", None)
     test_file = args.get("test_file", None)
+    dev_file = args.get("dev_file", None)
     if train_file:
         filepath = f"{output_dir}/{train_file}"
         save_dataframe(train, filepath, verbose=verbose)
     if test_file:
         filepath = f"{output_dir}/{test_file}"
         save_dataframe(test, filepath, verbose=verbose)
+    if dev_file:
+        filepath = f"{output_dir}/{dev_file}"
+        save_dataframe(dev, filepath, verbose=verbose)
 
     return df
 
@@ -416,6 +427,8 @@ def rename_columns(df, args):
         print(f"Renaming columns: {args}")
     if new_names is not None:
         df.rename(columns=new_names, inplace=True)
+    if verbose:
+        print(df.head())
     return df
 
 
@@ -430,6 +443,8 @@ def reset_index(df, args):
     df = df.reset_index(drop=drop_index)
     if not drop_index and index_column_name != "index":
         df.rename(columns={"index": index_column_name}, inplace=True)
+    if verbose:
+        print(df.head())
     return df
 
 
@@ -982,3 +997,22 @@ def save_as_json(df, args):
     if verbose:
         print(f"Corpus is exported to {output_file_path}")
     return df
+
+
+def process_dataframe(**cfg):
+    args = OmegaConf.create(cfg)
+    verbose = args.get("verbose", False)
+    pipeline_args = args.get("pipeline", {})
+    process_pipeline = pipeline_args.get("_pipeline_", [])
+    if process_pipeline is None:
+        process_pipeline = []
+
+    if len(process_pipeline) > 0:
+        df = apply_pipeline(None, process_pipeline, pipeline_args)
+        if df is not None:
+            if isinstance(df, list):
+                df = pd.concat(df)
+            if verbose:
+                print(df.tail())
+        else:
+            print("No dataframe returned")
