@@ -123,6 +123,11 @@ class DatasetBuilder:
     def build(self):
         if self.downloader and self.downloader.get("_target_", None):
             instantiate(self.downloader, _recursive_=False)
+            pipeline_args = self.downloader.get("pipeline", None)
+            if pipeline_args:
+                if self.verbose:
+                    msg.info(f"Applying a pipeline for downloader: {pipeline_args}")
+                instantiate(pipeline_args, _recursive_=False)
 
         split_infos = {}
         for split_name, split_data_source in self.fetch_sources.items():

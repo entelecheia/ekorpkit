@@ -1002,13 +1002,12 @@ def save_as_json(df, args):
 def process_dataframe(**cfg):
     args = OmegaConf.create(cfg)
     verbose = args.get("verbose", False)
-    pipeline_args = args.get("pipeline", {})
-    process_pipeline = pipeline_args.get("_pipeline_", [])
+    process_pipeline = args.get("_pipeline_", [])
     if process_pipeline is None:
         process_pipeline = []
-
+    df = None
     if len(process_pipeline) > 0:
-        df = apply_pipeline(None, process_pipeline, pipeline_args)
+        df = apply_pipeline(None, process_pipeline, args)
         if df is not None:
             if isinstance(df, list):
                 df = pd.concat(df)
@@ -1016,3 +1015,5 @@ def process_dataframe(**cfg):
                 print(df.tail())
         else:
             print("No dataframe returned")
+
+    return df

@@ -2,12 +2,9 @@ defaults:
   - _default
   - /pipeline: dataframe_pipeline
 
-_target_: ekorpkit.pipelines.pipe.process_dataframe
-data_dir: ${oc.select:..data_dir, ''}
-data_file:
 pipeline:
-  data_dir: ${..data_dir}
-  data_file: ${..data_file}
+  data_dir: ${..output_dir}
+  data_file: ${..output_file}
   _pipeline_:
     - load_dataframe
     - save_dataframe

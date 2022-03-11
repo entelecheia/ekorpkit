@@ -3,6 +3,6 @@ defaults:
 
 filepath:
 filetype:
-data_dir: ${oc.select:task.data_dir, .}
-data_file:
+data_dir: ${oc.select:..data_dir, ''}
+data_file: ${oc.select:..data_file, ''}
 verbose: ${oc.select:..verbose, true}

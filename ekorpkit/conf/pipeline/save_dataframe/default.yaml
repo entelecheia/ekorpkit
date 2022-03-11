@@ -4,7 +4,7 @@ defaults:
 columns_to_save:
 filepath:
 filetype:
-task_dir: corpus_csv
-output_dir: ${oc.select:task.output_dir, .}/${.task_dir}
+task_dir: 
+output_dir: ${oc.select:..data_dir, .}/${.task_dir}
 output_file:
 verbose: ${oc.select:..verbose, true}

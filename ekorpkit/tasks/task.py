@@ -1,11 +1,7 @@
-import pandas as pd
 from omegaconf import OmegaConf
 from hydra.utils import instantiate
 from ..utils.func import elapsed_timer
 from wasabi import msg
-from ekorpkit.pipelines.pipe import apply_pipeline
-
-# from omegaconf.dictconfig import DictConfig
 
 
 def topic_tasks(**cfg):
@@ -90,15 +86,10 @@ def transfomer_finetune(**cfg):
 def dataframe_tasks(**cfg):
     args = OmegaConf.create(cfg)
     pipeline_args = args.task.get("pipeline", {})
-    process_pipeline = pipeline_args.get("_pipeline_", [])
-    if process_pipeline is None:
-        process_pipeline = []
 
-    if len(process_pipeline) > 0:
-        df = apply_pipeline(None, process_pipeline, pipeline_args)
-        if df is not None:
-            if isinstance(df, list):
-                df = pd.concat(df)
-            print(df.tail())
-        else:
-            print("No dataframe returned")
+    if pipeline_args._target_:
+        df = instantiate(pipeline_args, _recursive_=False)
+        if df is None:
+            raise Exception("No dataframe found")
+    else:
+        raise Exception("Dataframe instantiation target is missing")

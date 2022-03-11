@@ -24,7 +24,7 @@ fetch:
     test: test.csv
     dev: dev.csv
   downloader:
-    data_file: esg_topics.csv
+    output_file: esg_topics.csv
     pipeline:
       _pipeline_:
         - load_dataframe
