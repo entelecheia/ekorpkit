@@ -13,8 +13,8 @@ column_info:
   data:
     id: int
     text: str
-    labels: int
-    classname: str
+    labels: str
+    class: int
     example_id: str
     count: int
 
@@ -28,13 +28,13 @@ fetch:
     pipeline:
       _pipeline_:
         - load_dataframe
-        - rename_columns
         - filter_query
+        - rename_columns
         - split_sampling
       rename_columns:
         new_names:
           content: text
-          class: labels
+          classname: labels
       filter_query:
         query: 
           - classname != 'UNKNOWN'

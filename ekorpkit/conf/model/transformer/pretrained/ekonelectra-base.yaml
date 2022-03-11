@@ -1,0 +1,3 @@
+model_type: electra
+model_name: ekonelectra-base
+model_uri: entelecheia/ekonelectra-base-discriminator

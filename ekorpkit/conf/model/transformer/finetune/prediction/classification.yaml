@@ -1,0 +1,6 @@
+data_dir: ${dir.dataset}/simple
+data_files:
+columns_to_keep:
+keys:
+  input_text: text
+  prediction: pred

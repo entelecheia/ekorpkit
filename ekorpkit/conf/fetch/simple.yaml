@@ -10,3 +10,4 @@ force_download: false
 overwrite: false
 calculate_stats: false
 preprocess_text: false
+verbose: ${oc.select:verbose, false}

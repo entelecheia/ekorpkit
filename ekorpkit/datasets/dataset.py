@@ -5,10 +5,6 @@ from wasabi import msg
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit.io.file import load_dataframe
 
-# from omegaconf.dictconfig import DictConfig
-# from ekorpkit.utils.func import ordinal, elapsed_timer
-# import pandas as pd
-
 
 class Dataset:
     def __init__(self, **args):
@@ -57,7 +53,7 @@ class Dataset:
     def load(self):
         for split, data_file in self.data_files.items():
             data_file = self.data_dir / data_file
-            df = load_dataframe(data_file)
+            df = load_dataframe(data_file, dtype=self._dtype)
             if self.process_pipeline and len(self.process_pipeline) > 0:
                 df = apply_pipeline(df, self.process_pipeline, self.pipeline_args)
             self.splits[split] = df

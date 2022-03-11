@@ -44,6 +44,7 @@ class DatasetBuilder:
         self.data_dir = args.get("data_dir", None)
         self.data_filetype = args.get("filetype", "parquet")
         self.column_info = self.args.get("column_info", None)
+        self.verbose = self.args.get("verbose", False)
 
         self.fetch_args = args.get("fetch", None)
         if isinstance(self.fetch_args, DictConfig):
@@ -121,12 +122,13 @@ class DatasetBuilder:
         pprint(self.info)
 
     def build(self):
-        if self.downloader and self.downloader.get("_target_", None):
-            instantiate(self.downloader, _recursive_=False)
+        if self.downloader:
+            if self.downloader.get("_target_", None):
+                instantiate(self.downloader, _recursive_=False)
             pipeline_args = self.downloader.get("pipeline", None)
             if pipeline_args:
                 if self.verbose:
-                    msg.info(f"Applying a pipeline for downloader: {pipeline_args}")
+                    print(f"Applying a pipeline for downloader: {pipeline_args}")
                 instantiate(pipeline_args, _recursive_=False)
 
         split_infos = {}
