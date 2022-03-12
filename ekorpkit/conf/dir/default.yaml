@@ -1,13 +1,13 @@
-  workspace: ./workspace
-  project: ${.workspace}/projects/${app_name} 
-  data: ${.workspace}/data
-  log: ${.project}/logs
-  tmp: ${.data}/tmp
-  cache: ${.tmp}/.cache
-  archive: ${.data}/archive
-  runtime: ${oc.select:hydra:runtime.cwd, .}
-  model: ${.data}/models
-  output: ${.data}/outputs
-  dataset: ${.data}/datasets
-  # dataset_processed: ${.workspace}/datasets/processed
-  corpus: ${.dataset}/corpus/ekorpkit
+workspace: ./workspace
+project: ${.workspace}/projects/${app_name} 
+data: ${.workspace}/data
+log: ${.project}/logs
+tmp: ${.data}/tmp
+cache: ${.tmp}/.cache
+archive: ${.data}/archive
+runtime: ${oc.select:hydra:runtime.cwd, .}
+model: ${.data}/models
+output: ${.data}/outputs
+dataset: ${.data}/datasets
+# dataset_processed: ${.workspace}/datasets/processed
+corpus: ${.dataset}/corpus/ekorpkit
