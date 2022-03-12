@@ -1,4 +1,4 @@
-  workspace: /workspace
+  workspace: ./workspace
   project: ${.workspace}/projects/${app_name} 
   data: ${.workspace}/data
   log: ${.project}/logs
