@@ -1,6 +1,5 @@
 import tarfile
 import orjson as json
-import pandas as pd
 from pathlib import Path
 from bs4 import BeautifulSoup
 import multiprocessing as mp

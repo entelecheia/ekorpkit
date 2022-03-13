@@ -3,13 +3,12 @@ import os
 import pandas as pd
 from omegaconf import OmegaConf
 from hydra.utils import instantiate
-
-
 from statistics import mean
 from scipy.stats import pearsonr, spearmanr
-from sklearn.metrics import accuracy_score, f1_score
-from transformers import T5Model
 from transformers.data.metrics.squad_metrics import compute_exact, compute_f1
+
+# from sklearn.metrics import accuracy_score, f1_score
+# from transformers import T5Model
 
 
 class SimpleTrainerT5:

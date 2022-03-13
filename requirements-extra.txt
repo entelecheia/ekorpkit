@@ -5,13 +5,14 @@
 # ex) pip install -e .\[modin\]
 
 fugashi					: tokenize
-mecab_ko_dic			: tokenize
-pysbd					: tokenize
+mecab-python3           : tokenize, dataset
+mecab_ko_dic			: tokenize, dataset
+pysbd					: tokenize, dataset
 pynori					: tokenize
 soynlp					: tokenize
 nltk					: tokenize
 sacremoses				: tokenize
-emoji					: tokenize
+emoji					: tokenize, dataset
 sentencepiece			: tokenize
 
 tomotopy			  	: topic
@@ -24,8 +25,8 @@ namu-wiki-extractor		: parser
 pdfplumber				: parser
 mail-parser				: parser
 pubmed_parser			: parser
-jsonpath-ng				: parser
-beautifulsoup4			: parser
+jsonpath-ng				: parser, dataset
+beautifulsoup4			: parser, dataset
 html-to-json			: parser
 fasttext-langdetect		: parser
 
@@ -33,7 +34,7 @@ simpletransformers		: transformers, model
 datasets				: transformers, dataset, model
 # torch					: transformers
 tensorflow				: transformers, model
-tf-nightly 				: transformers, model
+# tf-nightly 				: transformers, model
 google-api-python-client	: transformers, model
 
 modin					: pandas
@@ -65,4 +66,5 @@ p_tqdm					: dataset, parser
 joblib					: dataset, parser
 ftfy					: dataset, parser
 jsonlines				: dataset, parser
+loky					: dataset, parser
 # guesslang 				: dataset, parser

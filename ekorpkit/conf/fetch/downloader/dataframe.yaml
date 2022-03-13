@@ -1,0 +1,16 @@
+defaults:
+  - _default
+  - /pipeline: dataframe_pipeline
+
+pipeline:
+  data_dir: ${..output_dir}
+  data_file: ${..output_file}
+  _pipeline_:
+    - load_dataframe
+    - save_dataframe
+  load_dataframe:
+    data_dir: ${oc.select:..data_dir, ''}
+    data_file: ${oc.select:..data_file, ''}
+  save_dataframe:
+    output_dir: ${oc.select:..output_dir, ..load_dataframe.data_dir}
+    output_file: ${oc.select:..output_file, ''}

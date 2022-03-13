@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from omegaconf import OmegaConf
 from omegaconf.dictconfig import DictConfig
-from ekorpkit.utils.func import ordinal, elapsed_timer
+from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.utils.func import humanbytes, get_modified_time
 from ekorpkit.pipelines.stat import summary_stats
 from ekorpkit.pipelines.pipe import apply_pipeline
@@ -29,6 +29,14 @@ def build_t5(**args):
         db.build()
 
 
+def build_simple(**args):
+    cfg = args.get("dataset", {}).get("simple", None)
+    # print(cfg)
+    if cfg:
+        db = DatasetBuilder(**cfg)
+        db.build()
+
+
 class DatasetBuilder:
     def __init__(self, **args) -> None:
         self.args = args
@@ -36,6 +44,7 @@ class DatasetBuilder:
         self.data_dir = args.get("data_dir", None)
         self.data_filetype = args.get("filetype", "parquet")
         self.column_info = self.args.get("column_info", None)
+        self.verbose = self.args.get("verbose", False)
 
         self.fetch_args = args.get("fetch", None)
         if isinstance(self.fetch_args, DictConfig):
@@ -113,8 +122,14 @@ class DatasetBuilder:
         pprint(self.info)
 
     def build(self):
-        if self.downloader and self.downloader.get("_target_", None):
-            instantiate(self.downloader, _recursive_=False)
+        if self.downloader:
+            if self.downloader.get("_target_", None):
+                instantiate(self.downloader, _recursive_=False)
+            pipeline_args = self.downloader.get("pipeline", None)
+            if pipeline_args:
+                if self.verbose:
+                    print(f"Applying a pipeline for downloader: {pipeline_args}")
+                instantiate(pipeline_args, _recursive_=False)
 
         split_infos = {}
         for split_name, split_data_source in self.fetch_sources.items():

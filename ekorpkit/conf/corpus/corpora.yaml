@@ -1,0 +1,9 @@
+defaults:
+  - default
+
+_target_: ekorpkit.corpora.loader.Corpora
+data_dir: ${dir.corpus}
+use_name_as_subdir: true
+autoload: false
+verbose: ${oc.select:..verbose, true}
+collapse_ids: false

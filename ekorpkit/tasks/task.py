@@ -3,8 +3,6 @@ from hydra.utils import instantiate
 from ..utils.func import elapsed_timer
 from wasabi import msg
 
-# from omegaconf.dictconfig import DictConfig
-
 
 def topic_tasks(**cfg):
     args = OmegaConf.create(cfg)
@@ -83,3 +81,15 @@ def transfomer_finetune(**cfg):
         model.apply_pipeline()
     else:
         raise Exception("Model instantiation target is missing")
+
+
+def dataframe_tasks(**cfg):
+    args = OmegaConf.create(cfg)
+    pipeline_args = args.task.get("pipeline", {})
+
+    if pipeline_args._target_:
+        df = instantiate(pipeline_args, _recursive_=False)
+        if df is None:
+            raise Exception("No dataframe found")
+    else:
+        raise Exception("Dataframe instantiation target is missing")
