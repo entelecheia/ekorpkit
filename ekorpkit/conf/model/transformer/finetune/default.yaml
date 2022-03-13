@@ -8,6 +8,7 @@ model_uri: ${..pretrained.model_uri}
 output_dir: ${dir.project}/outputs/${.wandb_project}/${.model_name}
 best_model_dir: ${.output_dir}/best_model
 pred_output_dir: ${.output_dir}/predictions
+result_dir: ${.output_dir}/results
 cache_dir: ${dir.cache}/models
 wandb_project: ${project}-${task.name}
 wandb_kwargs:

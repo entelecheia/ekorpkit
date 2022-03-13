@@ -1,10 +1,10 @@
 output_dir: ${..output_dir}
 best_model_dir: ${..best_model_dir}
 cache_dir: ${..cache_dir}
-max_seq_length: 256
-train_batch_size: 32
-eval_batch_size: 64
-num_train_epochs: 2
+max_seq_length: 512
+train_batch_size: 48
+eval_batch_size: 48
+num_train_epochs: 7
 evaluate_during_training: true
 evaluate_during_training_steps: 15000
 evaluate_during_training_verbose: true
@@ -19,10 +19,7 @@ reprocess_input_data: true
 overwrite_output_dir: true
 wandb_project: ${oc.select:..wandb_project, {}}
 wandb_kwargs: ${oc.select:..wandb_kwargs, {}}
-# pred_args:  
-num_beams:
-do_sample: true
-max_length: 256
-top_k: 50
-top_p: 0.95
-num_return_sequences: 1
+regression: false
+sliding_window: true
+stride: 0.8
+tie_value: 1

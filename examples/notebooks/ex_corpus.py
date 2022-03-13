@@ -22,15 +22,3 @@ df_all = pd.concat(dfs)
 df_all.head()
 
 # %%
-
-path = '/workspace/data/projects/eKonPLM/data/lighttag/label-samples-tokens-1119/esg_topics2-LDA.k30-train-samples.csv'
-
-df_sample = pd.read_csv(path)
-df_sample.head()
-# %%
-df_sample_new = df_sample.merge(df_all, on=['corpus', 'id', 'chunk_no'])
-# %%
-print(len(df_sample), len(df_sample_new))
-# %%
-df_sample_new.tail(10)
-# %%

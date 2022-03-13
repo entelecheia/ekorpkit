@@ -1,5 +1,5 @@
 defaults:
-  - _loader
+  - datasets
   - /pipeline: dataset_load_pipeline
 
 name: ${oc.select:.preset.name, null}

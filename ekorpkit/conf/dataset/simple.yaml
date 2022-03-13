@@ -1,0 +1,11 @@
+defaults:
+  - default
+
+_target_: ekorpkit.datasets.dataset.Dataset
+name: ${oc.select:.simple.name, ''}
+data_dir: ${oc.select:.simple.data_dir, ${dir.dataset}/simple}/${.name}
+filetype: ${oc.select:.simple.filetype, .csv}
+autoload: true
+column_info:
+  keys: ${oc.select:..simple.column_info.keys, null}
+  data: ${oc.select:..simple.column_info.data, null}

@@ -33,7 +33,7 @@ def load_data(split_name, **loader_cfg):
             f"Starting multiprocessing with {processes} processes at {multiprocessing_at}"
         )
         desciption = "::load_data()"
-        with tqdm_joblib(tqdm(desc=desciption, total=num_files)) as pbar:
+        with tqdm_joblib(tqdm(desc=desciption, total=num_files)):
             results = Parallel(n_jobs=num_workers)(
                 delayed(_load_archive)(filepath, filetype, default_items, loader_cfg, 1)
                 for filepath in filepaths
@@ -90,8 +90,8 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
             else:
                 with open(file, "rb") as f:
                     contents = f.read()
-        except:
-            print(f"Error reading {filename}")
+        except Exception as e:
+            print(f"Error reading {filename}", e)
             continue
             # raise ValueError(f'Error reading {file}')
 

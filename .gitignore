@@ -6,7 +6,9 @@ package-lock.json
 node_modules/
 data
 logs/
-.install_ekorpkit.sh
+workspace/
+.history/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,8 +1,8 @@
 defaults:
-  - loader: tsv
+  - loader: csv
 
 name: ${oc.select:..name, ''}
-data_dir: ${dir.archive}/datasets/t5/source/${.name}
+data_dir: ${dir.archive}/datasets/source/simple/${.name}
 data_sources:
   train: 
 num_workers: ${oc.select:task.num_workers,100}
