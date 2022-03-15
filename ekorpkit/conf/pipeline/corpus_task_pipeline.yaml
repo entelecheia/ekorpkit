@@ -8,6 +8,8 @@ defaults:
   - aggregate_columns: aggregate
   - segment: segment
   - chunk: default
+  - split_sampling: default
+  - sampling: default
 
 _pipeline_:
 apply_to: 

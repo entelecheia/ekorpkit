@@ -23,12 +23,15 @@ class Corpora:
         self.column_info = self.args.get("column_info", None)
         if self.column_info:
             self._keys = self.column_info["keys"]
-            for k in ["id", "text"]:
-                if isinstance(self._keys[k], str):
-                    self._keys[k] = [self._keys[k]]
-                else:
-                    self._keys[k] = list(self._keys[k])
-            self._id_keys = self._keys["id"]
+            if self._keys is not None:
+                for k in ["id", "text"]:
+                    if isinstance(self._keys[k], str):
+                        self._keys[k] = [self._keys[k]]
+                    else:
+                        self._keys[k] = list(self._keys[k])
+                self._id_keys = self._keys["id"]
+            else:
+                self._id_keys = ["id"]
             self._data_keys = self.column_info.get("data", None)
             self._meta_kyes = self.column_info.get("meta", None)
         self._corpus_key = "corpus"
