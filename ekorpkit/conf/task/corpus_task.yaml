@@ -1,7 +1,17 @@
 defaults:
   - _default
-  - corpus: corpus_subtask
+  # - /pipeline: dataframe_pipeline
+  - /pipeline: corpus_task_pipeline
   - override /cmd@_global_: corpus_task
 
 name: corpus_task
+merge_metadata: true
+data_dir:
+data_file:
+apply_to: 
+  - text
 output_dir: ${dir.data}/${project}/corpus
+pipeline:
+  _pipeline_:
+  name: ${..name}
+  verbose: ${oc.select:..verbose, true}

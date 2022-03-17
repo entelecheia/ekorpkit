@@ -1,18 +1,30 @@
 defaults:
-  - filter_query: default
-  - filter_length: default
-  - explode_splits: default
-  - merge_dataframe: default
-  - save_as_text: default
-  - save_dataframe: default
+  - combine_columns: combine
   - aggregate_columns: aggregate
+  - rename_columns: rename
+  - reset_index: reset
+  - fillna: fillna
+  - normalize: normalize
   - segment: segment
-  - chunk: default
+  - replace_whitespace: whitespace
+  - replace_regex: regex
+  - filter_length: default
+  - drop_duplicates: drop
+  - save_samples: samples
+  - save_dataframe: default
+  - concat_dataframes: default
+  - split_dataframe: default
+  - eval_columns: default
+  - melt: default
   - split_sampling: default
   - sampling: default
+  - filter_query: default
+  - merge_dataframe: default
+  - top_values: default
 
 _pipeline_:
-apply_to: 
-  - text
+data_dir: ${oc.select:..data_dir, ''} 
+data_file: ${oc.select:..data_file, ''}
+apply_to: ${oc.select:..apply_to, text}
 use_batcher: true
 verbose: ${oc.select:..verbose, true}

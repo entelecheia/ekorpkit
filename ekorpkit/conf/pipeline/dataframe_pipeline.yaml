@@ -29,6 +29,6 @@ _pipeline_:
   - save_dataframe
 data_dir: ${oc.select:..data_dir, ''} 
 data_file: ${oc.select:..data_file, ''}
-apply_to: ${oc.select:..column_info.keys.text, text}
+apply_to: ${oc.select:..apply_to, text}
 use_batcher: true
 verbose: ${oc.select:..verbose, true}

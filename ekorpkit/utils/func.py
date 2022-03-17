@@ -7,7 +7,7 @@ import chardet
 import functools
 from contextlib import contextmanager
 from timeit import default_timer
-from hydra.utils import get_method, instantiate
+from hydra.utils import get_method
 
 
 def partial(_partial_, *args, **kwargs):

@@ -110,7 +110,12 @@ class Corpus:
 
         for split, data_file in self.data_files.items():
             filepaths = get_filepaths(data_file, self.data_dir)
-            df = pd.concat([load_dataframe(f, filetype=self.filetype, verbose=self.verbose) for f in filepaths])
+            df = pd.concat(
+                [
+                    load_dataframe(f, filetype=self.filetype, verbose=self.verbose)
+                    for f in filepaths
+                ]
+            )
 
             df[_text_keys] = df[_text_keys].fillna("")
             if len(_text_keys) > 1:
@@ -139,7 +144,12 @@ class Corpus:
         _id_keys = self._keys["id"]
         for split, data_file in self.meta_files.items():
             filepaths = get_filepaths(data_file, self.data_dir)
-            df = pd.concat([load_dataframe(f, filetype=self.filetype, verbose=self.verbose) for f in filepaths])
+            df = pd.concat(
+                [
+                    load_dataframe(f, filetype=self.filetype, verbose=self.verbose)
+                    for f in filepaths
+                ]
+            )
 
             if self.collapse_ids:
                 _id_prefix = f"{split}_" if len(self.data_files) > 1 else ""
@@ -153,3 +163,14 @@ class Corpus:
         self._metadata = pd.concat(dfs)
         print(self._metadata.head(3))
         print(self._metadata.tail(3))
+
+    def merge_metadata(self):
+        if self._metadata is None:
+            return
+        self._data = self._data.merge(
+            self._metadata,
+            on=self._id_keys,
+            how="left",
+            suffixes=("", "_metadata"),
+            validate="one_to_one",
+        )
