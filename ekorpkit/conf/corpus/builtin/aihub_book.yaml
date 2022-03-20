@@ -19,7 +19,6 @@ column_info:
   data:
     id: int
     text: str
-    summary: str
   meta:
     id: int
     passage_id: str

@@ -35,7 +35,7 @@ jobs:
           pip install -r requirements-test.txt
 
       - name: Run tests
-        run: pytest ekorpkit/tests
+        run: pytest tests
 
       - name: "Upload coverage to codecov"
         uses: codecov/codecov-action@v1

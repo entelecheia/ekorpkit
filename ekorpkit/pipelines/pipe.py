@@ -77,6 +77,10 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
         pipes[pipeline] = pipeline
     else:
         pipes = pipeline
+    if pipes is None or len(pipes) == 0:
+        if verbose:
+            print("No pipeline specified")
+        return df
     if verbose:
         print(f"Applying pipeline: {pipes}")
     for pipe, pipe_arg_name in pipes.items():

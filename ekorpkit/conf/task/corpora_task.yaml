@@ -1,7 +1,5 @@
 defaults:
-  - _default
-  - corpus: corpora_subtask
+  - corpus_task
   - override /cmd@_global_: corpora_task
 
 name: corpora_task
-output_dir: ${dir.data}/${project}/corpora

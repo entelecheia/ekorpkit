@@ -1,6 +1,5 @@
 # from hydra.utils import instantiate
 # from wasabi import msg
-from ekorpkit.pipelines.pipe import apply_pipeline
 import pandas as pd
 from omegaconf import OmegaConf
 from ekorpkit.utils.func import elapsed_timer
@@ -23,12 +22,15 @@ class Corpora:
         self.column_info = self.args.get("column_info", None)
         if self.column_info:
             self._keys = self.column_info["keys"]
-            for k in ["id", "text"]:
-                if isinstance(self._keys[k], str):
-                    self._keys[k] = [self._keys[k]]
-                else:
-                    self._keys[k] = list(self._keys[k])
-            self._id_keys = self._keys["id"]
+            if self._keys is not None:
+                for k in ["id", "text"]:
+                    if isinstance(self._keys[k], str):
+                        self._keys[k] = [self._keys[k]]
+                    else:
+                        self._keys[k] = list(self._keys[k])
+                self._id_keys = self._keys["id"]
+            else:
+                self._id_keys = ["id"]
             self._data_keys = self.column_info.get("data", None)
             self._meta_kyes = self.column_info.get("meta", None)
         self._corpus_key = "corpus"
@@ -83,27 +85,13 @@ class Corpora:
             raise KeyError(f"{name} not in corpora")
         return self.corpora[name]
 
-    def do_tasks(self, pipeline=None, **kwargs):
-        verbose = kwargs.get("verbose", self.verbose)
-        merge_metadata = kwargs.get("merge_metadata", False)
-        if merge_metadata and self._metadata is not None:
-            df = pd.merge(self._metadata, self._data, on=self._id_keys)
-        else:
-            df = self._data
-        # update_args = {"corpus_name": self.name}
-        _pipeline_ = pipeline.get("_pipeline_", {})
-        df = apply_pipeline(df, _pipeline_, pipeline)
-        if verbose and df is not None:
-            print(df.head())
-
-
-def do_corpus_tasks(corpus, pipeline=None, **kwargs):
-    # verbose = kwargs.get("verbose", False)
-    merge_metadata = kwargs.get("merge_metadata", False)
-    if merge_metadata:
-        df = pd.merge(corpus._metadata, corpus._data, on=corpus._id_key)
-    else:
-        df = corpus._data
-    update_args = {"corpus_name": corpus.name}
-    _pipeline_ = pipeline.get("_pipeline_", {})
-    df = apply_pipeline(df, _pipeline_, pipeline, update_args=update_args)
+    def merge_metadata(self):
+        if self._metadata is None:
+            return
+        self._data = self._data.merge(
+            self._metadata,
+            on=self._id_keys,
+            how="left",
+            suffixes=("", "_metadata"),
+            validate="one_to_one",
+        )
