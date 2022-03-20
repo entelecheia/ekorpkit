@@ -1,7 +1,8 @@
 from omegaconf import OmegaConf
 from hydra.utils import instantiate
-from ..utils.func import elapsed_timer
 from wasabi import msg
+from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.pipelines.pipe import apply_pipeline
 
 
 def topic_tasks(**cfg):
@@ -32,42 +33,41 @@ def topic_tasks(**cfg):
 def corpora_tasks(**cfg):
     args = OmegaConf.create(cfg)
     corpus_cfg = args.corpus
-    subtasks = args.task.corpus
-    _subtasks_ = args.task.corpus._subtasks_
+    merge_metadata = args.task.get("merge_metadata", False)
+    pipeline = args.task.get("pipeline", {})
+    if pipeline is None:
+        raise Exception("Pipeline is missing")
 
     with elapsed_timer(format_time=True) as elapsed:
         corpora = instantiate(corpus_cfg, _recursive_=False)
         corpora.load()
         corpora.concat_corpora()
 
-        for subtask in _subtasks_:
-            subtask_cfg = subtasks[subtask]
-            if "_target_" in subtask_cfg:
-                msg.info(f"Running {subtask} ...")
-                corpora.do_tasks(**subtask_cfg)
-            else:
-                msg.fail(f"{subtask} is not a valid subtask")
+        if merge_metadata:
+            corpora.merge_metadata()
+        _pipeline_ = pipeline.get("_pipeline_", {})
+        apply_pipeline(corpora._data, _pipeline_, pipeline)
         print(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
 
 def corpus_tasks(**cfg):
     args = OmegaConf.create(cfg)
     corpus_cfg = args.corpus
-    subtasks = args.task.corpus
-    _subtasks_ = args.task.corpus._subtasks_
+    merge_metadata = args.task.get("merge_metadata", False)
+    pipeline = args.task.get("pipeline", {})
+    if pipeline is None:
+        raise Exception("Pipeline is missing")
 
     with elapsed_timer(format_time=True) as elapsed:
         corpora = instantiate(corpus_cfg, _recursive_=False)
 
         for corpus in corpora:
             print(f"::: processing {corpus.name}")
-            for subtask in _subtasks_:
-                subtask_cfg = subtasks[subtask]
-                if "_target_" in subtask_cfg:
-                    msg.info(f"Running {subtask} ...")
-                    instantiate(subtask_cfg, corpus=corpus, _recursive_=False)
-                else:
-                    msg.fail(f"{subtask} is not a valid subtask")
+            if merge_metadata:
+                corpus.merge_metadata()
+            update_args = {"corpus_name": corpus.name}
+            _pipeline_ = pipeline.get("_pipeline_", {})
+            apply_pipeline(corpus._data, _pipeline_, pipeline, update_args=update_args)
         print(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
 

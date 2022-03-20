@@ -4,9 +4,9 @@
 # package[version_required]	: tag1, tag2, ...
 # ex) pip install -e .\[modin\]
 
-fugashi					: tokenize
-mecab-python3           : tokenize, dataset
-mecab_ko_dic			: tokenize, dataset
+fugashi					: fugashi
+mecab-python3           : mecab
+mecab_ko_dic			: mecab
 pysbd					: tokenize, dataset
 pynori					: tokenize
 soynlp					: tokenize
@@ -19,9 +19,9 @@ tomotopy			  	: topic
 wordcloud				: topic
 pyLDAvis				: topic
 
-pyhwp					: parser
-wikiextractor			: parser
-namu-wiki-extractor		: parser
+pyhwp					: parser, hwp, bok
+wikiextractor			: parser, wiki
+namu-wiki-extractor		: parser, wiki
 pdfplumber				: parser
 mail-parser				: parser
 pubmed_parser			: parser
@@ -57,7 +57,7 @@ rich					: doc
 matplotlib				: doc
 
 tensorflow-datasets		: dataset
-tensorflow-io			: dataset
+# tensorflow-io			: dataset
 lsh 					: dataset
 orjson 					: dataset, parser
 datasketch 				: dataset
@@ -68,3 +68,5 @@ ftfy					: dataset, parser
 jsonlines				: dataset, parser
 loky					: dataset, parser
 # guesslang 				: dataset, parser
+
+numba                   : numba

@@ -7,13 +7,13 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from omegaconf import OmegaConf
-from pprint import pprint
 
 
 class BOKMniutes:
     def __init__(self, **args):
         self.args = OmegaConf.create(args)
         # print(self.args)
+        self.autoload = self.args.get('autoload', True)
         self.from_date = str(self.args.scrap.from_date)
         self.base_url = self.args.scrap.base_url
         self.url = self.args.scrap.url
@@ -33,16 +33,17 @@ class BOKMniutes:
         self.minutes_hwp_files = []
         self.minutes_txt_files = []
 
-        if not os.path.exists(self.output_file) or self.force_download:
+        if self.autoload:
             self.build()
-        else:
-            print(f"{self.output_file} already exists. skipping..")
 
     def build(self):
-        self.get_minutes_list()
-        self.get_minutes_files()
-        self.convert_hwp_to_txt()
-        self.build_minutes()
+        if not os.path.exists(self.output_file) or self.force_download:
+            self.get_minutes_list()
+            self.get_minutes_files()
+            self.convert_hwp_to_txt()
+            self.build_minutes()
+        else:
+            print(f"{self.output_file} already exists. skipping..")
 
     def build_minutes(self):
 
@@ -54,7 +55,6 @@ class BOKMniutes:
         df = pd.DataFrame(
             docs, columns=["id", "filename", "mdate", "rdate", "section", "text"]
         )
-        # df = pd.DataFrame(docs, columns=['id', 'filename', 'mdate', 'rdate', 'section', 'sid', 'text'])
         df = df.dropna()
 
         if not self.force_download:
@@ -133,9 +133,9 @@ class BOKMniutes:
 
         for post in brdList:
             pubdate = post.find("pubdate").get_text().strip()
-            description = post.find("description").get_text().strip()
             guid = post.find("guid").get_text().strip()
             title = post.find("title").get_text().strip()
+            # description = post.find("description").get_text().strip()
             # if description.replace(' ','').find('통화정책방향') >= 0:
             mdate = title[title.find(")(") + 2 : -1]
             if mdate[-1] == ".":
