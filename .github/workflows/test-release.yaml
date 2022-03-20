@@ -23,7 +23,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v3
         with:
-            ref: dev/0.1.10
+            ref: develop
             fetch-depth: 0
 
       # - name: Fetch all history for all tags and branches
