@@ -68,3 +68,5 @@ ftfy					: dataset, parser
 jsonlines				: dataset, parser
 loky					: dataset, parser
 # guesslang 				: dataset, parser
+
+numba                   : numba

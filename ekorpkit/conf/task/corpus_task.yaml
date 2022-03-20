@@ -1,6 +1,5 @@
 defaults:
   - _default
-  # - /pipeline: dataframe_pipeline
   - /pipeline: corpus_task_pipeline
   - override /cmd@_global_: corpus_task
 

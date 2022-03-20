@@ -8,6 +8,5 @@ hydra_colorlog
 chardet
 rehash
 requests
-numba
 scipy
 pytablewriter>=0.64.0
