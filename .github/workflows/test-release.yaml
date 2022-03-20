@@ -25,6 +25,9 @@ jobs:
         with:
             ref: dev/0.1.10
 
+      - name: Fetch all history for all tags and branches
+        run: git fetch --prune --unshallow
+        
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
