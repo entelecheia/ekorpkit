@@ -12,6 +12,7 @@ class Wiki:
     def __init__(self, **args):
         self.args = OmegaConf.create(args)
         self.name = self.args.name
+        self.autoload = self.args.get("autoload", True)
         self.url = self.args.dump.url
         self.output_dir = self.args.output_dir
         self.dump_dir = self.args.dump.dump_dir
@@ -22,7 +23,8 @@ class Wiki:
         self.dump_file = os.path.join(self.dump_dir, self.args.dump.dump_file)
         self.force_download = self.args.force_download
 
-        self.fetch()
+        if self.autoload:
+            self.fetch()
 
     def fetch(self):
         if not os.listdir(self.output_dir) or self.force_download:
