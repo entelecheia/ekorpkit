@@ -10,3 +10,4 @@ rehash
 requests
 scipy
 pytablewriter>=0.64.0
+tqdm
