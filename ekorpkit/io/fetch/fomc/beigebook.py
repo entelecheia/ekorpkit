@@ -41,9 +41,7 @@ class BeigeBook(FomcBase):
         )
         dates = soup.find_all(
             "a",
-            href=re.compile(
-                self.base_url + "/monetarypolicy/files/BeigeBook_\d{8}.pdf"
-            ),
+            href=re.compile("/monetarypolicy/files/BeigeBook_\d{8}.pdf"),
         )
         dates = [content.attrs["href"] for content in dates]
         self.links = [content.attrs["href"] for content in contents]
@@ -60,7 +58,11 @@ class BeigeBook(FomcBase):
                 self.dates[i] = datetime(2019, 10, 4)
 
         if self.verbose:
-            print("{} links found in the current page.".format(len(self.links)))
+            print(
+                "{} links and {} dates found in the current page.".format(
+                    len(self.links), len(self.dates)
+                )
+            )
         if from_year <= 1995:
             print("Archive only from 1996, so setting from_year as 1996...")
             from_year = 1996
@@ -103,8 +105,9 @@ class BeigeBook(FomcBase):
                     print(
                         "YEAR: {} - {} links found.".format(year, len(yearly_contents))
                     )
-
-        # print(self.links)
+        print(len(self.dates), len(self.links))
+        print(self.links)
+        print(self.dates)
         print("There are total ", len(self.links), " links for ", self.content_type)
 
     def _add_article(self, link, index=None):

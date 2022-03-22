@@ -22,7 +22,7 @@ pyLDAvis				: topic
 pyhwp					: parser, hwp, bok
 wikiextractor			: parser, wiki
 namu-wiki-extractor		: parser, wiki
-pdfplumber				: parser
+pdfplumber				: parser, fomc
 mail-parser				: parser
 pubmed_parser			: parser
 jsonpath-ng				: parser, dataset

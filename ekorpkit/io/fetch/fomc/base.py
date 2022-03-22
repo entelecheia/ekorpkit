@@ -115,6 +115,7 @@ class FomcBase(metaclass=ABCMeta):
         from_year is min(2015, from_year)
         """
         # Implement in sub classes
+        # TODO - replace links list with dictionary with key as date
         pass
 
     @abstractmethod
