@@ -75,6 +75,7 @@ class FomcBase(metaclass=ABCMeta):
         ]
 
     def _date_from_link(self, link):
+        # TODO: fix this
         date = re.findall("[0-9]{8}", link)[0]
         if date[4] == "0":
             date = "{}-{}-{}".format(date[:4], date[5:6], date[6:])

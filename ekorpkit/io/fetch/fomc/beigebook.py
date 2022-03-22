@@ -52,6 +52,7 @@ class BeigeBook(FomcBase):
         self.dates = [
             datetime.strptime(self._date_from_link(x), "%Y-%m-%d") for x in dates
         ]
+        # TODO: _date_from_link deos not work for beigebooks, find date from content instead
         # Correct some date in the link does not match with the meeting date
         for i, m_date in enumerate(self.dates):
             if m_date == datetime(2019, 10, 11):
@@ -100,14 +101,13 @@ class BeigeBook(FomcBase):
                         self.dates[-1] = datetime(2008, 3, 10)
                     elif self.dates[-1] == datetime(2008, 10, 8):
                         self.dates[-1] = datetime(2008, 10, 7)
+                    if self.verbose:
+                        print(f'{self.dates[-1]}: {self.links[-1]}')
 
                 if self.verbose:
                     print(
                         "YEAR: {} - {} links found.".format(year, len(yearly_contents))
                     )
-        print(len(self.dates), len(self.links))
-        print(self.links)
-        print(self.dates)
         print("There are total ", len(self.links), " links for ", self.content_type)
 
     def _add_article(self, link, index=None):
