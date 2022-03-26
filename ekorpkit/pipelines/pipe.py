@@ -95,14 +95,29 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
 def eval_columns(df, args):
     verbose = args.get("verbose", False)
     expressions = args.get("expressions", None)
+    engine = args.get("engine", None)
+    eval_at = args.get("eval_at", 'dataframe')
     if expressions is None:
         if verbose:
             print("No expressions specified")
         return df
     if verbose:
         print(f"Eval columns: {args}")
-    for col, expr in expressions.items():
-        df[col] = df.eval(expr)
+    if eval_at == 'dataframe':
+        if isinstance(expressions, (list, ListConfig)):
+            for expr in expressions:
+                df.eval(expr, engine=engine, inplace=True)
+        else:
+            for col, expr in expressions.items():
+                df[col] = df.eval(expr, engine=engine)
+    else:
+        if isinstance(expressions, (list, ListConfig)):
+            for expr in expressions:
+                pd.eval(expr, engine=engine, inplace=True, target=df)
+        else:
+            for col, expr in expressions.items():
+                df[col] = pd.eval(expr, engine=engine)
+
     if verbose:
         print(df.tail())
     return df
@@ -872,12 +887,22 @@ def merge_dataframe(df=None, args=None):
     data_file = args.get("data_file", None)
     how = args.get("how", "inner")
     merge_on = args.get("merge_on", None)
-    if merge_on is None:
-        raise ValueError("merge_on must be specified")
+    left_on = args.get("left_on", None)
+    right_on = args.get("right_on", None)
+    if merge_on is None or (right_on is None and left_on is None):
+        raise ValueError("merge_on or (left_on and right_on) must be specified")
     if isinstance(merge_on, str):
         merge_on = [merge_on]
     else:
         merge_on = list(merge_on)
+    if isinstance(left_on, str):
+        left_on = [left_on]
+    else:
+        left_on = list(left_on)
+    if isinstance(right_on, str):
+        right_on = [right_on]
+    else:
+        right_on = list(right_on)
 
     if filepath:
         filepaths = get_filepaths(filepath)
@@ -889,7 +914,10 @@ def merge_dataframe(df=None, args=None):
         df_to_merge = load_dataframe(filepaths[0], verbose=verbose)
     else:
         df_to_merge = pd.concat([load_dataframe(f, verbose=verbose) for f in filepaths])
-    df = df.merge(df_to_merge, how=how, on=merge_on)
+    if merge_on:
+        df = df.merge(df_to_merge, how=how, on=merge_on)
+    else:
+        df = df.merge(df_to_merge, how=how, left_on=left_on, right_on=right_on)
     if verbose:
         print(df.tail())
     return df
@@ -969,6 +997,16 @@ def load_dataframe_pipe(df=None, args=None):
     filepath = args.get("filepath", None)
     data_dir = args.get("data_dir", None)
     data_file = args.get("data_file", None)
+    dtype = args.get("dtype", None)
+    if isinstance(dtype, DictConfig):
+        dtype = dict(dtype)
+    elif isinstance(dtype, (list, ListConfig)):
+        dtype = {k: "str" for k in dtype}
+    parse_dates = args.get("parse_dates", False)
+    if isinstance(parse_dates, DictConfig):
+        parse_dates = dict(parse_dates)
+    elif isinstance(parse_dates, ListConfig):
+        parse_dates = list(parse_dates)
 
     if filepath:
         filepaths = get_filepaths(filepath)
@@ -977,9 +1015,16 @@ def load_dataframe_pipe(df=None, args=None):
     if verbose:
         print(f"Loading {len(filepaths)} dataframes from {filepaths}")
     if len(filepaths) == 1:
-        return load_dataframe(filepaths[0], verbose=verbose)
+        return load_dataframe(
+            filepaths[0], verbose=verbose, dtype=dtype, parse_dates=parse_dates
+        )
     else:
-        df = pd.concat([load_dataframe(f, verbose=verbose) for f in filepaths])
+        df = pd.concat(
+            [
+                load_dataframe(f, verbose=verbose, dtype=dtype, parse_dates=parse_dates)
+                for f in filepaths
+            ]
+        )
         return df
 
 

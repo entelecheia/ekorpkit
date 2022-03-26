@@ -18,7 +18,6 @@ column_info:
   keys:
     id: id
     text: text
-    split: 
   data:
     id: int
     text: str
@@ -28,6 +27,35 @@ column_info:
     rdate: str
     type: str
     subtype: str
+    RPT_ID: str
+    ANL_DT: str
+    CMP_CD: str
+    SEC_CD: str
+    BRK_CD: str
+    RPT_TYP: str
+    RPT_SUB_TYP: str
+    ISS_FRQ_TYP: str
+    RECOM_TYP: str
+    RECOMM: str
+    BAS_YYMM: str
+    FS_MN: str
+    TARGET_PRC: float
+    TARGET_PRC_PRD: str
+    RPT_TITLE: str
+    COMMENT: str
+    PAGE_CNT: int
+    FILE_ATTACH_YN: str
+    FILE_NM: str
+    RECOMM_ACTION_TYP: str
+    PRC_ACTION_TYP: str
+    EPS_ACTION_TYP: str
+    EPS: float
+    PRE_EPS: float
+    PRE_RECOMM: str
+    PRE_TARGET_PRC: float
+    PRE_REG_DT: str
+    WORK_DT: str
+    TRD_DT: str
 
 fetch:
   data_sources:
@@ -35,6 +63,7 @@ fetch:
 
 pipeline:
   _transform_:
+    - merge_dataframe
     - reset_index
   _preprocess_:
     - normalize
@@ -42,3 +71,9 @@ pipeline:
     - filter_length
     - drop_duplicates
 
+  merge_dataframe:
+    data_dir: ${model.topic.output_dir}/infer
+    data_file: TT_EST_REPORT.parquet
+    how: left
+    left_on: rid
+    right_on: RPT_ID
