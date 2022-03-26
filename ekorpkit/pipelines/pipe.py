@@ -889,19 +889,19 @@ def merge_dataframe(df=None, args=None):
     merge_on = args.get("merge_on", None)
     left_on = args.get("left_on", None)
     right_on = args.get("right_on", None)
-    if merge_on is None or (right_on is None and left_on is None):
+    if merge_on is None and (right_on is None or left_on is None):
         raise ValueError("merge_on or (left_on and right_on) must be specified")
     if isinstance(merge_on, str):
         merge_on = [merge_on]
-    else:
+    elif isinstance(merge_on, ListConfig):
         merge_on = list(merge_on)
     if isinstance(left_on, str):
         left_on = [left_on]
-    else:
+    elif isinstance(left_on, ListConfig):
         left_on = list(left_on)
     if isinstance(right_on, str):
         right_on = [right_on]
-    else:
+    elif isinstance(right_on, ListConfig):
         right_on = list(right_on)
 
     if filepath:

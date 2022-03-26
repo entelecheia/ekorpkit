@@ -62,6 +62,7 @@ fetch:
     train: ${..downloader.output_file}
 
 pipeline:
+  data_dir: ${..fetch.data_dir}
   _transform_:
     - merge_dataframe
     - reset_index
@@ -72,7 +73,7 @@ pipeline:
     - drop_duplicates
 
   merge_dataframe:
-    data_dir: ${model.topic.output_dir}/infer
+    data_dir: ${..data_dir}
     data_file: TT_EST_REPORT.parquet
     how: left
     left_on: rid
