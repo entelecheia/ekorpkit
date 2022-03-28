@@ -15,6 +15,13 @@ class Tokenizer:
         self.only_text = kwargs.get("only_text", True)
         self.tokenize_each_word = kwargs.get("tokenize_each_word", False)
         self.wordpieces_prefix = kwargs.get("wordpieces_prefix", "##")
+        self.noun_pos = kwargs.get("noun_pos", None)
+        if self.noun_pos is None:
+            self.noun_pos = ["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"]
+        self.token_xpos_filter = kwargs.get("token_xpos_filter", None)
+        if self.token_xpos_filter is None:
+            self.token_xpos_filter = ["SP"]
+        self.no_space_for_non_nouns = kwargs.get("no_space_for_non_nouns", False)
 
     @abstractmethod
     def parse(self, text):
@@ -41,6 +48,21 @@ class Tokenizer:
             else:
                 term_pos.append(f"{self.wordpieces_prefix}{term}/{pos}")
         return term_pos
+
+    def nouns(self, text):
+        tokenized_text = self.tokenize(text)
+        return extract_tokens(
+            tokenized_text, nouns_only=True, noun_pos_filter=self.noun_pos
+        )
+
+    def tokens(self, text):
+        tokenized_text = self.tokenize(text)
+        return extract_tokens(
+            tokenized_text,
+            nouns_only=False,
+            token_xpos_filter=self.token_xpos_filter,
+            no_space_for_non_nouns=self.no_space_for_non_nouns,
+        )
 
 
 class PynoriTokenizer(Tokenizer):
@@ -120,7 +142,7 @@ class BWPTokenizer(Tokenizer):
 
 
 def extract_tokens(
-    text,
+    tokenized_text,
     nouns_only=False,
     noun_pos_filter=["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"],
     token_xpos_filter=["SP"],
@@ -128,26 +150,32 @@ def extract_tokens(
     **kwargs,
 ):
 
-    _tokens = [token.split("/") for token in text.split() if len(token.split("/")) == 2]
+    _tokens_pos = [
+        token.split("/")
+        for token in tokenized_text.split()
+        if len(token.split("/")) == 2
+    ]
 
     if nouns_only:
-        tokens = [token[0].strip() for token in _tokens if token[1] in noun_pos_filter]
+        _tokens = [
+            token[0].strip() for token in _tokens_pos if token[1] in noun_pos_filter
+        ]
     else:
         exist_sp_tag = False
-        for i, token in enumerate(_tokens):
+        for i, token in enumerate(_tokens_pos):
             if token[1] == "SP":
                 exist_sp_tag = True
                 break
 
-        tokens = []
+        _tokens = []
         if exist_sp_tag and no_space_for_non_nouns:
             prev_nonnoun_check = False
             cont_morphs = []
             i = 0
-            while i < len(_tokens):
-                token = _tokens[i]
+            while i < len(_tokens_pos):
+                token = _tokens_pos[i]
                 if not prev_nonnoun_check and token[1] in noun_pos_filter:
-                    tokens.append(token[0])
+                    _tokens.append(token[0])
                 elif (
                     not prev_nonnoun_check
                     and token[1] not in noun_pos_filter
@@ -163,44 +191,44 @@ def extract_tokens(
                     cont_morphs.append(token[0])
                 else:
                     if len(cont_morphs) > 0:
-                        tokens.append("".join(cont_morphs))
+                        _tokens.append("".join(cont_morphs))
                         cont_morphs = []
                         prev_nonnoun_check = False
                     if token[1] != "SP":
-                        tokens.append(token[0])
+                        _tokens.append(token[0])
                 i += 1
             if len(cont_morphs) > 0:
-                tokens.append("".join(cont_morphs))
+                _tokens.append("".join(cont_morphs))
         else:
-            tokens = [
+            _tokens = [
                 token[0].strip()
-                for token in _tokens
+                for token in _tokens_pos
                 if token[1] not in token_xpos_filter
             ]
-    return tokens
+    return _tokens
 
 
-def extract_tokens_dataframe(df, **args):
-    x_args = args["extract_func"]
-    text_key = x_args["text_key"]
-    num_workers = args["num_workers"]
+# def extract_tokens_dataframe(df, **args):
+#     x_args = args["extract_func"]
+#     text_key = x_args["text_key"]
+#     num_workers = args["num_workers"]
 
-    def extact_tokens_row(row):
-        text = row[text_key]
-        if not isinstance(text, str):
-            return None
+#     def extact_tokens_row(row):
+#         text = row[text_key]
+#         if not isinstance(text, str):
+#             return None
 
-        sents = []
-        for sent in text.split("\n"):
-            if len(sent) > 0:
-                tokens = extract_tokens(sent, **x_args)
-                token_sent = " ".join(tokens)
-                sents.append(token_sent)
-            else:
-                sents.append("")
-        return "\n".join(sents)
+#         sents = []
+#         for sent in text.split("\n"):
+#             if len(sent) > 0:
+#                 tokens = extract_tokens(sent, **x_args)
+#                 token_sent = " ".join(tokens)
+#                 sents.append(token_sent)
+#             else:
+#                 sents.append("")
+#         return "\n".join(sents)
 
-    df[text_key] = df.apply(extact_tokens_row, axis=1)
+#     df[text_key] = df.apply(extact_tokens_row, axis=1)
 
-    df = df.dropna(subset=[text_key])
-    return df
+#     df = df.dropna(subset=[text_key])
+#     return df

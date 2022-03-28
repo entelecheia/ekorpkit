@@ -4,13 +4,13 @@
 # package[version_required]	: tag1, tag2, ...
 # ex) pip install -e .\[modin\]
 
-fugashi					: fugashi
-mecab-python3           : mecab
-mecab_ko_dic			: mecab
+fugashi					: tokenize, fugashi
+mecab-python3           : tokenize, mecab
+mecab_ko_dic			: tokenize, mecab
 pysbd					: tokenize, dataset
-pynori					: tokenize
-soynlp					: tokenize
-nltk					: tokenize
+pynori					: tokenize, pynori
+soynlp					: tokenize, soynlp
+nltk					: tokenize, nltk
 sacremoses				: tokenize
 emoji					: tokenize, dataset
 sentencepiece			: tokenize
@@ -23,12 +23,12 @@ pyhwp					: parser, hwp, bok
 wikiextractor			: parser, wiki
 namu-wiki-extractor		: parser, wiki
 pdfplumber				: parser, fomc
-mail-parser				: parser
-pubmed_parser			: parser
+mail-parser				: parser, mail
+pubmed_parser			: parser, pubmed
 jsonpath-ng				: parser, dataset
 beautifulsoup4			: parser, dataset
-html-to-json			: parser
-fasttext-langdetect		: parser
+html-to-json			: parser, html
+fasttext-langdetect		: parser, langdetect
 
 simpletransformers		: transformers, model
 datasets				: transformers, dataset, model
