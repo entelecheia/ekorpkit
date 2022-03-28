@@ -13,7 +13,7 @@ soynlp					: tokenize, soynlp
 nltk					: tokenize, nltk
 sacremoses				: tokenize
 emoji					: tokenize, dataset
-sentencepiece			: tokenize
+# sentencepiece			: tokenize
 
 tomotopy			  	: topic
 wordcloud				: topic
