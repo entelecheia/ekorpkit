@@ -1,7 +1,8 @@
 import logging
 from abc import ABCMeta, abstractmethod
-from ..preprocessors.normalizer import strict_normalize, only_text
+from .normalizer import strict_normalize, only_text
 
+logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -68,14 +69,16 @@ class Tokenizer:
 class PynoriTokenizer(Tokenizer):
     def __init__(
         self,
-        args=None,
+        pynori=None,
         **kwargs,
     ):
         logging.warning("Initializing Pynori...")
         try:
             from pynori.korean_analyzer import KoreanAnalyzer
-
-            self._tokenizer = KoreanAnalyzer(**args)
+            if pynori is None:
+                self._tokenizer = KoreanAnalyzer()
+            else:
+                self._tokenizer = KoreanAnalyzer(**pynori)
         except ImportError:
             raise ImportError(
                 "\n"
@@ -96,15 +99,17 @@ class PynoriTokenizer(Tokenizer):
 class MecabTokenizer(Tokenizer):
     def __init__(
         self,
-        args=None,
+        mecab=None,
         **kwargs,
     ):
 
         logging.warning("Initializing mecab...)")
         try:
-            from .mecab import MeCab
-
-            self._tokenizer = MeCab(**args)
+            from ..tokenizers.mecab import MeCab
+            if mecab is None:
+                self._tokenizer = MeCab()
+            else:
+                self._tokenizer = MeCab(**mecab)
         except ImportError:
             raise ImportError(
                 "\n"
@@ -114,20 +119,22 @@ class MecabTokenizer(Tokenizer):
         super().__init__(**kwargs)
 
     def parse(self, text):
-        return self._tokenizer.pos(text)
+        return self._tokenizer.pos(text, join=True)
 
 
 class BWPTokenizer(Tokenizer):
     def __init__(
         self,
-        args=None,
+        bwp=None,
         **kwargs,
     ):
         logging.warning("Initializing BertWordPieceTokenizer...")
         try:
             from transformers import BertTokenizerFast
-
-            self._tokenizer = BertTokenizerFast.from_pretrained(**args)
+            if bwp is None:
+                self._tokenizer = BertTokenizerFast.from_pretrained("entelecheia/ekonbert-base")
+            else:
+                self._tokenizer = BertTokenizerFast.from_pretrained(**bwp)
 
         except ImportError:
             raise ImportError(

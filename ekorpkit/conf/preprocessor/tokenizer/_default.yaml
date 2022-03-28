@@ -1,0 +1,14 @@
+only_text: true
+tokenize_each_word: false
+wordpieces_prefix: "##"
+noun_pos: 
+  - NNG
+  - NNP
+  - XSN
+  - SL
+  - XR
+  - NNB
+  - NR
+token_xpos_filter: 
+  -SP
+no_space_for_non_nouns: false

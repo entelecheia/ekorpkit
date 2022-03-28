@@ -1,0 +1,6 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.preprocessors.tokenizer.PynoriTokenizer
+pynori:
+

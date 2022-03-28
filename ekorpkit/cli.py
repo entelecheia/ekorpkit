@@ -14,7 +14,8 @@ from .tasks.info import make_table
 from ekorpkit.utils.func import lower_case_with_underscores
 
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
 
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
@@ -36,6 +37,7 @@ def listup(**args):
 
 def about(**args):
     from . import __version__
+
     cfg = OmegaConf.create(args)
     args = cfg.about.app
     print()
