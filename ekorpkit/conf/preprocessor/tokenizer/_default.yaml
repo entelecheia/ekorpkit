@@ -12,3 +12,6 @@ noun_pos:
 token_xpos_filter: 
   -SP
 no_space_for_non_nouns: false
+flatten: true
+join_pos: true
+include_whitespace_token: true

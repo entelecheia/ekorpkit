@@ -23,6 +23,12 @@ class Tokenizer:
         if self.token_xpos_filter is None:
             self.token_xpos_filter = ["SP"]
         self.no_space_for_non_nouns = kwargs.get("no_space_for_non_nouns", False)
+        self.flatten = kwargs.get("flatten", True)
+        self.join_pos = kwargs.get("join_pos", True)
+        self.include_whitespace_token = kwargs.get("include_whitespace_token", True)
+        self.punct_pos = kwargs.get("punct_pos", None)
+        if self.punct_pos is None:
+            self.punct_pos = ["SF", "SP", "SSO", "SSC", "SY"]
 
     @abstractmethod
     def parse(self, text):
@@ -44,10 +50,14 @@ class Tokenizer:
         tokens = self.parse(word)
         term_pos = []
         for i, (term, pos) in enumerate(tokens):
-            if i == 0:
-                term_pos.append(f"{term}/{pos}")
-            else:
-                term_pos.append(f"{self.wordpieces_prefix}{term}/{pos}")
+            term = f"{term}/{pos}" if self.join_pos else term
+            if (
+                i > 0
+                and pos not in self.punct_pos
+                and tokens[i - 1][1] not in self.punct_pos
+            ):
+                term = f"{self.wordpieces_prefix}{term}"
+            term_pos.append(term)
         return term_pos
 
     def nouns(self, text):
@@ -73,8 +83,17 @@ class PynoriTokenizer(Tokenizer):
         **kwargs,
     ):
         logging.warning("Initializing Pynori...")
+
+        super().__init__(**kwargs)
+        if pynori is None:
+            pynori = {}
+        pynori["decompound_mode"] = "NONE" if self.flatten else "MIXED"
+        pynori["infl_decompound_mode"] = "NONE" if self.flatten else "MIXED"
+        pynori["discard_punctuation"] = False
+
         try:
             from pynori.korean_analyzer import KoreanAnalyzer
+
             if pynori is None:
                 self._tokenizer = KoreanAnalyzer()
             else:
@@ -85,13 +104,15 @@ class PynoriTokenizer(Tokenizer):
                 "You must install `pynori` if you want to use `pynori` backend.\n"
                 "Please install using `pip install pynori`.\n"
             )
-        super().__init__(**kwargs)
 
     def parse(self, text):
 
+        join_pos = False if self.tokenize_each_word else self.join_pos
         tokens = self._tokenizer.do_analysis(text)
         term_pos = [
-            f"{term}/{pos}" for term, pos in zip(tokens["termAtt"], tokens["posTagAtt"])
+            f"{term}/{pos}" if join_pos else (term, pos)
+            for term, pos in zip(tokens["termAtt"], tokens["posTagAtt"])
+            if self.include_whitespace_token or pos != "SP"
         ]
         return term_pos
 
@@ -104,8 +125,10 @@ class MecabTokenizer(Tokenizer):
     ):
 
         logging.warning("Initializing mecab...)")
+        super().__init__(**kwargs)
         try:
             from ..tokenizers.mecab import MeCab
+
             if mecab is None:
                 self._tokenizer = MeCab()
             else:
@@ -116,10 +139,15 @@ class MecabTokenizer(Tokenizer):
                 "You must install `fugashi` and `mecab_ko_dic` if you want to use `mecab` backend.\n"
                 "Please install using `pip install python-mecab-ko`.\n"
             )
-        super().__init__(**kwargs)
 
     def parse(self, text):
-        return self._tokenizer.pos(text, join=True)
+        join_pos = False if self.tokenize_each_word else self.join_pos
+        return self._tokenizer.pos(
+            text,
+            join=join_pos,
+            flatten=self.flatten,
+            include_whitespace_token=self.include_whitespace_token,
+        )
 
 
 class BWPTokenizer(Tokenizer):
@@ -129,10 +157,14 @@ class BWPTokenizer(Tokenizer):
         **kwargs,
     ):
         logging.warning("Initializing BertWordPieceTokenizer...")
+        super().__init__(**kwargs)
         try:
             from transformers import BertTokenizerFast
+
             if bwp is None:
-                self._tokenizer = BertTokenizerFast.from_pretrained("entelecheia/ekonbert-base")
+                self._tokenizer = BertTokenizerFast.from_pretrained(
+                    "entelecheia/ekonbert-base"
+                )
             else:
                 self._tokenizer = BertTokenizerFast.from_pretrained(**bwp)
 
@@ -142,7 +174,6 @@ class BWPTokenizer(Tokenizer):
                 "You must install `BertWordPieceTokenizer` if you want to use `bwp` backend.\n"
                 "Please install using `pip install transformers`.\n"
             )
-        super().__init__(**kwargs)
 
     def parse(self, text):
         return self._tokenizer.tokenize(text)
