@@ -64,7 +64,7 @@ datasketch 				: dataset
 pysimdjson				: dataset, parser
 p_tqdm					: dataset, parser
 joblib					: dataset, parser
-ftfy					: dataset, parser
+ftfy					: dataset, parser, tokenize
 jsonlines				: dataset, parser
 loky					: dataset, parser
 # guesslang 				: dataset, parser
