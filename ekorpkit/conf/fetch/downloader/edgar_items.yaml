@@ -1,0 +1,14 @@
+defaults:
+  - edgar_filings
+
+_target_: ekorpkit.io.edgar.extract.extract_items
+extracted_filings_dir: EXTRACTED_FILINGS
+items_to_extract: [
+	"1", "1A", "1B", "2", "3", "4", "5", "6", "7", "7A",
+	"8", "9", "9A", "9B", "10", "11", "12", "13", "14", "15"
+]
+remove_tables: true
+
+
+# Item 1A “Risk Factors”
+# Item 7 “Management’s Discussion and Analysis of Financial Condition and Results of Operations”

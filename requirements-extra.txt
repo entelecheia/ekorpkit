@@ -29,6 +29,7 @@ jsonpath-ng				: parser, dataset
 beautifulsoup4			: parser, dataset
 html-to-json			: parser, html
 fasttext-langdetect		: parser, langdetect
+cssutils                : parser, edgar
 
 simpletransformers		: transformers, model
 datasets				: transformers, dataset, model

@@ -1,0 +1,24 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.fetch.edgar.download.download_filings
+base_url: "https://www.sec.gov/Archives/edgar/full-index/"
+start_year: 2021
+end_year: 2021
+quarters: [1, 2, 3, 4]
+filing_types: [10-K, 10-K405, 10-KT]
+# list of filing types to download.
+cik_tickers:
+# list or path of file containing CIKs or Tickers. e.g. [789019, 1018724, AAPL, TWTR]
+# In case of file, provide each CIK or Ticker in a different line.
+# If this argument is not provided, then the toolkit will download annual reports for all the U.S. publicly traded companies.
+user_agent: edgar-cralwer
+raw_filings_dir: RAW_FILINGS
+# the name of the folder where downloaded filings will be stored.
+indices_dir: INDICES,
+# the name of the folder where EDGAR TSV files will be stored. These are used to locate the annual reports. Default value is 'INDICES'.
+filings_metadata_file: FILINGS_METADATA.csv
+# CSV filename to save metadata from the reports.
+skip_present_indices: true
+# Whether to skip already downloaded EDGAR indices or download them nonetheless. Default value is True.
+companies_info_file: companies_info.json
