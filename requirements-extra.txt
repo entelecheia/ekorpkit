@@ -68,6 +68,7 @@ joblib					: dataset, parser
 ftfy					: dataset, parser, tokenize
 jsonlines				: dataset, parser
 loky					: dataset, parser
+pathos                    : dataset, parser, edgar
 # guesslang 				: dataset, parser
 
 numba                   : numba
