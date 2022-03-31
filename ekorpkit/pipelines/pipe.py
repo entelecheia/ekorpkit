@@ -646,7 +646,7 @@ def chunk(df, args):
         if verbose:
             print("No columns specified")
         return df
-    segmenter = args.get("segmenter", None)
+    segmenter = args.get("preprocessor", {}).get("segmenter", None)
     if segmenter is None:
         if verbose:
             print("No segmenter specified")

@@ -14,6 +14,9 @@ class Corpora:
         if isinstance(self.names, str):
             self.names = [self.names]
         self.data_dir = args.data_dir
+        self.metadata_dir = self.args.get("metadata_dir", None)
+        if self.metadata_dir is None:
+            self.metadata_dir = self.data_dir
         self.corpora = {}
         self._data = None
         self._metadata = None
@@ -43,9 +46,12 @@ class Corpora:
                 print(f"processing {name}")
                 if use_name_as_subdir:
                     data_dir = f"{self.data_dir}/{name}"
+                    metadata_dir = f"{self.metadata_dir}/{name}"
                 else:
                     data_dir = self.data_dir
+                    metadata_dir = self.metadata_dir
                 args["data_dir"] = data_dir
+                args["metadata_dir"] = metadata_dir
                 args["name"] = name
                 corpus = Corpus(**args)
                 self.corpora[name] = corpus

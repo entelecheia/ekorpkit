@@ -39,7 +39,7 @@ class Tokenizer:
 
     @abstractmethod
     def parse(self, text):
-        pass
+        raise NotImplementedError
 
     def tokenize_article(self, article):
         if article is None:

@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
 import pyLDAvis
 import logging
+from omegaconf import OmegaConf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
 from ekorpkit.io.file import save_dataframe, load_dataframe
@@ -231,18 +232,15 @@ class TopicModel:
 
     def _load_word_prior(self):
         if self.word_prior_path.is_file():
-            with open(self.word_prior_path, "r") as fp:
-                self.word_prior = json.load(fp)
+            self.word_prior = OmegaConf.load(self.word_prior_path)
             print(self.word_prior)
         else:
             if self.default_word_prior_path.is_file():
-                with open(self.default_word_prior_path, "r") as fp:
-                    self.word_prior = json.load(fp)
+                self.word_prior = OmegaConf.load(self.default_word_prior_path)
                 print(self.word_prior)
             else:
                 self.word_prior = {}
-        with open(self.word_prior_path, "w") as fp:
-            json.dump(self.word_prior, fp, ensure_ascii=False, indent=4)
+        OmegaConf.save(self.word_prior, self.word_prior_path)
 
     def load_corpus(
         self, sample_ratio=1.0, reload_corpus=False, min_df=5, min_word_len=2, **kwargs

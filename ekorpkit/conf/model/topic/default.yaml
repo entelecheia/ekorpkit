@@ -22,6 +22,6 @@ files:
   ngram_docs: ${..model_dir}/ngram_docs.pkl
   stopwords: ${..model_dir}/stopwords.txt
   default_stopwords: ${..base_model_dir}/stopwords.txt
-  word_prior: ${..model_dir}/word_prior.json
-  default_word_prior: ${..base_model_dir}/word_prior.json
+  word_prior: ${..model_dir}/word_prior.yaml
+  default_word_prior: ${..base_model_dir}/word_prior.yaml
 verbose: ${oc.select:..verbose, true}

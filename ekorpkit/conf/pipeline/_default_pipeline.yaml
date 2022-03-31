@@ -23,6 +23,8 @@ defaults:
   - top_values: default
   - tokenize: default
   - extract_tokens: default
+  - explode_splits: default
+  - chunk: default
 
 apply_to: ${oc.select:..apply_to, text}
 use_batcher: true

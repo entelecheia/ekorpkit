@@ -3,3 +3,4 @@ defaults:
 
 _target_: ekorpkit.corpora.loader.Corpora
 data_dir: ${dir.corpus}
+metadata_dir: ${.data_dir}

@@ -22,6 +22,9 @@ class Corpus:
         self.args = OmegaConf.create(args)
         self.name = self.args.name
         self.data_dir = Path(self.args.data_dir)
+        self.metadata_dir = Path(self.args.get("metadata_dir", None))
+        if self.metadata_dir is None:
+            self.metadata_dir = self.data_dir
         self.info_file = self.data_dir / f"info-{self.name}.yaml"
         self.info = OmegaConf.load(self.info_file) if self.info_file.is_file() else {}
         if self.info:
@@ -143,7 +146,7 @@ class Corpus:
         dfs = []
         _id_keys = self._keys["id"]
         for split, data_file in self.meta_files.items():
-            filepaths = get_filepaths(data_file, self.data_dir)
+            filepaths = get_filepaths(data_file, self.metadata_dir)
             df = pd.concat(
                 [
                     load_dataframe(f, filetype=self.filetype, verbose=self.verbose)
