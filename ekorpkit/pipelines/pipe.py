@@ -85,6 +85,9 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
         print(f"Applying pipeline: {pipes}")
     for pipe, pipe_arg_name in pipes.items():
         args = dict(pipeline_args.get(pipe_arg_name, {}))
+        if pipe != pipe_arg_name:
+            args_override = dict(pipeline_args.get(pipe, {}))
+            args.update(args_override)
         if args and isinstance(args, dict):
             args.update(update_args)
             pipeline_targets.append(args)
@@ -96,14 +99,14 @@ def eval_columns(df, args):
     verbose = args.get("verbose", False)
     expressions = args.get("expressions", None)
     engine = args.get("engine", None)
-    eval_at = args.get("eval_at", 'dataframe')
+    eval_at = args.get("eval_at", "dataframe")
     if expressions is None:
         if verbose:
             print("No expressions specified")
         return df
     if verbose:
         print(f"Eval columns: {args}")
-    if eval_at == 'dataframe':
+    if eval_at == "dataframe":
         if isinstance(expressions, (list, ListConfig)):
             for expr in expressions:
                 df.eval(expr, engine=engine, inplace=True)
@@ -548,6 +551,83 @@ def segment(df, args):
                 segmenter.segment_article,
                 df[key],
                 description=f"Splitting column: {key}",
+                verbose=verbose,
+                use_batcher=use_batcher,
+                minibatch_size=minibatch_size,
+            )
+            if verbose:
+                msg.good("\n >> elapsed time to segment: {}\n".format(elapsed()))
+    return df
+
+
+def tokenize(df, args):
+    verbose = args.get("verbose", False)
+    use_batcher = args.get("use_batcher", True)
+    minibatch_size = args.get("minibatch_size", None)
+    apply_to = args.get("apply_to", "text")
+    if apply_to is None:
+        if verbose:
+            print("No columns specified")
+        return df
+    tokenizer = args.get("preprocessor", {}).get("tokenizer", None)
+    if tokenizer is None:
+        if verbose:
+            print("No tokenizer specified")
+        return df
+    if isinstance(apply_to, str):
+        apply_to = [apply_to]
+    if verbose:
+        print(f"Tokenizing text: {args}")
+        print("instantiating tokenizer")
+    tokenizer = instantiate(tokenizer)
+    for key in apply_to:
+        if verbose:
+            print(f"\nPreprocessing column: {key}")
+        with elapsed_timer(format_time=True) as elapsed:
+            df[key] = apply(
+                tokenizer.tokenize_article,
+                df[key],
+                description=f"Tokenizing column: {key}",
+                verbose=verbose,
+                use_batcher=use_batcher,
+                minibatch_size=minibatch_size,
+            )
+            if verbose:
+                msg.good("\n >> elapsed time to segment: {}\n".format(elapsed()))
+    return df
+
+
+def extract_tokens(df, args):
+    verbose = args.get("verbose", False)
+    use_batcher = args.get("use_batcher", True)
+    nouns_ony = args.get("nouns_ony", True)
+    minibatch_size = args.get("minibatch_size", None)
+    apply_to = args.get("apply_to", "text")
+    if apply_to is None:
+        if verbose:
+            print("No columns specified")
+        return df
+    tokenizer = args.get("preprocessor", {}).get("tokenizer", None)
+    if tokenizer is None:
+        if verbose:
+            print("No tokenizer specified")
+        return df
+    if isinstance(apply_to, str):
+        apply_to = [apply_to]
+    if verbose:
+        print(f"Extracting tokens: {args}")
+        print("instantiating tokenizer")
+    tokenizer = instantiate(tokenizer)
+    extract_func = tokenizer.extract_nouns if nouns_ony else tokenizer.extract_tokens
+
+    for key in apply_to:
+        if verbose:
+            print(f"\nPreprocessing column: {key}")
+        with elapsed_timer(format_time=True) as elapsed:
+            df[key] = apply(
+                extract_func,
+                df[key],
+                description=f"Extracting column: {key}",
                 verbose=verbose,
                 use_batcher=use_batcher,
                 minibatch_size=minibatch_size,

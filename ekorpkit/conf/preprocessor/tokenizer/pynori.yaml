@@ -3,4 +3,4 @@ defaults:
 
 _target_: ekorpkit.preprocessors.tokenizer.PynoriTokenizer
 pynori:
-
+  path_userdict: ${..userdic_path}

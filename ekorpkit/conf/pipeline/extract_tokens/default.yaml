@@ -1,0 +1,8 @@
+defaults:
+  - /preprocessor/tokenizer: _default
+  - /method: extract_tokens
+
+apply_to: ${oc.select:..apply_to, text}
+verbose: ${oc.select:..verbose, true}
+use_batcher: ${oc.select:..use_batcher, true}
+nouns_ony: true

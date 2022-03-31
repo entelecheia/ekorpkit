@@ -1,0 +1,11 @@
+defaults:
+  - /preprocessor/tokenizer: mecab
+  - /method: tokenize
+
+apply_to: ${oc.select:..apply_to, text}
+verbose: ${oc.select:..verbose, true}
+use_batcher: ${oc.select:..use_batcher, true}
+userdic_path:
+preprocessor:
+  userdic_path: ${..userdic_path}
+  verbose: ${oc.select:..verbose, false}
