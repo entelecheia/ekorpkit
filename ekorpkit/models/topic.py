@@ -1,59 +1,23 @@
 import os
 import sys
-import platform
 import random
 import itertools
 import pandas as pd
-import json
 import tomotopy as tp
 from pathlib import Path
 from collections import namedtuple
 from datetime import datetime
 from tqdm import tqdm
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import font_manager, rc
 import pyLDAvis
 import logging
 from omegaconf import OmegaConf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
 from ekorpkit.io.file import save_dataframe, load_dataframe
-
-# from pprint import pprint
+from ekorpkit.visualize.wordcloud import topic_wordclouds, savefig
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
-
-
-def _get_font_name(set_font_for_matplot=True, font_path=None):
-    if not font_path:
-        if platform.system() == "Darwin":
-            font_path = "/System/Library/Fonts/Supplemental/AppleGothic.ttf"
-        elif platform.system() == "Windows":
-            font_path = "c:/Windows/Fonts/malgun.ttf"
-        elif platform.system() == "Linux":
-            font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
-
-    if not Path(font_path).is_file():
-        font_name = None
-        font_path = None
-        print(f"Font file does not exist at {font_path}")
-        if platform.system() == "Linux":
-            font_install_help = """
-            apt install fontconfig
-            apt install fonts-nanum
-            fc-list | grep -i nanum
-            """
-            print(font_install_help)
-    else:
-        font_manager.fontManager.addfont(font_path)
-        font_name = font_manager.FontProperties(fname=font_path).get_name()
-        if set_font_for_matplot and font_name:
-            rc("font", family=font_name)
-            plt.rcParams["axes.unicode_minus"] = False
-    print("font family: ", plt.rcParams["font.family"])
-    print("font path: ", font_path)
-    return font_name, font_path
 
 
 ModelSummary = namedtuple(
@@ -495,7 +459,7 @@ class TopicModel:
             self.model_name, model_type, exec_dt
         )
         out_file = str(self.model_dir / "figures/tune" / out_file)
-        plt.savefig(out_file, transparent=False, dpi=300)
+        savefig(out_file, transparent=False, dpi=300)
 
     def train_model(
         self,
@@ -647,7 +611,7 @@ class TopicModel:
             self.model_name, self.active_model_id, exec_dt
         )
         out_file = str(self.output_dir / "figures/train" / out_file)
-        plt.savefig(out_file, transparent=False, dpi=300)
+        savefig(out_file, transparent=False, dpi=300)
 
         mdl.summary()
         self.model = mdl
@@ -928,7 +892,6 @@ class TopicModel:
 
     def topic_wordclouds(
         self,
-        topic_dict=None,
         title_fontsize=20,
         title_color="green",
         top_n=100,
@@ -947,35 +910,15 @@ class TopicModel:
         wordclouds as plots
         """
         assert self.model, "Model not found"
-        # if topic_dict is None:
-        #     topic_dict = self.get_topic_words()
         num_topics = self.model.k
-        # wc = WordCloud(background_color="white")
 
-        def save_fig():
-            plt.subplots_adjust(
-                left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.00, hspace=0.00
-            )  # make the figure look better
-            fig.tight_layout()
-            out_file = "{}-{}-wc_topic_p{}.png".format(
-                self.model_name, self.active_model_id, p
-            )
-            out_file = str(self.output_dir / "figures/wc" / out_file)
-            plt.savefig(out_file, transparent=True, dpi=dpi)
-
-        fontname, _ = _get_font_name()
-        plt.rcParams["font.family"] = fontname
-        figsize = (nrows * 4, ncols * 5)
-        fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
-        cnt = 0
-        p = 1
-        for i in range(num_topics):
-            r, c = divmod(cnt, ncols)
-            k = i
-            print(f"Creating topic wordcloud for Topic #{k}")
-            self.create_wordcloud(
-                k, fig, axes[r, c], top_n=top_n, save=False, fontname=fontname
-            )
+        fig_output_dir = str(self.output_dir / "figures/wc")
+        fig_filename_format = "{}-{}-wc_topic".format(
+            self.model_name, self.active_model_id
+        )
+        topic_wc_args = []
+        for k in range(num_topics):
+            topic_freq = dict(self.model.get_topic_words(k, top_n=top_n))
             if self.labels:
                 topic_name = self.labels[k]["name"]
                 if topic_name.startswith("Topic #"):
@@ -986,50 +929,17 @@ class TopicModel:
                 title = f"Topic #{k} - {topic_name}"
             else:
                 title = f"Topic #{k}"
-            axes[r, c].set_title(title, fontsize=title_fontsize, color=title_color)
-            cnt += 1
-            if cnt == nrows * ncols:
-                if save:
-                    save_fig()
-                if i < num_topics - 1:
-                    p += 1
-                    cnt = 0
-                    fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
-        if save and cnt < nrows * ncols:
-            while cnt < nrows * ncols:
-                r, c = divmod(cnt, ncols)
-                axes[r, c].set_visible(False)
-                cnt += 1
-            save_fig()
+            wc_args = {"word_freq": topic_freq, "title": title}
+            topic_wc_args.append(wc_args)
 
-    def create_wordcloud(
-        self, topic_idx, fig, ax, top_n=100, save=False, fontname=None
-    ):
-        """Wrapper function that generates individual wordclouds from topics in a tomotopy model
-
-        ** Inputs **
-        topic_idx: int -> topic index
-        fig, ax: obj -> pyplot objects from subplots method
-        save: bool -> If the user would like to save the images
-
-        ** Returns **
-        wordclouds as plots"""
-        from wordcloud import WordCloud
-
-        assert self.model, "Model not found"
-        mdl = self.model
-        if not fontname:
-            fontname, _ = _get_font_name()
-        wc = WordCloud(font_path=fontname, background_color="white")
-
-        topic_freq = dict(mdl.get_topic_words(topic_idx, top_n=top_n))
-        img = wc.generate_from_frequencies(topic_freq)
-        ax.imshow(img, interpolation="bilinear")
-        ax.axis("off")
-        if save:
-            extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-            out_file = "{}-{}-wc_topic_{}.png".format(
-                self.model_name, self.active_model_id, topic_idx
-            )
-            out_file = str(self.output_dir / "figures/wc" / out_file)
-            plt.savefig(out_file, bbox_inches=extent.expanded(1.1, 1.2))
+        topic_wordclouds(
+            topic_wc_args,
+            fig_output_dir,
+            fig_filename_format,
+            title_fontsize,
+            title_color,
+            ncols,
+            nrows,
+            dpi,
+            save,
+        )
