@@ -25,7 +25,10 @@ defaults:
   - extract_tokens: default
   - explode_splits: default
   - chunk: default
+  - stdout_samples: default
 
 apply_to: ${oc.select:..apply_to, text}
+data_dir: ${oc.select:..data_dir, ''} 
+data_file: ${oc.select:..data_file, ''}
 use_batcher: true
 verbose: ${oc.select:..verbose, true}

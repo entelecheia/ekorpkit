@@ -2,5 +2,3 @@ defaults:
   - _default_pipeline
 
 _pipeline_:
-data_dir: ${oc.select:..data_dir, ''} 
-data_file: ${oc.select:..data_file, ''}

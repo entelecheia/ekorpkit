@@ -7,12 +7,6 @@ from wasabi import msg
 from omegaconf import OmegaConf
 from ekorpkit.io.file import load_dataframe, get_filepaths
 
-# from hydra.utils import instantiate
-# from omegaconf.dictconfig import DictConfig
-# from ekorpkit.utils.func import ordinal, elapsed_timer
-# import swifter
-
-
 DESCRIPTION = "Corpus for Language Models"
 LICENSE = "Copyright of the corpus is owned by the authors."
 
@@ -60,17 +54,23 @@ class Corpus:
         if self.split_info:
             self.split_info = OmegaConf.to_container(self.split_info)
         self._keys = self.column_info["keys"]
+        self._timestamp = self.column_info.get("timestamp", None)
         self.collapse_ids = self.args.get("collapse_ids", True)
 
-        for k in ["id", "text"]:
+        self._id_key = "id"
+        self._text_key = "text"
+        self._merge_meta_on_key = "merge_meta_on"
+        self._timestamp_key = "timestamp"
+        for k in [self._id_key, self._text_key, self._merge_meta_on_key]:
             if isinstance(self._keys[k], str):
                 self._keys[k] = [self._keys[k]]
             else:
                 self._keys[k] = list(self._keys[k])
-
-        self._id_keys = self._keys["id"]
-        self._text_key = "text"
-        self._id_key = "id"
+        if self._merge_meta_on_key in self._keys:
+            self._merge_meta_on = self._keys[self._merge_meta_on_key] 
+        else:
+            self._merge_meta_on = self._id_key
+        self._id_keys = self._keys[self._id_key]
         self._id_separator = "_"
         self._data_keys = self.column_info.get("data", None)
         self._meta_kyes = self.column_info.get("meta", None)
@@ -78,9 +78,13 @@ class Corpus:
         self._data = None
         self._metadata = None
 
+        # TODO: option to add timestamp column to data
+        # timestamp column, conversion rules, etc.
+
         if self.autoload:
             self.load()
             self.load_metadata()
+            self.laod_timestamp()
 
     @property
     def data(self):
@@ -99,15 +103,33 @@ class Corpus:
 
     # def __repr__(self):
     # 	return f"Dataset({{\n    features: {list(self.features.keys())},\n    num_rows: {self.num_rows}\n}})"
-
+    def laod_timestamp(self):
+        if self._timestamp is None:
+            return
+        _timestamp_col = self._timestamp.get("key", None)
+        if _timestamp_col is None:
+            return
+        _format = self._timestamp.get("format", None)
+        _params = self._timestamp.get("params", {})
+        if _params is None:
+            _params = {}
+        if _timestamp_col in self._metadata.columns:
+            self._metadata[self._timestamp_key] = pd.to_datetime(self._metadata[_timestamp_col], format=_format, **_params)
+            df_dt = self._metadata[self._merge_meta_on + [self._timestamp_key]]
+            self._metadata = self._metadata.drop(self._timestamp_key, axis=1)
+            self._data = self._data.merge(df_dt, on=self._merge_meta_on, how="left")
+            if self.verbose:
+                msg.info(f"Timestamp column {self._timestamp_key} added to data")
+                print(self._data.head())
+            
     def load(self):
         dfs = []
-        _text_keys = self._keys["text"]
-        _id_keys = self._keys["id"]
+        _text_cols = self._keys[self._text_key]
+        _id_cols = self._keys[self._id_key]
 
-        if len(_text_keys) > 1:
+        if len(_text_cols) > 1:
             self._data_keys = {
-                k: v for k, v in self._data_keys.items() if k not in _text_keys
+                k: v for k, v in self._data_keys.items() if k not in _text_cols
             }
             self._data_keys[self._text_key] = "str"
 
@@ -120,31 +142,33 @@ class Corpus:
                 ]
             )
 
-            df[_text_keys] = df[_text_keys].fillna("")
-            if len(_text_keys) > 1:
-                df[self._text_key] = df[_text_keys].apply(
+            df[_text_cols] = df[_text_cols].fillna("")
+            if len(_text_cols) > 1:
+                df[self._text_key] = df[_text_cols].apply(
                     lambda row: self.segment_separator.join(row.values.astype(str)),
                     axis=1,
                 )
 
             if self.collapse_ids:
                 _id_prefix = f"{split}_" if len(self.data_files) > 1 else ""
-                if len(_id_keys) > 1 or len(self.data_files) > 1:
-                    df[self._id_key] = df[_id_keys].apply(
+                if len(_id_cols) > 1 or len(self.data_files) > 1:
+                    df[self._id_key] = df[_id_cols].apply(
                         lambda row: _id_prefix
                         + self._id_separator.join(row.values.astype(str)),
                         axis=1,
                     )
             dfs.append(df[list(self._data_keys.keys())])
         self._data = pd.concat(dfs)
-        print(self._data.head(3))
-        print(self._data.tail(3))
+        if self.verbose:
+            print(f"Data loaded {len(self._data)} rows")
+            print(self._data.head(3))
+            print(self._data.tail(3))
 
     def load_metadata(self):
         if self.meta_files is None:
             return
         dfs = []
-        _id_keys = self._keys["id"]
+        _id_cols = self._keys[self._id_key]
         for split, data_file in self.meta_files.items():
             filepaths = get_filepaths(data_file, self.metadata_dir)
             df = pd.concat(
@@ -156,24 +180,28 @@ class Corpus:
 
             if self.collapse_ids:
                 _id_prefix = f"{split}_" if len(self.data_files) > 1 else ""
-                if len(_id_keys) > 1 or len(self.data_files) > 1:
-                    df[self._id_key] = df[_id_keys].apply(
+                if len(_id_cols) > 1 or len(self.data_files) > 1:
+                    df[self._id_key] = df[_id_cols].apply(
                         lambda row: _id_prefix
                         + self._id_separator.join(row.values.astype(str)),
                         axis=1,
                     )
             dfs.append(df)
         self._metadata = pd.concat(dfs)
-        print(self._metadata.head(3))
-        print(self._metadata.tail(3))
+        if self.verbose:
+            print(f"Metadata loaded {len(self._metadata)} rows")
+            print(self._metadata.head(3))
+            print(self._metadata.tail(3))
 
     def merge_metadata(self):
         if self._metadata is None:
             return
         self._data = self._data.merge(
             self._metadata,
-            on=self._id_keys,
+            on=self._merge_meta_on,
             how="left",
-            suffixes=("", "_metadata"),
-            validate="one_to_one",
         )
+        if self.verbose:
+            print(f"Metadata merged to data")
+            print(self._data.head(3))
+            print(self._data.tail(3))

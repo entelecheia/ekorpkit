@@ -1,21 +1,20 @@
-import os
-from omegaconf import OmegaConf
-from omegaconf import DictConfig
-import pandas as pd
-import numpy as np
 import codecs
-import ekorpkit.config as config
-from ekorpkit.utils.func import elapsed_timer, check_min_len, check_max_len
-from functools import reduce
-from hydra.utils import instantiate
-from ekorpkit.utils.batch import decorator_apply
-from functools import partial
-from wasabi import msg
+import os
 from collections import OrderedDict
+from functools import partial, reduce
+
+import ekorpkit.config as config
+import numpy as np
+import pandas as pd
+from ekorpkit.io.file import get_filepaths, load_dataframe, save_dataframe
+from ekorpkit.utils import print_status
+from ekorpkit.utils.batch import decorator_apply
+from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
+from hydra.utils import instantiate
+from omegaconf import DictConfig, OmegaConf
 from omegaconf.listconfig import ListConfig
 from tqdm.auto import tqdm
-from ekorpkit.utils import print_status
-from ekorpkit.io.file import get_filepaths, save_dataframe, load_dataframe
+from wasabi import msg
 
 
 def apply(
@@ -901,6 +900,65 @@ def save_samples(df, args):
         print(sample_separator)
         print(print_text)
         print(f"Saved {num_samples_to_save} samples to {sample_file}")
+
+    return df
+
+
+def stdout_samples(df, args):
+    from contextlib import redirect_stdout
+
+    verbose = args.get("verbose", False)
+    apply_to = args.get("apply_to", "text")
+    sample_length_to_print = args.get("sample_length_to_print", 1000)
+    if apply_to is None:
+        if verbose:
+            print("No columns specified")
+        return df
+    if isinstance(apply_to, str):
+        apply_to = [apply_to]
+    num_samples = args.get("num_samples", None)
+    output_dir = args.get("output_dir", None)
+    if output_dir is None:
+        output_dir = "."
+    output_file = args.get("output_file", None)
+    head = args.get("head", None)
+    tail = args.get("tail", None)
+    if head is None:
+        head = 5
+    if tail is None:
+        tail = 5
+
+    if verbose:
+        print(f"Print samples: {args}")
+
+    sample_separator = "-" * 100 + "\n"
+    df_sample = df.sample(num_samples)[apply_to]
+
+    print_text = ""
+    for i, row in df_sample.iterrows():
+        for key in apply_to:
+            ptext = row[key]
+            print_text += key + ": \n" + ptext + "\n\n"
+        print_text += sample_separator
+    print_text = print_text.strip()
+    
+    if output_file is not None:
+        output_file = os.path.join(output_dir, output_file)
+        with open(output_file, "w", encoding="utf-8") as f:
+            with redirect_stdout(f):
+                print(print_text)
+                print(sample_separator)
+                print(df.head(head))
+                print(sample_separator)
+                print(df.tail(tail))
+    print(print_text)
+    print(sample_separator)
+    print(df.head(head))
+    print(sample_separator)
+    print(df.tail(tail))
+
+    if verbose:
+        print(f"Saved {num_samples} samples to {output_file}")
 
     return df
 

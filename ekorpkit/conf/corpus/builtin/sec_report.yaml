@@ -18,6 +18,7 @@ column_info:
   keys:
     id: id
     text: text
+    timestamp: rdate
   data:
     id: int
     text: str

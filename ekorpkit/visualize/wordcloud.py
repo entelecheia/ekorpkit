@@ -1,11 +1,13 @@
-import platform
+import logging
 import matplotlib.pyplot as plt
-from matplotlib import font_manager, rc
 from pathlib import Path
+from .base import _get_font_name
+
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
-def topic_wordclouds(
-    topic_wc_args,
+def generate_wordclouds(
+    wordcloud_args_list,
     fig_output_dir,
     fig_filename_format,
     title_fontsize=20,
@@ -14,13 +16,11 @@ def topic_wordclouds(
     nrows=1,
     dpi=300,
     save=True,
-    figsize=(20, 20), 
+    figsize=(20, 20),
     **kwargs,
 ):
-    """Wrapper function that generates wordclouds for ALL topics of a tomotopy model
+    """Wrapper function that generates wordclouds
     ** Inputs **
-    topic_dic: dict -> per topic, an arrays with top words and associated frequencies
-    save: bool -> If the user would like to save the images
 
     ** Returns **
     wordclouds as plots
@@ -35,11 +35,11 @@ def topic_wordclouds(
     p = 1
     wc_file_format = fig_filename_format + "_{}.png"
     wc_page_file_format = fig_filename_format + "_p{}.png"
-    num_topics = len(topic_wc_args)
-    for i, wc_args in enumerate(topic_wc_args):
+    num_clouds = len(wordcloud_args_list)
+    for i, wc_args in enumerate(wordcloud_args_list):
         r, c = divmod(cnt, ncols)
         k = i
-        print(f"Creating topic wordcloud for Topic #{k}")
+        print(f"Creating wordcloud #{k}")
         wc_file = wc_file_format.format(k)
         fig_filepath = Path(fig_output_dir) / wc_file
         create_wordcloud(
@@ -59,7 +59,7 @@ def topic_wordclouds(
                 wc_file = wc_page_file_format.format(p)
                 fig_filepath = Path(fig_output_dir) / wc_file
                 save_subplots(fig, fig_filepath, transparent=True, dpi=dpi)
-            if i < num_topics - 1:
+            if i < num_clouds - 1:
                 p += 1
                 cnt = 0
                 fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
@@ -75,6 +75,7 @@ def topic_wordclouds(
 
 def savefig(fig_filepath, transparent=True, dpi=300, **kwargs):
     plt.savefig(fig_filepath, transparent=transparent, dpi=dpi, **kwargs)
+
 
 def save_subplots(fig, fig_filepath, transparent=True, dpi=300):
     plt.subplots_adjust(
@@ -111,34 +112,3 @@ def create_wordcloud(
         Path(fig_filepath).parent.mkdir(parents=True, exist_ok=True)
         fig_filepath = str(fig_filepath)
         plt.savefig(fig_filepath, bbox_inches=extent.expanded(1.1, 1.2))
-
-
-def _get_font_name(set_font_for_matplot=True, font_path=None):
-    if not font_path:
-        if platform.system() == "Darwin":
-            font_path = "/System/Library/Fonts/Supplemental/AppleGothic.ttf"
-        elif platform.system() == "Windows":
-            font_path = "c:/Windows/Fonts/malgun.ttf"
-        elif platform.system() == "Linux":
-            font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
-
-    if not Path(font_path).is_file():
-        font_name = None
-        font_path = None
-        print(f"Font file does not exist at {font_path}")
-        if platform.system() == "Linux":
-            font_install_help = """
-            apt install fontconfig
-            apt install fonts-nanum
-            fc-list | grep -i nanum
-            """
-            print(font_install_help)
-    else:
-        font_manager.fontManager.addfont(font_path)
-        font_name = font_manager.FontProperties(fname=font_path).get_name()
-        if set_font_for_matplot and font_name:
-            rc("font", family=font_name)
-            plt.rcParams["axes.unicode_minus"] = False
-    print("font family: ", plt.rcParams["font.family"])
-    print("font path: ", font_path)
-    return font_name, font_path

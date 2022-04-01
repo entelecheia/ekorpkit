@@ -10,14 +10,11 @@ from datetime import datetime
 from tqdm import tqdm
 import numpy as np
 import pyLDAvis
-import logging
 from omegaconf import OmegaConf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
 from ekorpkit.io.file import save_dataframe, load_dataframe
-from ekorpkit.visualize.wordcloud import topic_wordclouds, savefig
-
-logging.getLogger("matplotlib").setLevel(logging.WARNING)
+from ekorpkit.visualize.wordcloud import generate_wordclouds, savefig
 
 
 ModelSummary = namedtuple(
@@ -120,6 +117,12 @@ class TopicModel:
 
     def _load_raw_corpus(self, reload_corpus=False):
 
+        def data_feeder(docs):
+            for doc in docs:
+                fd = doc.strip().split(maxsplit=1)
+                timepoint = int(fd[0])
+                yield fd[1], None, {'timepoint':timepoint}
+
         if not self._raw_corpus or reload_corpus:
             self._raw_corpus = tp.utils.Corpus(tokenizer=tp.utils.SimpleTokenizer())
             if self.corpora is None:
@@ -166,11 +169,7 @@ class TopicModel:
     def _load_ngram_docs(self, rebuild=False):
         if self.ngram_docs_path.is_file() and not rebuild:
             with elapsed_timer() as elapsed:
-                print(
-                    "Starting to load ngram documents from {}".format(
-                        self.ngram_docs_path
-                    )
-                )
+                print(f"Starting to load ngram documents from {self.ngram_docs_path}")
                 self._raw_corpus = tp.utils.Corpus().load(self.ngram_docs_path)
                 df = load_dataframe(self._raw_corpus_key_path)
                 self._raw_corpus_keys = df[self.corpora._id_keys].values.tolist()
@@ -470,10 +469,12 @@ class TopicModel:
         k=None,
         k1=None,
         k2=None,
+        t=1,
         tw=IDF,
         gamma=2,
         alpha=0.1,
         eta=0.01,
+        phi=0.1,
         min_cf=5,
         rm_top=0,
         min_df=0,
@@ -552,6 +553,19 @@ class TopicModel:
                 rm_top=rm_top,
                 eta=eta,
                 smoothing_alpha=alpha,
+                corpus=self.corpus,
+                seed=seed,
+            )
+        elif model_type == "DTM":
+            mdl = tp.DTModel(
+                tw=tw,
+                k=k,
+                t=t,
+                min_cf=min_cf,
+                rm_top=rm_top,
+                alpha_var=alpha,
+                eta_var=eta,
+                phi_var=phi,
                 corpus=self.corpus,
                 seed=seed,
             )
@@ -932,7 +946,7 @@ class TopicModel:
             wc_args = {"word_freq": topic_freq, "title": title}
             topic_wc_args.append(wc_args)
 
-        topic_wordclouds(
+        generate_wordclouds(
             topic_wc_args,
             fig_output_dir,
             fig_filename_format,

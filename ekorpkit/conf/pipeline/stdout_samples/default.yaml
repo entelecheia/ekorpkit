@@ -1,0 +1,10 @@
+defaults:
+  - /method: stdout_samples
+
+apply_to: ${oc.select:..apply_to, text}
+num_samples: 5
+head:
+tail:
+output_dir: ${oc.select:..data_dir, .}
+output_file: stdout_samples.txt
+verbose: ${oc.select:..verbose, true}
