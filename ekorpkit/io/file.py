@@ -68,14 +68,14 @@ def save_dataframe(
     filetype=None,
     verbose=False,
     index=False,
-    columns_to_save=None,
+    columns_to_keep=None,
     **kwargs,
 ):
     if df is None:
         msg.warn("Dataframe is None")
         return df
-    if columns_to_save is not None:
-        df = df[columns_to_save]
+    if columns_to_keep is not None:
+        df = df[columns_to_keep]
     if verbose:
         print(df.tail())
 

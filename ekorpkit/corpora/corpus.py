@@ -67,7 +67,7 @@ class Corpus:
             else:
                 self._keys[k] = list(self._keys[k])
         if self._merge_meta_on_key in self._keys:
-            self._merge_meta_on = self._keys[self._merge_meta_on_key] 
+            self._merge_meta_on = self._keys[self._merge_meta_on_key]
         else:
             self._merge_meta_on = self._id_key
         self._id_keys = self._keys[self._id_key]
@@ -77,9 +77,6 @@ class Corpus:
 
         self._data = None
         self._metadata = None
-
-        # TODO: option to add timestamp column to data
-        # timestamp column, conversion rules, etc.
 
         if self.autoload:
             self.load()
@@ -113,15 +110,20 @@ class Corpus:
         _params = self._timestamp.get("params", {})
         if _params is None:
             _params = {}
-        if _timestamp_col in self._metadata.columns:
-            self._metadata[self._timestamp_key] = pd.to_datetime(self._metadata[_timestamp_col], format=_format, **_params)
+        if (
+            _timestamp_col in self._metadata.columns
+            and self._timestamp_key not in self._data.columns
+        ):
+            self._metadata[self._timestamp_key] = pd.to_datetime(
+                self._metadata[_timestamp_col], format=_format, **_params
+            )
             df_dt = self._metadata[self._merge_meta_on + [self._timestamp_key]]
             self._metadata = self._metadata.drop(self._timestamp_key, axis=1)
             self._data = self._data.merge(df_dt, on=self._merge_meta_on, how="left")
             if self.verbose:
                 msg.info(f"Timestamp column {self._timestamp_key} added to data")
                 print(self._data.head())
-            
+
     def load(self):
         dfs = []
         _text_cols = self._keys[self._text_key]

@@ -367,7 +367,7 @@ def sampling(df, args):
     if output_file:
         filepath = f"{output_dir}/{output_file}"
         save_dataframe(
-            df_sample, filepath, verbose=verbose, columns_to_save=columns_to_keep
+            df_sample, filepath, verbose=verbose, columns_to_keep=columns_to_keep
         )
 
     return df
@@ -1097,7 +1097,7 @@ def save_dataframe_pipe(df, args):
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
     dataframe_no = args.get("dataframe_no", None)
-    columns_to_save = args.get("columns_to_save", None)
+    columns_to_keep = args.get("columns_to_keep", None)
 
     if df is None:
         msg.warn("Dataframe is None")
@@ -1124,7 +1124,7 @@ def save_dataframe_pipe(df, args):
         filename = f"{filename}{filetype}"
     filepath = f"{output_dir}/{filename}"
 
-    save_dataframe(df, filepath, filetype, verbose, columns_to_save=columns_to_save)
+    save_dataframe(df, filepath, filetype, verbose, columns_to_keep=columns_to_keep)
     return df
 
 
