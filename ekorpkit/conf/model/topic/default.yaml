@@ -1,4 +1,4 @@
-_target_: ekorpkit.models.topic.TopicModel
+_target_: ekorpkit.models.topic.model.TopicModel
 base_model_dir: ${dir.model}/topic
 base_output_dir: ${dir.output}/topic
 model_name:
@@ -21,6 +21,7 @@ files:
   ngram_candidates: ${..model_dir}/ngram_candidates.csv
   ngram_docs: ${..model_dir}/ngram_docs.pkl
   stopwords: ${..model_dir}/stopwords.txt
+  stoplist:
   default_stopwords: ${..base_model_dir}/stopwords.txt
   word_prior: ${..model_dir}/word_prior.yaml
   default_word_prior: ${..base_model_dir}/word_prior.yaml

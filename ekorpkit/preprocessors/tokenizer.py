@@ -2,6 +2,7 @@ import codecs
 import logging
 from abc import ABCMeta, abstractmethod
 from .normalizer import strict_normalize, only_text
+from ekorpkit.io.load.list import load_wordlist, save_wordlist
 
 logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -36,6 +37,14 @@ class Tokenizer:
         self.sentence_separator = codecs.decode(
             self.sentence_separator, "unicode_escape"
         )
+        self.verbose = kwargs.get("verbose", False)
+        self.stopwords_path = kwargs.get("stopwords_path", None)
+        if self.stopwords_path is not None:
+            self.stopwords = load_wordlist(
+                self.stopwords_path, lowercase=True, verbose=self.verbose
+            )
+        else:
+            self.stopwords = None
 
     @abstractmethod
     def parse(self, text):
@@ -90,7 +99,10 @@ class Tokenizer:
             if len(sent) > 0:
                 if nouns_only:
                     tokens = extract_tokens(
-                        sent, nouns_only=True, noun_pos=self.noun_pos
+                        sent,
+                        nouns_only=True,
+                        noun_pos=self.noun_pos,
+                        stopwords=self.stopwords,
                     )
                 else:
                     tokens = extract_tokens(
@@ -98,6 +110,7 @@ class Tokenizer:
                         nouns_only=False,
                         exclude_pos=self.exclude_pos,
                         no_space_for_non_nouns=self.no_space_for_non_nouns,
+                        stopwords=self.stopwords,
                     )
                 tokens_article.append(" ".join(tokens))
             else:
@@ -109,6 +122,24 @@ class Tokenizer:
 
     def extract_nouns(self, article):
         return self.extract(article, nouns_only=True)
+
+    def filter_stopwords(self, article):
+        if article is None:
+            return None
+
+        tokens_article = []
+        for sent in article.split(self.sentence_separator):
+            sent = sent.strip()
+            if len(sent) > 0:
+                tokens = [
+                    token
+                    for token in sent.split()
+                    if token.lower() not in self.stopwords
+                ]
+                tokens_article.append(" ".join(tokens))
+            else:
+                tokens_article.append("")
+        return self.sentence_separator.join(tokens_article)
 
     def nouns(self, text):
         tokenized_text = self.tokenize(text)
@@ -241,6 +272,8 @@ def extract_tokens(
     noun_pos=["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"],
     exclude_pos=["SP"],
     no_space_for_non_nouns=False,
+    filter_stopwords_only=False,
+    stopwords=[],
     **kwargs,
 ):
 
@@ -295,4 +328,7 @@ def extract_tokens(
             _tokens = [
                 token[0].strip() for token in _tokens_pos if token[1] not in exclude_pos
             ]
+
+    if stopwords is not None and len(stopwords) > 0:
+        _tokens = [token for token in _tokens if token.lower() not in stopwords]
     return _tokens

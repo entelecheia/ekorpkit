@@ -23,5 +23,6 @@ flatten: true
 join_pos: true
 include_whitespace_token: true
 userdic_path: ${oc.select:..userdic_path, null}
+stopwords_path: ${oc.select:..stopwords_path, null}
 sentence_separator: '\n'
 verbose: ${oc.select:..verbose, false}

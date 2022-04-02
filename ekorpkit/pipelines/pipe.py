@@ -600,6 +600,7 @@ def extract_tokens(df, args):
     verbose = args.get("verbose", False)
     use_batcher = args.get("use_batcher", True)
     nouns_ony = args.get("nouns_ony", True)
+    filter_stopwords_only = args.get("filter_stopwords_only", False)
     minibatch_size = args.get("minibatch_size", None)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
@@ -617,7 +618,12 @@ def extract_tokens(df, args):
         print(f"Extracting tokens: {args}")
         print("instantiating tokenizer")
     tokenizer = instantiate(tokenizer)
-    extract_func = tokenizer.extract_nouns if nouns_ony else tokenizer.extract_tokens
+    if filter_stopwords_only:
+        extract_func = tokenizer.filter_stopwords
+    elif nouns_ony:
+        extract_func = tokenizer.extract_nouns
+    else:
+        extract_func = tokenizer.extract_tokens
 
     for key in apply_to:
         if verbose:
@@ -941,7 +947,7 @@ def stdout_samples(df, args):
             print_text += key + ": \n" + ptext + "\n\n"
         print_text += sample_separator
     print_text = print_text.strip()
-    
+
     if output_file is not None:
         output_file = os.path.join(output_dir, output_file)
         with open(output_file, "w", encoding="utf-8") as f:

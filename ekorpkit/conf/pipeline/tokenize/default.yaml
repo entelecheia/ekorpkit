@@ -6,6 +6,8 @@ apply_to: ${oc.select:..apply_to, text}
 verbose: ${oc.select:..verbose, true}
 use_batcher: ${oc.select:..use_batcher, true}
 userdic_path:
+stopwords_path:
 preprocessor:
   userdic_path: ${..userdic_path}
+  stopwords_path: ${..stopwords_path}
   verbose: ${oc.select:..verbose, false}

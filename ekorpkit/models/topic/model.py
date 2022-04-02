@@ -103,6 +103,12 @@ class TopicModel:
         self._raw_corpus_key_path = Path(self.files.raw_corpus_key)
         self.ngram_candidates_path = Path(self.files.ngram_candidates)
         self.ngram_docs_path = Path(self.files.ngram_docs)
+        self.stoplist_paths = self.files.stoplist
+        if self.stoplist_paths is not None:
+            if isinstance(self.stoplist_paths, str):
+                self.stoplist_paths = [self.stoplist_paths]
+            else:
+                self.stoplist_paths = list(self.stoplist_paths)
         self.stopwords_path = Path(self.files.stopwords)
         self.default_stopwords_path = Path(self.files.default_stopwords)
         self.default_word_prior_path = Path(self.files.default_word_prior)
@@ -116,12 +122,11 @@ class TopicModel:
         (self.output_dir / "logs").mkdir(exist_ok=True, parents=True)
 
     def _load_raw_corpus(self, reload_corpus=False):
-
         def data_feeder(docs):
             for doc in docs:
                 fd = doc.strip().split(maxsplit=1)
                 timepoint = int(fd[0])
-                yield fd[1], None, {'timepoint':timepoint}
+                yield fd[1], None, {"timepoint": timepoint}
 
         if not self._raw_corpus or reload_corpus:
             self._raw_corpus = tp.utils.Corpus(tokenizer=tp.utils.SimpleTokenizer())
@@ -184,14 +189,25 @@ class TopicModel:
             self._raw_corpus.save(self.ngram_docs_path)
 
     def _load_stopwords(self):
+        self.stopwords = []
         if self.stopwords_path.is_file():
-            self.stopwords = load_wordlist(self.stopwords_path)
+            self.stopwords = load_wordlist(self.stopwords_path, lowercase=True)
         else:
             if self.default_stopwords_path.is_file():
-                self.stopwords = load_wordlist(self.default_stopwords_path)
+                self.stopwords = load_wordlist(self.default_stopwords_path, lowercase=True)
             else:
                 self.stopwords = ["."]
         save_wordlist(self.stopwords, self.stopwords_path)
+        if self.verbose:
+            print(f"{len(self.stopwords)} stopwords are loaded.")
+
+        for path in self.stoplist_paths:
+            if os.path.exists(path):
+                stopwords = load_wordlist(path, lowercase=True)
+                self.stopwords += stopwords
+                save_wordlist(stopwords, path)
+                if self.verbose:
+                    print(f"{len(stopwords)} stopwords are loaded from {path}")
 
     def _load_word_prior(self):
         if self.word_prior_path.is_file():
