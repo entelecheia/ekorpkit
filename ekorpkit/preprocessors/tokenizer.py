@@ -43,6 +43,8 @@ class Tokenizer:
             self.stopwords = load_wordlist(
                 self.stopwords_path, lowercase=True, verbose=self.verbose
             )
+            if self.verbose:
+                logger.info(f"Loaded {len(self.stopwords)} stopwords")
         else:
             self.stopwords = None
 

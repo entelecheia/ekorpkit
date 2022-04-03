@@ -3,3 +3,4 @@ sample_ratio: 1.0
 min_df: 5
 min_word_len: 2
 reload_corpus: false
+rebuild: false

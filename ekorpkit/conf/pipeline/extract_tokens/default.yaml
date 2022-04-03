@@ -7,3 +7,7 @@ verbose: ${oc.select:..verbose, true}
 use_batcher: ${oc.select:..use_batcher, true}
 nouns_ony: true
 filter_stopwords_only: false
+stopwords_path:
+preprocessor:
+  stopwords_path: ${..stopwords_path}
+  verbose: ${oc.select:..verbose, false}

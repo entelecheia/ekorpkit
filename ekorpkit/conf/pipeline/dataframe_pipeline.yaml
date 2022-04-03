@@ -1,7 +1,6 @@
 defaults:
   - _default_pipeline
+  - load_dataframe: default
   
 _target_: ekorpkit.pipelines.pipe.process_dataframe
 _pipeline_:
-  - load_dataframe
-  - save_dataframe

@@ -2,6 +2,7 @@ import os
 import sys
 import random
 import itertools
+import omegaconf
 import pandas as pd
 import tomotopy as tp
 from pathlib import Path
@@ -104,7 +105,9 @@ class TopicModel:
         self.ngram_candidates_path = Path(self.files.ngram_candidates)
         self.ngram_docs_path = Path(self.files.ngram_docs)
         self.stoplist_paths = self.files.stoplist
-        if self.stoplist_paths is not None:
+        if self.stoplist_paths is None:
+            self.stoplist_paths = []
+        else:
             if isinstance(self.stoplist_paths, str):
                 self.stoplist_paths = [self.stoplist_paths]
             else:
@@ -194,7 +197,9 @@ class TopicModel:
             self.stopwords = load_wordlist(self.stopwords_path, lowercase=True)
         else:
             if self.default_stopwords_path.is_file():
-                self.stopwords = load_wordlist(self.default_stopwords_path, lowercase=True)
+                self.stopwords = load_wordlist(
+                    self.default_stopwords_path, lowercase=True
+                )
             else:
                 self.stopwords = ["."]
         save_wordlist(self.stopwords, self.stopwords_path)
@@ -222,7 +227,13 @@ class TopicModel:
         OmegaConf.save(self.word_prior, self.word_prior_path)
 
     def load_corpus(
-        self, sample_ratio=1.0, reload_corpus=False, min_df=5, min_word_len=2, **kwargs
+        self,
+        sample_ratio=1.0,
+        reload_corpus=False,
+        min_df=5,
+        min_word_len=2,
+        rebuild=False,
+        **kwargs,
     ):
         sample_ratio = sample_ratio if sample_ratio else self.sample_ratio
         if self.corpus and self.sample_ratio == sample_ratio and not reload_corpus:
@@ -231,7 +242,7 @@ class TopicModel:
         else:
             print("Start loading corpus w/ sample_ratio: {}".format(sample_ratio))
         if not self._raw_corpus:
-            self._load_ngram_docs()
+            self._load_ngram_docs(rebuild=rebuild)
         self._load_stopwords()
         assert self._raw_corpus, "Load ngram documents first"
         assert self.stopwords, "Load stopwords first"
@@ -928,7 +939,12 @@ class TopicModel:
         ncols=5,
         nrows=1,
         dpi=300,
+        figsize=(10, 10),
         save=True,
+        mask_dir=None,
+        wordclouds=None,
+        save_each=False,
+        save_masked=False,
         **kwargs,
     ):
         """Wrapper function that generates wordclouds for ALL topics of a tomotopy model
@@ -942,34 +958,54 @@ class TopicModel:
         assert self.model, "Model not found"
         num_topics = self.model.k
 
+        if figsize is not None and isinstance(figsize, str):
+            figsize = eval(figsize)
+        if mask_dir is None:
+            mask_dir = str(self.output_dir / "figures/masks")
         fig_output_dir = str(self.output_dir / "figures/wc")
         fig_filename_format = "{}-{}-wc_topic".format(
             self.model_name, self.active_model_id
         )
-        topic_wc_args = []
+        if wordclouds is None:
+            wordclouds_args = {}
+        else:
+            wordclouds_args = OmegaConf.to_container(wordclouds)
         for k in range(num_topics):
             topic_freq = dict(self.model.get_topic_words(k, top_n=top_n))
-            if self.labels:
-                topic_name = self.labels[k]["name"]
-                if topic_name.startswith("Topic #"):
+            if k in wordclouds_args:
+                wc_args = wordclouds_args[k]
+            else:
+                wc_args = {}
+            title = wc_args.get("title", None)
+            if title is None:
+                if self.labels:
+                    topic_name = self.labels[k]["name"]
+                    if topic_name.startswith("Topic #"):
+                        topic_name = None
+                else:
                     topic_name = None
-            else:
-                topic_name = None
-            if topic_name:
-                title = f"Topic #{k} - {topic_name}"
-            else:
-                title = f"Topic #{k}"
-            wc_args = {"word_freq": topic_freq, "title": title}
-            topic_wc_args.append(wc_args)
-
+                if topic_name:
+                    title = f"Topic #{k} - {topic_name}"
+                else:
+                    title = f"Topic #{k}"
+                wc_args["title"] = title
+            wc_args["word_freq"] = topic_freq
+            wordclouds_args[k] = wc_args
+        
         generate_wordclouds(
-            topic_wc_args,
+            wordclouds_args,
             fig_output_dir,
             fig_filename_format,
-            title_fontsize,
-            title_color,
-            ncols,
-            nrows,
-            dpi,
-            save,
+            title_fontsize=title_fontsize,
+            title_color=title_color,
+            ncols=ncols,
+            nrows=nrows,
+            dpi=dpi,
+            figsize=figsize,
+            save=save,
+            mask_dir=mask_dir,
+            save_each=save_each,
+            save_masked=save_masked,
+            verbose=self.verbose,
+            **kwargs,
         )
