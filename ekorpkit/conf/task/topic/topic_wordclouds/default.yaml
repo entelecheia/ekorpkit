@@ -10,6 +10,8 @@ save: true
 save_each: false
 save_masked: false
 figsize: (12, 12)
+fontpath:
+colormap: PuBu
 mask_dir:
 wordclouds:
   0:

@@ -945,6 +945,8 @@ class TopicModel:
         wordclouds=None,
         save_each=False,
         save_masked=False,
+        fontpath=None,
+        colormap='PuBu',
         **kwargs,
     ):
         """Wrapper function that generates wordclouds for ALL topics of a tomotopy model
@@ -1006,6 +1008,8 @@ class TopicModel:
             mask_dir=mask_dir,
             save_each=save_each,
             save_masked=save_masked,
+            fontpath=fontpath,
+            colormap=colormap,
             verbose=self.verbose,
             **kwargs,
         )
