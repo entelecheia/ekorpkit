@@ -278,10 +278,13 @@ def extract_tokens(
     stopwords=[],
     **kwargs,
 ):
-
+    if isinstance(tokenized_text, str):
+        tokens = tokenized_text.split()
+    else:
+        tokens = tokenized_text
     _tokens_pos = [
         token.split("/")
-        for token in tokenized_text.split()
+        for token in tokens
         if len(token.split("/")) == 2
     ]
 

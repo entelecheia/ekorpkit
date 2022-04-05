@@ -6,7 +6,7 @@
 
 fugashi					: tokenize, fugashi
 mecab-python3           : tokenize, mecab
-mecab_ko_dic			: tokenize, mecab
+mecab-ko-dic			: tokenize, mecab
 pysbd					: tokenize, dataset
 pynori					: tokenize, pynori
 soynlp					: tokenize, soynlp
