@@ -2,7 +2,6 @@ import os
 import sys
 import random
 import itertools
-import omegaconf
 import pandas as pd
 import tomotopy as tp
 from pathlib import Path
@@ -10,12 +9,12 @@ from collections import namedtuple
 from datetime import datetime
 from tqdm import tqdm
 import numpy as np
-import pyLDAvis
 from omegaconf import OmegaConf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
 from ekorpkit.io.file import save_dataframe, load_dataframe
 from ekorpkit.visualize.wordcloud import generate_wordclouds, savefig
+from ekorpkit.pipelines.pipe import apply
 
 
 ModelSummary = namedtuple(
@@ -230,7 +229,7 @@ class TopicModel:
         self,
         sample_ratio=1.0,
         reload_corpus=False,
-        min_df=5,
+        min_num_words=5,
         min_word_len=2,
         rebuild=False,
         **kwargs,
@@ -262,7 +261,7 @@ class TopicModel:
             words = [
                 w for w in doc if w not in self.stopwords and len(w) >= min_word_len
             ]
-            if len(words) > min_df:
+            if len(words) > min_num_words:
                 self.corpus.add_doc(words=words)
                 self.corpus_keys.append(self._raw_corpus_keys[i_doc])
             else:
@@ -282,9 +281,11 @@ class TopicModel:
         output_dir=None,
         output_file=None,
         iterations=100,
-        min_df=5,
+        min_num_words=5,
         min_word_len=2,
         num_workers=0,
+        use_batcher=True,
+        minibatch_size=None,
         **kwargs,
     ):
 
@@ -298,17 +299,12 @@ class TopicModel:
         text_key = self.corpora._text_key
         id_keys = self.corpora._id_keys
 
-        def convert_to_token_list(row):
-            doc = str(getattr(row, text_key))
-            words = [
-                w
-                for w in doc.split()
-                if w not in self.stopwords and len(w) >= min_word_len
-            ]
-            if len(words) > min_df:
-                return words
-            else:
-                return None
+        simtok = SimpleTokenizer(
+            stopwords=self.stopwords,
+            min_word_len=min_word_len,
+            min_num_words=min_num_words,
+            verbose=self.verbose,
+        )
 
         if self.corpora is None:
             raise ValueError("corpora is not set")
@@ -317,30 +313,39 @@ class TopicModel:
             self.corpora.concat_corpora()
             df = self.corpora._data
             df.dropna(subset=[text_key], inplace=True)
-            tp_docs = []
-            for row in df.itertuples():
-                text = convert_to_token_list(row)
-                doc = None
-                if text:
-                    doc = self.model.make_doc(text)
-                else:
-                    print("Empty text!\n", row)
-                    # df.drop(row.Index, inplace = True)
-                if doc:
-                    tp_docs.append(doc)
-                else:
-                    if text:
-                        print(":::::::::::: Empty doc\n", text)
-                    df.drop(row.Index, inplace=True)
+            df[text_key] = apply(
+                simtok.tokenize,
+                df[text_key],
+                description=f"tokenize",
+                verbose=self.verbose,
+                use_batcher=use_batcher,
+                minibatch_size=minibatch_size,
+            )
             df = df.dropna(subset=[text_key]).reset_index(drop=True)
-            print(df.tail())
+            if self.verbose:
+                print(df.tail())
+
+            docs = []
+            indexes_to_drop = []
+            for ix in df.index:
+                doc = df.loc[ix, text_key]
+                mdoc = self.model.make_doc(doc)
+                if mdoc:
+                    docs.append(mdoc)
+                else:
+                    print(f"Skipped - {doc}")
+                    indexes_to_drop.append(ix)
+            df.drop(df.index[indexes_to_drop], inplace=True)
+            if self.verbose:
+                print(f'{len(docs)} documents are loaded from: {len(df.index)}.')
 
             topic_dists, ll = self.model.infer(
-                tp_docs, workers=num_workers, iter=iterations
+                docs, workers=num_workers, iter=iterations
             )
-            print(topic_dists[-1:], ll)
-
-            print(f"Total inferred: {len(topic_dists)}, from: {len(df.index)}")
+            if self.verbose:
+                print(topic_dists[-1:], ll)
+                print(f"Total inferred: {len(topic_dists)}, from: {len(df.index)}")
+                
             if len(topic_dists) == len(df.index):
                 idx = range(len(topic_dists[0]))
                 df_infer = pd.DataFrame(topic_dists, columns=[f"topic{i}" for i in idx])
@@ -874,6 +879,8 @@ class TopicModel:
             save_dataframe(df, label_file, index=False, verbose=self.verbose)
 
     def visualize(self, **kwargs):
+        import pyLDAvis
+
         assert self.model, "Model not found"
         mdl = self.model
         topic_term_dists = np.stack([mdl.get_topic_word_dist(k) for k in range(mdl.k)])
@@ -946,7 +953,7 @@ class TopicModel:
         save_each=False,
         save_masked=False,
         fontpath=None,
-        colormap='PuBu',
+        colormap="PuBu",
         **kwargs,
     ):
         """Wrapper function that generates wordclouds for ALL topics of a tomotopy model
@@ -993,7 +1000,7 @@ class TopicModel:
                 wc_args["title"] = title
             wc_args["word_freq"] = topic_freq
             wordclouds_args[k] = wc_args
-        
+
         generate_wordclouds(
             wordclouds_args,
             fig_output_dir,
@@ -1013,3 +1020,39 @@ class TopicModel:
             verbose=self.verbose,
             **kwargs,
         )
+
+
+class SimpleTokenizer:
+    """Class to tokenize texts for a corpus"""
+
+    def __init__(
+        self,
+        stopwords=[],
+        min_word_len=2,
+        min_num_words=5,
+        verbose=False,
+        **kwargs,
+    ):
+        self.stopwords = stopwords
+        self.min_word_len = min_word_len
+        self.min_num_words = min_num_words
+        self.verbose = verbose
+        if verbose:
+            print(f"{self.__class__.__name__} initialized with:")
+            print(f"\tstopwords: {len(self.stopwords)}")
+            print(f"\tmin_word_len: {self.min_word_len}")
+            print(f"\tmin_num_words: {self.min_num_words}")
+
+
+    def tokenize(self, text):
+        if text is None:
+            return None
+        words = [
+            w
+            for w in text.split()
+            if w not in self.stopwords and len(w) >= self.min_word_len
+        ]
+        if len(set(words)) > self.min_num_words:
+            return words
+        else:
+            return None

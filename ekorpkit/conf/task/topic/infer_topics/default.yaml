@@ -2,6 +2,6 @@ _name_: infer_topics
 output_dir: ${model.topic.output_dir}/infer
 output_file: infer_topics.parquet
 iterations: 100
-min_df: 5
+min_num_words: 5
 min_word_len: 2
 num_workers: ${oc.select:..num_workers, 0}

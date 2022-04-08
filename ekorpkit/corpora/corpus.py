@@ -111,9 +111,14 @@ class Corpus:
         _params = self._timestamp.get("params", {})
         if _params is None:
             _params = {}
-        if (
+        if self._timestamp_key in self._data.columns:
+            self._data[self._timestamp_key] = pd.to_datetime(
+                self._data[self._timestamp_key], format=_format, **_params
+            )
+            if self.verbose:
+                msg.info(f"Loaded timestamp column {self._timestamp_key}")
+        elif (
             _timestamp_col in self._metadata.columns
-            and self._timestamp_key not in self._data.columns
         ):
             self._metadata[self._timestamp_key] = pd.to_datetime(
                 self._metadata[_timestamp_col], format=_format, **_params
