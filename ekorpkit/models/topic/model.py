@@ -12,6 +12,7 @@ import numpy as np
 from omegaconf import OmegaConf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
+from ekorpkit.io.load.pickle import load_pickle, save_pickle
 from ekorpkit.io.file import save_dataframe, load_dataframe
 from ekorpkit.visualize.wordcloud import generate_wordclouds, savefig
 from ekorpkit.pipelines.pipe import apply
@@ -81,6 +82,7 @@ class TopicModel:
         self._raw_corpus = tp.utils.Corpus()
         self._raw_corpus_keys = None
         self.ngrams = None
+        self.ngram_model = None
         self._ngram_docs = None
         self.stopwords = []
         self.docs = None
@@ -102,6 +104,7 @@ class TopicModel:
         self.corpus_key_path = Path(self.files.corpus_key)
         self._raw_corpus_key_path = Path(self.files.raw_corpus_key)
         self.ngram_candidates_path = Path(self.files.ngram_candidates)
+        self.ngram_model_path = Path(self.files.ngram_model)
         self.ngram_docs_path = Path(self.files.ngram_docs)
         self.stoplist_paths = self.files.stoplist
         if self.stoplist_paths is None:
@@ -150,7 +153,7 @@ class TopicModel:
                 print("Elapsed time is %.2f seconds" % elapsed())
 
     def extract_ngrams(self):
-        if not self.ngrams:
+        if self.ngrams is None:
             self._load_raw_corpus()
             assert self._raw_corpus, "Load a corpus first"
             with elapsed_timer() as elapsed:
@@ -265,9 +268,10 @@ class TopicModel:
                 self.corpus.add_doc(words=words)
                 self.corpus_keys.append(self._raw_corpus_keys[i_doc])
             else:
-                print(
-                    f"Skipped - index={i_doc}, key={self._raw_corpus_keys[i_doc]}, words={list(words)}"
-                )
+                if self.verbose > 5:
+                    print(
+                        f"Skipped - index={i_doc}, key={self._raw_corpus_keys[i_doc]}, words={list(words)}"
+                    )
                 n_skipped += 1
         print(f"Total {i_doc-n_skipped+1} documents are loaded.")
         print(f"Total {n_skipped} documents are removed from the corpus.")
@@ -299,10 +303,17 @@ class TopicModel:
         text_key = self.corpora._text_key
         id_keys = self.corpora._id_keys
 
+        df_ngram = load_dataframe(self.ngram_candidates_path)
+        ngrams = []
+        for ngram in df_ngram['words'].to_list():
+            ngrams.append(ngram.split(','))
+        
         simtok = SimpleTokenizer(
             stopwords=self.stopwords,
             min_word_len=min_word_len,
             min_num_words=min_num_words,
+            ngrams=ngrams,
+            ngram_delimiter=self.ngram.delimiter,
             verbose=self.verbose,
         )
 
@@ -335,9 +346,9 @@ class TopicModel:
                 else:
                     print(f"Skipped - {doc}")
                     indexes_to_drop.append(ix)
-            df.drop(df.index[indexes_to_drop], inplace=True)
+            df = df.drop(df.index[indexes_to_drop]).reset_index(drop=True)
             if self.verbose:
-                print(f'{len(docs)} documents are loaded from: {len(df.index)}.')
+                print(f"{len(docs)} documents are loaded from: {len(df.index)}.")
 
             topic_dists, ll = self.model.infer(
                 docs, workers=num_workers, iter=iterations
@@ -345,7 +356,7 @@ class TopicModel:
             if self.verbose:
                 print(topic_dists[-1:], ll)
                 print(f"Total inferred: {len(topic_dists)}, from: {len(df.index)}")
-                
+
             if len(topic_dists) == len(df.index):
                 idx = range(len(topic_dists[0]))
                 df_infer = pd.DataFrame(topic_dists, columns=[f"topic{i}" for i in idx])
@@ -1031,28 +1042,47 @@ class SimpleTokenizer:
         min_word_len=2,
         min_num_words=5,
         verbose=False,
+        ngrams=[],
+        ngram_delimiter="_",
         **kwargs,
     ):
-        self.stopwords = stopwords
+        self.stopwords = stopwords if stopwords else []
         self.min_word_len = min_word_len
         self.min_num_words = min_num_words
+        self.ngram_delimiter = ngram_delimiter
+        if ngrams:
+            self.ngrams = {ngram_delimiter.join(ngram): ngram for ngram in ngrams}
+        else:
+            self.ngrams = {}
+        self.verbose = verbose
         self.verbose = verbose
         if verbose:
             print(f"{self.__class__.__name__} initialized with:")
             print(f"\tstopwords: {len(self.stopwords)}")
             print(f"\tmin_word_len: {self.min_word_len}")
             print(f"\tmin_num_words: {self.min_num_words}")
-
+            print(f"\tngrams: {len(self.ngrams)}")
+            print(f"\tngram_delimiter: {self.ngram_delimiter}")
 
     def tokenize(self, text):
         if text is None:
             return None
+        if len(self.ngrams) > 0:
+            words = text.split()
+            for repl, ngram in self.ngrams.items():
+                words = self.replace_seq(words, ngram, repl)
+        else:
+            words = text.split()
         words = [
-            w
-            for w in text.split()
-            if w not in self.stopwords and len(w) >= self.min_word_len
+            w for w in words if w not in self.stopwords and len(w) >= self.min_word_len
         ]
         if len(set(words)) > self.min_num_words:
             return words
         else:
             return None
+
+    @staticmethod
+    def replace_seq(sequence, subseq, repl):
+        if len(sequence) < len(subseq):
+            return sequence
+        return eval(str(list(sequence)).replace(str(list(subseq))[2:-2], repl))

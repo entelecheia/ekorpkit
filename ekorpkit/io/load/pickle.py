@@ -1,9 +1,23 @@
 import _pickle as cPickle
+import pickle
 import bz2
 import sys
 
 
-def save_pickle(filename, data, add_suffix=False, suffix=".pkl.bz2"):
+def save_pickle(data, filename):
+    filename = str(filename)
+    with open(filename, "wb") as f:
+        pickle.dump(data, f)
+
+
+def load_pickle(filename):
+    filename = str(filename)
+    with open(filename, "rb") as f:
+        data = pickle.load(f)
+    return data
+
+
+def compressed_pickle(data, filename, add_suffix=False, suffix=".pkl.bz2"):
     """
     save object to file using pickle
 
@@ -26,7 +40,7 @@ def save_pickle(filename, data, add_suffix=False, suffix=".pkl.bz2"):
     f.close()
 
 
-def load_pickle(filename):
+def decompress_pickle(filename):
     """
     Load from filename using pickle
 

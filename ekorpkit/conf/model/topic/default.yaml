@@ -9,7 +9,7 @@ min_word_len: 2
 ngram:
   min_cf: 10
   min_df: 5
-  max_len: 10
+  max_len: 5
   max_cand: 5000
   min_score: -10
   normalized: true
@@ -19,6 +19,7 @@ files:
   corpus_key: ${..model_dir}/corpus_keys.csv
   raw_corpus_key: ${..model_dir}/raw_corpus_keys.csv
   ngram_candidates: ${..model_dir}/ngram_candidates.csv
+  ngram_model: ${..model_dir}/ngram_model.pkl
   ngram_docs: ${..model_dir}/ngram_docs.pkl
   stopwords: ${..model_dir}/stopwords.txt
   stoplist:
