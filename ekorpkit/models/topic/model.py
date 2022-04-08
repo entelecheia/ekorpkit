@@ -1085,4 +1085,4 @@ class SimpleTokenizer:
     def replace_seq(sequence, subseq, repl):
         if len(sequence) < len(subseq):
             return sequence
-        return eval(str(list(sequence)).replace(str(list(subseq))[2:-2], repl))
+        return eval(str(list(sequence)).replace(str(list(subseq))[1:-1], f"'{repl}'"))
