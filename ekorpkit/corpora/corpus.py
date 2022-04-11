@@ -25,6 +25,8 @@ class Corpus:
             self.args = OmegaConf.merge(self.args, self.info)
         self.verbose = self.args.get("verbose", False)
         self.autoload = self.args.get("autoload", False)
+        self.automerge = self.args.get("automerge", False)
+        self.metadata_merged = False
 
         if self.verbose:
             msg.info(f"Intantiating a corpus {self.name} with a config:")
@@ -83,6 +85,8 @@ class Corpus:
             self.load()
             self.load_metadata()
             self.laod_timestamp()
+            if self.automerge:
+                self.merge_metadata()
 
     @property
     def data(self):
@@ -202,13 +206,14 @@ class Corpus:
             print(self._metadata.tail(3))
 
     def merge_metadata(self):
-        if self._metadata is None:
+        if self._metadata is None or self.metadata_merged:
             return
         self._data = self._data.merge(
             self._metadata,
             on=self._merge_meta_on,
             how="left",
         )
+        self.metadata_merged = True
         if self.verbose:
             print(f"Metadata merged to data")
             print(self._data.head(3))

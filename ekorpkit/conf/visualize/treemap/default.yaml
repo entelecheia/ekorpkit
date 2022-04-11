@@ -1,0 +1,17 @@
+fig_filepath:
+scale: 1.5
+columns:
+  label:
+  value:
+  parent:
+treemap:
+  textinfo: label+percent
+  marker_colorscale: RdBu
+layout:  
+  paper_bgcolor: 'rgba(0,0,0,0)'
+update_layout:
+  margin:
+    l: 0
+    r: 0
+    b: 0
+    t: 0

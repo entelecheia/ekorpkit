@@ -12,7 +12,6 @@ import numpy as np
 from omegaconf import OmegaConf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
-from ekorpkit.io.load.pickle import load_pickle, save_pickle
 from ekorpkit.io.file import save_dataframe, load_dataframe
 from ekorpkit.visualize.wordcloud import generate_wordclouds, savefig
 from ekorpkit.pipelines.pipe import apply

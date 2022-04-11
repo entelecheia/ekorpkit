@@ -142,6 +142,29 @@ def combine_columns(df, args):
     return df
 
 
+def drop(df, args):
+    verbose = args.get("verbose", False)
+    labels = args.get("labels", None)
+    axis = args.get("axis", 1)
+    columns = args.get("columns", None)
+    index = args.get("index", None)
+    level = args.get("level", None)
+    errors = args.get("errors", "ignore")
+    if verbose:
+        print(f"droping: {args}")
+    df = df.drop(
+        columns=columns,
+        axis=axis,
+        labels=labels,
+        index=index,
+        level=level,
+        errors=errors,
+    )
+    if verbose:
+        print(df.head())
+    return df
+
+
 def melt(df, args):
     verbose = args.get("verbose", False)
     id_vars = args.get("id_vars", None)
@@ -167,6 +190,57 @@ def melt(df, args):
         col_level=col_level,
         ignore_index=ignore_index,
     )
+    if verbose:
+        print(df.head())
+    return df
+
+
+def plot(df, args):
+    verbose = args.get("verbose", False)
+    plot_cfg = args.get("visualize", {}).get("plot", {})
+    if "_target_" not in plot_cfg:
+        print("No target specified")
+        return df
+    if verbose:
+        print(f"Plotting: {plot_cfg}")
+    instantiate(plot_cfg, df=df, _recursive_=False)
+    return df
+
+
+def pivot(df, args):
+    verbose = args.get("verbose", False)
+    index = args.get("index", None)
+    columns = args.get("columns", None)
+    values = args.get("values", None)
+    fillna = args.get("fillna", None)
+    reset_index = args.get("reset_index", True)
+    if index is None:
+        print("No index specified")
+        return df
+    if columns is None:
+        print("No columns specified")
+        return df
+    if values is None:
+        print("No values specified")
+        return df
+    if verbose:
+        print(f"Pivoting columns: {args}")
+    if isinstance(index, (list, ListConfig)):
+        index = list(index)
+    if isinstance(columns, (list, ListConfig)):
+        columns = list(columns)
+    if isinstance(values, (list, ListConfig)):
+        values = list(values)
+    if len(values) == 1:
+        values = values[0]
+    df = df.pivot(index=index, columns=columns, values=values)
+    # df = df.set_index(index)[values].unstack()
+    if fillna is not None:
+        df.fillna(fillna, inplace=True)
+    if reset_index:
+        df = df.reset_index()
+        if isinstance(values, list) and len(values) > 1:
+            df.columns = ["_".join(a).strip("_") for a in df.columns.to_flat_index()]
     if verbose:
         print(df.head())
     return df
@@ -619,7 +693,7 @@ def extract_tokens(df, args):
         print("instantiating tokenizer")
     tokenizer = instantiate(tokenizer)
     if filter_stopwords_only:
-        extract_func = tokenizer.filter_stopwords
+        extract_func = tokenizer.filter_article_stopwords
     elif nouns_ony:
         extract_func = tokenizer.extract_nouns
     else:

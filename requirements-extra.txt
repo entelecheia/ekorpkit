@@ -52,10 +52,11 @@ pymongo					: database
 
 # py-markdown-table		: doc
 # pytablewriter			: doc
-plotly					: doc
-kaleido					: doc
-rich					: doc
-matplotlib				: doc
+plotly					: doc, visualize
+kaleido					: doc, visualize
+rich					: doc, visualize
+matplotlib				: doc, visualize
+seaborn                 : doc, visualize
 
 tensorflow-datasets		: dataset
 # tensorflow-io			: dataset

@@ -1,0 +1,9 @@
+defaults:
+  - /method: pivot
+
+index:
+columns:
+values:
+reset_index: true
+fillna:
+verbose: ${oc.select:..verbose, true}

@@ -26,6 +26,9 @@ defaults:
   - explode_splits: default
   - chunk: default
   - stdout_samples: default
+  - drop: default
+  - pivot: default
+  - plot: default
 
 apply_to: ${oc.select:..apply_to, text}
 data_dir: ${oc.select:..data_dir, ''} 

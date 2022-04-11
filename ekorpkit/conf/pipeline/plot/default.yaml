@@ -1,0 +1,9 @@
+defaults:
+  - /method: plot
+
+output_dir: 
+output_file:
+visualize:
+  plot:
+    output_dir: 
+verbose: ${oc.select:..verbose, true}
