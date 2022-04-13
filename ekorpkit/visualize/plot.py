@@ -52,7 +52,35 @@ def lineplot(df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **
 
     plt.figure(figsize=figsize, tight_layout=True)
     ax = plt.gca()
-    sns.lineplot(data=data[ycols], linewidth=2.5)
+    linewidth = plot.get("linewidth", None)
+    sns.lineplot(data=data[ycols], linewidth=linewidth)
+    set_figure(ax, **figure)
+    fname = savefig.get("fname", None)
+    if fname:
+        Path(fname).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(**savefig)
+        if verbose:
+            print(f"Saved figure to {fname}")
+
+
+def stackplot(
+    df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **kwargs
+):
+
+    set_style(**plot)
+    figsize = plot.get("figsize", None)
+    if figsize is not None and isinstance(figsize, str):
+        figsize = eval(figsize)
+    ycols = columns.yvalue
+    xcol = columns.xvalue
+    data = df
+
+    plt.figure(figsize=figsize, tight_layout=True)
+    ax = plt.gca()
+    labels = figure.get("legend", {}).get("labels", None)
+    if labels is None:
+        labels = ycols
+    plt.stackplot(data[xcol], data[ycols].T, labels=labels)
     set_figure(ax, **figure)
     fname = savefig.get("fname", None)
     if fname:

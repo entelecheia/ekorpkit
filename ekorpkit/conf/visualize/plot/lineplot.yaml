@@ -1,61 +1,7 @@
+defaults:
+  - _default
+
 _target_: ekorpkit.visualize.plot.lineplot
-output_dir: ${oc.select:..output_dir, .}
 output_file: ${oc.select:..output_file, lineplot.png}
-verbose: ${oc.select:verbose, true}
-savefig:
-  fname: ${..output_dir}/${..output_file}
-  dpi: 300
 plot:
-  figsize: (10, 5)
-  style: fivethirtyeight
-  rcParams:
-    axes.unicode_minus: False
-    axes.labelsize: 14
-    text.color: dimgrey
-    font.family: NanumGothic
-    # savefig.edgecolor: black
-  fontpath:
-columns:
-  xvalue:
-  yvalue:
-figure:
-  xlabel:
-    xlabel:
-  ylabel:
-    ylabel:
-  title:
-    label:
-  legend:
-    title:
-    title_fontsize: 12
-    labels:
-  # xlim:
-  #   left:
-  #   right:
-  # ylim:
-  #   bottom:
-  #   top:
-  # xticks:
-  #   ticks:
-  #   labels:
-  # yticks:
-  #   ticks:
-  #   labels:
-  # xtickmajorformatterfunc: 'ticker.FormatStrFormatter("%d")'
-  # ytickmajorformatterfunc: 'ticker.PercentFormatter(1.0)'
-  # xticklabels:
-  # yticklabels:
-  # xticklabelsize:
-  # yticklabelsize:
-  # xticklabelrotation:
-  # yticklabelrotation:
-  # xticklabelpad:
-  # yticklabelpad:
-  # xtickpad:
-  # ytickpad:
-  # xtickangle:
-  # ytickangle:
-  # xtickminorlocator:
-  # ytickminorlocator:
-  # xtickmajorlocator:
-  # ytickmajorlocator:
+  linewidth: 2.5

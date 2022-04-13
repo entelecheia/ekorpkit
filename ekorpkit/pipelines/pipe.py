@@ -181,7 +181,10 @@ def melt(df, args):
         print(f"Melting columns: {args}")
     id_vars = list(id_vars)
     if value_vars:
-        value_vars = list(value_vars)
+        if isinstance(value_vars, str):
+            value_vars = eval(value_vars)
+        else:
+            value_vars = list(value_vars)
     df = df.melt(
         id_vars=id_vars,
         value_vars=value_vars,
