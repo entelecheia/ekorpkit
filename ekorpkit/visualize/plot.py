@@ -66,7 +66,10 @@ def lineplot(df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **
 def stackplot(
     df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **kwargs
 ):
-
+    if df is None:
+        if verbose:
+            print("No data to plot")
+        return
     set_style(**plot)
     figsize = plot.get("figsize", None)
     if figsize is not None and isinstance(figsize, str):

@@ -206,7 +206,29 @@ def plot(df, args):
         return df
     if verbose:
         print(f"Plotting: {plot_cfg}")
-    instantiate(plot_cfg, df=df, _recursive_=False)
+    subset = args.get("subset", {})
+    col = subset.get("column", None)
+    values = subset.get("value", None)
+    output_file = args.get("output_file", None)
+    output_dir = args.get("output_dir", '.')
+    if subset and col:
+        if isinstance(values, str):
+            values = [values]
+        for val in values:
+            if verbose:
+                print(f"Plotting subset: {col} == {val}")
+            df_sub = df[df[col] == val]
+            if output_file and "{}" in output_file:
+                output_path = output_file.replace("{}", str(val))
+                output_path = f"{output_dir}/{output_path}"
+                plot_cfg["savefig"]["fname"] = output_path
+            if verbose:
+                print(f"Plotting: {plot_cfg}")
+                print(df_sub.head())
+            instantiate(plot_cfg, df=df_sub, _recursive_=False)
+    else:
+        instantiate(plot_cfg, df=df, _recursive_=False)
+
     return df
 
 
