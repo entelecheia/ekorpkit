@@ -56,6 +56,7 @@ def lineplot(df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **
     sns.lineplot(data=data[ycols], linewidth=linewidth)
     set_figure(ax, **figure)
     fname = savefig.get("fname", None)
+    
     if fname:
         Path(fname).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(**savefig)
@@ -85,6 +86,39 @@ def stackplot(
         labels = ycols
     plt.stackplot(data[xcol], data[ycols].T, labels=labels)
     set_figure(ax, **figure)
+    
+    fname = savefig.get("fname", None)
+    if fname:
+        Path(fname).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(**savefig)
+        if verbose:
+            print(f"Saved figure to {fname}")
+
+def barplot(
+    df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **kwargs
+):
+    if df is None:
+        if verbose:
+            print("No data to plot")
+        return
+    set_style(**plot)
+    figsize = plot.get("figsize", None)
+    if figsize is not None and isinstance(figsize, str):
+        figsize = eval(figsize)
+    ycols = columns.yvalue
+    xcol = columns.xvalue
+    index = columns.get('index', None)
+    if index:
+        df.index = list(index)
+        xcol = None
+    data = df
+
+    # plt.figure(figsize=figsize, tight_layout=True)
+    stacked = plot.get("stacked", False)
+    ax = data.plot(x=xcol, y=ycols, kind='bar', stacked=stacked, figsize=figsize)
+    set_figure(ax, **figure)
+    plt.tight_layout()
+    
     fname = savefig.get("fname", None)
     if fname:
         Path(fname).parent.mkdir(parents=True, exist_ok=True)
@@ -103,6 +137,8 @@ def set_figure(
     ylim=None,
     xticks=None,
     yticks=None,
+    xticklabels=None,
+    yticklabels=None,
     xtickmajorformatterfunc=None,
     ytickmajorformatterfunc=None,
     **kwargs,
@@ -136,6 +172,14 @@ def set_figure(
         else:
             if yticks.get("labels", None) or yticks.get("ticks", None):
                 ax.set_yticks(**yticks)
+    if xticklabels is not None:
+        if not xticklabels.get("labels", None):
+            xticklabels['labels'] = ax.get_xticks().tolist()
+        ax.set_xticklabels(**xticklabels)
+    if yticklabels is not None:
+        if not yticklabels.get("labels", None):
+            yticklabels['labels'] = ax.get_yticks().tolist()
+        ax.set_yticklabels(**yticklabels)
     if xlim is not None:
         if isinstance(xlim, str):
             ax.set_xlim(eval(xlim))

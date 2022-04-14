@@ -208,13 +208,18 @@ def plot(df, args):
         print(f"Plotting: {plot_cfg}")
     subset = args.get("subset", {})
     col = subset.get("column", None)
-    values = subset.get("value", None)
+    values = subset.get("values", None)
+    titles = subset.get("titles", None)
     output_file = args.get("output_file", None)
-    output_dir = args.get("output_dir", '.')
+    output_dir = args.get("output_dir", ".")
     if subset and col:
+        title_prefix = plot_cfg["figure"].get("title", None)
+        title_prefix = title_prefix + " - " if title_prefix else ""
         if isinstance(values, str):
             values = [values]
-        for val in values:
+        if titles and isinstance(titles, str):
+            titles = [titles]
+        for i, val in enumerate(values):
             if verbose:
                 print(f"Plotting subset: {col} == {val}")
             df_sub = df[df[col] == val]
@@ -222,9 +227,11 @@ def plot(df, args):
                 output_path = output_file.replace("{}", str(val))
                 output_path = f"{output_dir}/{output_path}"
                 plot_cfg["savefig"]["fname"] = output_path
+            if titles and len(titles) > i:
+                plot_cfg["figure"]["title"] = title_prefix + titles[i]
             if verbose:
                 print(f"Plotting: {plot_cfg}")
-                print(df_sub.head())
+                # print(df_sub.head())
             instantiate(plot_cfg, df=df_sub, _recursive_=False)
     else:
         instantiate(plot_cfg, df=df, _recursive_=False)
@@ -263,8 +270,10 @@ def pivot(df, args):
     if fillna is not None:
         df.fillna(fillna, inplace=True)
     if reset_index:
-        df = df.reset_index()
-        if isinstance(values, list) and len(values) > 1:
+        if verbose:
+            print(f"Resetting index, nlevels of columns: {df.columns.nlevels}")
+        df.reset_index(inplace=True)
+        if df.columns.nlevels  > 1:
             df.columns = ["_".join(a).strip("_") for a in df.columns.to_flat_index()]
     if verbose:
         print(df.head())
@@ -503,7 +512,11 @@ def aggregate_columns(df, args):
             {onto_column: separator.join}
         )
     if reset_index:
+        if verbose:
+            print(f"Resetting index, nlevels of columns: {df.columns.nlevels}")
         df.reset_index(inplace=True)
+        if df.columns.nlevels  > 1:
+            df.columns = ["_".join(a).strip("_") for a in df.columns.to_flat_index()]
     n_docs = df.shape[0]
     if verbose:
         print(df.tail())
