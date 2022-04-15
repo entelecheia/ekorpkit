@@ -2,7 +2,7 @@ defaults:
   - /method: split_sampling
 
 stratify_on:
-random_state: 12345
+random_state: 1234
 dev_size: 
 test_size: 0.1
 groupby: ${.stratify_on}
