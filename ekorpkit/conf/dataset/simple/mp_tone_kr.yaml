@@ -1,0 +1,48 @@
+defaults:
+  - _build
+  - /fetch/downloader: dataframe
+
+name: mp_tone_kr
+domain: econ
+task: classification
+lang: ko
+column_info: 
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    example_id: int
+    topic: str
+    date: str
+    labels: int
+    text: str
+
+fetch:
+  data_sources: 
+    train: train.csv
+    test: test.csv
+    dev: dev.csv
+  downloader:
+    output_file: mp_tone_kr.csv
+    pipeline:
+      _pipeline_:
+        - load_dataframe
+        - rename_columns
+        - drop_duplicates
+        - reset_index
+        - split_sampling
+      rename_columns:
+        new_names:
+          category: labels
+      reset_index:
+        index_column_name: example_id
+      split_sampling:
+        stratify_on: labels
+        dev_size: 0.2
+        test_size: 0.2
+        unique_key: example_id
+        output_dir: ${..data_dir}
+        train_file: train.csv
+        test_file: test.csv
+        dev_file: dev.csv
