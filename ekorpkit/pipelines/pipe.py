@@ -297,6 +297,7 @@ def split_sampling(df, args):
     if verbose:
         print(f"Split sampling: {args}")
 
+    train, dev, test = None, None, None
     if stratify_on is None:
         train, test = train_test_split(
             df, test_size=test_size, random_state=random_state
@@ -360,13 +361,13 @@ def split_sampling(df, args):
     train_file = args.get("train_file", None)
     test_file = args.get("test_file", None)
     dev_file = args.get("dev_file", None)
-    if train_file:
+    if train_file and train is not None:
         filepath = f"{output_dir}/{train_file}"
         save_dataframe(train, filepath, verbose=verbose)
-    if test_file:
+    if test_file and test is not None:
         filepath = f"{output_dir}/{test_file}"
         save_dataframe(test, filepath, verbose=verbose)
-    if dev_file:
+    if dev_file and dev is not None:
         filepath = f"{output_dir}/{dev_file}"
         save_dataframe(dev, filepath, verbose=verbose)
 

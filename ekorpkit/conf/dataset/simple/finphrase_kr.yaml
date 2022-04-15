@@ -39,7 +39,7 @@ fetch:
         index_column_name: example_id
       split_sampling:
         stratify_on: labels
-        dev_size: 0.1
+        # dev_size: 0.1
         test_size: 0.2
         unique_key: example_id
         output_dir: ${..data_dir}
