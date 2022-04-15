@@ -1,19 +1,22 @@
 from pathlib import Path
 
 
-def save_wordlist(words, file_path, sort=True):
+def save_wordlist(words, filepath, sort=True, verbose=True, **kwargs):
     if sort:
         words = sorted(words)
-    print(
-        "Save the list to the file: {}, no. of words: {}".format(file_path, len(words))
-    )
-    with open(file_path, "w") as f:
+    if verbose:
+        print(
+            "Save the list to the file: {}, no. of words: {}".format(
+                filepath, len(words)
+            )
+        )
+    with open(filepath, "w") as f:
         for word in words:
             f.write(word + "\n")
 
 
 def load_wordlist(
-    file_path,
+    filepath,
     rewrite=False,
     max_ngram=None,
     remove_tag=False,
@@ -21,14 +24,16 @@ def load_wordlist(
     remove_duplicate=True,
     sort=True,
     lowercase=False,
+    verbose=True,
+    **kwargs,
 ):
-    file_path = Path(file_path)
-    if file_path.is_file():
-        with open(file_path) as f:
+    filepath = Path(filepath)
+    if filepath.is_file():
+        with open(filepath) as f:
             words = [word.strip().split()[0] for word in f if len(word.strip()) > 0]
     else:
         words = []
-        save_wordlist(words, file_path)
+        save_wordlist(words, filepath, verbose=verbose)
 
     if remove_delimiter:
         words = [word.replace(";", "") for word in words]
@@ -36,14 +41,16 @@ def load_wordlist(
         words = sorted(set(words))
     if max_ngram:
         words = [word for word in words if len(word.split(";")) <= max_ngram]
-    print("Loaded the file: {}, No. of words: {}".format(file_path, len(words)))
+    if verbose:
+        print("Loaded the file: {}, No. of words: {}".format(filepath, len(words)))
     if rewrite:
         if sort:
             words = sorted(words)
-        with open(file_path, "w") as f:
+        with open(filepath, "w") as f:
             for word in words:
                 f.write(word + "\n")
-        print("Rewrite the words to the file: {}".format(file_path))
+        if verbose:
+            print("Rewrite the file: {}, No. of words: {}".format(filepath, len(words)))
 
     if remove_tag:
         words = [word.split("/")[0] for word in words]
@@ -53,5 +60,7 @@ def load_wordlist(
         if not word.startswith("#")
     ]
     if remove_duplicate:
-        words = set(words)
+        words = list(set(words))
+        if verbose:
+            print("Remove duplicated words, No. of words: {}".format(len(words)))
     return words

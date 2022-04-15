@@ -7,3 +7,15 @@ title_color: green
 top_n: 100
 dpi: 300
 save: true
+save_each: false
+save_masked: false
+figsize: (12, 12)
+fontpath:
+colormap: PuBu
+mask_dir:
+wordclouds:
+  0:
+    title: 'Topic 0'
+    color: blue
+    mask_file: 
+    figsize:

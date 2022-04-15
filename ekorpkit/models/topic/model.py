@@ -1,58 +1,20 @@
 import os
 import sys
-import platform
 import random
 import itertools
 import pandas as pd
-import json
 import tomotopy as tp
 from pathlib import Path
 from collections import namedtuple
 from datetime import datetime
 from tqdm import tqdm
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import font_manager, rc
-import pyLDAvis
-import logging
+from omegaconf import OmegaConf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
 from ekorpkit.io.file import save_dataframe, load_dataframe
-
-# from pprint import pprint
-
-logging.getLogger("matplotlib").setLevel(logging.WARNING)
-
-
-def _get_font_name(set_font_for_matplot=True, font_path=None):
-    if not font_path:
-        if platform.system() == "Darwin":
-            font_path = "/System/Library/Fonts/Supplemental/AppleGothic.ttf"
-        elif platform.system() == "Windows":
-            font_path = "c:/Windows/Fonts/malgun.ttf"
-        elif platform.system() == "Linux":
-            font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
-
-    if not Path(font_path).is_file():
-        font_name = None
-        font_path = None
-        print(f"Font file does not exist at {font_path}")
-        if platform.system() == "Linux":
-            font_install_help = """
-            apt install fontconfig
-            apt install fonts-nanum
-            fc-list | grep -i nanum
-            """
-            print(font_install_help)
-    else:
-        font_manager.fontManager.addfont(font_path)
-        font_name = font_manager.FontProperties(fname=font_path).get_name()
-        if set_font_for_matplot and font_name:
-            rc("font", family=font_name)
-            plt.rcParams["axes.unicode_minus"] = False
-    print("font family: ", plt.rcParams["font.family"])
-    print("font path: ", font_path)
-    return font_name, font_path
+from ekorpkit.visualize.wordcloud import generate_wordclouds, savefig
+from ekorpkit.pipelines.pipe import apply
 
 
 ModelSummary = namedtuple(
@@ -119,6 +81,7 @@ class TopicModel:
         self._raw_corpus = tp.utils.Corpus()
         self._raw_corpus_keys = None
         self.ngrams = None
+        self.ngram_model = None
         self._ngram_docs = None
         self.stopwords = []
         self.docs = None
@@ -140,7 +103,16 @@ class TopicModel:
         self.corpus_key_path = Path(self.files.corpus_key)
         self._raw_corpus_key_path = Path(self.files.raw_corpus_key)
         self.ngram_candidates_path = Path(self.files.ngram_candidates)
+        self.ngram_model_path = Path(self.files.ngram_model)
         self.ngram_docs_path = Path(self.files.ngram_docs)
+        self.stoplist_paths = self.files.stoplist
+        if self.stoplist_paths is None:
+            self.stoplist_paths = []
+        else:
+            if isinstance(self.stoplist_paths, str):
+                self.stoplist_paths = [self.stoplist_paths]
+            else:
+                self.stoplist_paths = list(self.stoplist_paths)
         self.stopwords_path = Path(self.files.stopwords)
         self.default_stopwords_path = Path(self.files.default_stopwords)
         self.default_word_prior_path = Path(self.files.default_word_prior)
@@ -154,6 +126,11 @@ class TopicModel:
         (self.output_dir / "logs").mkdir(exist_ok=True, parents=True)
 
     def _load_raw_corpus(self, reload_corpus=False):
+        def data_feeder(docs):
+            for doc in docs:
+                fd = doc.strip().split(maxsplit=1)
+                timepoint = int(fd[0])
+                yield fd[1], None, {"timepoint": timepoint}
 
         if not self._raw_corpus or reload_corpus:
             self._raw_corpus = tp.utils.Corpus(tokenizer=tp.utils.SimpleTokenizer())
@@ -175,7 +152,7 @@ class TopicModel:
                 print("Elapsed time is %.2f seconds" % elapsed())
 
     def extract_ngrams(self):
-        if not self.ngrams:
+        if self.ngrams is None:
             self._load_raw_corpus()
             assert self._raw_corpus, "Load a corpus first"
             with elapsed_timer() as elapsed:
@@ -201,11 +178,7 @@ class TopicModel:
     def _load_ngram_docs(self, rebuild=False):
         if self.ngram_docs_path.is_file() and not rebuild:
             with elapsed_timer() as elapsed:
-                print(
-                    "Starting to load ngram documents from {}".format(
-                        self.ngram_docs_path
-                    )
-                )
+                print(f"Starting to load ngram documents from {self.ngram_docs_path}")
                 self._raw_corpus = tp.utils.Corpus().load(self.ngram_docs_path)
                 df = load_dataframe(self._raw_corpus_key_path)
                 self._raw_corpus_keys = df[self.corpora._id_keys].values.tolist()
@@ -220,32 +193,48 @@ class TopicModel:
             self._raw_corpus.save(self.ngram_docs_path)
 
     def _load_stopwords(self):
+        self.stopwords = []
         if self.stopwords_path.is_file():
-            self.stopwords = load_wordlist(self.stopwords_path)
+            self.stopwords = load_wordlist(self.stopwords_path, lowercase=True)
         else:
             if self.default_stopwords_path.is_file():
-                self.stopwords = load_wordlist(self.default_stopwords_path)
+                self.stopwords = load_wordlist(
+                    self.default_stopwords_path, lowercase=True
+                )
             else:
                 self.stopwords = ["."]
         save_wordlist(self.stopwords, self.stopwords_path)
+        if self.verbose:
+            print(f"{len(self.stopwords)} stopwords are loaded.")
+
+        for path in self.stoplist_paths:
+            if os.path.exists(path):
+                stopwords = load_wordlist(path, lowercase=True)
+                self.stopwords += stopwords
+                save_wordlist(stopwords, path)
+                if self.verbose:
+                    print(f"{len(stopwords)} stopwords are loaded from {path}")
 
     def _load_word_prior(self):
         if self.word_prior_path.is_file():
-            with open(self.word_prior_path, "r") as fp:
-                self.word_prior = json.load(fp)
+            self.word_prior = OmegaConf.load(self.word_prior_path)
             print(self.word_prior)
         else:
             if self.default_word_prior_path.is_file():
-                with open(self.default_word_prior_path, "r") as fp:
-                    self.word_prior = json.load(fp)
+                self.word_prior = OmegaConf.load(self.default_word_prior_path)
                 print(self.word_prior)
             else:
                 self.word_prior = {}
-        with open(self.word_prior_path, "w") as fp:
-            json.dump(self.word_prior, fp, ensure_ascii=False, indent=4)
+        OmegaConf.save(self.word_prior, self.word_prior_path)
 
     def load_corpus(
-        self, sample_ratio=1.0, reload_corpus=False, min_df=5, min_word_len=2, **kwargs
+        self,
+        sample_ratio=1.0,
+        reload_corpus=False,
+        min_num_words=5,
+        min_word_len=2,
+        rebuild=False,
+        **kwargs,
     ):
         sample_ratio = sample_ratio if sample_ratio else self.sample_ratio
         if self.corpus and self.sample_ratio == sample_ratio and not reload_corpus:
@@ -254,7 +243,7 @@ class TopicModel:
         else:
             print("Start loading corpus w/ sample_ratio: {}".format(sample_ratio))
         if not self._raw_corpus:
-            self._load_ngram_docs()
+            self._load_ngram_docs(rebuild=rebuild)
         self._load_stopwords()
         assert self._raw_corpus, "Load ngram documents first"
         assert self.stopwords, "Load stopwords first"
@@ -274,13 +263,14 @@ class TopicModel:
             words = [
                 w for w in doc if w not in self.stopwords and len(w) >= min_word_len
             ]
-            if len(words) > min_df:
+            if len(words) > min_num_words:
                 self.corpus.add_doc(words=words)
                 self.corpus_keys.append(self._raw_corpus_keys[i_doc])
             else:
-                print(
-                    f"Skipped - index={i_doc}, key={self._raw_corpus_keys[i_doc]}, words={list(words)}"
-                )
+                if self.verbose > 5:
+                    print(
+                        f"Skipped - index={i_doc}, key={self._raw_corpus_keys[i_doc]}, words={list(words)}"
+                    )
                 n_skipped += 1
         print(f"Total {i_doc-n_skipped+1} documents are loaded.")
         print(f"Total {n_skipped} documents are removed from the corpus.")
@@ -294,9 +284,11 @@ class TopicModel:
         output_dir=None,
         output_file=None,
         iterations=100,
-        min_df=5,
+        min_num_words=5,
         min_word_len=2,
         num_workers=0,
+        use_batcher=True,
+        minibatch_size=None,
         **kwargs,
     ):
 
@@ -310,17 +302,19 @@ class TopicModel:
         text_key = self.corpora._text_key
         id_keys = self.corpora._id_keys
 
-        def convert_to_token_list(row):
-            doc = str(getattr(row, text_key))
-            words = [
-                w
-                for w in doc.split()
-                if w not in self.stopwords and len(w) >= min_word_len
-            ]
-            if len(words) > min_df:
-                return words
-            else:
-                return None
+        df_ngram = load_dataframe(self.ngram_candidates_path)
+        ngrams = []
+        for ngram in df_ngram['words'].to_list():
+            ngrams.append(ngram.split(','))
+        
+        simtok = SimpleTokenizer(
+            stopwords=self.stopwords,
+            min_word_len=min_word_len,
+            min_num_words=min_num_words,
+            ngrams=ngrams,
+            ngram_delimiter=self.ngram.delimiter,
+            verbose=self.verbose,
+        )
 
         if self.corpora is None:
             raise ValueError("corpora is not set")
@@ -329,30 +323,39 @@ class TopicModel:
             self.corpora.concat_corpora()
             df = self.corpora._data
             df.dropna(subset=[text_key], inplace=True)
-            tp_docs = []
-            for row in df.itertuples():
-                text = convert_to_token_list(row)
-                doc = None
-                if text:
-                    doc = self.model.make_doc(text)
-                else:
-                    print("Empty text!\n", row)
-                    # df.drop(row.Index, inplace = True)
-                if doc:
-                    tp_docs.append(doc)
-                else:
-                    if text:
-                        print(":::::::::::: Empty doc\n", text)
-                    df.drop(row.Index, inplace=True)
+            df[text_key] = apply(
+                simtok.tokenize,
+                df[text_key],
+                description=f"tokenize",
+                verbose=self.verbose,
+                use_batcher=use_batcher,
+                minibatch_size=minibatch_size,
+            )
             df = df.dropna(subset=[text_key]).reset_index(drop=True)
-            print(df.tail())
+            if self.verbose:
+                print(df.tail())
+
+            docs = []
+            indexes_to_drop = []
+            for ix in df.index:
+                doc = df.loc[ix, text_key]
+                mdoc = self.model.make_doc(doc)
+                if mdoc:
+                    docs.append(mdoc)
+                else:
+                    print(f"Skipped - {doc}")
+                    indexes_to_drop.append(ix)
+            df = df.drop(df.index[indexes_to_drop]).reset_index(drop=True)
+            if self.verbose:
+                print(f"{len(docs)} documents are loaded from: {len(df.index)}.")
 
             topic_dists, ll = self.model.infer(
-                tp_docs, workers=num_workers, iter=iterations
+                docs, workers=num_workers, iter=iterations
             )
-            print(topic_dists[-1:], ll)
+            if self.verbose:
+                print(topic_dists[-1:], ll)
+                print(f"Total inferred: {len(topic_dists)}, from: {len(df.index)}")
 
-            print(f"Total inferred: {len(topic_dists)}, from: {len(df.index)}")
             if len(topic_dists) == len(df.index):
                 idx = range(len(topic_dists[0]))
                 df_infer = pd.DataFrame(topic_dists, columns=[f"topic{i}" for i in idx])
@@ -497,7 +500,7 @@ class TopicModel:
             self.model_name, model_type, exec_dt
         )
         out_file = str(self.model_dir / "figures/tune" / out_file)
-        plt.savefig(out_file, transparent=False, dpi=300)
+        savefig(out_file, transparent=False, dpi=300)
 
     def train_model(
         self,
@@ -508,10 +511,12 @@ class TopicModel:
         k=None,
         k1=None,
         k2=None,
+        t=1,
         tw=IDF,
         gamma=2,
         alpha=0.1,
         eta=0.01,
+        phi=0.1,
         min_cf=5,
         rm_top=0,
         min_df=0,
@@ -593,6 +598,19 @@ class TopicModel:
                 corpus=self.corpus,
                 seed=seed,
             )
+        elif model_type == "DTM":
+            mdl = tp.DTModel(
+                tw=tw,
+                k=k,
+                t=t,
+                min_cf=min_cf,
+                rm_top=rm_top,
+                alpha_var=alpha,
+                eta_var=eta,
+                phi_var=phi,
+                corpus=self.corpus,
+                seed=seed,
+            )
         else:
             print("{} is not supported".format(model_type))
             return False
@@ -649,7 +667,7 @@ class TopicModel:
             self.model_name, self.active_model_id, exec_dt
         )
         out_file = str(self.output_dir / "figures/train" / out_file)
-        plt.savefig(out_file, transparent=False, dpi=300)
+        savefig(out_file, transparent=False, dpi=300)
 
         mdl.summary()
         self.model = mdl
@@ -871,6 +889,8 @@ class TopicModel:
             save_dataframe(df, label_file, index=False, verbose=self.verbose)
 
     def visualize(self, **kwargs):
+        import pyLDAvis
+
         assert self.model, "Model not found"
         mdl = self.model
         topic_term_dists = np.stack([mdl.get_topic_word_dist(k) for k in range(mdl.k)])
@@ -930,14 +950,20 @@ class TopicModel:
 
     def topic_wordclouds(
         self,
-        topic_dict=None,
         title_fontsize=20,
         title_color="green",
         top_n=100,
         ncols=5,
         nrows=1,
         dpi=300,
+        figsize=(10, 10),
         save=True,
+        mask_dir=None,
+        wordclouds=None,
+        save_each=False,
+        save_masked=False,
+        fontpath=None,
+        colormap="PuBu",
         **kwargs,
     ):
         """Wrapper function that generates wordclouds for ALL topics of a tomotopy model
@@ -949,89 +975,113 @@ class TopicModel:
         wordclouds as plots
         """
         assert self.model, "Model not found"
-        # if topic_dict is None:
-        #     topic_dict = self.get_topic_words()
         num_topics = self.model.k
-        # wc = WordCloud(background_color="white")
 
-        def save_fig():
-            plt.subplots_adjust(
-                left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.00, hspace=0.00
-            )  # make the figure look better
-            fig.tight_layout()
-            out_file = "{}-{}-wc_topic_p{}.png".format(
-                self.model_name, self.active_model_id, p
-            )
-            out_file = str(self.output_dir / "figures/wc" / out_file)
-            plt.savefig(out_file, transparent=True, dpi=dpi)
-
-        fontname, _ = _get_font_name()
-        plt.rcParams["font.family"] = fontname
-        figsize = (nrows * 4, ncols * 5)
-        fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
-        cnt = 0
-        p = 1
-        for i in range(num_topics):
-            r, c = divmod(cnt, ncols)
-            k = i
-            print(f"Creating topic wordcloud for Topic #{k}")
-            self.create_wordcloud(
-                k, fig, axes[r, c], top_n=top_n, save=False, fontname=fontname
-            )
-            if self.labels:
-                topic_name = self.labels[k]["name"]
-                if topic_name.startswith("Topic #"):
+        if figsize is not None and isinstance(figsize, str):
+            figsize = eval(figsize)
+        if mask_dir is None:
+            mask_dir = str(self.output_dir / "figures/masks")
+        fig_output_dir = str(self.output_dir / "figures/wc")
+        fig_filename_format = "{}-{}-wc_topic".format(
+            self.model_name, self.active_model_id
+        )
+        if wordclouds is None:
+            wordclouds_args = {}
+        else:
+            wordclouds_args = OmegaConf.to_container(wordclouds)
+        for k in range(num_topics):
+            topic_freq = dict(self.model.get_topic_words(k, top_n=top_n))
+            if k in wordclouds_args:
+                wc_args = wordclouds_args[k]
+            else:
+                wc_args = {}
+            title = wc_args.get("title", None)
+            if title is None:
+                if self.labels:
+                    topic_name = self.labels[k]["name"]
+                    if topic_name.startswith("Topic #"):
+                        topic_name = None
+                else:
                     topic_name = None
-            else:
-                topic_name = None
-            if topic_name:
-                title = f"Topic #{k} - {topic_name}"
-            else:
-                title = f"Topic #{k}"
-            axes[r, c].set_title(title, fontsize=title_fontsize, color=title_color)
-            cnt += 1
-            if cnt == nrows * ncols:
-                if save:
-                    save_fig()
-                if i < num_topics - 1:
-                    p += 1
-                    cnt = 0
-                    fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
-        if save and cnt < nrows * ncols:
-            while cnt < nrows * ncols:
-                r, c = divmod(cnt, ncols)
-                axes[r, c].set_visible(False)
-                cnt += 1
-            save_fig()
+                if topic_name:
+                    title = f"Topic #{k} - {topic_name}"
+                else:
+                    title = f"Topic #{k}"
+                wc_args["title"] = title
+            wc_args["word_freq"] = topic_freq
+            wordclouds_args[k] = wc_args
 
-    def create_wordcloud(
-        self, topic_idx, fig, ax, top_n=100, save=False, fontname=None
+        generate_wordclouds(
+            wordclouds_args,
+            fig_output_dir,
+            fig_filename_format,
+            title_fontsize=title_fontsize,
+            title_color=title_color,
+            ncols=ncols,
+            nrows=nrows,
+            dpi=dpi,
+            figsize=figsize,
+            save=save,
+            mask_dir=mask_dir,
+            save_each=save_each,
+            save_masked=save_masked,
+            fontpath=fontpath,
+            colormap=colormap,
+            verbose=self.verbose,
+            **kwargs,
+        )
+
+
+class SimpleTokenizer:
+    """Class to tokenize texts for a corpus"""
+
+    def __init__(
+        self,
+        stopwords=[],
+        min_word_len=2,
+        min_num_words=5,
+        verbose=False,
+        ngrams=[],
+        ngram_delimiter="_",
+        **kwargs,
     ):
-        """Wrapper function that generates individual wordclouds from topics in a tomotopy model
+        self.stopwords = stopwords if stopwords else []
+        self.min_word_len = min_word_len
+        self.min_num_words = min_num_words
+        self.ngram_delimiter = ngram_delimiter
+        if ngrams:
+            self.ngrams = {ngram_delimiter.join(ngram): ngram for ngram in ngrams}
+        else:
+            self.ngrams = {}
+        self.verbose = verbose
+        self.verbose = verbose
+        if verbose:
+            print(f"{self.__class__.__name__} initialized with:")
+            print(f"\tstopwords: {len(self.stopwords)}")
+            print(f"\tmin_word_len: {self.min_word_len}")
+            print(f"\tmin_num_words: {self.min_num_words}")
+            print(f"\tngrams: {len(self.ngrams)}")
+            print(f"\tngram_delimiter: {self.ngram_delimiter}")
 
-        ** Inputs **
-        topic_idx: int -> topic index
-        fig, ax: obj -> pyplot objects from subplots method
-        save: bool -> If the user would like to save the images
+    def tokenize(self, text):
+        if text is None:
+            return None
+        if len(self.ngrams) > 0:
+            words = text.split()
+            for repl, ngram in self.ngrams.items():
+                words = self.replace_seq(words, ngram, repl)
+        else:
+            words = text.split()
+        words = [
+            w for w in words if w not in self.stopwords and len(w) >= self.min_word_len
+        ]
+        if len(set(words)) > self.min_num_words:
+            return words
+        else:
+            return None
 
-        ** Returns **
-        wordclouds as plots"""
-        from wordcloud import WordCloud
-
-        assert self.model, "Model not found"
-        mdl = self.model
-        if not fontname:
-            fontname, _ = _get_font_name()
-        wc = WordCloud(font_path=fontname, background_color="white")
-
-        topic_freq = dict(mdl.get_topic_words(topic_idx, top_n=top_n))
-        img = wc.generate_from_frequencies(topic_freq)
-        ax.imshow(img, interpolation="bilinear")
-        ax.axis("off")
-        if save:
-            extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-            out_file = "{}-{}-wc_topic_{}.png".format(
-                self.model_name, self.active_model_id, topic_idx
-            )
-            out_file = str(self.output_dir / "figures/wc" / out_file)
-            plt.savefig(out_file, bbox_inches=extent.expanded(1.1, 1.2))
+    @staticmethod
+    def replace_seq(sequence, subseq, repl):
+        if len(sequence) < len(subseq):
+            return sequence
+        return eval(str(list(sequence)).replace(str(list(subseq))[1:-1], f"'{repl}'"))

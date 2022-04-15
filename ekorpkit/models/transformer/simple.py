@@ -1,4 +1,5 @@
 import os
+import sklearn
 from omegaconf import OmegaConf
 from hydra.utils import instantiate
 from ekorpkit.io.file import load_dataframe, save_dataframe
@@ -43,13 +44,13 @@ class SimpleTraner:
             print(self.train_data.tail())
         if "dev" in self.splits:
             self.eval_data = self.splits["dev"]
-            self.args["evaluate_during_training"] = True
+            self.model_cfg["evaluate_during_training"] = True
             if self.verbose:
                 print(self.eval_data.info())
                 print(self.eval_data.tail())
         else:
             self.eval_data = None
-            self.args["evaluate_during_training"] = False
+            self.model_cfg["evaluate_during_training"] = False
         self.test_data = self.splits["test"]
         if self.verbose:
             print(self.test_data.info())
@@ -138,10 +139,14 @@ class SimpleTrainerClassification(SimpleTraner):
         )
 
         # Train the model
-        model.train_model(self.train_data, eval_df=self.eval_data)
+        model.train_model(
+            self.train_data, eval_df=self.eval_data, acc=sklearn.metrics.accuracy_score
+        )
 
         # Evaluate the model
-        result, model_outputs, wrong_predictions = model.eval_model(self.test_data)
+        result, model_outputs, wrong_predictions = model.eval_model(
+            self.test_data, acc=sklearn.metrics.accuracy_score
+        )
         print(result.keys())
         print(len(model_outputs), len(wrong_predictions))
         print(model_outputs[:5])

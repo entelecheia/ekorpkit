@@ -1,0 +1,28 @@
+_target_: ekorpkit.preprocessors.tokenizer.Tokenizer
+only_text: true
+tokenize_each_word: false
+wordpieces_prefix: "##"
+punct_pos:
+  - SF
+  - SP
+  - SSO
+  - SSC
+  - SY
+noun_pos:
+  - NNG
+  - NNP
+  - XSN
+  - SL
+  - XR
+  - NNB
+  - NR
+exclude_pos:
+  - SP
+no_space_for_non_nouns: false
+flatten: true
+join_pos: true
+include_whitespace_token: true
+userdic_path: ${oc.select:..userdic_path, null}
+stopwords_path: ${oc.select:..stopwords_path, null}
+sentence_separator: '\n'
+verbose: ${oc.select:..verbose, false}

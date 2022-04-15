@@ -1,0 +1,5 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.visualize.plot.barplot
+output_file: ${oc.select:..output_file, barplot.png}

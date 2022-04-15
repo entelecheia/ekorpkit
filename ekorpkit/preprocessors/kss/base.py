@@ -19,9 +19,7 @@ from .character_definition import (
 )
 from .rule import Table, Stats
 
-logging.basicConfig(
-    format="[Korean Sentence Splitter]: %(message)s", level=logging.WARNING
-)
+logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
 
 
 class Const:

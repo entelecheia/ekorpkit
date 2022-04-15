@@ -20,8 +20,6 @@ defaults:
   # - split_dataframe: default
   
 _pipeline_:
-  # - load_dataframe
-  # - save_dataframe
 apply_to: ${oc.select:..column_info.keys.text, text}
 use_batcher: true
 verbose: ${oc.select:..verbose, true}

@@ -9,8 +9,8 @@ contents:
     _target_: ekorpkit.io.fetch.fomc.Statement  
   - content_type: fomc_minutes
     _target_: ekorpkit.io.fetch.fomc.Minutes  
-  - content_type: fomc_beigebook
-    _target_: ekorpkit.io.fetch.fomc.BeigeBook
+  # - content_type: fomc_beigebook
+  #   _target_: ekorpkit.io.fetch.fomc.BeigeBook
   - content_type: fomc_speech
     _target_: ekorpkit.io.fetch.fomc.Speech
   - content_type: fomc_testimony

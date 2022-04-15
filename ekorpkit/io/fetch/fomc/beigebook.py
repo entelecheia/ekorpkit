@@ -41,9 +41,7 @@ class BeigeBook(FomcBase):
         )
         dates = soup.find_all(
             "a",
-            href=re.compile(
-                self.base_url + "/monetarypolicy/files/BeigeBook_\d{8}.pdf"
-            ),
+            href=re.compile("/monetarypolicy/files/BeigeBook_\d{8}.pdf"),
         )
         dates = [content.attrs["href"] for content in dates]
         self.links = [content.attrs["href"] for content in contents]
@@ -54,13 +52,18 @@ class BeigeBook(FomcBase):
         self.dates = [
             datetime.strptime(self._date_from_link(x), "%Y-%m-%d") for x in dates
         ]
+        # TODO: _date_from_link deos not work for beigebooks, find date from content instead
         # Correct some date in the link does not match with the meeting date
         for i, m_date in enumerate(self.dates):
             if m_date == datetime(2019, 10, 11):
                 self.dates[i] = datetime(2019, 10, 4)
 
         if self.verbose:
-            print("{} links found in the current page.".format(len(self.links)))
+            print(
+                "{} links and {} dates found in the current page.".format(
+                    len(self.links), len(self.dates)
+                )
+            )
         if from_year <= 1995:
             print("Archive only from 1996, so setting from_year as 1996...")
             from_year = 1996
@@ -98,13 +101,13 @@ class BeigeBook(FomcBase):
                         self.dates[-1] = datetime(2008, 3, 10)
                     elif self.dates[-1] == datetime(2008, 10, 8):
                         self.dates[-1] = datetime(2008, 10, 7)
+                    if self.verbose:
+                        print(f'{self.dates[-1]}: {self.links[-1]}')
 
                 if self.verbose:
                     print(
                         "YEAR: {} - {} links found.".format(year, len(yearly_contents))
                     )
-
-        # print(self.links)
         print("There are total ", len(self.links), " links for ", self.content_type)
 
     def _add_article(self, link, index=None):

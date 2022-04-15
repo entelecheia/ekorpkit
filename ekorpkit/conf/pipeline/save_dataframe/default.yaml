@@ -1,7 +1,7 @@
 defaults:
   - /method: save_dataframe
 
-columns_to_save:
+columns_to_keep:
 filepath:
 filetype:
 task_dir: 

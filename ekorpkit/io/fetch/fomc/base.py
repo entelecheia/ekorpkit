@@ -75,6 +75,7 @@ class FomcBase(metaclass=ABCMeta):
         ]
 
     def _date_from_link(self, link):
+        # TODO: fix this
         date = re.findall("[0-9]{8}", link)[0]
         if date[4] == "0":
             date = "{}-{}-{}".format(date[:4], date[5:6], date[6:])
@@ -115,6 +116,7 @@ class FomcBase(metaclass=ABCMeta):
         from_year is min(2015, from_year)
         """
         # Implement in sub classes
+        # TODO - replace links list with dictionary with key as date
         pass
 
     @abstractmethod

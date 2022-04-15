@@ -1,5 +1,4 @@
 .pre-commit-config.yaml
-.pre-commit-config.yaml
 *_tmp_*
 tmp
 package-lock.json
@@ -9,6 +8,7 @@ logs/
 workspace/
 .history/
 .vscode/
+TODO
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

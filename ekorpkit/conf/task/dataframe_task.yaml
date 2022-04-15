@@ -1,8 +1,8 @@
 defaults:
   - _default
   - /pipeline: dataframe_pipeline
-  - /pipeline/normalize/normalizer: formal_en
-  - /pipeline/segment/segmenter: pysbd
+  # - /pipeline/normalize/normalizer: formal_en
+  # - /pipeline/segment/segmenter: pysbd
   - override /cmd@_global_: dataframe_task
 
 name: dataframe_task
@@ -11,28 +11,28 @@ data_file:
 
 pipeline:
   _pipeline_:
-    - load_dataframe
-    - normalize
-    - filter_length
-    - split_dataframe
+    # - load_dataframe
+    # - normalize
+    # - filter_length
+    # - split_dataframe
     # - segment
     # - concat_dataframes
     # - drop_duplicates
-    - save_dataframe
-  save_dataframe:
-    output_dir: ${dir.project}/dataframe/tmp
-    output_file: ${..load_dataframe.data_file}
-  split_dataframe:
-    num_splits: 10
-  filter_length:
-    min_length: 30
-    max_length: 10_000
-  drop_duplicates:
-    apply_to:
-      - text
-  segment:
-    segmenter:
-      merge_lines: true
-      merge_level: article
-      verbose: true
-      max_split_length: 11_000
+    # - save_dataframe
+  # save_dataframe:
+  #   output_dir: ${dir.project}/dataframe/tmp
+  #   output_file: ${..load_dataframe.data_file}
+  # split_dataframe:
+  #   num_splits: 10
+  # filter_length:
+  #   min_length: 30
+  #   max_length: 10_000
+  # drop_duplicates:
+  #   apply_to:
+  #     - text
+  # segment:
+  #   segmenter:
+  #     merge_lines: true
+  #     merge_level: article
+  #     verbose: true
+  #     max_split_length: 11_000

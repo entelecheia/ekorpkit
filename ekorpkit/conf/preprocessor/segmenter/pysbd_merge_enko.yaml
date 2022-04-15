@@ -1,0 +1,20 @@
+_target_: ekorpkit.preprocessors.segmenter.PySBDSegmenter
+language: en
+clean: false
+in_segment_separator: '\n\n'
+in_sentence_separator: '\n'
+out_segment_separator: '\n\n'
+out_sentence_separator: '\n'
+return_type: str
+keep_segment: true
+merge_lines: true
+merge_level: segment
+empty_lines_threshold: 0.6
+broken_lines_threshold: 0.4
+filter_language: true
+detection_level: segment
+languages_to_keep:
+  - en
+  - ko
+verbose: false
+print_args: true

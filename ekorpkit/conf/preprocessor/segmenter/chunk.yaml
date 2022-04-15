@@ -10,3 +10,4 @@ keep_segment: ${oc.select:..keep_segment, false}
 chunk_size: ${oc.select:..chunk_size, 300}
 chunk_overlap: ${oc.select:..chunk_overlap, false}
 print_args: true
+verbose: ${oc.select:..verbose, true}

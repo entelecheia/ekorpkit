@@ -1,21 +1,20 @@
-import os
-from omegaconf import OmegaConf
-from omegaconf import DictConfig
-import pandas as pd
-import numpy as np
 import codecs
-import ekorpkit.config as config
-from ekorpkit.utils.func import elapsed_timer, check_min_len, check_max_len
-from functools import reduce
-from hydra.utils import instantiate
-from ekorpkit.utils.batch import decorator_apply
-from functools import partial
-from wasabi import msg
+import os
 from collections import OrderedDict
+from functools import partial, reduce
+
+import ekorpkit.config as config
+import numpy as np
+import pandas as pd
+from ekorpkit.io.file import get_filepaths, load_dataframe, save_dataframe
+from ekorpkit.utils import print_status
+from ekorpkit.utils.batch import decorator_apply
+from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
+from hydra.utils import instantiate
+from omegaconf import DictConfig, OmegaConf
 from omegaconf.listconfig import ListConfig
 from tqdm.auto import tqdm
-from ekorpkit.utils import print_status
-from ekorpkit.io.file import get_filepaths, save_dataframe, load_dataframe
+from wasabi import msg
 
 
 def apply(
@@ -85,6 +84,9 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
         print(f"Applying pipeline: {pipes}")
     for pipe, pipe_arg_name in pipes.items():
         args = dict(pipeline_args.get(pipe_arg_name, {}))
+        if pipe != pipe_arg_name:
+            args_override = dict(pipeline_args.get(pipe, {}))
+            args.update(args_override)
         if args and isinstance(args, dict):
             args.update(update_args)
             pipeline_targets.append(args)
@@ -95,14 +97,29 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
 def eval_columns(df, args):
     verbose = args.get("verbose", False)
     expressions = args.get("expressions", None)
+    engine = args.get("engine", None)
+    eval_at = args.get("eval_at", "dataframe")
     if expressions is None:
         if verbose:
             print("No expressions specified")
         return df
     if verbose:
         print(f"Eval columns: {args}")
-    for col, expr in expressions.items():
-        df[col] = df.eval(expr)
+    if eval_at == "dataframe":
+        if isinstance(expressions, (list, ListConfig)):
+            for expr in expressions:
+                df.eval(expr, engine=engine, inplace=True)
+        else:
+            for col, expr in expressions.items():
+                df[col] = df.eval(expr, engine=engine)
+    else:
+        if isinstance(expressions, (list, ListConfig)):
+            for expr in expressions:
+                pd.eval(expr, engine=engine, inplace=True, target=df)
+        else:
+            for col, expr in expressions.items():
+                df[col] = pd.eval(expr, engine=engine)
+
     if verbose:
         print(df.tail())
     return df
@@ -125,6 +142,29 @@ def combine_columns(df, args):
     return df
 
 
+def drop(df, args):
+    verbose = args.get("verbose", False)
+    labels = args.get("labels", None)
+    axis = args.get("axis", 1)
+    columns = args.get("columns", None)
+    index = args.get("index", None)
+    level = args.get("level", None)
+    errors = args.get("errors", "ignore")
+    if verbose:
+        print(f"droping: {args}")
+    df = df.drop(
+        columns=columns,
+        axis=axis,
+        labels=labels,
+        index=index,
+        level=level,
+        errors=errors,
+    )
+    if verbose:
+        print(df.head())
+    return df
+
+
 def melt(df, args):
     verbose = args.get("verbose", False)
     id_vars = args.get("id_vars", None)
@@ -141,7 +181,10 @@ def melt(df, args):
         print(f"Melting columns: {args}")
     id_vars = list(id_vars)
     if value_vars:
-        value_vars = list(value_vars)
+        if isinstance(value_vars, str):
+            value_vars = eval(value_vars)
+        else:
+            value_vars = list(value_vars)
     df = df.melt(
         id_vars=id_vars,
         value_vars=value_vars,
@@ -150,6 +193,88 @@ def melt(df, args):
         col_level=col_level,
         ignore_index=ignore_index,
     )
+    if verbose:
+        print(df.head())
+    return df
+
+
+def plot(df, args):
+    verbose = args.get("verbose", False)
+    plot_cfg = args.get("visualize", {}).get("plot", {})
+    if "_target_" not in plot_cfg:
+        print("No target specified")
+        return df
+    if verbose:
+        print(f"Plotting: {plot_cfg}")
+    subset = args.get("subset", {})
+    col = subset.get("column", None)
+    values = subset.get("values", None)
+    titles = subset.get("titles", None)
+    output_file = args.get("output_file", None)
+    output_dir = args.get("output_dir", ".")
+    if subset and col:
+        title_prefix = plot_cfg["figure"].get("title", None)
+        title_prefix = title_prefix + " - " if title_prefix else ""
+        if isinstance(values, str):
+            values = [values]
+        if titles and isinstance(titles, str):
+            titles = [titles]
+        for i, val in enumerate(values):
+            if verbose:
+                print(f"Plotting subset: {col} == {val}")
+            df_sub = df[df[col] == val]
+            if output_file and "{}" in output_file:
+                output_path = output_file.replace("{}", str(val))
+                output_path = f"{output_dir}/{output_path}"
+                plot_cfg["savefig"]["fname"] = output_path
+            if titles and len(titles) > i:
+                plot_cfg["figure"]["title"] = title_prefix + titles[i]
+            if verbose:
+                print(f"Plotting: {plot_cfg}")
+                # print(df_sub.head())
+            instantiate(plot_cfg, df=df_sub, _recursive_=False)
+    else:
+        instantiate(plot_cfg, df=df, _recursive_=False)
+
+    return df
+
+
+def pivot(df, args):
+    verbose = args.get("verbose", False)
+    index = args.get("index", None)
+    columns = args.get("columns", None)
+    values = args.get("values", None)
+    fillna = args.get("fillna", None)
+    reset_index = args.get("reset_index", True)
+    if index is None:
+        print("No index specified")
+        return df
+    if columns is None:
+        print("No columns specified")
+        return df
+    if values is None:
+        print("No values specified")
+        return df
+    if verbose:
+        print(f"Pivoting columns: {args}")
+    if isinstance(index, (list, ListConfig)):
+        index = list(index)
+    if isinstance(columns, (list, ListConfig)):
+        columns = list(columns)
+    if isinstance(values, (list, ListConfig)):
+        values = list(values)
+    if len(values) == 1:
+        values = values[0]
+    df = df.pivot(index=index, columns=columns, values=values)
+    # df = df.set_index(index)[values].unstack()
+    if fillna is not None:
+        df.fillna(fillna, inplace=True)
+    if reset_index:
+        if verbose:
+            print(f"Resetting index, nlevels of columns: {df.columns.nlevels}")
+        df.reset_index(inplace=True)
+        if df.columns.nlevels  > 1:
+            df.columns = ["_".join(a).strip("_") for a in df.columns.to_flat_index()]
     if verbose:
         print(df.head())
     return df
@@ -172,6 +297,7 @@ def split_sampling(df, args):
     if verbose:
         print(f"Split sampling: {args}")
 
+    train, dev, test = None, None, None
     if stratify_on is None:
         train, test = train_test_split(
             df, test_size=test_size, random_state=random_state
@@ -235,13 +361,13 @@ def split_sampling(df, args):
     train_file = args.get("train_file", None)
     test_file = args.get("test_file", None)
     dev_file = args.get("dev_file", None)
-    if train_file:
+    if train_file and train is not None:
         filepath = f"{output_dir}/{train_file}"
         save_dataframe(train, filepath, verbose=verbose)
-    if test_file:
+    if test_file and test is not None:
         filepath = f"{output_dir}/{test_file}"
         save_dataframe(test, filepath, verbose=verbose)
-    if dev_file:
+    if dev_file and dev is not None:
         filepath = f"{output_dir}/{dev_file}"
         save_dataframe(dev, filepath, verbose=verbose)
 
@@ -350,7 +476,7 @@ def sampling(df, args):
     if output_file:
         filepath = f"{output_dir}/{output_file}"
         save_dataframe(
-            df_sample, filepath, verbose=verbose, columns_to_save=columns_to_keep
+            df_sample, filepath, verbose=verbose, columns_to_keep=columns_to_keep
         )
 
     return df
@@ -387,7 +513,11 @@ def aggregate_columns(df, args):
             {onto_column: separator.join}
         )
     if reset_index:
+        if verbose:
+            print(f"Resetting index, nlevels of columns: {df.columns.nlevels}")
         df.reset_index(inplace=True)
+        if df.columns.nlevels  > 1:
+            df.columns = ["_".join(a).strip("_") for a in df.columns.to_flat_index()]
     n_docs = df.shape[0]
     if verbose:
         print(df.tail())
@@ -542,6 +672,89 @@ def segment(df, args):
     return df
 
 
+def tokenize(df, args):
+    verbose = args.get("verbose", False)
+    use_batcher = args.get("use_batcher", True)
+    minibatch_size = args.get("minibatch_size", None)
+    apply_to = args.get("apply_to", "text")
+    if apply_to is None:
+        if verbose:
+            print("No columns specified")
+        return df
+    tokenizer = args.get("preprocessor", {}).get("tokenizer", None)
+    if tokenizer is None:
+        if verbose:
+            print("No tokenizer specified")
+        return df
+    if isinstance(apply_to, str):
+        apply_to = [apply_to]
+    if verbose:
+        print(f"Tokenizing text: {args}")
+        print("instantiating tokenizer")
+    tokenizer = instantiate(tokenizer)
+    for key in apply_to:
+        if verbose:
+            print(f"\nPreprocessing column: {key}")
+        with elapsed_timer(format_time=True) as elapsed:
+            df[key] = apply(
+                tokenizer.tokenize_article,
+                df[key],
+                description=f"Tokenizing column: {key}",
+                verbose=verbose,
+                use_batcher=use_batcher,
+                minibatch_size=minibatch_size,
+            )
+            if verbose:
+                msg.good("\n >> elapsed time to segment: {}\n".format(elapsed()))
+    return df
+
+
+def extract_tokens(df, args):
+    verbose = args.get("verbose", False)
+    use_batcher = args.get("use_batcher", True)
+    nouns_ony = args.get("nouns_ony", True)
+    filter_stopwords_only = args.get("filter_stopwords_only", False)
+    minibatch_size = args.get("minibatch_size", None)
+    apply_to = args.get("apply_to", "text")
+    if apply_to is None:
+        if verbose:
+            print("No columns specified")
+        return df
+    tokenizer = args.get("preprocessor", {}).get("tokenizer", None)
+    if tokenizer is None:
+        if verbose:
+            print("No tokenizer specified")
+        return df
+    if isinstance(apply_to, str):
+        apply_to = [apply_to]
+    if verbose:
+        print(f"Extracting tokens: {args}")
+        print("instantiating tokenizer")
+    tokenizer = instantiate(tokenizer)
+    if filter_stopwords_only:
+        extract_func = tokenizer.filter_article_stopwords
+    elif nouns_ony:
+        extract_func = tokenizer.extract_nouns
+    else:
+        extract_func = tokenizer.extract_tokens
+
+    for key in apply_to:
+        if verbose:
+            print(f"\nPreprocessing column: {key}")
+        with elapsed_timer(format_time=True) as elapsed:
+            df[key] = apply(
+                extract_func,
+                df[key],
+                description=f"Extracting column: {key}",
+                verbose=verbose,
+                use_batcher=use_batcher,
+                minibatch_size=minibatch_size,
+            )
+            if verbose:
+                msg.good("\n >> elapsed time to segment: {}\n".format(elapsed()))
+    return df
+
+
 def chunk(df, args):
     verbose = args.get("verbose", False)
     use_batcher = args.get("use_batcher", True)
@@ -551,7 +764,7 @@ def chunk(df, args):
         if verbose:
             print("No columns specified")
         return df
-    segmenter = args.get("segmenter", None)
+    segmenter = args.get("preprocessor", {}).get("segmenter", None)
     if segmenter is None:
         if verbose:
             print("No segmenter specified")
@@ -810,6 +1023,65 @@ def save_samples(df, args):
     return df
 
 
+def stdout_samples(df, args):
+    from contextlib import redirect_stdout
+
+    verbose = args.get("verbose", False)
+    apply_to = args.get("apply_to", "text")
+    sample_length_to_print = args.get("sample_length_to_print", 1000)
+    if apply_to is None:
+        if verbose:
+            print("No columns specified")
+        return df
+    if isinstance(apply_to, str):
+        apply_to = [apply_to]
+    num_samples = args.get("num_samples", None)
+    output_dir = args.get("output_dir", None)
+    if output_dir is None:
+        output_dir = "."
+    output_file = args.get("output_file", None)
+    head = args.get("head", None)
+    tail = args.get("tail", None)
+    if head is None:
+        head = 5
+    if tail is None:
+        tail = 5
+
+    if verbose:
+        print(f"Print samples: {args}")
+
+    sample_separator = "-" * 100 + "\n"
+    df_sample = df.sample(num_samples)[apply_to]
+
+    print_text = ""
+    for i, row in df_sample.iterrows():
+        for key in apply_to:
+            ptext = row[key]
+            print_text += key + ": \n" + ptext + "\n\n"
+        print_text += sample_separator
+    print_text = print_text.strip()
+
+    if output_file is not None:
+        output_file = os.path.join(output_dir, output_file)
+        with open(output_file, "w", encoding="utf-8") as f:
+            with redirect_stdout(f):
+                print(print_text)
+                print(sample_separator)
+                print(df.head(head))
+                print(sample_separator)
+                print(df.tail(tail))
+    print(print_text)
+    print(sample_separator)
+    print(df.head(head))
+    print(sample_separator)
+    print(df.tail(tail))
+
+    if verbose:
+        print(f"Saved {num_samples} samples to {output_file}")
+
+    return df
+
+
 def save_as_text(df, args):
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
@@ -872,12 +1144,22 @@ def merge_dataframe(df=None, args=None):
     data_file = args.get("data_file", None)
     how = args.get("how", "inner")
     merge_on = args.get("merge_on", None)
-    if merge_on is None:
-        raise ValueError("merge_on must be specified")
+    left_on = args.get("left_on", None)
+    right_on = args.get("right_on", None)
+    if merge_on is None and (right_on is None or left_on is None):
+        raise ValueError("merge_on or (left_on and right_on) must be specified")
     if isinstance(merge_on, str):
         merge_on = [merge_on]
-    else:
+    elif isinstance(merge_on, ListConfig):
         merge_on = list(merge_on)
+    if isinstance(left_on, str):
+        left_on = [left_on]
+    elif isinstance(left_on, ListConfig):
+        left_on = list(left_on)
+    if isinstance(right_on, str):
+        right_on = [right_on]
+    elif isinstance(right_on, ListConfig):
+        right_on = list(right_on)
 
     if filepath:
         filepaths = get_filepaths(filepath)
@@ -889,7 +1171,10 @@ def merge_dataframe(df=None, args=None):
         df_to_merge = load_dataframe(filepaths[0], verbose=verbose)
     else:
         df_to_merge = pd.concat([load_dataframe(f, verbose=verbose) for f in filepaths])
-    df = df.merge(df_to_merge, how=how, on=merge_on)
+    if merge_on:
+        df = df.merge(df_to_merge, how=how, on=merge_on)
+    else:
+        df = df.merge(df_to_merge, how=how, left_on=left_on, right_on=right_on)
     if verbose:
         print(df.tail())
     return df
@@ -931,7 +1216,7 @@ def save_dataframe_pipe(df, args):
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
     dataframe_no = args.get("dataframe_no", None)
-    columns_to_save = args.get("columns_to_save", None)
+    columns_to_keep = args.get("columns_to_keep", None)
 
     if df is None:
         msg.warn("Dataframe is None")
@@ -958,7 +1243,7 @@ def save_dataframe_pipe(df, args):
         filename = f"{filename}{filetype}"
     filepath = f"{output_dir}/{filename}"
 
-    save_dataframe(df, filepath, filetype, verbose, columns_to_save=columns_to_save)
+    save_dataframe(df, filepath, filetype, verbose, columns_to_keep=columns_to_keep)
     return df
 
 
@@ -969,6 +1254,16 @@ def load_dataframe_pipe(df=None, args=None):
     filepath = args.get("filepath", None)
     data_dir = args.get("data_dir", None)
     data_file = args.get("data_file", None)
+    dtype = args.get("dtype", None)
+    if isinstance(dtype, DictConfig):
+        dtype = dict(dtype)
+    elif isinstance(dtype, (list, ListConfig)):
+        dtype = {k: "str" for k in dtype}
+    parse_dates = args.get("parse_dates", False)
+    if isinstance(parse_dates, DictConfig):
+        parse_dates = dict(parse_dates)
+    elif isinstance(parse_dates, ListConfig):
+        parse_dates = list(parse_dates)
 
     if filepath:
         filepaths = get_filepaths(filepath)
@@ -977,9 +1272,16 @@ def load_dataframe_pipe(df=None, args=None):
     if verbose:
         print(f"Loading {len(filepaths)} dataframes from {filepaths}")
     if len(filepaths) == 1:
-        return load_dataframe(filepaths[0], verbose=verbose)
+        return load_dataframe(
+            filepaths[0], verbose=verbose, dtype=dtype, parse_dates=parse_dates
+        )
     else:
-        df = pd.concat([load_dataframe(f, verbose=verbose) for f in filepaths])
+        df = pd.concat(
+            [
+                load_dataframe(f, verbose=verbose, dtype=dtype, parse_dates=parse_dates)
+                for f in filepaths
+            ]
+        )
         return df
 
 

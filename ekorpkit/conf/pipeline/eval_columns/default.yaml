@@ -1,5 +1,7 @@
 defaults:
   - /method: eval_columns
 
-expressions: 
+expressions:
+engine:
+eval_at: dataframe
 verbose: ${oc.select:..verbose, true}

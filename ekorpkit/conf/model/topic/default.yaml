@@ -1,4 +1,4 @@
-_target_: ekorpkit.models.topic.TopicModel
+_target_: ekorpkit.models.topic.model.TopicModel
 base_model_dir: ${dir.model}/topic
 base_output_dir: ${dir.output}/topic
 model_name:
@@ -8,10 +8,10 @@ num_workers: ${oc.select:num_workers, 0}
 min_word_len: 2
 ngram:
   min_cf: 10
-  min_df: 10
+  min_df: 5
   max_len: 5
   max_cand: 5000
-  min_score: -1
+  min_score: -10
   normalized: true
   delimiter: _
 files:
@@ -19,9 +19,11 @@ files:
   corpus_key: ${..model_dir}/corpus_keys.csv
   raw_corpus_key: ${..model_dir}/raw_corpus_keys.csv
   ngram_candidates: ${..model_dir}/ngram_candidates.csv
+  ngram_model: ${..model_dir}/ngram_model.pkl
   ngram_docs: ${..model_dir}/ngram_docs.pkl
   stopwords: ${..model_dir}/stopwords.txt
+  stoplist:
   default_stopwords: ${..base_model_dir}/stopwords.txt
-  word_prior: ${..model_dir}/word_prior.json
-  default_word_prior: ${..base_model_dir}/word_prior.json
+  word_prior: ${..model_dir}/word_prior.yaml
+  default_word_prior: ${..base_model_dir}/word_prior.yaml
 verbose: ${oc.select:..verbose, true}

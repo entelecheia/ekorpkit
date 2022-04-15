@@ -1,0 +1,10 @@
+defaults:
+  - /method: drop
+
+labels:
+axix: 1
+columns:
+index:
+level:
+errors: raise
+verbose: ${oc.select:..verbose, true}

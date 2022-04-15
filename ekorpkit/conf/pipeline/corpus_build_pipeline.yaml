@@ -5,7 +5,7 @@ defaults:
   - eval_columns: default
   - reset_index: reset
   - save_metadata: default
-
+  - merge_dataframe: default
   - fillna: fillna
   - normalize: normalize
   - segment: segment
@@ -31,3 +31,4 @@ _preprocess_:
 apply_to: ${oc.select:..column_info.keys.text, text}
 use_batcher: true
 verbose: ${oc.select:..verbose, true}
+data_dir: 
