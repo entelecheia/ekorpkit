@@ -12,6 +12,7 @@ column_info:
     text: text
   data:
     id: int
+    example_id: int
     labels: str
     text: str
     text_en: str
@@ -34,11 +35,13 @@ fetch:
         new_names:
           kor_sentence: text
           sentence: text_en
+      reset_index:
+        index_column_name: example_id
       split_sampling:
         stratify_on: labels
         dev_size: 0.1
         test_size: 0.2
-        unique_key: id
+        unique_key: example_id
         output_dir: ${..data_dir}
         train_file: train.csv
         test_file: test.csv
