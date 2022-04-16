@@ -1,28 +1,17 @@
-import random
 import os
 import logging
 import hydra
-
-# from hydra.core.hydra_config import HydraConfig
+import ekorpkit.utils.batch as batch
+import ekorpkit.ekonf as eKonf
 from omegaconf import DictConfig, OmegaConf
 from pprint import pprint
 from wasabi import msg
 from ekorpkit.utils.batch.batcher import Batcher
-
-import ekorpkit.config as config
 from .tasks.info import make_table
-from ekorpkit.utils.func import lower_case_with_underscores
 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
-
-OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
-OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
-OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
-OmegaConf.register_new_resolver(
-    "lower_case_with_underscores", lower_case_with_underscores
-)
 
 
 def listup(**args):
@@ -72,7 +61,7 @@ def init_environ(cfg, verbose=False):
             import ray
 
             ray_cfg = env.get("ray", None)
-            ray_cfg = OmegaConf.to_container(ray_cfg, resolve=True)
+            ray_cfg = eKonf.to_container(ray_cfg, resolve=True)
             if verbose:
                 msg.info(f"initializing ray with {ray_cfg}")
             ray.init(**ray_cfg)
@@ -82,16 +71,16 @@ def init_environ(cfg, verbose=False):
             from dask.distributed import Client
 
             dask_cfg = env.get("dask", None)
-            dask_cfg = OmegaConf.to_container(dask_cfg, resolve=True)
+            dask_cfg = eKonf.to_container(dask_cfg, resolve=True)
             if verbose:
                 msg.info(f"initializing dask client with {dask_cfg}")
             client = Client(**dask_cfg)
             if verbose:
                 print(client)
 
-        config.batcher = Batcher(backend_handle=backend_handle, **env.batcher)
+        batch.batcher = Batcher(backend_handle=backend_handle, **env.batcher)
         if verbose:
-            print(config.batcher)
+            print(batch.batcher)
     if verbose:
         print()
 
@@ -125,11 +114,11 @@ def hydra_main(cfg: DictConfig) -> None:
         print("\n## eKorpkit Command Line Interface for Hydra ##\n")
     if cfg.get("print_config"):
         print("## hydra configuration ##")
-        print(OmegaConf.to_yaml(cfg))
+        print(eKonf.to_yaml(cfg))
 
     if cfg.get("print_resolved_config"):
         print("## hydra configuration resolved ##")
-        args = OmegaConf.to_container(cfg, resolve=True)
+        args = eKonf.to_container(cfg, resolve=True)
         pprint(args)
         print()
 
@@ -139,7 +128,7 @@ def hydra_main(cfg: DictConfig) -> None:
     if cfg.get("_target_"):
         init_environ(cfg, verbose)
 
-        hydra.utils.instantiate(cfg, _recursive_=False)
+        eKonf.instantiate(cfg, _recursive_=False)
 
         stop_environ(cfg, verbose)
     # print(HydraConfig.get())
