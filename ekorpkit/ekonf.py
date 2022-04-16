@@ -14,11 +14,92 @@ OmegaConf.register_new_resolver(
 )
 
 
+class eKonf:
+    """ekorpkit config primary class"""
+
+    def __init__(self) -> None:
+        raise NotImplementedError("Use one of the static construction functions")
+
+    @staticmethod
+    def compose(
+        overrides: List[str] = [],
+        config_group: str = None,
+        *,
+        return_as_dict: bool = True,
+        throw_on_resolution_failure: bool = True,
+        throw_on_missing: bool = False,
+        config_name="ekonf",
+        verbose: bool = False,
+    ):
+        return compose(
+            overrides,
+            config_group=config_group,
+            return_as_dict=return_as_dict,
+            throw_on_resolution_failure=throw_on_resolution_failure,
+            throw_on_missing=throw_on_missing,
+            config_name=config_name,
+            verbose=verbose,
+        )
+
+    @staticmethod
+    def select(
+        cfg: Any,
+        key: str,
+        *,
+        default: Any = None,
+        throw_on_resolution_failure: bool = True,
+        throw_on_missing: bool = False,
+    ):
+        return select(
+            cfg,
+            key,
+            default=default,
+            throw_on_resolution_failure=throw_on_resolution_failure,
+            throw_on_missing=throw_on_missing,
+        )
+
+    @staticmethod
+    def to_dict(
+        cfg: Any,
+    ):
+        return to_dict(cfg)
+
+    @staticmethod
+    def to_config(
+        cfg: Any,
+    ):
+        return to_config(cfg)
+
+    @staticmethod
+    def to_yaml(cfg: Any, *, resolve: bool = True, sort_keys: bool = False) -> str:
+        return to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
+
+    @staticmethod
+    def to_container(
+        cfg: Any,
+        *,
+        resolve: bool = False,
+        throw_on_missing: bool = False,
+        enum_to_str: bool = False,
+        structured_config_mode: SCMode = SCMode.DICT,
+    ):
+        return to_container(
+            cfg,
+            resolve,
+            throw_on_missing,
+            enum_to_str,
+            structured_config_mode,
+        )
+
+    @staticmethod
+    def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
+        return instantiate(config, *args, **kwargs)
+
+
 def compose(
     overrides: List[str] = [],
     config_group: str = None,
     *,
-    resolve: bool = True,
     return_as_dict: bool = True,
     throw_on_resolution_failure: bool = True,
     throw_on_missing: bool = False,
@@ -30,7 +111,6 @@ def compose(
 
     :param overrides: List of overrides to apply
     :param config_group: Config group name to select ('config_group=name')
-    :param resolve: Resolve the configs
     :param return_as_dict: Return the composed config as a dict
     :param throw_on_resolution_failure: Throw if resolution fails
     :param throw_on_missing: Throw if a config is missing
@@ -39,13 +119,16 @@ def compose(
 
     :return: The composed config
     """
-    _task = config_group.split("=")
-    if len(_task) == 2:
-        key, value = _task
+    if config_group:
+        _task = config_group.split("=")
+        if len(_task) == 2:
+            key, value = _task
+        else:
+            key = _task[0]
+            value = None
     else:
-        key = _task[0]
+        key = None
         value = None
-    key = key.replace("/", ".")
     if key and value:
         with hydra.initialize_config_module(config_module="ekorpkit.conf"):
             cfg = hydra.compose(config_name=config_name, overrides=overrides)
@@ -91,6 +174,7 @@ def select(
     throw_on_resolution_failure: bool = True,
     throw_on_missing: bool = False,
 ):
+    key = key.replace("/", ".")
     return OmegaConf.select(
         cfg,
         key=key,
