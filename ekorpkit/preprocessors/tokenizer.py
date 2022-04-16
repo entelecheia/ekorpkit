@@ -1,8 +1,9 @@
 import codecs
 import logging
-from abc import ABCMeta, abstractmethod
-from .normalizer import strict_normalize, only_text
-from ekorpkit.io.load.list import load_wordlist, save_wordlist
+from abc import ABCMeta
+from tabnanny import verbose
+from ekorpkit.io.load.list import load_wordlist
+from ekorpkit import eKonf
 
 logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -22,46 +23,51 @@ class Tokenizer:
                 f"Invalid return_type: {self.return_type}. "
                 f"Valid values are 'str' and 'list'."
             )
-
-        self.only_text = kwargs.get("only_text", True)
-        self.tokenize_each_word = kwargs.get("tokenize_each_word", False)
-        self.wordpieces_prefix = kwargs.get("wordpieces_prefix", "##")
-        self.noun_pos = kwargs.get("noun_pos", None)
-        if self.noun_pos is None:
-            self.noun_pos = ["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"]
-        self.exclude_pos = kwargs.get("exclude_pos", None)
-        if self.exclude_pos is None:
-            self.exclude_pos = ["SP"]
-        self.no_space_for_non_nouns = kwargs.get("no_space_for_non_nouns", False)
-        self.flatten = kwargs.get("flatten", True)
-        self.join_pos = kwargs.get("join_pos", True)
-        self.include_whitespace_token = kwargs.get("include_whitespace_token", True)
-        self.punct_pos = kwargs.get("punct_pos", None)
-        if self.punct_pos is None:
-            self.punct_pos = ["SF", "SP", "SSO", "SSC", "SY"]
-        self.sentence_separator = kwargs.get("sentence_separator", None)
-        if self.sentence_separator is None:
-            self.sentence_separator = "\n"
-        self.sentence_separator = codecs.decode(
-            self.sentence_separator, "unicode_escape"
-        )
         self.verbose = kwargs.get("verbose", False)
-        self.stopwords_path = kwargs.get("stopwords_path", None)
-        if self.stopwords_path is not None:
-            self.stopwords = load_wordlist(
-                self.stopwords_path, lowercase=True, verbose=self.verbose
+
+        self._normalize = kwargs.get("normalize", None)
+        if eKonf.is_instantiatable(self._normalize):
+            self._normalize = eKonf.instantiate(self._normalize)
+            print(f"[ekorpkit]: {self._normalize.__name__} is instantiated.")
+        self._lowercase = kwargs.get("lowercase", False)
+
+        self._tokenize_each_word = kwargs.get("tokenize_each_word", False)
+        self._wordpieces_prefix = kwargs.get("wordpieces_prefix", "##")
+        self._noun_pos = kwargs.get("noun_pos", None)
+        if self._noun_pos is None:
+            self._noun_pos = ["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"]
+        self._exclude_pos = kwargs.get("exclude_pos", None)
+        if self._exclude_pos is None:
+            self._exclude_pos = ["SP"]
+        self._no_space_for_non_nouns = kwargs.get("no_space_for_non_nouns", False)
+        self._flatten = kwargs.get("flatten", True)
+        self._concat_token_and_pos = kwargs.get("concat_token_and_pos", True)
+        self._include_whitespace_token = kwargs.get("include_whitespace_token", True)
+        self._punct_pos = kwargs.get("punct_pos", None)
+        if self._punct_pos is None:
+            self._punct_pos = ["SF", "SP", "SSO", "SSC", "SY"]
+        self._sentence_separator = kwargs.get("sentence_separator", None)
+        if self._sentence_separator is None:
+            self._sentence_separator = "\n"
+        self._sentence_separator = codecs.decode(
+            self._sentence_separator, "unicode_escape"
+        )
+        self._stopwords_path = kwargs.get("stopwords_path", None)
+        if self._stopwords_path is not None:
+            self._stopwords = load_wordlist(
+                self._stopwords_path, lowercase=True, verbose=self.verbose
             )
             if self.verbose:
-                logger.info(f"Loaded {len(self.stopwords)} stopwords")
+                logger.info(f"Loaded {len(self._stopwords)} stopwords")
         else:
-            self.stopwords = []
+            self._stopwords = []
         stopwords = kwargs.get("stopwords", None)
         if stopwords is not None:
-            self.stopwords += stopwords
+            self._stopwords += stopwords
         if self.verbose:
             print(f"{self.__class__.__name__} initialized with:")
             print(f"\treturn_type: {self.return_type}")
-            print(f"\tstopwords_path: {self.stopwords_path}")
+            print(f"\tstopwords_path: {self._stopwords_path}")
 
     def parse(self, text):
         return text.split()
@@ -71,21 +77,23 @@ class Tokenizer:
             return None
 
         tokenized_article = []
-        for sent in article.split(self.sentence_separator):
+        for sent in article.split(self._sentence_separator):
             sent = sent.strip()
             tokens = self.tokenize(sent)
             tokenized_article.append(tokens)
         return (
             tokenized_article
             if self.return_type == "list"
-            else self.sentence_separator.join(tokenized_article)
+            else self._sentence_separator.join(tokenized_article)
         )
 
-    def tokenize(self, text):
-        if self.only_text:
-            text = only_text(strict_normalize(text))
+    def _tokenize(self, text):
+        if self._lowercase:
+            text = text.lower()
+        if self._normalize and callable(self._normalize):
+            text = self._normalize(text)
         if len(text) > 0:
-            if self.tokenize_each_word:
+            if self._tokenize_each_word:
                 term_pos = []
                 for word in text.split():
                     term_pos += self._tokenize_word(word)
@@ -94,19 +102,26 @@ class Tokenizer:
                 term_pos = self.parse(text)
         else:
             term_pos = []
+        return term_pos
+
+    def tokenize(self, text):
+        term_pos = self._tokenize(text)
         return term_pos if self.return_type == "list" else " ".join(term_pos)
+
+    def pos(self, text):
+        return self._tokenize(text)
 
     def _tokenize_word(self, word):
         tokens = self.parse(word)
         term_pos = []
         for i, (term, pos) in enumerate(tokens):
-            term = f"{term}/{pos}" if self.join_pos else term
+            term = f"{term}/{pos}" if self._concat_token_and_pos else term
             if (
                 i > 0
-                and pos not in self.punct_pos
-                and tokens[i - 1][1] not in self.punct_pos
+                and pos not in self._punct_pos
+                and tokens[i - 1][1] not in self._punct_pos
             ):
-                term = f"{self.wordpieces_prefix}{term}"
+                term = f"{self._wordpieces_prefix}{term}"
             term_pos.append(term)
         return term_pos
 
@@ -116,16 +131,16 @@ class Tokenizer:
                 tokens = extract_tokens(
                     text,
                     nouns_only=True,
-                    noun_pos=self.noun_pos,
-                    stopwords=self.stopwords,
+                    noun_pos=self._noun_pos,
+                    stopwords=self._stopwords,
                 )
             else:
                 tokens = extract_tokens(
                     text,
                     nouns_only=False,
-                    exclude_pos=self.exclude_pos,
-                    no_space_for_non_nouns=self.no_space_for_non_nouns,
-                    stopwords=self.stopwords,
+                    exclude_pos=self._exclude_pos,
+                    no_space_for_non_nouns=self._no_space_for_non_nouns,
+                    stopwords=self._stopwords,
                 )
         else:
             tokens = []
@@ -136,14 +151,14 @@ class Tokenizer:
             return None
 
         tokens_article = []
-        for sent in article.split(self.sentence_separator):
+        for sent in article.split(self._sentence_separator):
             sent = sent.strip()
             tokens = self.extract(sent, nouns_only=nouns_only)
             tokens_article.append(tokens)
         return (
             tokens_article
             if self.return_type == "list"
-            else self.sentence_separator.join(tokens_article)
+            else self._sentence_separator.join(tokens_article)
         )
 
     def extract_tokens(self, article):
@@ -161,7 +176,7 @@ class Tokenizer:
         else:
             tokens = self.tokenize(text_or_tokens)
 
-        tokens = [token for token in tokens if token.lower() not in self.stopwords]
+        tokens = [token for token in tokens if token.lower() not in self._stopwords]
 
         return tokens if self.return_type == "list" else " ".join(tokens)
 
@@ -170,26 +185,29 @@ class Tokenizer:
             return None
 
         tokens_article = []
-        for sent in article.split(self.sentence_separator):
+        for sent in article.split(self._sentence_separator):
             tokens_article.append(self.filter_stopwords(sent))
         return (
             tokens_article
             if self.return_type == "list"
-            else self.sentence_separator.join(tokens_article)
+            else self._sentence_separator.join(tokens_article)
         )
 
     def nouns(self, text):
         tokenized_text = self.tokenize(text)
-        return extract_tokens(tokenized_text, nouns_only=True, noun_pos=self.noun_pos)
+        return extract_tokens(tokenized_text, nouns_only=True, noun_pos=self._noun_pos)
 
     def tokens(self, text):
         tokenized_text = self.tokenize(text)
         return extract_tokens(
             tokenized_text,
             nouns_only=False,
-            exclude_pos=self.exclude_pos,
-            no_space_for_non_nouns=self.no_space_for_non_nouns,
+            exclude_pos=self._exclude_pos,
+            no_space_for_non_nouns=self._no_space_for_non_nouns,
         )
+
+    def morphs(self, text):
+        return self.tokens(text)
 
 
 class SimpleTokenizer(Tokenizer):
@@ -211,8 +229,8 @@ class PynoriTokenizer(Tokenizer):
         super().__init__(**kwargs)
         if pynori is None:
             pynori = {}
-        pynori["decompound_mode"] = "NONE" if self.flatten else "MIXED"
-        pynori["infl_decompound_mode"] = "NONE" if self.flatten else "MIXED"
+        pynori["decompound_mode"] = "NONE" if self._flatten else "MIXED"
+        pynori["infl_decompound_mode"] = "NONE" if self._flatten else "MIXED"
         pynori["discard_punctuation"] = False
 
         try:
@@ -231,12 +249,14 @@ class PynoriTokenizer(Tokenizer):
 
     def parse(self, text):
 
-        join_pos = False if self.tokenize_each_word else self.join_pos
+        concat_token_and_pos = (
+            False if self._tokenize_each_word else self._concat_token_and_pos
+        )
         tokens = self._tokenizer.do_analysis(text)
         term_pos = [
-            f"{term}/{pos}" if join_pos else (term, pos)
+            f"{term}/{pos}" if concat_token_and_pos else (term, pos)
             for term, pos in zip(tokens["termAtt"], tokens["posTagAtt"])
-            if self.include_whitespace_token or pos != "SP"
+            if self._include_whitespace_token or pos != "SP"
         ]
         return term_pos
 
@@ -248,7 +268,7 @@ class MecabTokenizer(Tokenizer):
         **kwargs,
     ):
 
-        logging.warning("Initializing mecab...)")
+        logging.warning("Initializing mecab...")
         super().__init__(**kwargs)
         self.mecab = mecab
         try:
@@ -273,12 +293,14 @@ class MecabTokenizer(Tokenizer):
         else:
             self._tokenizer = MeCab(**self.mecab)
 
-        join_pos = False if self.tokenize_each_word else self.join_pos
+        concat_token_and_pos = (
+            False if self._tokenize_each_word else self._concat_token_and_pos
+        )
         return self._tokenizer.pos(
             text,
-            join=join_pos,
-            flatten=self.flatten,
-            include_whitespace_token=self.include_whitespace_token,
+            join=concat_token_and_pos,
+            flatten=self._flatten,
+            include_whitespace_token=self._include_whitespace_token,
         )
 
 

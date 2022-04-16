@@ -1,5 +1,6 @@
 _target_: ekorpkit.preprocessors.tokenizer.Tokenizer
-only_text: true
+normalize:
+lowercase: false
 tokenize_each_word: false
 wordpieces_prefix: "##"
 punct_pos:
@@ -20,7 +21,7 @@ exclude_pos:
   - SP
 no_space_for_non_nouns: false
 flatten: true
-join_pos: true
+concat_token_and_pos: true
 include_whitespace_token: true
 userdic_path: ${oc.select:..userdic_path, null}
 stopwords_path: ${oc.select:..stopwords_path, null}

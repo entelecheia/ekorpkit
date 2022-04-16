@@ -13,7 +13,7 @@ defaults:
   - model: null
   - project: null
   - tokenizer: null
-  - preprocessor/tokenizer: _default
+  - preprocessor/tokenizer: default
 
   - override hydra/hydra_logging: colorlog
   - override hydra/job_logging: colorlog

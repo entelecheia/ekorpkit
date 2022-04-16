@@ -1,6 +1,8 @@
+import functools
 import random
 import hydra
 from hydra.core.config_store import ConfigStore
+from hydra.utils import get_method
 from omegaconf import OmegaConf, SCMode, DictConfig
 from typing import Any, List, Dict, Union, Optional
 from ekorpkit.utils.func import lower_case_with_underscores
@@ -12,6 +14,10 @@ OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
 )
+
+
+def partial(_partial_, *args, **kwargs):
+    return functools.partial(get_method(_partial_), *args, **kwargs)
 
 
 class eKonf:
@@ -94,6 +100,16 @@ class eKonf:
     @staticmethod
     def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
         return instantiate(config, *args, **kwargs)
+
+    @staticmethod
+    def is_config(
+        cfg: Any,
+    ):
+        return is_config(cfg)
+
+    @staticmethod
+    def is_instantiatable(cfg: Any):
+        return is_instantiatable(cfg)
 
 
 def compose(
@@ -193,6 +209,16 @@ def to_dict(
         throw_on_missing=False,
         structured_config_mode=SCMode.DICT,
     )
+
+
+def is_config(
+    cfg: Any,
+):
+    return isinstance(cfg, (DictConfig, dict))
+
+
+def is_instantiatable(cfg: Any):
+    return is_config(cfg) and "_target_" in cfg
 
 
 def to_config(

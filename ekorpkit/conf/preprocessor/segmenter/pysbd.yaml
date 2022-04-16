@@ -6,4 +6,4 @@ in_sentence_separator: '\n'
 out_segment_separator: '\n\n'
 out_sentence_separator: '\n'
 return_type: str
-print_args: true
+print_args: false

@@ -8,9 +8,22 @@ from collections import namedtuple
 Offset = namedtuple("Offset", ["this", "next", "prev_cum_len", "this_cum_len"])
 
 
-class Segmenter:
+class BaseSegmenter:
     __metaclass__ = ABCMeta
+    """Abstract segmenter class from which all segmenters inherit.
+    Subclasses must implement a ``segment()`` method.
+    """
 
+    @abstractmethod
+    def segment(self, text):
+        raise NotImplementedError("Must override segment")
+
+    def __call__(self, text):
+        """Calling a segmenter instance like a function just calls the segment method."""
+        return self.segment(text)
+
+
+class Segmenter(BaseSegmenter):
     def __init__(
         self,
         in_segment_separator="\n\n",
@@ -102,10 +115,6 @@ class Segmenter:
             print(f"kwargs = {self.kwargs}")
 
         self.guess = None
-
-    @abstractmethod
-    def segment(self, text):
-        raise NotImplementedError("Must override segment")
 
     def _check_if_merge_lines(self, text):
         num_empty_lines = 0
