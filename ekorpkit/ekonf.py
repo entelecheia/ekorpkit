@@ -273,10 +273,12 @@ def to_config(
 def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
     return OmegaConf.load(file_)
 
+
 def save(
     config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
 ) -> None:
     eKonf.save(config, f, resolve=resolve)
+
 
 def merge(
     *configs: Union[

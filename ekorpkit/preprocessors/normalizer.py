@@ -691,35 +691,11 @@ class Normalizer(BaseNormalizer):
 
     def __init__(
         self,
-        normalization_form="NFKC",
-        unescape_html="auto",
-        remove_terminal_escapes=True,
-        fix_encoding=True,
-        restore_byte_a0=True,
-        replace_lossy_sequences=True,
-        decode_inconsistent_utf8=True,
-        fix_c1_controls=True,
-        fix_latin_ligatures=True,
-        fix_character_width=True,
-        uncurl_quotes=True,
-        fix_line_breaks=True,
-        fix_surrogates=True,
-        remove_control_chars=True,
-        fix_hyphens=False,
-        fix_ellipsis=False,
-        fix_slashes=False,
-        fix_tildes=False,
-        strip=True,
-        fix_whitespaces=False,
-        collapse_whitespaces=False,
-        replace_tabs=True,
-        num_spaces_for_tab=4,
+        ftfy=None,
+        spaces=None,
+        special_characters=None,
         hanja2hangle=True,
-        fix_emoticons=False,
         num_repeats=2,
-        single_quotes_only=False,
-        regular_parentheses_only=False,
-        max_decode_length=1000000,
         **kwargs
     ):
         """
@@ -731,42 +707,37 @@ class Normalizer(BaseNormalizer):
         :param bool slashes: Whether to normalize slash characters to the ASCII slash character.
         :param bool tildes: Whether to normalize tilde characters to the ASCII tilde character.
         """
-        self.form = normalization_form
-        self.strip = strip
-        self.fix_whitespaces = fix_whitespaces
-        self.collapse_whitespaces = collapse_whitespaces
-        self.fix_hyphens = fix_hyphens
-        self.uncurl_quotes = uncurl_quotes
-        self.fix_ellipsis = fix_ellipsis
-        self.fix_slashes = fix_slashes
-        self.fix_tildes = fix_tildes
-        self.remove_control_chars = remove_control_chars
-        self.fix_line_breaks = fix_line_breaks
-        self.hanja2hangle = hanja2hangle
-        self.fix_emoticons = fix_emoticons
-        self.num_repeats = num_repeats
-        self.single_quotes_only = single_quotes_only
-        self.regular_parentheses_only = regular_parentheses_only
-        self.replace_tabs = replace_tabs
-        self.replacement_spaces = " " * num_spaces_for_tab
-
-        self.ftfy_cfg = TextFixerConfig(
-            unescape_html=unescape_html,
-            remove_terminal_escapes=remove_terminal_escapes,
-            fix_encoding=fix_encoding,
-            restore_byte_a0=restore_byte_a0,
-            replace_lossy_sequences=replace_lossy_sequences,
-            decode_inconsistent_utf8=decode_inconsistent_utf8,
-            fix_c1_controls=fix_c1_controls,
-            fix_latin_ligatures=fix_latin_ligatures,
-            fix_character_width=fix_character_width,
-            uncurl_quotes=uncurl_quotes,
-            fix_line_breaks=fix_line_breaks,
-            fix_surrogates=fix_surrogates,
-            remove_control_chars=remove_control_chars,
-            normalization=normalization_form,
-            max_decode_length=max_decode_length,
+        self.ftfy = ftfy if ftfy is not None else {}
+        self.special_characters = (
+            special_characters if special_characters is not None else {}
         )
+        self.spaces = spaces if spaces is not None else {}
+
+        self.uncurl_quotes = self.ftfy.get("uncurl_quotes", True)
+        self.remove_control_chars = self.ftfy.get("remove_control_chars", True)
+
+        self.strip = self.spaces.get("strip", True)
+        self.fix_whitespaces = self.spaces.get("fix_whitespaces", True)
+        self.collapse_whitespaces = self.spaces.get("collapse_whitespaces", True)
+        self.replace_tabs = self.spaces.get("replace_tabs", True)
+        self.replacement_spaces = " " * self.spaces.get("replacement_spaces", 4)
+
+        self.fix_hyphens = self.special_characters.get("fix_hyphens", True)
+        self.fix_ellipsis = self.special_characters.get("fix_ellipsis", True)
+        self.fix_slashes = self.special_characters.get("fix_slashes", True)
+        self.fix_tildes = self.special_characters.get("fix_tildes", True)
+        self.fix_emoticons = self.special_characters.get("fix_emoticons", False)
+        self.single_quotes_only = self.special_characters.get(
+            "single_quotes_only", False
+        )
+        self.regular_parentheses_only = self.special_characters.get(
+            "regular_parentheses_only", False
+        )
+
+        self.hanja2hangle = hanja2hangle
+        self.num_repeats = num_repeats
+
+        self.ftfy_cfg = TextFixerConfig(**self.ftfy)
 
     def normalize(self, text):
         """Run the Normalizer on a string.
@@ -860,7 +831,6 @@ base_normalize = Normalizer(
     strip=True,
     fix_whitespaces=False,
     fix_hyphens=False,
-    uncurl_quotes=False,
     fix_ellipsis=False,
 )
 #: More aggressive normalize that also standardizes hyphens, and quotes.
@@ -868,7 +838,6 @@ strict_normalize = Normalizer(
     strip=True,
     fix_whitespaces=False,
     fix_hyphens=True,
-    uncurl_quotes=True,
     fix_ellipsis=True,
     fix_tildes=True,
 )

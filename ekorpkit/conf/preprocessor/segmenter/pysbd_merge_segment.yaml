@@ -1,11 +1,6 @@
-_target_: ekorpkit.preprocessors.segmenter.PySBDSegmenter
-language: en
-clean: false
-in_segment_separator: '\n\n'
-in_sentence_separator: '\n'
-out_segment_separator: '\n\n'
-out_sentence_separator: '\n'
-return_type: str
-print_args: true
-merge_lines: true
-merge_level: segment
+defaults:
+  - pysbd
+
+merge:
+  merge_lines: true
+  merge_level: segment

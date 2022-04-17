@@ -1,4 +1,5 @@
 defaults:
   - default
 
-unescape_html: "auto"
+ftfy:
+  unescape_html: "auto"

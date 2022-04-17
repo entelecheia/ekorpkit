@@ -26,95 +26,114 @@ class BaseSegmenter:
 class Segmenter(BaseSegmenter):
     def __init__(
         self,
-        in_segment_separator="\n\n",
-        in_sentence_separator="\n",
-        out_segment_separator="\n\n",
-        out_sentence_separator="\n",
-        return_type="list",
-        max_split_length=30_000,
-        max_split_iterations=100,
-        keep_segment=True,
-        merge_lines=False,
-        merge_level="segment",
-        empty_lines_threshold=0.6,
-        broken_lines_threshold=0.4,
-        filter_language=False,
-        detection_level="segment",
-        languages_to_keep=["en", "ko"],
-        min_language_probability=0.8,
+        separators=None,
+        merge=None,
+        split=None,
+        filter_language=None,
         filter_programming_language=False,
-        filter_sentence_length=False,
-        min_num_words=3,
-        min_length=10,
-        chunk_size=300,
-        chunk_overlap=False,
+        filter_sentence_length=None,
+        chunk=None,
+        return_type="list",
         verbose=False,
         print_args=False,
         **kwargs,
     ):
-        self.in_segment_separator = codecs.decode(
+        _separators = separators or {}
+        _merge = merge or {}
+        _split = split or {}
+        _filter_language = filter_language or {}
+        _filter_sentence_length = filter_sentence_length or {}
+        _chunk = chunk or {}
+
+        in_segment_separator = _separators.get("in_segment", "\n\n")
+        in_sentence_separator = _separators.get("in_sentence", "\n")
+        out_segment_separator = _separators.get("out_segment", "\n\n")
+        out_sentence_separator = _separators.get("out_sentence", "\n")
+
+        keep_segment = _split.get("keep_segment", True)
+        max_split_length = _split.get("max_split_length", 30_000)
+        max_split_iterations = _split.get("max_split_iterations", 100)
+
+        merge_lines = _merge.get("merge_lines", False)
+        merge_level = _merge.get("merge_level", "segmenmt")
+        empty_lines_threshold = _merge.get("empty_lines_threshold", 0.6)
+        broken_lines_threshold = _merge.get("broken_lines_threshold", 0.4)
+
+        filter_language = _filter_language.get("filter", False)
+        detection_level = _filter_language.get("detection_level", "segment")
+        languages_to_keep = _filter_language.get("languages_to_keep", ["en", "ko"])
+        min_language_probability = _filter_language.get("min_language_probability", 0.8)
+
+        filter_sentence_length = _filter_sentence_length.get("filter", False)
+        min_num_words = _filter_sentence_length.get("min_num_words", 3)
+        min_length = _filter_sentence_length.get("min_length", 10)
+
+        chunk_size = _chunk.get("chunk_size", 300)
+        chunk_overlap = _chunk.get("chunk_overlap", False)
+
+        self._in_segment_separator = codecs.decode(
             in_segment_separator, "unicode_escape"
         )
-        self.in_sentence_separator = codecs.decode(
+        self._in_sentence_separator = codecs.decode(
             in_sentence_separator, "unicode_escape"
         )
-        self.out_segment_separator = codecs.decode(
+        self._out_segment_separator = codecs.decode(
             out_segment_separator, "unicode_escape"
         )
-        self.out_sentence_separator = codecs.decode(
+        self._out_sentence_separator = codecs.decode(
             out_sentence_separator, "unicode_escape"
         )
-        self.return_type = return_type
-        self.max_split_length = max_split_length
-        self.max_split_iterations = max_split_iterations
-        self.keep_segment = keep_segment
-        self.merge_lines = (
+        self._return_type = return_type
+        self._max_split_length = max_split_length
+        self._max_split_iterations = max_split_iterations
+        self._keep_segment = keep_segment
+        self._merge_lines = (
             merge_lines
             if isinstance(merge_lines, bool)
             else str(merge_lines).lower() in ["true", "t", "1"]
         )
-        self.merge_level = merge_level
-        self.empty_lines_threshold = empty_lines_threshold
-        self.broken_lines_threshold = broken_lines_threshold
-        self.filter_language = filter_language
-        self.detection_level = detection_level
-        self.languages_to_keep = list(languages_to_keep)
-        self.min_language_probability = min_language_probability
-        self.filter_programming_language = filter_programming_language
-        self.filter_sentence_length = filter_sentence_length
-        self.min_num_words = min_num_words
-        self.min_length = min_length
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+        self._merge_level = merge_level
+        self._empty_lines_threshold = empty_lines_threshold
+        self._broken_lines_threshold = broken_lines_threshold
+        self._filter_language = filter_language
+        self._detection_level = detection_level
+        self._languages_to_keep = list(languages_to_keep)
+        self._min_language_probability = min_language_probability
+        self._filter_programming_language = filter_programming_language
+        self._filter_sentence_length = filter_sentence_length
+        self._min_num_words = min_num_words
+        self._min_length = min_length
+        self._chunk_size = chunk_size
+        self._chunk_overlap = chunk_overlap
         self.verbose = verbose
-        self.kwargs = kwargs
+        self._kwargs = kwargs
         if print_args:
-            print(f"in_segment_separator = {self.in_segment_separator}")
-            print(f"in_sentence_separator = {self.in_sentence_separator}")
-            print(f"out_segment_separator = {self.out_segment_separator}")
-            print(f"out_sentence_separator = {self.out_sentence_separator}")
-            print(f"return_type = {self.return_type}")
-            print(f"max_split_length = {self.max_split_length}")
-            print(f"max_split_iterations = {self.max_split_iterations}")
-            print(f"keep_segment = {self.keep_segment}")
-            print(f"merge_lines = {self.merge_lines}")
-            print(f"merge_level = {self.merge_level}")
-            print(f"empty_lines_threshold = {self.empty_lines_threshold}")
-            print(f"broken_lines_threshold = {self.broken_lines_threshold}")
-            print(f"filter_language = {self.filter_language}")
-            print(f"detection_level = {self.detection_level}")
-            print(f"languages_to_keep = {self.languages_to_keep}")
-            print(f"min_language_probability = {self.min_language_probability}")
-            print(f"filter_programming_language = {self.filter_programming_language}")
-            print(f"filter_sentence_length = {self.filter_sentence_length}")
-            print(f"min_num_words = {self.min_num_words}")
-            print(f"min_length = {self.min_length}")
-            print(f"chunk_size = {self.chunk_size}")
-            print(f"chunk_overlap = {self.chunk_overlap}")
+            print(f"in_segment_separator = {self._in_segment_separator}")
+            print(f"in_sentence_separator = {self._in_sentence_separator}")
+            print(f"out_segment_separator = {self._out_segment_separator}")
+            print(f"out_sentence_separator = {self._out_sentence_separator}")
+            print(f"return_type = {self._return_type}")
+            print(f"max_split_length = {self._max_split_length}")
+            print(f"max_split_iterations = {self._max_split_iterations}")
+            print(f"keep_segment = {self._keep_segment}")
+            print(f"merge_lines = {self._merge_lines}")
+            print(f"merge_level = {self._merge_level}")
+            print(f"empty_lines_threshold = {self._empty_lines_threshold}")
+            print(f"broken_lines_threshold = {self._broken_lines_threshold}")
+            print(f"filter_language = {self._filter_language}")
+            print(f"detection_level = {self._detection_level}")
+            print(f"languages_to_keep = {self._languages_to_keep}")
+            print(f"min_language_probability = {self._min_language_probability}")
+            print(f"filter_programming_language = {self._filter_programming_language}")
+            print(f"filter_sentence_length = {self._filter_sentence_length}")
+            print(f"min_num_words = {self._min_num_words}")
+            print(f"min_length = {self._min_length}")
+            print(f"chunk_size = {self._chunk_size}")
+            print(f"chunk_overlap = {self._chunk_overlap}")
             print(f"verbose = {self.verbose}")
-            print(f"kwargs = {self.kwargs}")
+            print(f"kwargs = {self._kwargs}")
 
-        self.guess = None
+        self._guess = None
 
     def _check_if_merge_lines(self, text):
         num_empty_lines = 0
@@ -137,9 +156,9 @@ class Segmenter(BaseSegmenter):
             print(f"num_lines={num_lines}")
             print(f"empty_lines_ratio={empty_lines_ratio}")
             print(f"broken_lines_ratio={broken_lines_ratio}")
-        if empty_lines_ratio > self.empty_lines_threshold:
+        if empty_lines_ratio > self._empty_lines_threshold:
             return True
-        if broken_lines_ratio > self.broken_lines_threshold:
+        if broken_lines_ratio > self._broken_lines_threshold:
             return True
 
     def segment_article(self, article):
@@ -148,18 +167,19 @@ class Segmenter(BaseSegmenter):
             return None
 
         article = re.sub(
-            f"{self.in_segment_separator}+", self.in_segment_separator, article
+            f"{self._in_segment_separator}+", self._in_segment_separator, article
         )
-        if self.merge_lines == "auto":
+        if self._merge_lines == "auto":
             merge_lines = self._check_if_merge_lines(article)
         else:
-            merge_lines = self.merge_lines
-        if merge_lines and self.merge_level == "article":
+            merge_lines = self._merge_lines
+        if merge_lines and self._merge_level == "article":
             if self.verbose > 10:
                 print("=> merging lines of the article")
             article = re.sub(r"\s+", " ", article)
-        if self.keep_segment:
-            in_segments = article.split(self.in_segment_separator)
+
+        if self._keep_segment:
+            in_segments = article.split(self._in_segment_separator)
         else:
             in_segments = [article]
 
@@ -167,23 +187,26 @@ class Segmenter(BaseSegmenter):
         for i, segment in enumerate(in_segments):
             segment = segment.strip()
             if len(segment) > 0:
-                if self.filter_programming_language:
+                if self._filter_programming_language:
                     if self._skip_programming_language(segment):
                         continue
-                if merge_lines and self.merge_level == "segment":
+                if merge_lines and self._merge_level == "segment":
                     if self.verbose > 10:
                         print("=> merging lines of the segment")
                     segment = re.sub(r"\s+", " ", segment)
 
-                if self.filter_language and self.detection_level == "segment":
+                if self._filter_language and self._detection_level == "segment":
                     if self._skip_language(segment):
                         continue
                 sentences = []
-                for sent in segment.split(self.in_sentence_separator):
+                for sent in segment.split(self._in_sentence_separator):
                     sent = sent.strip()
                     if len(sent) > 0:
 
-                        if self.filter_language and self.detection_level == "sentence":
+                        if (
+                            self._filter_language
+                            and self._detection_level == "sentence"
+                        ):
                             if self._skip_language(sent):
                                 continue
 
@@ -194,24 +217,24 @@ class Segmenter(BaseSegmenter):
                             continue
 
                 sentences = self._filter_sentence_length(sentences)
-                if self.return_type == "list":
+                if self._return_type == "list":
                     segments.append(sentences)
                 else:
-                    segments.append(self.out_sentence_separator.join(sentences))
+                    segments.append(self._out_sentence_separator.join(sentences))
 
         return (
             segments
-            if self.return_type == "list"
-            else self.out_segment_separator.join(segments)
+            if self._return_type == "list"
+            else self._out_segment_separator.join(segments)
         )
 
     def _filter_sentence_length(self, sentences):
-        if self.filter_sentence_length:
+        if self._filter_sentence_length:
             sentences = [
                 sent
                 for sent in sentences
-                if len(sent.split()) >= self.min_num_words
-                and len(sent) >= self.min_length
+                if len(sent.split()) >= self._min_num_words
+                and len(sent) >= self._min_length
             ]
         return sentences
 
@@ -221,8 +244,8 @@ class Segmenter(BaseSegmenter):
         lang = detect(text.replace("\n", " "), low_memory=False)
         if (
             lang is not None
-            and lang["lang"] not in self.languages_to_keep
-            and lang["score"] < self.min_language_probability
+            and lang["lang"] not in self._languages_to_keep
+            and lang["score"] < self._min_language_probability
         ):
             if self.verbose > 5:
                 print(f"===> lang={lang} not in languages_to_keep")
@@ -232,11 +255,11 @@ class Segmenter(BaseSegmenter):
     def _skip_programming_language(self, text):
         from ekorpkit.models.guesslang import Guess
 
-        if self.guess is None:
-            self.guess = Guess()
+        if self._guess is None:
+            self._guess = Guess()
 
         # Guess the language from code
-        lang = self.guess.language_name(text)
+        lang = self._guess.language_name(text)
         if lang is not None:
             if self.verbose > 5:
                 print(f"===> Programming language: {lang}")
@@ -247,16 +270,16 @@ class Segmenter(BaseSegmenter):
 
     def _split_sentences(self, text):
         text = text.strip()
-        if len(text) <= self.max_split_length:
+        if len(text) <= self._max_split_length:
             return self.segment(text)
         else:
             if self.verbose:
                 print(f"==> too long text: {len(text)}")
-            text_chunk = text[: self.max_split_length]
-            next_chunk = text[self.max_split_length :]
+            text_chunk = text[: self._max_split_length]
+            next_chunk = text[self._max_split_length :]
             sentences = []
             split_iter = 0
-            while len(text_chunk) > 0 and split_iter < self.max_split_iterations:
+            while len(text_chunk) > 0 and split_iter < self._max_split_iterations:
                 sents = self.segment(text_chunk)
                 if len(sents) > 1 and len(next_chunk) > 0:
                     sentences.extend(sents[:-1])
@@ -264,7 +287,7 @@ class Segmenter(BaseSegmenter):
                 else:
                     sentences.extend(sents)
                     last_sent = ""
-                end_pos = self.max_split_length - len(last_sent)
+                end_pos = self._max_split_length - len(last_sent)
                 if end_pos >= len(next_chunk):
                     text_chunk = last_sent + next_chunk
                     next_chunk = ""
@@ -272,7 +295,7 @@ class Segmenter(BaseSegmenter):
                     text_chunk = last_sent + next_chunk[:end_pos]
                     next_chunk = next_chunk[end_pos:]
                 split_iter += 1
-            if split_iter >= self.max_split_iterations:
+            if split_iter >= self._max_split_iterations:
                 if self.verbose:
                     print(f"==> too many split iterations: {split_iter}")
                 raise Exception(f"Maximum number of iterations reached: {split_iter}")
@@ -287,10 +310,10 @@ class Segmenter(BaseSegmenter):
             return None
 
         article = re.sub(
-            f"{self.in_segment_separator}+", self.in_segment_separator, article
+            f"{self._in_segment_separator}+", self._in_segment_separator, article
         )
-        if self.keep_segment:
-            in_segments = article.split(self.in_segment_separator)
+        if self._keep_segment:
+            in_segments = article.split(self._in_segment_separator)
         else:
             in_segments = [article]
 
@@ -298,26 +321,26 @@ class Segmenter(BaseSegmenter):
         for i, segment in enumerate(in_segments):
             segment = segment.strip()
             segment = re.sub(
-                f"{self.in_sentence_separator}+", self.in_sentence_separator, segment
+                f"{self._in_sentence_separator}+", self._in_sentence_separator, segment
             )
             if len(segment) > 0:
-                sentences = segment.split(self.in_sentence_separator)
+                sentences = segment.split(self._in_sentence_separator)
 
                 chunks = self.chunk(
                     sentences,
-                    max_length=self.chunk_size,
-                    overlap=self.chunk_overlap,
+                    max_length=self._chunk_size,
+                    overlap=self._chunk_overlap,
                 )
-                if self.return_type != "list":
+                if self._return_type != "list":
                     chunks = [
-                        self.out_sentence_separator.join(chunk) for chunk in chunks
+                        self._out_sentence_separator.join(chunk) for chunk in chunks
                     ]
                 segments += chunks
 
         return (
             segments
-            if self.return_type == "list"
-            else self.out_segment_separator.join(segments)
+            if self._return_type == "list"
+            else self._out_segment_separator.join(segments)
         )
 
     def chunk(

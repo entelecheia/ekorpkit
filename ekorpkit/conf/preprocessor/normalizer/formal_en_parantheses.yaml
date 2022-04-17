@@ -1,4 +1,5 @@
 defaults:
   - default
 
-regular_parentheses_only: true
+special_characters:
+  regular_parentheses_only: true

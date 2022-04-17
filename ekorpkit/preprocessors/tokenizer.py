@@ -27,8 +27,10 @@ class Tokenizer:
 
         self._normalize = kwargs.get("normalize", None)
         if eKonf.is_instantiatable(self._normalize):
+            if self.verbose:
+                print(f"[ekorpkit]: instantiating {self._normalize['_target_']}...")
             self._normalize = eKonf.instantiate(self._normalize)
-            print(f"[ekorpkit]: {self._normalize.__name__} is instantiated.")
+            # print(f"[ekorpkit]: {self._normalize.__name__} is instantiated.")
         self._lowercase = kwargs.get("lowercase", False)
 
         self._tokenize_each_word = kwargs.get("tokenize_each_word", False)
