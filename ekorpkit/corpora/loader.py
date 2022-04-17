@@ -70,6 +70,36 @@ class Corpora:
                 self.corpora[name] = corpus
             print(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
+    def __str__(self):
+        classname = self.__class__.__name__
+        s = f"{classname}\n----------\n"
+        for name in self.corpora.keys():
+            s += f"{str(name)}\n"
+        return s
+
+    def __getitem__(self, name):
+        return self.corpora[name]
+
+    @property
+    def id_key(self):
+        return self._id_key
+
+    @property
+    def id_keys(self):
+        return self._id_keys
+
+    @property
+    def text_key(self):
+        return self._text_key
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def metadata(self):
+        return self._metadata
+
     def load(self):
         for corpus in self:
             corpus.load()

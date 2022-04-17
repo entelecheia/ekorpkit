@@ -1,5 +1,6 @@
 name: ${oc.select:.builtin.name, null} 
 data_dir: ${oc.select:.builtin.data_dir, ${dir.corpus}}
+metadata_dir:
 filetype: ${oc.select:.builtin.filetype, null}
 autoload: true
 verbose: ${oc.select:..verbose, true}

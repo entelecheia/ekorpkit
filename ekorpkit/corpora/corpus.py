@@ -16,9 +16,11 @@ class Corpus:
         self.args = eKonf.to_config(args)
         self.name = self.args.name
         self.data_dir = Path(self.args.data_dir)
-        self.metadata_dir = Path(self.args.get("metadata_dir", None))
+        self.metadata_dir = self.args.get("metadata_dir", None)
         if self.metadata_dir is None:
             self.metadata_dir = self.data_dir
+        else:
+            self.metadata_dir = Path(self.metadata_dir)
         self.info_file = self.data_dir / f"info-{self.name}.yaml"
         self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
         if self.info:
@@ -88,6 +90,23 @@ class Corpus:
             if self.automerge:
                 self.merge_metadata()
 
+    def __str__(self):
+        classname = self.__class__.__name__
+        s = f"{classname} : {self.name}"
+        return s
+
+    @property
+    def id_key(self):
+        return self._id_key
+
+    @property
+    def id_keys(self):
+        return self._id_keys
+
+    @property
+    def text_key(self):
+        return self._text_key
+
     @property
     def data(self):
         return self._data
@@ -121,9 +140,7 @@ class Corpus:
             )
             if self.verbose:
                 msg.info(f"Loaded timestamp column {self._timestamp_key}")
-        elif (
-            _timestamp_col in self._metadata.columns
-        ):
+        elif _timestamp_col in self._metadata.columns:
             self._metadata[self._timestamp_key] = pd.to_datetime(
                 self._metadata[_timestamp_col], format=_format, **_params
             )
