@@ -1,13 +1,13 @@
 import os
 import requests
 from bs4 import BeautifulSoup
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from ekorpkit.io.download.web import web_download, web_download_unzip
 
 
 class EDGAR:
     def __init__(self, **args):
-        self.args = OmegaConf.create(args)
+        self.args = eKonf.to_config(args)
         self.base_url = self.args.base_url
         self.url = self.args.url
         self.output_dir = self.args.output_dir

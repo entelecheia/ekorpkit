@@ -1,6 +1,6 @@
 from pathlib import Path
 from pprint import pprint
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from wasabi import msg
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit.io.file import load_dataframe
@@ -8,20 +8,20 @@ from ekorpkit.io.file import load_dataframe
 
 class Dataset:
     def __init__(self, **args):
-        self.args = OmegaConf.create(args)
+        self.args = eKonf.to_config(args)
         self.name = self.args.name
         self.data_dir = Path(self.args.data_dir)
         self.info_file = self.data_dir / f"info-{self.name}.yaml"
-        self.info = OmegaConf.load(self.info_file) if self.info_file.is_file() else {}
+        self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
         self.verbose = self.args.get("verbose", False)
         self.autoload = self.args.get("autoload", False)
 
         if self.info:
-            self.args = OmegaConf.merge(self.args, self.info)
+            self.args = eKonf.merge(self.args, self.info)
 
         if self.verbose:
             msg.info(f"Intantiating a dataset {self.name} with a config:")
-            pprint(OmegaConf.to_container(self.args))
+            pprint(eKonf.to_dict(self.args))
 
         self.filetype = self.args.filetype
         self.data_files = self.args.data_files
@@ -30,8 +30,8 @@ class Dataset:
 
         self.description = self.args.get("description", "")
         self.license = self.args.get("license", "")
-        self.column_info = OmegaConf.to_container(self.args.column_info)
-        self.split_info = OmegaConf.to_container(self.args.splits)
+        self.column_info = eKonf.to_dict(self.args.column_info)
+        self.split_info = eKonf.to_dict(self.args.splits)
         if self.column_info is None:
             raise ValueError("Column info can't be None")
         self.splits = {}

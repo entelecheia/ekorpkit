@@ -3,14 +3,14 @@ import subprocess
 import orjson as json
 import pandas as pd
 from multiprocessing import Pool
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from glob import glob
 from ekorpkit.io.download.web import web_download, google_download_un7z
 
 
 class Wiki:
     def __init__(self, **args):
-        self.args = OmegaConf.create(args)
+        self.args = eKonf.to_config(args)
         self.name = self.args.name
         self.autoload = self.args.get("autoload", True)
         self.url = self.args.dump.url

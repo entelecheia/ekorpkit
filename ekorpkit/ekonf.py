@@ -1,12 +1,15 @@
 import functools
 import random
 import hydra
+import pathlib
+from enum import Enum
 from hydra.core.config_store import ConfigStore
 from hydra.utils import get_method
-from omegaconf import OmegaConf, SCMode, DictConfig
-from typing import Any, List, Dict, Union, Optional
+from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
+from typing import Any, List, IO, Dict, Union, Tuple, Optional
 from ekorpkit.utils.func import lower_case_with_underscores
 
+DictKeyType = Union[str, int, Enum, float, bool]
 
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
@@ -18,6 +21,16 @@ OmegaConf.register_new_resolver(
 
 def partial(_partial_, *args, **kwargs):
     return functools.partial(get_method(_partial_), *args, **kwargs)
+
+
+class _Keys(str, Enum):
+    """Special keys in configs used by instantiate."""
+
+    TARGET = "_target_"
+    CONVERT = "_convert_"
+    RECURSIVE = "_recursive_"
+    ARGS = "_args_"
+    PARTIAL = "__partial__"
 
 
 class eKonf:
@@ -111,6 +124,34 @@ class eKonf:
     def is_instantiatable(cfg: Any):
         return is_instantiatable(cfg)
 
+    @staticmethod
+    def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
+        return OmegaConf.load(file_)
+
+    @staticmethod
+    def merge(
+        *configs: Union[
+            DictConfig,
+            ListConfig,
+            Dict[DictKeyType, Any],
+            List[Any],
+            Tuple[Any, ...],
+            Any,
+        ],
+    ) -> Union[ListConfig, DictConfig]:
+        """
+        Merge a list of previously created configs into a single one
+        :param configs: Input configs
+        :return: the merged config object.
+        """
+        return OmegaConf.merge(*configs)
+
+    @staticmethod
+    def save(
+        config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
+    ) -> None:
+        OmegaConf.save(config, f, resolve=resolve)
+
 
 def compose(
     overrides: List[str] = [],
@@ -203,6 +244,8 @@ def select(
 def to_dict(
     cfg: Any,
 ):
+    if isinstance(cfg, dict):
+        return cfg
     return OmegaConf.to_container(
         cfg,
         resolve=True,
@@ -225,6 +268,27 @@ def to_config(
     cfg: Any,
 ):
     return OmegaConf.create(cfg)
+
+
+def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
+    return OmegaConf.load(file_)
+
+def save(
+    config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
+) -> None:
+    eKonf.save(config, f, resolve=resolve)
+
+def merge(
+    *configs: Union[
+        DictConfig,
+        ListConfig,
+        Dict[DictKeyType, Any],
+        List[Any],
+        Tuple[Any, ...],
+        Any,
+    ],
+) -> Union[ListConfig, DictConfig]:
+    return eKonf.merge(*configs)
 
 
 def to_yaml(cfg: Any, *, resolve: bool = True, sort_keys: bool = False) -> str:
@@ -256,7 +320,7 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
                    And may contain:
                    _args_: List-like of positional arguments to pass to the target
                    _recursive_: Construct nested objects as well (bool).
-                                True by default.
+                                False by default.
                                 may be overridden via a _recursive_ key in
                                 the kwargs
                    _convert_: Conversion strategy
@@ -275,4 +339,7 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     :return: if _target_ is a class name: the instantiated object
              if _target_ is a callable: the return value of the call
     """
+    _recursive_ = config.get(_Keys.RECURSIVE, False)
+    if _Keys.RECURSIVE not in kwargs:
+        kwargs[_Keys.RECURSIVE] = _recursive_
     return hydra.utils.instantiate(config, *args, **kwargs)

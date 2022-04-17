@@ -1,5 +1,5 @@
 from pathlib import Path
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from hydra.utils import instantiate
 
 from ..datasets import ShardingDataset
@@ -8,7 +8,7 @@ from ..utils.func import elapsed_timer
 
 
 def lmdata(**args):
-    args = OmegaConf.create(args)
+    args = eKonf.to_config(args)
 
     with elapsed_timer(format_time=True) as elapsed:
         for subtask, task_args in args.task.lmdata.items():
@@ -20,7 +20,7 @@ def lmdata(**args):
 
 
 def build_vocab(**args):
-    cfg = OmegaConf.create(args)
+    cfg = eKonf.to_config(args)
     # print(cfg)
     args = cfg.parent.tokenizer
 
@@ -43,7 +43,7 @@ def build_vocab(**args):
 
 
 def sharding(**args):
-    args = OmegaConf.create(args)
+    args = eKonf.to_config(args)
     # print(cfg)
 
     sharding = ShardingDataset(**args)

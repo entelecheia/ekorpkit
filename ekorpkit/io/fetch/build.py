@@ -1,8 +1,7 @@
 from tabnanny import verbose
 import time
 from pathlib import Path
-from omegaconf import OmegaConf
-from omegaconf.dictconfig import DictConfig
+from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.utils.func import humanbytes, get_modified_time
 from ekorpkit.pipelines.stat import summary_stats
@@ -47,8 +46,7 @@ class DatasetBuilder:
         self.verbose = self.args.get("verbose", False)
 
         self.fetch_args = args.get("fetch", None)
-        if isinstance(self.fetch_args, DictConfig):
-            self.fetch_args = OmegaConf.to_container(self.fetch_args)
+        self.fetch_args = eKonf.to_dict(self.fetch_args)
         self.fetch_dir = self.fetch_args.get("data_dir", None)
         self.fetch_sources = self.fetch_args.get("data_sources", None)
         if isinstance(self.fetch_sources, str):
@@ -80,7 +78,7 @@ class DatasetBuilder:
             "info_file", f"info-{self.name}.yaml"
         )
         if self.info_path.exists():
-            self.info = OmegaConf.to_container(OmegaConf.load(self.info_path))
+            self.info = eKonf.to_dict(eKonf.load(self.info_path))
         else:
             self.info = {}
         for key in self.info_args.info_list:
@@ -117,7 +115,7 @@ class DatasetBuilder:
                 self.info[key] = max(vals)
         self.info["info_updated"] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
-        OmegaConf.save(config=OmegaConf.create(self.info), f=self.info_path)
+        eKonf.save(config=eKonf.to_config(self.info), f=self.info_path)
 
         pprint(self.info)
 

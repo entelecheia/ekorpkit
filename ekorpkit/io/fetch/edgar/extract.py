@@ -12,7 +12,7 @@ from html.parser import HTMLParser
 from pathos.multiprocessing import ProcessPool
 from tqdm import tqdm
 from typing import List
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 
 # Change the default recursion limit of 1000 to 30000
 sys.setrecursionlimit(30000)
@@ -556,7 +556,7 @@ def extract_items(**args):
     Gets the list of 10K files and extracts all textual items/sections by calling the extract_items() function.
     """
 
-    config = OmegaConf.create(args)
+    config = eKonf.to_config(args)
     output_dir = config["output_dir"]
 
     filings_metadata_filepath = os.path.join(

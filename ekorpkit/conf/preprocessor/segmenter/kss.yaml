@@ -9,4 +9,4 @@ backend: mecab-python3  # fugashi
 use_quotes_brackets_processing: false
 max_recover_step: 0
 max_recover_length: 30000
-print_args: true
+print_args: false

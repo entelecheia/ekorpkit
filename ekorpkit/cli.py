@@ -2,8 +2,7 @@ import os
 import logging
 import hydra
 import ekorpkit.utils.batch as batch
-import ekorpkit.ekonf as eKonf
-from omegaconf import DictConfig, OmegaConf
+from ekorpkit import eKonf
 from pprint import pprint
 from wasabi import msg
 from ekorpkit.utils.batch.batcher import Batcher
@@ -19,7 +18,7 @@ def listup(**args):
     corpus_info = {}
     for name in args["corpus"]["preset"]["corpus"]:
         info_path = f"{ekorpkit_dir}/resources/corpora/{name}.yaml"
-        info = OmegaConf.load(info_path)
+        info = eKonf.load(info_path)
         corpus_info[name] = info
     make_table(corpus_info.values(), args["info"]["table"])
 
@@ -27,7 +26,7 @@ def listup(**args):
 def about(**args):
     from . import __version__
 
-    cfg = OmegaConf.create(args)
+    cfg = eKonf.to_config(args)
     args = cfg.about.app
     print()
     for k, v in args.items():
@@ -38,7 +37,7 @@ def about(**args):
 
 
 def listfiles(**args):
-    cfg = OmegaConf.create(args)
+    cfg = eKonf.to_config(args)
     args = cfg.corpus
     # corpus_paths = load_corpus_paths(args.corpus_dir, args.name, corpus_type=args.corpus_type,
     #     corpus_filetype=args.corpus_filetype, filename_pattern=args.filename_pattern)
@@ -107,7 +106,7 @@ def stop_environ(cfg, verbose=False):
 
 
 @hydra.main(config_path="conf", config_name="config")
-def hydra_main(cfg: DictConfig) -> None:
+def hydra_main(cfg) -> None:
     # log.info("eKorpkit Command Line Interface for Hydra")
     verbose = cfg.verbose
     if verbose:
@@ -118,7 +117,7 @@ def hydra_main(cfg: DictConfig) -> None:
 
     if cfg.get("print_resolved_config"):
         print("## hydra configuration resolved ##")
-        args = eKonf.to_container(cfg, resolve=True)
+        args = eKonf.to_dict(cfg)
         pprint(args)
         print()
 
@@ -128,7 +127,7 @@ def hydra_main(cfg: DictConfig) -> None:
     if cfg.get("_target_"):
         init_environ(cfg, verbose)
 
-        eKonf.instantiate(cfg, _recursive_=False)
+        eKonf.instantiate(cfg)
 
         stop_environ(cfg, verbose)
     # print(HydraConfig.get())

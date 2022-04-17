@@ -6,12 +6,12 @@ import subprocess
 import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 
 
 class BOKMniutes:
     def __init__(self, **args):
-        self.args = OmegaConf.create(args)
+        self.args = eKonf.to_config(args)
         # print(self.args)
         self.autoload = self.args.get('autoload', True)
         self.from_date = str(self.args.scrap.from_date)

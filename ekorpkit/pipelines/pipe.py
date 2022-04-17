@@ -10,7 +10,8 @@ from ekorpkit.utils import print_status
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
 from hydra.utils import instantiate
-from omegaconf import DictConfig, OmegaConf
+from ekorpkit import eKonf
+from omegaconf import DictConfig
 from omegaconf.listconfig import ListConfig
 from tqdm.auto import tqdm
 from wasabi import msg
@@ -1305,7 +1306,7 @@ def save_as_json(df, args):
 
 
 def process_dataframe(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     verbose = args.get("verbose", False)
     process_pipeline = args.get("_pipeline_", [])
     if process_pipeline is None:
