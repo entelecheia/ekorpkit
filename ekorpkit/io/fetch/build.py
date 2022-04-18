@@ -125,8 +125,6 @@ class DatasetBuilder:
                 instantiate(self.downloader, _recursive_=False)
             pipeline_args = self.downloader.get("pipeline", None)
             if pipeline_args:
-                if self.verbose:
-                    print(f"Applying a pipeline for downloader: {pipeline_args}")
                 instantiate(pipeline_args, _recursive_=False)
 
         split_infos = {}

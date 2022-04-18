@@ -25,6 +25,7 @@ class Corpus:
         self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
         if self.info:
             self.args = eKonf.merge(self.args, self.info)
+            self.info = eKonf.to_dict(self.info)
         self.verbose = self.args.get("verbose", False)
         self.autoload = self.args.get("autoload", False)
         self.automerge = self.args.get("automerge", False)
