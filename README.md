@@ -5,7 +5,7 @@
 This package provides corpus management and analysis pipelines such as extraction, transformation, tokenization, training, and visualization.
 This package does not support downloading corpus files.
 
-## [The eKorpkit Corpus](./docs/corpus/README.md)
+## [The eKorpkit Corpus](https://github.com/entelecheia/ekorpkit/blob/main/docs/corpus/README.md)
 
 The eKorpkit Corpus is a large, diverse, bilingual (ko/en) language modelling dataset.
 
