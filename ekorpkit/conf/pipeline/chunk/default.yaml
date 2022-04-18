@@ -13,3 +13,8 @@ preprocessor:
   chunk_size: ${oc.select:..chunk_size, 300}
   chunk_overlap: ${oc.select:..chunk_overlap, false}
   verbose: ${oc.select:..verbose, true}
+  segmenter:
+    keep_segment: ${oc.select:..keep_segment, false}
+    chunk_size: ${oc.select:..chunk_size, 300}
+    chunk_overlap: ${oc.select:..chunk_overlap, false}
+    verbose: ${oc.select:..verbose, true}  

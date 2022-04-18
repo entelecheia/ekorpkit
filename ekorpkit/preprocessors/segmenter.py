@@ -415,11 +415,16 @@ class NLTKSegmenter(Segmenter):
 
 
 class SimpleSegmenter(Segmenter):
-    def __init__(self, separator="\n", remove_newlines=True, **kwargs):
-        self.separator = codecs.decode(separator, "unicode_escape")
-        self.remove_newlines = remove_newlines
+    def __init__(self, simple=None, **kwargs):
+        if simple is None:
+            simple = {}
+            simple["separator"] = "\n"
+            simple["remove_newlines"] = True
+
+        self.separator = codecs.decode(simple["separator"], "unicode_escape")
+        self.remove_newlines = simple["remove_newlines"]
         print(f"segment_separator: -->{self.separator}<--")
-        if remove_newlines:
+        if self.remove_newlines:
             print("Remove newlines inside segments")
         super().__init__(**kwargs)
 
@@ -431,40 +436,34 @@ class SimpleSegmenter(Segmenter):
 
 
 class PySBDSegmenter(Segmenter):
-    def __init__(self, language="en", clean=False, doc_type=None, **kwargs):
-        import pysbd
+    def __init__(self, pysbd=None, **kwargs):
+        import pysbd as pySBD
 
-        self.language = language
-        self.clean = clean
-        self.doc_type = doc_type
-        if doc_type == "pdf":
-            self.clean = True
-        self.seg = pysbd.Segmenter(
-            language=self.language, clean=self.clean, doc_type=self.doc_type
-        )
+        if pysbd is None:
+            pysbd = {}
+            pysbd["language"] = "en"
+            pysbd["clean"] = False
+
+        if pysbd.get("doc_type", None) == "pdf":
+            pysbd["clean"] = True
+        self.seg = pySBD.Segmenter(**pysbd)
         super().__init__(**kwargs)
 
     def segment(self, text):
-        # import pysbd
-        # seg = pysbd.Segmenter(language=self.language, clean=self.clean, doc_type=self.doc_type)
-        # results = self.seg.segment(text)
-        # del seg
         return self.seg.segment(text)
 
 
 class KSSSegmenter(Segmenter):
-    def __init__(self, use_heuristic=False, backend="fugashi", **kwargs):
+    def __init__(self, kss=None, **kwargs):
         from ekorpkit.preprocessors import KSS
 
-        self.use_heuristic = use_heuristic
-        self.backend = backend
-        self.kwargs = kwargs
-        self.seg = KSS(
-            use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs
-        )
+        if kss is None:
+            kss = {}
+            kss["use_heuristic"] = False
+            kss["backend"] = "fugashi"
+
+        self.seg = KSS(**kss)
         super().__init__(**kwargs)
 
     def segment(self, text):
-        # from ekorpkit.preprocessors import KSS
-        # seg = KSS(use_heuristic=self.use_heuristic, backend=self.backend, **self.kwargs)
         return self.seg.segment(text)

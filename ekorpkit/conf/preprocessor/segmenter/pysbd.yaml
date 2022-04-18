@@ -2,6 +2,7 @@ defaults:
   - default
 
 _target_: ekorpkit.preprocessors.segmenter.PySBDSegmenter
-language: en
-clean: false
-doc_type:
+pysbd:
+  language: en
+  clean: false
+  doc_type:

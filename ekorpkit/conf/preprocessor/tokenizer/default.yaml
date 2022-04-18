@@ -1,29 +1,34 @@
 _target_: ekorpkit.preprocessors.tokenizer.Tokenizer
 normalize:
-lowercase: false
-tokenize_each_word: false
-wordpieces_prefix: "##"
-punct_pos:
-  - SF
-  - SP
-  - SSO
-  - SSC
-  - SY
-noun_pos:
-  - NNG
-  - NNP
-  - XSN
-  - SL
-  - XR
-  - NNB
-  - NR
-exclude_pos:
-  - SP
-no_space_for_non_nouns: false
-flatten: true
-concat_token_and_pos: true
-include_whitespace_token: true
-userdic_path: ${oc.select:..userdic_path, null}
-stopwords_path: ${oc.select:..stopwords_path, null}
-sentence_separator: '\n'
+tokenize:
+  lowercase: false
+  flatten: true
+  concat_surface_and_pos: true
+  include_whitespace_token: true
+  tokenize_each_word: false
+  punct_postags:
+    - SF
+    - SP
+    - SSO
+    - SSC
+    - SY
+  wordpieces_prefix: "##"
+  userdic_path: ${oc.select:..userdic_path, null}
+tokenize_article:
+  sentence_separator: '\n'
+  return_typ: str
+extract:
+  noun_postags:
+    - NNG
+    - NNP
+    - XSN
+    - SL
+    - XR
+    - NNB
+    - NR
+  stop_postags:
+    - SP
+  no_space_for_non_nouns: false
+  stopwords:
+  stopwords_path: ${oc.select:..stopwords_path, null}
 verbose: ${oc.select:..verbose, false}
