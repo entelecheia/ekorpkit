@@ -3,7 +3,6 @@ _target_: null
 defaults:
   - _self_
   - about: default
-  - cmd: about
   - dir: default
   - env: default
   - mode: default
@@ -13,6 +12,8 @@ defaults:
   - model: null
   - project: null
   - tokenizer: null
+  - preprocessor/normalizer: default
+  - preprocessor/segmenter: default
   - preprocessor/tokenizer: default
 
   - override hydra/hydra_logging: colorlog
