@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from ekorpkit.utils.func import humanbytes, parse_size, utf8len
 
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from ekorpkit.utils.func import change_directory
 from hydra.utils import instantiate
 
@@ -373,7 +373,7 @@ def sample_from_sets(datasets, n_docs):
 
 
 def build_pile(**args):
-    args = OmegaConf.create(args)
+    args = eKonf.to_config(args)
 
     if args.output_dir:
         os.makedirs(args.output_dir, exist_ok=True)

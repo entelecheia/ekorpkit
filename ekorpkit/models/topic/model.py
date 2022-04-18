@@ -9,7 +9,7 @@ from collections import namedtuple
 from datetime import datetime
 from tqdm import tqdm
 import numpy as np
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
 from ekorpkit.io.file import save_dataframe, load_dataframe
@@ -217,15 +217,15 @@ class TopicModel:
 
     def _load_word_prior(self):
         if self.word_prior_path.is_file():
-            self.word_prior = OmegaConf.load(self.word_prior_path)
+            self.word_prior = eKonf.load(self.word_prior_path)
             print(self.word_prior)
         else:
             if self.default_word_prior_path.is_file():
-                self.word_prior = OmegaConf.load(self.default_word_prior_path)
+                self.word_prior = eKonf.load(self.default_word_prior_path)
                 print(self.word_prior)
             else:
                 self.word_prior = {}
-        OmegaConf.save(self.word_prior, self.word_prior_path)
+        eKonf.save(self.word_prior, self.word_prior_path)
 
     def load_corpus(
         self,
@@ -988,7 +988,7 @@ class TopicModel:
         if wordclouds is None:
             wordclouds_args = {}
         else:
-            wordclouds_args = OmegaConf.to_container(wordclouds)
+            wordclouds_args = eKonf.to_dict(wordclouds)
         for k in range(num_topics):
             topic_freq = dict(self.model.get_topic_words(k, top_n=top_n))
             if k in wordclouds_args:

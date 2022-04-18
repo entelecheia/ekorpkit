@@ -1,29 +1,5 @@
-_target_: ekorpkit.preprocessors.normalizer.Normalizer
-normalization_form: 'NFKC'
-unescape_html: "auto"
-remove_terminal_escapes: true
-fix_encoding: true
-restore_byte_a0: true
-replace_lossy_sequences: true
-decode_inconsistent_utf8: true
-fix_c1_controls: true
-fix_latin_ligatures: true
-fix_character_width: true
-uncurl_quotes: true
-fix_line_breaks: true
-fix_surrogates: true
-remove_control_chars: true
-fix_hyphens: true
-fix_ellipsis: true
-fix_slashes: true
-fix_tildes: true
-strip: true
-fix_whitespaces: true
-collapse_whitespaces: true
-replace_tabs: true
-num_spaces_for_tab: 4
-hanja2hangle: true
-fix_emoticons: true
-num_repeats: 2
-single_quotes_only: false
-regular_parentheses_only: false
+defaults:
+  - formal_ko
+
+special_characters:
+  fix_emoticons: true

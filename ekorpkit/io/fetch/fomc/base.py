@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import codecs
 from abc import ABCMeta, abstractmethod
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 
 
 def download_data(fomc, from_year):
@@ -22,7 +22,7 @@ def download_data(fomc, from_year):
 def build_fomc(**args):
     from hydra.utils import instantiate
 
-    args = OmegaConf.create(args)
+    args = eKonf.to_config(args)
     from_year = args.from_year
     if (from_year < 1980) or (from_year > 2020):
         print("Please specify the second argument between 1980 and 2020")
@@ -39,7 +39,7 @@ class FomcBase(metaclass=ABCMeta):
     """
 
     def __init__(self, content_type, **args):
-        args = OmegaConf.create(args)
+        args = eKonf.to_config(args)
         print(content_type)
         # Set arguments to internal variables
         self.content_type = content_type

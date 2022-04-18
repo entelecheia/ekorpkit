@@ -1,17 +1,17 @@
 import codecs
 import os
-from collections import OrderedDict
-from functools import partial, reduce
-
-import ekorpkit.config as config
+import ekorpkit.utils.batch as batch
 import numpy as np
 import pandas as pd
+from collections import OrderedDict
+from functools import partial, reduce
 from ekorpkit.io.file import get_filepaths, load_dataframe, save_dataframe
 from ekorpkit.utils import print_status
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
 from hydra.utils import instantiate
-from omegaconf import DictConfig, OmegaConf
+from ekorpkit import eKonf
+from omegaconf import DictConfig
 from omegaconf.listconfig import ListConfig
 from tqdm.auto import tqdm
 from wasabi import msg
@@ -26,7 +26,7 @@ def apply(
     minibatch_size=None,
     **kwargs,
 ):
-    batcher = config.batcher
+    batcher = batch.batcher
     if use_batcher and batcher is not None:
         batcher_minibatch_size = batcher.minibatch_size
         if minibatch_size is None:
@@ -273,7 +273,7 @@ def pivot(df, args):
         if verbose:
             print(f"Resetting index, nlevels of columns: {df.columns.nlevels}")
         df.reset_index(inplace=True)
-        if df.columns.nlevels  > 1:
+        if df.columns.nlevels > 1:
             df.columns = ["_".join(a).strip("_") for a in df.columns.to_flat_index()]
     if verbose:
         print(df.head())
@@ -516,7 +516,7 @@ def aggregate_columns(df, args):
         if verbose:
             print(f"Resetting index, nlevels of columns: {df.columns.nlevels}")
         df.reset_index(inplace=True)
-        if df.columns.nlevels  > 1:
+        if df.columns.nlevels > 1:
             df.columns = ["_".join(a).strip("_") for a in df.columns.to_flat_index()]
     n_docs = df.shape[0]
     if verbose:
@@ -1306,7 +1306,7 @@ def save_as_json(df, args):
 
 
 def process_dataframe(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     verbose = args.get("verbose", False)
     process_pipeline = args.get("_pipeline_", [])
     if process_pipeline is None:

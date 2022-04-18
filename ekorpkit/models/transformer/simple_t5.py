@@ -1,7 +1,7 @@
 import re
 import os
 import pandas as pd
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from hydra.utils import instantiate
 from statistics import mean
 from scipy.stats import pearsonr, spearmanr
@@ -13,14 +13,14 @@ from transformers.data.metrics.squad_metrics import compute_exact, compute_f1
 
 class SimpleTrainerT5:
     def __init__(self, **args):
-        args = OmegaConf.create(args)
+        args = eKonf.to_config(args)
         os.makedirs(args.output_dir, exist_ok=True)
         os.makedirs(args.cache_dir, exist_ok=True)
         os.makedirs(args.pred_output_dir, exist_ok=True)
         self.args = args
         self.dataset_cfg = args.get("dataset_cfg", None)
-        self.model_cfg = OmegaConf.to_container(args.config)
-        self.prediction_args = OmegaConf.to_container(args.prediction)
+        self.model_cfg = eKonf.to_dict(args.config)
+        self.prediction_args = eKonf.to_dict(args.prediction)
         self.verbose = args.get("verbose", True)
         self.model_pipeline = self.args.get("_pipeline_", [])
         if self.model_pipeline is None:

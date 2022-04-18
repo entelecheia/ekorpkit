@@ -1,4 +1,4 @@
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from hydra.utils import instantiate
 from wasabi import msg
 from ekorpkit.utils.func import elapsed_timer
@@ -6,7 +6,7 @@ from ekorpkit.pipelines.pipe import apply_pipeline
 
 
 def topic_tasks(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     corpus_cfg = args.corpus
     model_cfg = args.model.topic
     subtasks = args.task.topic
@@ -31,7 +31,7 @@ def topic_tasks(**cfg):
 
 
 def corpora_tasks(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     corpus_cfg = args.corpus
     merge_metadata = args.task.get("merge_metadata", False)
     pipeline = args.task.get("pipeline", {})
@@ -51,7 +51,7 @@ def corpora_tasks(**cfg):
 
 
 def corpus_tasks(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     corpus_cfg = args.corpus
     merge_metadata = args.task.get("merge_metadata", False)
     pipeline = args.task.get("pipeline", {})
@@ -72,7 +72,7 @@ def corpus_tasks(**cfg):
 
 
 def transfomer_finetune(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     model_cfg = args.model.transformer.finetune
     dataset_cfg = args.dataset
 
@@ -84,7 +84,7 @@ def transfomer_finetune(**cfg):
 
 
 def dataframe_tasks(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     pipeline_args = args.task.get("pipeline", {})
 
     if pipeline_args._target_:

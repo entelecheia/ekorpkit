@@ -3,14 +3,14 @@ import re
 import pysbd
 from pathlib import Path
 import pandas as pd
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from glob import glob
 from hydra.utils import instantiate
 
 
 class Pathobook:
     def __init__(self, **args):
-        self.args = OmegaConf.create(args)
+        self.args = eKonf.to_config(args)
         self.input_path = self.args.input_path
         self.output_dir = Path(self.args.output_dir)
         self.chapter_dir = self.output_dir / "chapters"

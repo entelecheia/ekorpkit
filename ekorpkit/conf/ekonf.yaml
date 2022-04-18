@@ -1,0 +1,23 @@
+# @package _global_
+_target_: null
+defaults:
+  - _self_
+  - about: default
+  - cmd: about
+  - dir: default
+  - env: default
+  - mode: default
+  - corpus: _loader
+  - dataset: _loader
+  - task: _default
+  - model: null
+  - project: null
+  - tokenizer: null
+  - preprocessor/tokenizer: default
+
+  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: colorlog
+  - override hydra/help: help
+
+app_name: ${about.app.name}
+project: ${app_name}

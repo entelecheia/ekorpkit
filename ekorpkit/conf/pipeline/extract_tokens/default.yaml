@@ -1,5 +1,5 @@
 defaults:
-  - /preprocessor/tokenizer: _default
+  - /preprocessor/tokenizer: default
   - /method: extract_tokens
 
 apply_to: ${oc.select:..apply_to, text}

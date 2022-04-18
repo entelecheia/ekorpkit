@@ -3,7 +3,7 @@
 import io
 import os
 import pandas as pd
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from ekorpkit.io.download.web import web_download
 from tqdm.auto import tqdm
 
@@ -69,7 +69,7 @@ class PileReader:
 
 class ThePile:
     def __init__(self, **args):
-        self.cfg = OmegaConf.create(args)
+        self.cfg = eKonf.to_config(args)
         self.name = self.cfg.name
         self.subsets = self.cfg.get("subsets", [])
         if self.name == "the_pile":

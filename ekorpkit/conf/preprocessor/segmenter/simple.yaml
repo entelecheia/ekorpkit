@@ -1,0 +1,6 @@
+defaults:
+  - default
+
+_target_: ekorpkit.preprocessors.segmenter.SimpleSegmenter
+separator: '\n'
+remove_newlines: true

@@ -6,7 +6,7 @@ import tarfile
 import zipfile
 from tqdm import tqdm
 from urllib import request
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 
 
 GOOGLE_DRIVE_URL = "https://docs.google.com/uc?export=download"
@@ -25,7 +25,7 @@ def download_from_gcs(**cfg):
     """
     import tensorflow as tf
 
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     os.makedirs(args.output_dir, exist_ok=True)
     if not os.listdir(args.output_dir) or args.force_download:
         for filename, source_path in args.data_sources.items():
@@ -37,7 +37,7 @@ def download_from_gcs(**cfg):
 
 
 def download_from_web(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     os.makedirs(args.output_dir, exist_ok=True)
     if not os.listdir(args.output_dir) or args.force_download:
         for filename, url in args.urls.items():
@@ -52,7 +52,7 @@ def download_from_web(**cfg):
 
 
 def download_from_gdrive(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     os.makedirs(args.output_dir, exist_ok=True)
     for filename, url in args.urls.items():
         file_path = f"{args.output_dir}/{filename}"
@@ -60,7 +60,7 @@ def download_from_gdrive(**cfg):
 
 
 def download_from_gdrive_untar(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     os.makedirs(args.output_dir, exist_ok=True)
     for filename, url in args.urls.items():
         file_path = f"{args.output_dir}/{filename}"

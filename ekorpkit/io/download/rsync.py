@@ -1,11 +1,11 @@
 import os
 import codecs
 import subprocess
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 
 
 def rsync(**cfg):
-    args = OmegaConf.create(cfg)
+    args = eKonf.to_config(cfg)
     os.makedirs(args.output_dir, exist_ok=True)
 
     options = codecs.decode(args.options, "unicode_escape")

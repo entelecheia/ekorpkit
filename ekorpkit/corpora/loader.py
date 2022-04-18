@@ -1,13 +1,13 @@
 import pandas as pd
 from wasabi import msg
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from .corpus import Corpus
 
 
 class Corpora:
     def __init__(self, **args):
-        args = OmegaConf.create(args)
+        args = eKonf.to_config(args)
         self.args = args
         self.names = args.name
         if isinstance(self.names, str):
@@ -69,6 +69,36 @@ class Corpora:
                 corpus = Corpus(**args)
                 self.corpora[name] = corpus
             print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+
+    def __str__(self):
+        classname = self.__class__.__name__
+        s = f"{classname}\n----------\n"
+        for name in self.corpora.keys():
+            s += f"{str(name)}\n"
+        return s
+
+    def __getitem__(self, name):
+        return self.corpora[name]
+
+    @property
+    def id_key(self):
+        return self._id_key
+
+    @property
+    def id_keys(self):
+        return self._id_keys
+
+    @property
+    def text_key(self):
+        return self._text_key
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def metadata(self):
+        return self._metadata
 
     def load(self):
         for corpus in self:

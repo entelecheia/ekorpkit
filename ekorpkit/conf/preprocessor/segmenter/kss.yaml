@@ -1,12 +1,7 @@
+defaults:
+  - default
+
 _target_: ekorpkit.preprocessors.segmenter.KSSSegmenter
-in_segment_separator: '\n\n'
-in_sentence_separator: '\n'
-out_segment_separator: '\n\n'
-out_sentence_separator: '\n'
-return_type: str
 use_heuristic: false
 backend: mecab-python3  # fugashi
 use_quotes_brackets_processing: false
-max_recover_step: 0
-max_recover_length: 30000
-print_args: true

@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 from pprint import pprint
 from wasabi import msg
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from ekorpkit.io.file import load_dataframe, get_filepaths
 
 DESCRIPTION = "Corpus for Language Models"
@@ -13,16 +13,19 @@ LICENSE = "Copyright of the corpus is owned by the authors."
 
 class Corpus:
     def __init__(self, **args):
-        self.args = OmegaConf.create(args)
+        self.args = eKonf.to_config(args)
         self.name = self.args.name
         self.data_dir = Path(self.args.data_dir)
-        self.metadata_dir = Path(self.args.get("metadata_dir", None))
+        self.metadata_dir = self.args.get("metadata_dir", None)
         if self.metadata_dir is None:
             self.metadata_dir = self.data_dir
+        else:
+            self.metadata_dir = Path(self.metadata_dir)
         self.info_file = self.data_dir / f"info-{self.name}.yaml"
-        self.info = OmegaConf.load(self.info_file) if self.info_file.is_file() else {}
+        self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
         if self.info:
-            self.args = OmegaConf.merge(self.args, self.info)
+            self.args = eKonf.merge(self.args, self.info)
+            self.info = eKonf.to_dict(self.info)
         self.verbose = self.args.get("verbose", False)
         self.autoload = self.args.get("autoload", False)
         self.automerge = self.args.get("automerge", False)
@@ -30,7 +33,7 @@ class Corpus:
 
         if self.verbose:
             msg.info(f"Intantiating a corpus {self.name} with a config:")
-            pprint(OmegaConf.to_container(self.args))
+            pprint(eKonf.to_dict(self.args))
 
         self.filetype = self.args.get("filetype", "csv")
         self.data_files = self.args.data_files
@@ -52,9 +55,9 @@ class Corpus:
         self.split_info = self.args.get("splits", None)
         if self.column_info is None:
             raise ValueError("Column info can't be None")
-        self.column_info = OmegaConf.to_container(self.column_info)
+        self.column_info = eKonf.to_dict(self.column_info)
         if self.split_info:
-            self.split_info = OmegaConf.to_container(self.split_info)
+            self.split_info = eKonf.to_dict(self.split_info)
         self._keys = self.column_info["keys"]
         self._timestamp = self.column_info.get("timestamp", None)
         self.collapse_ids = self.args.get("collapse_ids", False)
@@ -87,6 +90,23 @@ class Corpus:
             self.laod_timestamp()
             if self.automerge:
                 self.merge_metadata()
+
+    def __str__(self):
+        classname = self.__class__.__name__
+        s = f"{classname} : {self.name}"
+        return s
+
+    @property
+    def id_key(self):
+        return self._id_key
+
+    @property
+    def id_keys(self):
+        return self._id_keys
+
+    @property
+    def text_key(self):
+        return self._text_key
 
     @property
     def data(self):
@@ -121,9 +141,7 @@ class Corpus:
             )
             if self.verbose:
                 msg.info(f"Loaded timestamp column {self._timestamp_key}")
-        elif (
-            _timestamp_col in self._metadata.columns
-        ):
+        elif _timestamp_col in self._metadata.columns:
             self._metadata[self._timestamp_key] = pd.to_datetime(
                 self._metadata[_timestamp_col], format=_format, **_params
             )

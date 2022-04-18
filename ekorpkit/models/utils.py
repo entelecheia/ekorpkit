@@ -3,15 +3,15 @@ import glob
 import orjson as json
 from pathlib import Path
 from hydra.utils import instantiate
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 
 from ..utils.convert import convert_tf_checkpoint_to_pytorch
 
 
 def convert_electra_ckpt_to_pytorch(**cfg):
-    cfg = OmegaConf.create(cfg)
+    cfg = eKonf.to_config(cfg)
 
-    model_config = OmegaConf.to_container(cfg.model.electra, resolve=True)
+    model_config = eKonf.to_dict(cfg.model.electra, resolve=True)
     args = cfg.task.train.convert_electra
     tokenizer_config = dict(args.tokenizer)
 

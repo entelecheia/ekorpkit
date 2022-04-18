@@ -4,7 +4,7 @@ import time
 import codecs
 import pandas as pd
 from glob import glob
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 from omegaconf.dictconfig import DictConfig
 from pytablewriter import MarkdownTableWriter
 from pytablewriter.style import Style
@@ -14,7 +14,7 @@ import ekorpkit
 
 
 def info_docs(**args):
-    cfg = OmegaConf.create(args)
+    cfg = eKonf.to_config(args)
 
     info_cfg = cfg.info
     table_cfg = info_cfg.table
@@ -36,7 +36,7 @@ def info_docs(**args):
     infos = []
     for info_path in info_paths:
         print(f"Reading {info_path}")
-        info = OmegaConf.load(info_path)
+        info = eKonf.load(info_path)
 
         data_file_dir = Path(info_path).parent.as_posix()
         info_output_path = (
@@ -48,7 +48,7 @@ def info_docs(**args):
         )
 
         if os.path.exists(info_src_path):
-            info_src = OmegaConf.load(info_src_path)
+            info_src = eKonf.load(info_src_path)
             available = info_src.get("available", True)
 
             for key in info_cfg.update_info:
@@ -80,12 +80,12 @@ def info_docs(**args):
                     info[key] = max(vals)
             info["info_updated"] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
             # print(f'update info to {info_path}')
-            OmegaConf.save(info, info_path)
+            eKonf.save(info, info_path)
             info_to_save = {}
             for key in info_cfg.info_list:
                 if info.get(key) is not None:
                     info_to_save[key] = info[key]
-            info_to_save = OmegaConf.create(info_to_save)
+            info_to_save = eKonf.to_config(info_to_save)
 
             if sample_output_dir:
                 sample_text_path = Path(sample_output_dir) / f"{info.name}.txt"
@@ -98,7 +98,7 @@ def info_docs(**args):
         if available:
             infos.append(info_to_save)
             # print(f'saving info to {info_output_path}')
-            OmegaConf.save(info_to_save, info_output_path)
+            eKonf.save(info_to_save, info_output_path)
             if sample_output_dir:
                 save_sample_text(
                     data_file_dir, sample_text_path, info_cfg.sample_max_lines
@@ -126,9 +126,9 @@ def info_docs(**args):
                     sample_text_path.unlink()
 
     builtins_path = Path(info_cfg.base_dir) / info_cfg.builtins_path
-    builtins = OmegaConf.load(builtins_path)
+    builtins = eKonf.load(builtins_path)
     builtins[info_name] = [info.name for info in infos]
-    OmegaConf.save(builtins, builtins_path)
+    eKonf.save(builtins, builtins_path)
 
     info_table = make_table(infos, table_cfg)
     readme_table_md = readme_md_template.format(info_table=info_table)

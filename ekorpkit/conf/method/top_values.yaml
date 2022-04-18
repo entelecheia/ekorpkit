@@ -1,2 +1,2 @@
-_target_: ekorpkit.utils.partial
+_target_: ekorpkit.ekonf.partial
 _partial_: ekorpkit.pipelines.pipe.top_values

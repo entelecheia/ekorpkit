@@ -1,10 +1,10 @@
 import shutil
 from pathlib import Path
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 
 
 def utils(**args):
-    args = OmegaConf.create(args)
+    args = eKonf.to_config(args)
     subtask = args.subtask
 
     if subtask == "duplicate":

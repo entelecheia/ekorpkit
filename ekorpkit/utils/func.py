@@ -4,14 +4,8 @@ import os
 import re
 import datetime
 import chardet
-import functools
 from contextlib import contextmanager
 from timeit import default_timer
-from hydra.utils import get_method
-
-
-def partial(_partial_, *args, **kwargs):
-    return functools.partial(get_method(_partial_), *args, **kwargs)
 
 
 def unescape_dict(d):

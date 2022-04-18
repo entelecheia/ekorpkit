@@ -21,7 +21,7 @@ from requests.exceptions import (
 from tqdm import tqdm
 from typing import List
 from urllib3.util import Retry
-from omegaconf import OmegaConf
+from ekorpkit import eKonf
 
 try:
     from html.parser import NewTypeOfFancyException as HTMLParseError
@@ -44,7 +44,7 @@ def download_filings(**args):
     The main method iterates all over the tsv index files that are generated
     and calls a scrap method for each one of them.
     """
-    config = OmegaConf.create(args)
+    config = eKonf.to_config(args)
 
     output_dir = config["output_dir"]
     raw_filings_dir = os.path.join(output_dir, config["raw_filings_dir"])
