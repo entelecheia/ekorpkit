@@ -3,6 +3,6 @@ defaults:
 
 _target_: ekorpkit.preprocessors.tokenizer.MecabTokenizer
 mecab:
-  userdic_path: ${..userdic_path}
+  userdic_path: ${..tokenize.userdic_path}
   backend: mecab-python3
   verbose: ${oc.select:..verbose, false}
