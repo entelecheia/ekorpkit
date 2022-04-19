@@ -405,7 +405,7 @@ class NLTKSegmenter(Segmenter):
     def __init__(self, **kwargs):
         import nltk
 
-        nltk.download("punkt")
+        nltk.download("punkt", quiet=True)
         super().__init__(**kwargs)
 
     def segment(self, text):
