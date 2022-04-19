@@ -24,6 +24,21 @@ def test_mecab():
     assert type(tokens) == list
 
 
+def test_nltk():
+    from ekorpkit import eKonf
+    from ekorpkit.preprocessors.tokenizer import NLTKTokenizer
+
+    config_group = "preprocessor/tokenizer=nltk"
+    cfg = eKonf.compose(config_group=config_group)
+    nltk = eKonf.instantiate(cfg)
+
+    text = "I shall reemphasize some of those thoughts today in the context of legislative proposals that are now before the current Congress."
+    tokens = nltk.tokenize(text)
+    nltk = NLTKTokenizer()
+    tokens = nltk.tokenize(text)
+    assert type(tokens) == list
+
+
 def test_kss():
     from ekorpkit.preprocessors.segmenter import KSSSegmenter
 
