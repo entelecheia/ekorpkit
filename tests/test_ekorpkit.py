@@ -32,8 +32,18 @@ def test_kss():
     sents = seg(text)
     assert type(sents) == list
 
+
+def test_normalizer():
+    from ekorpkit.preprocessors.normalizer import Normalizer
+
+    text = "IMF가 推定한 우리나라의 GDP갭률은 今年에도 소폭의 마이너스(−)를 持續하고 있다."
+    text = Normalizer().normalize(text)
+    assert type(text) == str
+
+
 def test_about():
     from ekorpkit.cli import about
+
     cfg = eKonf.compose()
     about(**cfg)
     assert True

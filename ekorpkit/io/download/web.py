@@ -233,7 +233,7 @@ def gdrive_download(
             unit_scale=True,
             total=total,
             initial=0,
-            desc=f"[{filename}] download {local_path}",
+            desc=f"[{filename}]",
         )
         for chunk in response.iter_content(chunk_size=1024):
             if chunk:

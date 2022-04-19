@@ -6,19 +6,19 @@ import re
 from .hanja import translate as hanja2hangle
 from .hangle import compose, decompose
 
-doublespace_pattern = re.compile("\s+")
-repeatchars_pattern = re.compile("(\w)\\1{2,}")
-number_pattern = re.compile("[0-9]")
-punctuation_pattern = re.compile("[,\.\?\!]")
-symbol_pattern = re.compile("[()\[\]\{\}`]")
-hangle_pattern = re.compile("[ㄱ-ㅎㅏ-ㅣ가-힣]")
-alphabet_pattern = re.compile("[a-zA-Z]")
+doublespace_pattern = re.compile(r"\s+")
+repeatchars_pattern = re.compile(r"(\w)\\1{2,}")
+number_pattern = re.compile(r"[0-9]")
+punctuation_pattern = re.compile(r"[,\.\?\!]")
+symbol_pattern = re.compile(r"[()\[\]\{\}`]")
+hangle_pattern = re.compile(r"[ㄱ-ㅎㅏ-ㅣ가-힣]")
+alphabet_pattern = re.compile(r"[a-zA-Z]")
 
-hangle_filter = re.compile("[^ㄱ-ㅎㅏ-ㅣ가-힣]")
-hangle_number_filter = re.compile("[^ㄱ-ㅎㅏ-ㅣ가-힣0-9]")
-text_filter = re.compile("[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"'\(\)\[\]\{\}+\-\\\/\*×%]")
-# text_filter = re.compile('[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"\'-()\[\]\{\}]')
-text_filter_for_lrgraph = re.compile("[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&\"'-()\[\]\{\}]")
+hangle_filter = re.compile(r"[^ㄱ-ㅎㅏ-ㅣ가-힣]")
+hangle_number_filter = re.compile(r"[^ㄱ-ㅎㅏ-ㅣ가-힣0-9]")
+text_filter = re.compile(r"[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"'\(\)\[\]\{\}+\-\\\/\*×%]")
+# text_filter = re.compile(r'[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"\'-()\[\]\{\}]')
+text_filter_for_lrgraph = re.compile(r"[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&\"'-()\[\]\{\}]")
 
 
 #: Control characters.
@@ -542,34 +542,6 @@ def word_shape(text):
     return "".join(shape)
 
 
-def normalize(
-    doc,
-    hanja2hangle=True,
-    no_alphabets=False,
-    no_numbers=False,
-    no_punctuations=False,
-    no_symbols=False,
-    remove_repeats=0,
-    text_pattern="[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9,\.\?\!&·\"'-()\[\]\{\}]",
-):
-    text_filter = re.compile(text_pattern)
-    if hanja2hangle:
-        doc = hanja_to_hangle(doc)
-    doc = text_filter.sub(" ", doc)
-    if no_alphabets:
-        doc = alphabet_pattern.sub(" ", doc)
-    if no_numbers:
-        doc = number_pattern.sub(" ", doc)
-    if no_punctuations:
-        doc = punctuation_pattern.sub(" ", doc)
-    if no_symbols:
-        doc = symbol_pattern.sub(" ", doc)
-    if remove_repeats > 0:
-        doc = repeatchars_pattern.sub("\\1" * remove_repeats, doc)
-
-    return doublespace_pattern.sub(" ", doc).strip()
-
-
 def remove_doublespace(sent):
     return doublespace_pattern.sub(" ", sent)
 
@@ -691,9 +663,9 @@ class Normalizer(BaseNormalizer):
 
     def __init__(
         self,
-        ftfy=None,
-        spaces=None,
-        special_characters=None,
+        ftfy={},
+        spaces={},
+        special_characters={},
         hanja2hangle=True,
         num_repeats=2,
         **kwargs
@@ -707,37 +679,181 @@ class Normalizer(BaseNormalizer):
         :param bool slashes: Whether to normalize slash characters to the ASCII slash character.
         :param bool tildes: Whether to normalize tilde characters to the ASCII tilde character.
         """
-        self.ftfy = ftfy if ftfy is not None else {}
-        self.special_characters = (
-            special_characters if special_characters is not None else {}
-        )
-        self.spaces = spaces if spaces is not None else {}
+        self.ftfy = ftfy or {}
+        self.special_characters = special_characters or {}
+        self.spaces = spaces or {}
 
-        self.uncurl_quotes = self.ftfy.get("uncurl_quotes", True)
-        self.remove_control_chars = self.ftfy.get("remove_control_chars", True)
+        self._uncurl_quotes = self.ftfy.get("uncurl_quotes", True)
+        self._remove_control_chars = self.ftfy.get("remove_control_chars", True)
 
-        self.strip = self.spaces.get("strip", True)
-        self.fix_whitespaces = self.spaces.get("fix_whitespaces", True)
-        self.collapse_whitespaces = self.spaces.get("collapse_whitespaces", True)
-        self.replace_tabs = self.spaces.get("replace_tabs", True)
-        self.replacement_spaces = " " * self.spaces.get("replacement_spaces", 4)
+        self._strip = self.spaces.get("strip", True)
+        self._fix_whitespaces = self.spaces.get("fix_whitespaces", True)
+        self._collapse_whitespaces = self.spaces.get("collapse_whitespaces", True)
+        self._replace_tabs = self.spaces.get("replace_tabs", True)
+        self._replacement_spaces = " " * self.spaces.get("replacement_spaces", 4)
 
-        self.fix_hyphens = self.special_characters.get("fix_hyphens", True)
-        self.fix_ellipsis = self.special_characters.get("fix_ellipsis", True)
-        self.fix_slashes = self.special_characters.get("fix_slashes", True)
-        self.fix_tildes = self.special_characters.get("fix_tildes", True)
-        self.fix_emoticons = self.special_characters.get("fix_emoticons", False)
-        self.single_quotes_only = self.special_characters.get(
+        self._fix_hyphens = self.special_characters.get("fix_hyphens", True)
+        self._fix_ellipsis = self.special_characters.get("fix_ellipsis", True)
+        self._fix_slashes = self.special_characters.get("fix_slashes", True)
+        self._fix_tildes = self.special_characters.get("fix_tildes", True)
+        self._fix_emoticons = self.special_characters.get("fix_emoticons", False)
+        self._single_quotes_only = self.special_characters.get(
             "single_quotes_only", False
         )
-        self.regular_parentheses_only = self.special_characters.get(
+        self._regular_parentheses_only = self.special_characters.get(
             "regular_parentheses_only", False
         )
 
-        self.hanja2hangle = hanja2hangle
-        self.num_repeats = num_repeats
+        self._hanja2hangle = hanja2hangle
+        self._num_repeats = num_repeats
 
-        self.ftfy_cfg = TextFixerConfig(**self.ftfy)
+        self._ftfy_cfg = TextFixerConfig(**self.ftfy)
+
+    def fix_text(self, text):
+        if text is None:
+            return None
+        return fix_text(str(text), self._ftfy_cfg)
+
+    def remove_control_chars(self, text):
+        """
+        Strip out any control characters (they occasionally creep in somehow)
+        """
+        if text is None:
+            return None
+        for control in CONTROLS:
+            text = text.replace(control, "")
+        return text
+
+    def fix_hyphens(self, text):
+        """
+        Normalize all hyphens, minuses and dashes to ascii hyphen-minus and remove soft hyphen entirely
+        """
+        # TODO: Better normalization of em/en dashes to '--' if surrounded by spaces or start/end?
+        if text is None:
+            return None
+        for hyphen in HYPHENS | MINUSES:
+            text = text.replace(hyphen, "-")
+        text = text.replace("\u00ad", "")
+        return text
+
+    def uncurl_quotes(self, text):
+        """
+        Normalize all quotes and primes to ascii apostrophe and quotation mark
+        """
+        if text is None:
+            return None
+        for double_quote in DOUBLE_QUOTES:
+            text = text.replace(double_quote, '"')  # \u0022
+        for single_quote in SINGLE_QUOTES | APOSTROPHES | ACCENTS:
+            text = text.replace(single_quote, "'")  # \u0027
+        text = text.replace("′", "'")  # \u2032 prime
+        text = text.replace("‵", "'")  # \u2035 reversed prime
+        text = text.replace("″", "''")  # \u2033 double prime
+        text = text.replace("‶", "''")  # \u2036 reversed double prime
+        text = text.replace("‴", "'''")  # \u2034 triple prime
+        text = text.replace("‷", "'''")  # \u2037 reversed triple prime
+        text = text.replace("⁗", "''''")  # \u2057 quadruple prime
+        return text
+
+    def fix_ellipsis(self, text):
+        """
+        Normalize ellipses to three full stops
+        """
+        if text is None:
+            return None
+        text = text.replace("…", "...").replace(" . . . ", " ... ")  # \u2026
+        return text
+
+    def fix_slashes(self, text):
+        """
+        Normalize slash characters to ascii slash
+        """
+        if text is None:
+            return None
+        for slash in SLASHES:
+            text = text.replace(slash, "/")
+        return text
+
+    def fix_tildes(self, text):
+        """
+        Normalize tilde characters to ascii tilde
+        """
+        if text is None:
+            return None
+        for tilde in TILDES:
+            text = text.replace(tilde, "~")
+        return text
+
+    def replace_tabs(self, text, replacement_spaces=" " * 4):
+        """
+        Replace tabs with spaces
+        """
+        if text is None:
+            return None
+        text = text.replace("\t", replacement_spaces)
+        return text
+
+    def fix_whitespaces(self, text):
+        """
+        Normalize unusual whitespace not caught by unicodedata
+        """
+        if text is None:
+            return None
+        text = (
+            text.replace("\u000b", " ").replace("\u000c", " ").replace(u"\u0085", " ")
+        )
+        return text
+
+    def collapse_whitespaces(self, text):
+        """
+        Collapse all whitespace to a single space
+        """
+        if text is None:
+            return None
+
+        text = re.sub(r" +", " ", text)
+        return text
+
+    def single_quotes_only(self, text):
+        """
+        Replace all double quotes with single quotes
+        """
+        if text is None:
+            return None
+        for quote in QUOTES:
+            text = text.replace(quote, "'")
+        return text
+
+    # Convert all brackets to regular parentheses
+    def regular_parentheses_only(self, text):
+        """
+        Replace all curly brackets with regular parentheses
+        """
+        if text is None:
+            return None
+        for ob in LEFT_PARENTHESES:
+            text = text.replace(ob, "(")
+        for cb in RIGHT_PARENTHESES:
+            text = text.replace(cb, ")")
+        return text
+
+    def hanja2hangle(self, text):
+        """
+        Convert all hanja to hangle
+        """
+        if text is None:
+            return None
+        text = hanja_to_hangle(text)
+        return text
+
+    def fix_emoticons(self, text, num_repeats=2):
+        """
+        Replace emoticons with their text equivalents
+        """
+        if text is None:
+            return None
+        text = emoticon_normalize(text, num_repeats=num_repeats)
+        return text
 
     def normalize(self, text):
         """Run the Normalizer on a string.
@@ -745,84 +861,57 @@ class Normalizer(BaseNormalizer):
         """
         if text is None:
             return None
-        text = fix_text(str(text), self.ftfy_cfg)
+        text = self.fix_text(text)
+
         # Normalize to canonical unicode (using NFKC by default)
         # if self.form is not None:
         #     text = unicodedata.normalize(self.form, text)
 
-        # Strip out any control characters (they occasionally creep in somehow)
-        if self.remove_control_chars:
-            for control in CONTROLS:
-                text = text.replace(control, "")
+        if self._remove_control_chars:
+            text = self.remove_control_chars(text)
 
         # if self.fix_line_breaks:
         #     text = text.replace('\u2028', '\n').replace('\u2029', '\n').replace('\r\n', '\n').replace('\r', '\n')
 
-        # Normalize all hyphens, minuses and dashes to ascii hyphen-minus and remove soft hyphen entirely
-        if self.fix_hyphens:
-            # TODO: Better normalization of em/en dashes to '--' if surrounded by spaces or start/end?
-            for hyphen in HYPHENS | MINUSES:
-                text = text.replace(hyphen, "-")
-            text = text.replace("\u00ad", "")
+        if self._fix_hyphens:
+            text = self.fix_hyphens(text)
 
-        # Normalize all quotes and primes to ascii apostrophe and quotation mark
-        if self.uncurl_quotes:
-            for double_quote in DOUBLE_QUOTES:
-                text = text.replace(double_quote, '"')  # \u0022
-            for single_quote in SINGLE_QUOTES | APOSTROPHES | ACCENTS:
-                text = text.replace(single_quote, "'")  # \u0027
-            text = text.replace("′", "'")  # \u2032 prime
-            text = text.replace("‵", "'")  # \u2035 reversed prime
-            text = text.replace("″", "''")  # \u2033 double prime
-            text = text.replace("‶", "''")  # \u2036 reversed double prime
-            text = text.replace("‴", "'''")  # \u2034 triple prime
-            text = text.replace("‷", "'''")  # \u2037 reversed triple prime
-            text = text.replace("⁗", "''''")  # \u2057 quadruple prime
+        if self._uncurl_quotes:
+            text = self.uncurl_quotes(text)
 
-        if self.fix_ellipsis:
-            text = text.replace("…", "...").replace(" . . . ", " ... ")  # \u2026
+        if self._fix_ellipsis:
+            text = self.fix_ellipsis(text)
 
-        if self.fix_slashes:
-            for slash in SLASHES:
-                text = text.replace(slash, "/")
+        if self._fix_slashes:
+            text = self.fix_slashes(text)
 
-        if self.fix_tildes:
-            for tilde in TILDES:
-                text = text.replace(tilde, "~")
+        if self._fix_tildes:
+            text = self.fix_tildes(text)
 
-        if self.replace_tabs:
-            text = text.replace("\t", self.replacement_spaces)
+        if self._replace_tabs:
+            text = self.replace_tabs(text, replacement_spaces=self._replacement_spaces)
 
-        # Collapse all whitespace down to a single space
-        if self.fix_whitespaces:
-            # Normalize unusual whitespace not caught by unicodedata
-            text = (
-                text.replace("\u000b", " ")
-                .replace("\u000c", " ")
-                .replace(u"\u0085", " ")
-            )
-        if self.collapse_whitespaces:
-            # text = ' '.join(text.split())
-            text = re.sub(r" +", " ", text)
+        if self._fix_whitespaces:
+            text = self.fix_whitespaces(text)
 
-        if self.strip:
+        if self._collapse_whitespaces:
+            text = self.collapse_whitespaces(text)
+
+        if self._strip:
             text = text.strip()
 
-        if self.single_quotes_only:
-            for quote in QUOTES:
-                text = text.replace(quote, "'")
-        # Convert all brackets to regular parentheses
-        if self.regular_parentheses_only:
-            for ob in LEFT_PARENTHESES:
-                text = text.replace(ob, "(")
-            for cb in RIGHT_PARENTHESES:
-                text = text.replace(cb, ")")
+        if self._single_quotes_only:
+            text = self.single_quotes_only(text)
 
-        if self.hanja2hangle:
-            text = hanja_to_hangle(text)
+        if self._regular_parentheses_only:
+            text = self.regular_parentheses_only(text)
 
-        if self.fix_emoticons:
-            text = emoticon_normalize(text, num_repeats=self.num_repeats)
+        if self._hanja2hangle:
+            text = self.hanja2hangle(text)
+
+        if self._fix_emoticons:
+            text = self.emoticon_normalize(text, num_repeats=self._num_repeats)
+
         return text
 
 
@@ -869,7 +958,3 @@ strict_normalize = Normalizer(
 #         for cb in {')', '>', ']', '}', '&gt;'}:
 #             text = text.replace(cb, ')')
 #         return text
-
-
-# excess_normalize = ExcessNormalizer(strip=True, collapse=False, hyphens=True, quotes=True, ellipsis=True, tildes=True, lower=True)
-# excess_normalize_wo_lower = ExcessNormalizer(strip=True, collapse=False, hyphens=True, quotes=True, ellipsis=True, tildes=True, lower=False)

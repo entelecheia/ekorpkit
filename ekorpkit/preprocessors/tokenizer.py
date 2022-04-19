@@ -14,9 +14,9 @@ class Tokenizer:
     def __init__(
         self,
         normalize=None,
-        tokenize=None,
-        tokenize_article=None,
-        extract=None,
+        tokenize={},
+        tokenize_article={},
+        extract={},
         verbose=False,
         **kwargs,
     ):
@@ -236,7 +236,7 @@ class SimpleTokenizer(Tokenizer):
 class PynoriTokenizer(Tokenizer):
     def __init__(
         self,
-        pynori=None,
+        pynori={},
         **kwargs,
     ):
         logging.warning("Initializing Pynori...")
@@ -281,7 +281,7 @@ class PynoriTokenizer(Tokenizer):
 class MecabTokenizer(Tokenizer):
     def __init__(
         self,
-        mecab=None,
+        mecab={},
         **kwargs,
     ):
 
@@ -324,7 +324,7 @@ class MecabTokenizer(Tokenizer):
 class BWPTokenizer(Tokenizer):
     def __init__(
         self,
-        bwp=None,
+        bwp={},
         **kwargs,
     ):
         logging.warning("Initializing BertWordPieceTokenizer...")
