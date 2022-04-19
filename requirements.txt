@@ -4,7 +4,7 @@ openpyxl
 pandas
 wasabi
 hydra-core
-hydra_colorlog
+# hydra_colorlog
 chardet
 rehash
 requests

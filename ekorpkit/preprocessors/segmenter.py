@@ -26,13 +26,13 @@ class BaseSegmenter:
 class Segmenter(BaseSegmenter):
     def __init__(
         self,
-        separators=None,
-        merge=None,
-        split=None,
-        filter_language=None,
+        separators={},
+        merge={},
+        split={},
+        filter_language={},
         filter_programming_language=False,
-        filter_sentence_length=None,
-        chunk=None,
+        filter_sentence_length={},
+        chunk={},
         return_type="list",
         verbose=False,
         print_args=False,
@@ -415,9 +415,10 @@ class NLTKSegmenter(Segmenter):
 
 
 class SimpleSegmenter(Segmenter):
-    def __init__(self, simple=None, **kwargs):
-        if simple is None:
-            simple = {}
+    def __init__(self, simple={}, **kwargs):
+
+        simple = simple or {}
+        if not simple:
             simple["separator"] = "\n"
             simple["remove_newlines"] = True
 
@@ -436,11 +437,11 @@ class SimpleSegmenter(Segmenter):
 
 
 class PySBDSegmenter(Segmenter):
-    def __init__(self, pysbd=None, **kwargs):
+    def __init__(self, pysbd={}, **kwargs):
         import pysbd as pySBD
 
-        if pysbd is None:
-            pysbd = {}
+        pysbd = pysbd or {}
+        if not pysbd:
             pysbd["language"] = "en"
             pysbd["clean"] = False
 
@@ -454,11 +455,11 @@ class PySBDSegmenter(Segmenter):
 
 
 class KSSSegmenter(Segmenter):
-    def __init__(self, kss=None, **kwargs):
+    def __init__(self, kss={}, **kwargs):
         from ekorpkit.preprocessors import KSS
 
-        if kss is None:
-            kss = {}
+        kss = kss or {}
+        if not kss:
             kss["use_heuristic"] = False
             kss["backend"] = "fugashi"
 

@@ -14,14 +14,20 @@ class Tokenizer:
     def __init__(
         self,
         normalize=None,
-        tokenize=None,
-        tokenize_article=None,
-        extract=None,
+        tokenize={},
+        tokenize_article={},
+        extract={},
         verbose=False,
         **kwargs,
     ):
 
         self.verbose = verbose
+        if tokenize is None:
+            tokenize = {}
+        if tokenize_article is None:
+            tokenize_article = {}
+        if extract is None:
+            extract = {}
 
         self._normalize = normalize
         if eKonf.is_instantiatable(self._normalize):
@@ -29,6 +35,7 @@ class Tokenizer:
                 print(f"[ekorpkit]: instantiating {self._normalize['_target_']}...")
             self._normalize = eKonf.instantiate(self._normalize)
             # print(f"[ekorpkit]: {self._normalize.__name__} is instantiated.")
+
 
         self._lowercase = tokenize.get("lowercase", False)
         self._flatten = tokenize.get("flatten", True)
@@ -229,7 +236,7 @@ class SimpleTokenizer(Tokenizer):
 class PynoriTokenizer(Tokenizer):
     def __init__(
         self,
-        pynori=None,
+        pynori={},
         **kwargs,
     ):
         logging.warning("Initializing Pynori...")
@@ -274,7 +281,7 @@ class PynoriTokenizer(Tokenizer):
 class MecabTokenizer(Tokenizer):
     def __init__(
         self,
-        mecab=None,
+        mecab={},
         **kwargs,
     ):
 
@@ -317,7 +324,7 @@ class MecabTokenizer(Tokenizer):
 class BWPTokenizer(Tokenizer):
     def __init__(
         self,
-        bwp=None,
+        bwp={},
         **kwargs,
     ):
         logging.warning("Initializing BertWordPieceTokenizer...")
