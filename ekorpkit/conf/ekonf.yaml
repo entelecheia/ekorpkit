@@ -16,8 +16,6 @@ defaults:
   - preprocessor/segmenter: default
   - preprocessor/tokenizer: default
 
-  - override hydra/hydra_logging: colorlog
-  - override hydra/job_logging: colorlog
   - override hydra/help: help
 
 app_name: ${about.app.name}

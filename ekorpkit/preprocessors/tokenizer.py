@@ -22,6 +22,12 @@ class Tokenizer:
     ):
 
         self.verbose = verbose
+        if tokenize is None:
+            tokenize = {}
+        if tokenize_article is None:
+            tokenize_article = {}
+        if extract is None:
+            extract = {}
 
         self._normalize = normalize
         if eKonf.is_instantiatable(self._normalize):
@@ -29,6 +35,7 @@ class Tokenizer:
                 print(f"[ekorpkit]: instantiating {self._normalize['_target_']}...")
             self._normalize = eKonf.instantiate(self._normalize)
             # print(f"[ekorpkit]: {self._normalize.__name__} is instantiated.")
+
 
         self._lowercase = tokenize.get("lowercase", False)
         self._flatten = tokenize.get("flatten", True)

@@ -41,10 +41,10 @@ def download_from_web(**cfg):
     os.makedirs(args.output_dir, exist_ok=True)
     if not os.listdir(args.output_dir) or args.force_download:
         for filename, url in args.urls.items():
-            file_path = f"{args.output_dir}/{filename}"
-            print(f"Downloading {url} to {file_path}")
+            filepath = f"{args.output_dir}/{filename}"
+            print(f"Downloading {url} to {filepath}")
             # download_file(url, file_path)
-            web_download(url, file_path, args.name, force_download=False)
+            web_download(url, filepath, args.name, force_download=False)
         if args.extract_command:
             print(args.extract_command)
     else:
@@ -56,7 +56,7 @@ def download_from_gdrive(**cfg):
     os.makedirs(args.output_dir, exist_ok=True)
     for filename, url in args.urls.items():
         file_path = f"{args.output_dir}/{filename}"
-        google_drive_download(url, file_path, args.name, args.force_download)
+        gdrive_download(url, file_path, args.name, args.force_download)
 
 
 def download_from_gdrive_untar(**cfg):
@@ -64,74 +64,94 @@ def download_from_gdrive_untar(**cfg):
     os.makedirs(args.output_dir, exist_ok=True)
     for filename, url in args.urls.items():
         file_path = f"{args.output_dir}/{filename}"
-        google_download_untar(url, file_path, args.name, args.force_download)
+        gdrive_download_untar(url, file_path, args.name, args.force_download)
 
 
-def web_download(url, output_path, name="", force_download=False):
+def web_download(
+    url, local_path, filename="", force_download=False, verbose=True, **kwargs
+):
+    if filename == "":
+        filename = os.path.basename(local_path)
     site = request.urlopen(url)
     meta = site.info()
     remote_size = int(meta["Content-Length"])
     if (
         (not force_download)
-        and os.path.exists(output_path)
-        and (os.stat(output_path).st_size == remote_size)
+        and os.path.exists(local_path)
+        and (os.stat(local_path).st_size == remote_size)
     ):
-        print(f"[eKorpkit] Corpus `{name}` is already downloaded at {output_path}")
+        if verbose:
+            print(f"\[ekorpkit\] `{filename}` is already downloaded at {local_path}")
         return None
-    filename = os.path.basename(output_path)
+    filename = os.path.basename(local_path)
     with tqdm(
-        unit="B", unit_scale=True, miniters=1, desc=f"[{name}] download {filename}"
+        unit="B", unit_scale=True, miniters=1, desc=f"[{filename}] download {filename}"
     ) as t:
-        request.urlretrieve(url, filename=output_path, reporthook=_reporthook(t))
+        request.urlretrieve(url, filename=local_path, reporthook=_reporthook(t))
 
 
-def web_download_unzip(url, zip_path, corpus_name="", force_download=False):
-    web_download(url, zip_path, corpus_name, force_download)
+def web_download_unzip(
+    url, zip_path, filename="", force_download=False, verbose=True, **kwargs
+):
+    web_download(url, zip_path, filename, force_download)
     # assume that path/to/abc.zip consists path/to/abc
     data_path = zip_path[:-4]
     if (not force_download) and os.path.exists(data_path):
-        print(f"[eKorpkit] Corpus `{corpus_name}` is already extracted at {data_path}")
+        if verbose:
+            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
         return None
     data_root = os.path.dirname(zip_path)
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(data_root)
-    print(f"unzip {data_path}")
+    if verbose:
+        print(f"unzip {data_path}")
 
 
-def web_download_un7z(url, zip_path, corpus_name="", force_download=False):
+def web_download_un7z(
+    url, zip_path, filename="", force_download=False, verbose=True, **kwargs
+):
     import py7zr
 
-    web_download(url, zip_path, corpus_name, force_download)
+    web_download(url, zip_path, filename, force_download)
     # assume that path/to/abc.zip consists path/to/abc
     data_path = zip_path[:-3]
     if (not force_download) and os.path.exists(data_path):
-        print(f"[eKorpkit] Corpus `{corpus_name}` is already extracted at {data_path}")
+        if verbose:
+            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
         return None
     # data_root = os.path.dirname(zip_path)
     with py7zr.SevenZipFile(zip_path, mode="r") as z:
         z.extractall()
-    print(f"un7z {data_path}")
+    if verbose:
+        print(f"un7z {data_path}")
 
 
-def web_download_untar(url, tar_path, corpus_name="", force_download=False):
-    web_download(url, tar_path, corpus_name, force_download)
+def web_download_untar(
+    url, tar_path, filename="", force_download=False, verbose=True, **kwargs
+):
+    web_download(url, tar_path, filename, force_download)
     # assume that path/to/abc.tar consists path/to/abc
     data_path = tar_path[:-4]
     if (not force_download) and os.path.exists(data_path):
-        print(f"[eKorpkit] Corpus `{corpus_name}` is already extracted at {data_path}")
+        if verbose:
+            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
         return None
     data_root = os.path.dirname(tar_path)
     with tarfile.open(tar_path) as tar:
         tar.extractall(data_root)
-    print(f"decompress {tar_path}")
+    if verbose:
+        print(f"decompress {tar_path}")
 
 
-def web_download_ungzip(url, gzip_path, corpus_name="", force_download=False):
-    web_download(url, gzip_path, corpus_name, force_download)
+def web_download_ungzip(
+    url, gzip_path, filename="", force_download=False, verbose=True, **kwargs
+):
+    web_download(url, gzip_path, filename, force_download)
     # assume that path/to/abc.gzip consists path/to/abc
     data_path = gzip_path[:-3]
     if (not force_download) and os.path.exists(data_path):
-        print(f"[eKorpkit] Corpus `{corpus_name}` is already extracted at {data_path}")
+        if verbose:
+            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
         return None
     with gzip.open(gzip_path, "rb") as fi:
         with open(data_path, "wb") as fo:
@@ -139,43 +159,56 @@ def web_download_ungzip(url, gzip_path, corpus_name="", force_download=False):
     print(f"decompress {gzip_path}")
 
 
-def google_download_un7z(file_id, zip_path, corpus_name="", force_download=False):
+def gdrive_download_un7z(
+    file_id, zip_path, filename="", force_download=False, verbose=True, **kwargs
+):
     import py7zr
 
-    google_drive_download(file_id, zip_path, corpus_name, force_download)
+    gdrive_download(file_id, zip_path, filename, force_download)
     # assume that path/to/abc.zip consists path/to/abc
     data_path = zip_path[:-3]
     if (not force_download) and os.path.exists(data_path):
-        print(f"[eKorpkit] Corpus `{corpus_name}` is already extracted at {data_path}")
+        if verbose:
+            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
         return None
     # data_root = os.path.dirname(zip_path)
     with py7zr.SevenZipFile(zip_path, mode="r") as z:
         z.extractall(path=data_path)
-    print(f"un7z {data_path}")
+    if verbose:
+        print(f"un7z {data_path}")
 
 
-def google_download_untar(file_id, local_path, corpus_name="", force_download=False):
-    google_drive_download(file_id, local_path, corpus_name, force_download)
+def gdrive_download_untar(
+    file_id, local_path, filename="", force_download=False, verbose=True, **kwargs
+):
+    gdrive_download(file_id, local_path, filename, force_download)
     # assume that path/to/abc.tar consists path/to/abc
     data_path = local_path[: local_path.find(".tar")]
     if (not force_download) and os.path.exists(data_path):
-        print(f"[eKorpkit] Corpus `{corpus_name}` is already extracted at {data_path}")
+        if verbose:
+            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
         return None
     data_root = os.path.dirname(local_path)
     with tarfile.open(local_path) as tar:
         tar.extractall(data_root)
-    print(f"decompress {local_path}")
+    if verbose:
+        print(f"decompress {local_path}")
 
 
-def google_drive_download(file_id, local_path, filename="", force_download=False):
+def gdrive_download(
+    file_id, local_path, filename="", force_download=False, verbose=True, **kwargs
+):
     def get_confirm_token(response):
         for key, value in response.cookies.items():
             if key.startswith("download_warning"):
                 return value
         return None
 
+    if filename == "":
+        filename = os.path.basename(local_path)
     if (not force_download) and os.path.exists(local_path):
-        print(f"[eKorpkit] `{filename}` is already downloaded at {local_path}")
+        if verbose:
+            print(f"[ekorpkit] `{filename}` is already downloaded at {local_path}")
         return None
 
     # init a HTTP session
