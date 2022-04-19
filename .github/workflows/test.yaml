@@ -31,7 +31,11 @@ jobs:
 
       - name: Install
         run: |
-          pip install -e .\[tokenize\]
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            pip install -e .^[tokenize^]
+          else
+            pip install -e .\[tokenize\]
+          fi
           pip install -r requirements-test.txt
 
       - name: Run tests
