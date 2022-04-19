@@ -29,13 +29,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - name: Install
+      - name: Install-windows
+        if: runner.os == 'Windows'
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            pip install -e .^[tokenize^]
-          else
-            pip install -e .\[tokenize\]
-          fi
+          pip install -e .^[tokenize^]
+          pip install -r requirements-test.txt
+
+      - name: Install-others
+        if: runner.os != 'Windows'
+        run: |
+          pip install -e .\[tokenize\]
           pip install -r requirements-test.txt
 
       - name: Run tests
