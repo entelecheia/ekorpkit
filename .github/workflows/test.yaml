@@ -32,7 +32,7 @@ jobs:
       - name: Install-windows
         if: runner.os == 'Windows'
         run: |
-          pip install -e .^[tokenize^]
+          pip install -e ".[tokenize]"
           pip install -r requirements-test.txt
 
       - name: Install-others
