@@ -31,7 +31,7 @@ jobs:
 
       - name: Install
         run: |
-          pip install -e .
+          pip install -e .\[tokenize\]
           pip install -r requirements-test.txt
 
       - name: Run tests
