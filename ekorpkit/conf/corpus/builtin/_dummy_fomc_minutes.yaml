@@ -1,0 +1,46 @@
+defaults:
+  - _build
+  - /fetch/downloader: _dummy
+  - /pipeline/normalize/normalizer: formal_en
+  - /pipeline/segment/segmenter: pysbd
+  - override /fetch/loader: csv
+
+name: fomc_minutes
+fullname: Federal Open Market Committee (FOMC) Corpus
+lang: en
+category: formal
+domain: econ
+description: FOMC
+license: 
+homepage: https://www.federalreserve.gov
+version: 1.0.0
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    # content_type: str
+    date: str
+    speaker: str
+    title: str
+
+fetch:
+  data_dir: ${oc.select:..data_dir, .}
+  data_sources: 
+    train: ${..downloader.output_file}
+
+pipeline:        
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - segment
+    # - filter_length
+    - drop_duplicates
+  save_samples:
+    num_samples_to_save: 1
+    sample_length_to_print: 100

@@ -216,7 +216,7 @@ class Segmenter(BaseSegmenter):
                             print(f"===> skipping segment {i}: {e}")
                             continue
 
-                sentences = self._filter_sentence_length(sentences)
+                sentences = self.filter_sentence_length(sentences)
                 if self._return_type == "list":
                     segments.append(sentences)
                 else:
@@ -228,7 +228,7 @@ class Segmenter(BaseSegmenter):
             else self._out_segment_separator.join(segments)
         )
 
-    def _filter_sentence_length(self, sentences):
+    def filter_sentence_length(self, sentences):
         if self._filter_sentence_length:
             sentences = [
                 sent
@@ -405,7 +405,7 @@ class NLTKSegmenter(Segmenter):
     def __init__(self, **kwargs):
         import nltk
 
-        nltk.download("punkt")
+        nltk.download("punkt", quiet=True)
         super().__init__(**kwargs)
 
     def segment(self, text):

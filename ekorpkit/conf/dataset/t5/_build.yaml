@@ -3,8 +3,8 @@ defaults:
   - /info: t5_build
   - /info/stat: t5
   - /pipeline: t5_build_pipeline
-  - override /cmd@_global_: fetch_t5
 
+_target_: ekorpkit.io.fetch.build.DatasetBuilder
 name: 
 category: general
 data_dir: ${dir.dataset}/t5/${.name}

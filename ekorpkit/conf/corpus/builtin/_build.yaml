@@ -3,9 +3,9 @@ defaults:
   - /info: corpus_build
   - /info/stat: corpus
   - /pipeline: corpus_build_pipeline
-  - override /cmd@_global_: fetch_corpus
 
-name: 
+_target_: ekorpkit.io.fetch.build.DatasetBuilder
+name:
 data_dir: ${dir.corpus}/${.name}
 # data_dir: ${dir.archive}/datasets/lmdata/${.name}
 filetype: .parquet

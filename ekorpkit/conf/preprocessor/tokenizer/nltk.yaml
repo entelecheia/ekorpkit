@@ -1,0 +1,19 @@
+defaults:
+  - default
+
+_target_: ekorpkit.preprocessors.tokenizer.NLTKTokenizer
+nltk:
+  lemmatize: false
+  stem: true
+  lemmatizer:
+    _target_: nltk.stem.WordNetLemmatizer
+  stemmer:
+    _target_: nltk.stem.PorterStemmer
+extract:
+  noun_postags:
+    - NN
+    - NNP
+    - NNS
+    - NNPS
+  stop_postags:
+    - '.'

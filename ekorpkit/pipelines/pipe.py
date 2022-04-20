@@ -1,6 +1,6 @@
 import codecs
 import os
-import ekorpkit.utils.batch as batch
+import ekorpkit.utils.batch.batcher as batcher
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
@@ -26,22 +26,26 @@ def apply(
     minibatch_size=None,
     **kwargs,
 ):
-    batcher = batch.batcher
-    if use_batcher and batcher is not None:
-        batcher_minibatch_size = batcher.minibatch_size
+    batcher_instance = batcher.batcher_instance
+    if use_batcher and batcher_instance is not None:
+        if batcher_instance is not None:
+            batcher_minibatch_size = batcher_instance.minibatch_size
+        else:
+            batcher_minibatch_size = 1000
         if minibatch_size is None:
             minibatch_size = batcher_minibatch_size
-        if batcher.procs > 1:
-            batcher.minibatch_size = min(
-                int(len(series) / batcher.procs) + 1, minibatch_size
+        if batcher_instance.procs > 1:
+            batcher_instance.minibatch_size = min(
+                int(len(series) / batcher_instance.procs) + 1, minibatch_size
             )
             if verbose:
-                msg.info(f"Using batcher with minibatch size: {batcher.minibatch_size}")
-            results = decorator_apply(func, batcher, description=description)(series)
-            batcher.minibatch_size = batcher_minibatch_size
+                msg.info(f"Using batcher with minibatch size: {batcher_instance.minibatch_size}")
+            results = decorator_apply(func, batcher_instance, description=description)(series)
+            if batcher_instance is not None:
+                batcher_instance.minibatch_size = batcher_minibatch_size
             return results
 
-    if verbose and batcher is None:
+    if verbose and batcher_instance is None:
         msg.warn("Warning: batcher not initialized")
     tqdm.pandas(desc=description)
     return series.progress_apply(func)

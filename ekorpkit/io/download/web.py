@@ -9,7 +9,9 @@ from urllib import request
 from ekorpkit import eKonf
 
 
-GOOGLE_DRIVE_URL = "https://docs.google.com/uc?export=download"
+# GOOGLE_DRIVE_URL = "https://drive.google.com/uc"
+GOOGLE_DRIVE_URL = "https://drive.google.com/uc?export=download"
+CHUNK_SIZE = 512 * 1024  # 512KB
 
 
 def download_from_gcs(**cfg):
@@ -196,13 +198,15 @@ def gdrive_download_untar(
 
 
 def gdrive_download(
-    file_id, local_path, filename="", force_download=False, verbose=True, **kwargs
+    file_id,
+    local_path,
+    filename="",
+    force_download=False,
+    verify=True,
+    verbose=True,
+    **kwargs,
 ):
-    def get_confirm_token(response):
-        for key, value in response.cookies.items():
-            if key.startswith("download_warning"):
-                return value
-        return None
+    import gdown
 
     if filename == "":
         filename = os.path.basename(local_path)
@@ -211,35 +215,19 @@ def gdrive_download(
             print(f"[ekorpkit] `{filename}` is already downloaded at {local_path}")
         return None
 
-    # init a HTTP session
-    session = requests.Session()
+    if os.path.dirname(local_path):
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
-    # make a request
-    response = session.get(GOOGLE_DRIVE_URL, params={"id": file_id}, stream=True)
+    gdown.download(
+        id=file_id,
+        output=local_path,
+        quiet=not verbose,
+        fuzzy=True,
+        verify=verify,
+    )
+    if verbose:
+        print(f"download {filename}")
 
-    # get confirmation token
-    token = get_confirm_token(response)
-
-    if token:
-        params = {"id": file_id, "confirm": token}
-        response = session.get(GOOGLE_DRIVE_URL, params=params, stream=True)
-
-    # download to disk
-    with open(local_path, "wb") as f:
-        content_length = response.headers.get("Content-Length")
-        total = int(content_length) if content_length is not None else None
-        progress = tqdm(
-            unit="B",
-            unit_scale=True,
-            total=total,
-            initial=0,
-            desc=f"[{filename}]",
-        )
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                progress.update(len(chunk))
-                f.write(chunk)
-        progress.close()
 
 
 def _reporthook(t):

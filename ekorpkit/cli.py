@@ -77,9 +77,9 @@ def init_environ(cfg, verbose=False):
             if verbose:
                 print(client)
 
-        batch.batcher = Batcher(backend_handle=backend_handle, **env.batcher)
+        batch.batcher_instance = Batcher(backend_handle=backend_handle, **env.batcher)
         if verbose:
-            print(batch.batcher)
+            print(batch.batcher_instance)
     if verbose:
         print()
 
