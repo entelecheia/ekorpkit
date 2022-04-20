@@ -128,6 +128,12 @@ nltk.tokenize(text)
 
 > ['I/PRP', 'shall/MD', 'reemphas/VB', 'some/DT', 'of/IN', 'those/DT', 'thought/NNS', 'today/NN', 'in/IN', 'the/DT', 'context/NN', 'of/IN', 'legisl/JJ', 'propos/NNS', 'that/WDT', 'are/VBP', 'now/RB', 'befor/IN', 'the/DT', 'current/JJ', 'congress/NNP', './.']
 
+```python
+ nltk.nouns(text)
+```
+
+> ['thought', 'today', 'context', 'propos', 'congress']
+
 - compose a config for the mecab class
 
 ```python
