@@ -18,6 +18,7 @@ class Dataset:
 
         if self.info:
             self.args = eKonf.merge(self.args, self.info)
+            self.info = eKonf.to_dict(self.info)
 
         if self.verbose:
             msg.info(f"Intantiating a dataset {self.name} with a config:")
@@ -49,6 +50,18 @@ class Dataset:
 
         if self.autoload:
             self.load()
+
+    def __str__(self):
+        classname = self.__class__.__name__
+        s = f"{classname} : {self.name}"
+        return s
+
+    def __getitem__(self, split):
+        return self.splits[split]
+
+    @property
+    def ID(self):
+        return self._id_key
 
     def load(self):
         for split, data_file in self.data_files.items():

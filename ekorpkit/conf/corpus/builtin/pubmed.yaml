@@ -1,8 +1,8 @@
 defaults:
   - _build
   - /fetch/downloader: pubmed
-  - /pipeline/normalize/normalizer: formal_en
-  - /pipeline/segment/segmenter: pysbd
+  - /preprocessor/normalizer: formal_en
+  - /preprocessor/segmenter: pysbd
   - /fetch/loader/decompressor: gzip
   - override /fetch/loader/parser: pubmed
 

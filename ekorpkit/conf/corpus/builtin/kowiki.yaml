@@ -1,8 +1,8 @@
 defaults:
   - _build
   - /fetch/downloader: kowiki
-  - /pipeline/normalize/normalizer: formal_ko
-  - /pipeline/segment/segmenter: kss
+  - /preprocessor/normalizer: formal_ko
+  - /preprocessor/segmenter: kss
   - override /fetch/loader/parser: jsonlines
 
 name: kowiki

@@ -1,7 +1,7 @@
 defaults:
   - _build
-  - /pipeline/normalize/normalizer: formal_en
-  - /pipeline/segment/segmenter: pysbd
+  - /preprocessor/normalizer: formal_en
+  - /preprocessor/segmenter: pysbd
   - override /fetch/loader: csv
 
 name: us_equities_news

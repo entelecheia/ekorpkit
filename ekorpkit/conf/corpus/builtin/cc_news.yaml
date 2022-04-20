@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /pipeline/normalize/normalizer: formal_en
+  - /preprocessor/normalizer: formal_en
   - override /fetch/loader: hfds
 
 name: cc_news

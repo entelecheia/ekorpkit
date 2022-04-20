@@ -1,8 +1,8 @@
 defaults:
   - _build
   - /fetch/downloader: kcbert
-  - /pipeline/normalize/normalizer: informal_ko
-  - /pipeline/segment/segmenter: kss_merge_article
+  - /preprocessor/normalizer: informal_ko
+  - /preprocessor/segmenter: kss_merge_article
   - override /fetch/loader/parser: plaintext_split
 
 name: kcbert

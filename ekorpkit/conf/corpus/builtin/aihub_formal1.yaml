@@ -1,7 +1,7 @@
 defaults:
   - _build
-  - /pipeline/normalize/normalizer: formal_ko
-  - /pipeline/segment/segmenter: kss
+  - /preprocessor/normalizer: formal_ko
+  - /preprocessor/segmenter: kss
 
 name: aihub_formal1
 fullname: AiHub Formal Corpus 1

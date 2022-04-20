@@ -1,8 +1,8 @@
 defaults:
   - _default
   - /pipeline: dataframe_pipeline
-  # - /pipeline/normalize/normalizer: formal_en
-  # - /pipeline/segment/segmenter: pysbd
+  # - /preprocessor/normalizer: formal_en
+  # - /preprocessor/segmenter: pysbd
   - override /cmd@_global_: dataframe_task
 
 name: dataframe_task

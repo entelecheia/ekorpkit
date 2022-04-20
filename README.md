@@ -2,8 +2,9 @@
 
 [![PyPI version](https://badge.fury.io/py/ekorpkit.svg)](https://badge.fury.io/py/ekorpkit) [![release](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml) [![test](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml) ![Codecov](https://img.shields.io/codecov/c/gh/entelecheia/ekorpkit) [![markdown-autodocs](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml)
 
-This package provides corpus management and analysis pipelines such as extraction, transformation, tokenization, training, and visualization.
-This package does not support downloading corpus files.
+eKorpkit provides a flexible interface for corpus management and analysis pipelines such as extraction, transformation, tokenization, training, and visualization.
+
+- Powerful config composition backed by [Hydra](https://hydra.cc/) - Easily swap out corpora, datasets, models, preprocessors, visualizers and many more configurations without touching the code.
 
 ## [The eKorpkit Corpus](https://github.com/entelecheia/ekorpkit/blob/main/docs/corpus/README.md)
 
@@ -33,13 +34,14 @@ git clone https://github.com/entelecheia/ekorpkit-config.git
 ekorpkit --config-dir /workspace/data/ekorpkit-config/config \
     project=esgml \
     dir.workspace=/workspace \
+    num_workers=1 \
     env.distributed_framework.backend=joblib \
-    num_workers=230 \
-    +dataset/simple=mp_tone_kr \
-    dataset.simple.fetch.calculate_stats=true \
-    dataset.simple.fetch.preprocess_text=true \
-    dataset.simple.fetch.overwrite=false \
-    dataset.simple.fetch.force_download=false
+    +corpus/builtin=_dummy_fomc_minutes \
+    cmd=fetch_builtin_corpus \
+    corpus.builtin.fetch.calculate_stats=true \
+    corpus.builtin.fetch.preprocess_text=true \
+    corpus.builtin.fetch.overwrite=false \
+    corpus.builtin.fetch.force_download=false
 ```
 
 #### CLI Help
@@ -86,12 +88,58 @@ pprint(cfg)
 
 #### Instantiating objects with an ekorpkit config
 
+- compose a config for the nltk class
+
+```python
+config_group='preprocessor/tokenizer=nltk'
+cfg = eKonf.compose(config_group=config_group)
+pprint(eKonf.to_dict(cfg))
+nltk = eKonf.instantiate(cfg)
+```
+
+```python
+{'_target_': 'ekorpkit.preprocessors.tokenizer.NLTKTokenizer',
+ 'extract': {'no_space_for_non_nouns': False,
+             'noun_postags': ['NN', 'NNP', 'NNS', 'NNPS'],
+             'stop_postags': ['.'],
+             'stopwords': None,
+             'stopwords_path': None},
+ 'nltk': {'lemmatize': False,
+          'lemmatizer': {'_target_': 'nltk.stem.WordNetLemmatizer'},
+          'stem': True,
+          'stemmer': {'_target_': 'nltk.stem.PorterStemmer'}},
+ 'normalize': None,
+ 'tokenize': {'concat_surface_and_pos': True,
+              'flatten': True,
+              'include_whitespace_token': True,
+              'lowercase': False,
+              'punct_postags': ['SF', 'SP', 'SSO', 'SSC', 'SY'],
+              'tokenize_each_word': False,
+              'userdic_path': None,
+              'wordpieces_prefix': '##'},
+ 'tokenize_article': {'return_typ': 'str', 'sentence_separator': '\\n'},
+ 'verbose': False}
+```
+
+```ptyhon
+text = "I shall reemphasize some of those thoughts today in the context of legislative proposals that are now before the current Congress."
+nltk.tokenize(text)
+```
+
+> ['I/PRP', 'shall/MD', 'reemphas/VB', 'some/DT', 'of/IN', 'those/DT', 'thought/NNS', 'today/NN', 'in/IN', 'the/DT', 'context/NN', 'of/IN', 'legisl/JJ', 'propos/NNS', 'that/WDT', 'are/VBP', 'now/RB', 'befor/IN', 'the/DT', 'current/JJ', 'congress/NNP', './.']
+
+```python
+ nltk.nouns(text)
+```
+
+> ['thought', 'today', 'context', 'propos', 'congress']
+
 - compose a config for the mecab class
 
 ```python
 config_group='preprocessor/tokenizer=mecab'
 cfg = eKonf.compose(config_group=config_group)
-pprint(cfg)
+pprint(eKonf.to_dict(cfg))
 ```
 
 ```python
@@ -150,6 +198,7 @@ mecab.tokenize(text)
 
 ## References
 
+- [Hydra](https://hydra.cc/)
 - [Korpora](https://github.com/ko-nlp/Korpora)
 - [The Pile](https://github.com/EleutherAI/the-pile)
 - [soynlp](https://github.com/lovit/soynlp)
@@ -157,7 +206,6 @@ mecab.tokenize(text)
 - [kss](https://github.com/hyunwoongko/kss)
 - [fugashi](https://github.com/polm/fugashi)
 - [hanja](https://github.com/suminb/hanja)
-- [ChemDataExtractor](https://github.com/mcs07/ChemDataExtractor)
 
 ## License
 

@@ -1,7 +1,7 @@
 defaults:
   - _build
   - /fetch/downloader: _web
-  - /pipeline/normalize/normalizer: formal_en
+  - /preprocessor/normalizer: formal_en
   - override /fetch/loader/parser: email
 
 name: enron_mail

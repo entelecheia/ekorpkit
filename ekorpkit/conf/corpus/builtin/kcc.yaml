@@ -1,7 +1,7 @@
 defaults:
   - _build
   - /fetch/downloader: kcc
-  - /pipeline/normalize/normalizer: formal_ko
+  - /preprocessor/normalizer: formal_ko
   - override /fetch/loader/parser: plaintext_split
 
 name: kcc
