@@ -2,7 +2,6 @@ from io import StringIO
 from zipfile import ZipFile
 import pandas as pd
 from tqdm import tqdm
-from datasets import load_dataset
 from ekorpkit.io.parse.json import parse_data
 from joblib import Parallel, delayed
 from wasabi import msg
@@ -139,6 +138,8 @@ def load_csv_data(split_name, **loader_cfg):
 
 
 def load_hfds(split_name, **loader_cfg):
+    from datasets import load_dataset
+
     dataset_name = loader_cfg["name"]
     split = loader_cfg["data_souces"][split_name]
     subsets = loader_cfg["subset"]
