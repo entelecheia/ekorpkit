@@ -95,6 +95,12 @@ def test_dummy_corpus():
     os.remove(output_file)
     assert not os.path.exists(output_file)
 
+def test_build_corpus():
+    cfg = eKonf.compose(config_group='corpus/builtin=_dummy_fomc_minutes')
+    cfg['data_dir'] = './data/tmp/fomc_minutes'
+    db = eKonf.instantiate(cfg)
+    db.build()
+    assert True
 
 def test_about():
     from ekorpkit.cli import about
