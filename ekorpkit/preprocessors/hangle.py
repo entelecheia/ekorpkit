@@ -148,8 +148,8 @@ moum_list = [
     "ㅣ",
 ]
 
-doublespace_pattern = re.compile("\s+")
-repeatchars_pattern = re.compile("(\w)\\1{3,}")
+doublespace_pattern = re.compile(r"\s+")
+repeatchars_pattern = re.compile(r"(\w)\\1{3,}")
 
 
 def normalize(
@@ -159,7 +159,7 @@ def normalize(
     warnings.warn(message, DeprecationWarning, stacklevel=2)
 
     if remove_repeat > 0:
-        doc = repeatchars_pattern.sub("\\1" * remove_repeat, doc)
+        doc = repeatchars_pattern.sub(r"\\1" * remove_repeat, doc)
 
     f = []
     for c in doc:
