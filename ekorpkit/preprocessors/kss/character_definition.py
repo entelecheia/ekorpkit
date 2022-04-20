@@ -3,17 +3,16 @@ Character Definition
 
 Reference: `char.def` file.
 """
-from collections import defaultdict
-
-import emoji
 import regex
-
-_emojis = {}
-for lang in ["pt", "it", "es", "en"]:
-    _emojis.update(emoji.UNICODE_EMOJI[lang])
+from collections import defaultdict
 
 
 def get_emoji(text):
+    import emoji
+
+    _emojis = {}
+    for lang in ["pt", "it", "es", "en"]:
+        _emojis.update(emoji.UNICODE_EMOJI[lang])
     emoji_list = []
     flags = regex.findall("[\U0001F1E6-\U0001F1FF]", text)
 

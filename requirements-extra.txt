@@ -7,10 +7,10 @@
 fugashi					: tokenize, fugashi
 mecab-python3           : tokenize, mecab
 mecab-ko-dic			: tokenize, mecab
-pysbd					: tokenize, dataset
+pysbd					: tokenize, dataset, tokenize-en
 pynori					: tokenize, pynori
 soynlp					: tokenize, soynlp
-nltk					: tokenize, nltk
+nltk					: tokenize, nltk, tokenize-en
 sacremoses				: tokenize
 emoji					: tokenize, dataset
 # sentencepiece			: tokenize

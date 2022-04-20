@@ -8,7 +8,7 @@ from math import ceil
 from tqdm import tqdm
 import contextlib
 
-batcher = None
+batcher_instance = None
 
 class Batcher(object):
     """Scheduler to handle parallel jobs on minibatches

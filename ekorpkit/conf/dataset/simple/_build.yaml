@@ -3,8 +3,8 @@ defaults:
   - /info: dataset_build
   - /info/stat: dataset
   - /pipeline: dataset_build_pipeline
-  - override /cmd@_global_: fetch_simple
 
+_target_: ekorpkit.io.fetch.build.DatasetBuilder
 name: 
 category: general
 data_dir: ${dir.dataset}/simple/${.name}

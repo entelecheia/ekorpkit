@@ -1,0 +1,6 @@
+defaults:
+  - _default
+  
+_target_: ekorpkit.io.fetch.loader.dummy.DummyCorpus
+output_dir: ${oc.select:..data_dir, .}
+output_file: ${.name}${iif:${.compress},.csv.bz2,.csv}
