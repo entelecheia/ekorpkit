@@ -1,7 +1,7 @@
 defaults:
   - _build
-  - /pipeline/normalize/normalizer: formal_ko
-  - /pipeline/segment/segmenter: kss_merge_article
+  - /preprocessor/normalizer: formal_ko
+  - /preprocessor/segmenter: kss_merge_article
   - override /fetch/loader/parser: html_to_json
 
 name: kaist

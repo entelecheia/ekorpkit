@@ -39,8 +39,12 @@ def apply(
                 int(len(series) / batcher_instance.procs) + 1, minibatch_size
             )
             if verbose:
-                msg.info(f"Using batcher with minibatch size: {batcher_instance.minibatch_size}")
-            results = decorator_apply(func, batcher_instance, description=description)(series)
+                msg.info(
+                    f"Using batcher with minibatch size: {batcher_instance.minibatch_size}"
+                )
+            results = decorator_apply(func, batcher_instance, description=description)(
+                series
+            )
             if batcher_instance is not None:
                 batcher_instance.minibatch_size = batcher_minibatch_size
             return results
@@ -593,7 +597,7 @@ def normalize(df, args):
         if verbose:
             print("No columns specified")
         return df
-    normalizer = args.get("normalizer", None)
+    normalizer = args.get("preprocessor", {}).get("normalizer", None)
     if normalizer is None:
         if verbose:
             print("No normalizer specified")
@@ -648,7 +652,7 @@ def segment(df, args):
         if verbose:
             print("No columns specified")
         return df
-    segmenter = args.get("segmenter", None)
+    segmenter = args.get("preprocessor", {}).get("segmenter", None)
     if segmenter is None:
         if verbose:
             print("No segmenter specified")

@@ -1,8 +1,8 @@
 defaults:
   - _build
   - /fetch/downloader: pubmed
-  - /pipeline/normalize/normalizer: formal_en_parantheses
-  - /pipeline/segment/segmenter: pysbd_merge_article
+  - /preprocessor/normalizer: formal_en_parantheses
+  - /preprocessor/segmenter: pysbd_merge_article
   - override /fetch/loader/parser: pmc
 
 name: pmc_comm

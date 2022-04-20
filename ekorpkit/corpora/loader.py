@@ -81,15 +81,15 @@ class Corpora:
         return self.corpora[name]
 
     @property
-    def id_key(self):
+    def ID(self):
         return self._id_key
 
     @property
-    def id_keys(self):
+    def IDs(self):
         return self._id_keys
 
     @property
-    def text_key(self):
+    def TEXT(self):
         return self._text_key
 
     @property

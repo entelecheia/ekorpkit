@@ -1,7 +1,7 @@
 defaults:
   - _build
-  - /pipeline/normalize/normalizer: formal_en
-  - /pipeline/segment/segmenter: pysbd_merge_segment
+  - /preprocessor/normalizer: formal_en
+  - /preprocessor/segmenter: pysbd_merge_segment
   - override /fetch/loader: the_pile
 
 name: youtube_subtitles
