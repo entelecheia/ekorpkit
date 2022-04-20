@@ -1,2 +1,2 @@
-_target_: ekorpkit.ekonf.partial
-_partial_: ekorpkit.utils.func.len_wospc
+_partial_: true
+_target_: ekorpkit.utils.func.len_wospc

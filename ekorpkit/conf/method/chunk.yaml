@@ -1,2 +1,2 @@
-_target_: ekorpkit.ekonf.partial
-_partial_: ekorpkit.pipelines.pipe.chunk
+_partial_: true
+_target_: ekorpkit.pipelines.pipe.chunk
