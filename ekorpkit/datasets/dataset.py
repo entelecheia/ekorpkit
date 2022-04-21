@@ -36,9 +36,13 @@ class Dataset:
         if self.column_info is None:
             raise ValueError("Column info can't be None")
         self.splits = {}
+        self._keys = self.column_info["keys"]
 
         self._id_key = "id"
-        self._dtype = dict(self.column_info.get("data", None))
+        self._id_keys = self._keys[self._id_key]
+        if isinstance(self._id_keys, str):
+            self._id_keys = [self._id_keys]
+        self._data_keys = self.column_info.get("data", None)
 
         self.pipeline_args = self.args.get("pipeline", {})
         self.transform_pipeline = self.pipeline_args.get("_transform_", [])
@@ -63,10 +67,18 @@ class Dataset:
     def ID(self):
         return self._id_key
 
+    @property
+    def IDs(self):
+        return self._id_keys
+
+    @property
+    def DATA(self):
+        return list(self._data_keys.keys())
+
     def load(self):
         for split, data_file in self.data_files.items():
             data_file = self.data_dir / data_file
-            df = load_dataframe(data_file, dtype=self._dtype)
+            df = load_dataframe(data_file, dtype=self._data_keys)
             if self.process_pipeline and len(self.process_pipeline) > 0:
                 df = apply_pipeline(df, self.process_pipeline, self.pipeline_args)
             self.splits[split] = df

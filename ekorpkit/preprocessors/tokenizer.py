@@ -60,6 +60,9 @@ class Tokenizer:
             self._sentence_separator, "unicode_escape"
         )
 
+        self._postags = extract.get("postags", None)
+        if self._postags is None:
+            self._postags = []
         self._noun_postags = extract.get("noun_postags", None)
         if self._noun_postags is None:
             self._noun_postags = ["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"]
@@ -155,14 +158,14 @@ class Tokenizer:
         if nouns_only:
             tokens = _extract(
                 text,
-                nouns_only=True,
+                postags=self._noun_postags,
                 noun_postags=self._noun_postags,
                 stopwords=self._stopwords,
             )
         else:
             tokens = _extract(
                 text,
-                nouns_only=False,
+                postags=self._postags,
                 stop_postags=self._stop_postags,
                 no_space_for_non_nouns=self._no_space_for_non_nouns,
                 stopwords=self._stopwords,
@@ -244,7 +247,7 @@ def _token_to_tuple(_token):
 
 def _extract(
     tokenized_text,
-    nouns_only=False,
+    postags=[],
     noun_postags=["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"],
     stop_postags=["SP"],
     no_space_for_non_nouns=False,
@@ -259,49 +262,52 @@ def _extract(
         _token_to_tuple(token) for token in tokens if len(_token_to_tuple(token)) == 2
     ]
 
-    if nouns_only:
-        _tokens = [
-            token[0].strip() for token in _tokens_pos if token[1] in noun_postags
-        ]
-    else:
-        exist_sp_tag = False
+    exist_sp_tag = False
+    if no_space_for_non_nouns:
         for i, token in enumerate(_tokens_pos):
             if token[1] == "SP":
                 exist_sp_tag = True
                 break
 
-        _tokens = []
-        if exist_sp_tag and no_space_for_non_nouns:
-            prev_nonnoun_check = False
-            cont_morphs = []
-            i = 0
-            while i < len(_tokens_pos):
-                token = _tokens_pos[i]
-                if not prev_nonnoun_check and token[1] in noun_postags:
+    _tokens = []
+    if exist_sp_tag and no_space_for_non_nouns:
+        prev_nonnoun_check = False
+        cont_morphs = []
+        i = 0
+        while i < len(_tokens_pos):
+            token = _tokens_pos[i]
+            if not prev_nonnoun_check and token[1] in noun_postags:
+                _tokens.append(token[0])
+            elif (
+                not prev_nonnoun_check
+                and token[1] not in noun_postags
+                and token[1][0] != "S"
+            ):
+                prev_nonnoun_check = True
+                cont_morphs.append(token[0])
+            elif (
+                prev_nonnoun_check
+                and token[1] not in noun_postags
+                and token[1][0] != "S"
+            ):
+                cont_morphs.append(token[0])
+            else:
+                if len(cont_morphs) > 0:
+                    _tokens.append("".join(cont_morphs))
+                    cont_morphs = []
+                    prev_nonnoun_check = False
+                if token[1] != "SP":
                     _tokens.append(token[0])
-                elif (
-                    not prev_nonnoun_check
-                    and token[1] not in noun_postags
-                    and token[1][0] != "S"
-                ):
-                    prev_nonnoun_check = True
-                    cont_morphs.append(token[0])
-                elif (
-                    prev_nonnoun_check
-                    and token[1] not in noun_postags
-                    and token[1][0] != "S"
-                ):
-                    cont_morphs.append(token[0])
-                else:
-                    if len(cont_morphs) > 0:
-                        _tokens.append("".join(cont_morphs))
-                        cont_morphs = []
-                        prev_nonnoun_check = False
-                    if token[1] != "SP":
-                        _tokens.append(token[0])
-                i += 1
-            if len(cont_morphs) > 0:
-                _tokens.append("".join(cont_morphs))
+            i += 1
+        if len(cont_morphs) > 0:
+            _tokens.append("".join(cont_morphs))
+    else:
+        if len(postags) > 0:
+            _tokens = [
+                token[0].strip()
+                for token in _tokens_pos
+                if token[1] not in stop_postags and token[1] in postags
+            ]
         else:
             _tokens = [
                 token[0].strip()

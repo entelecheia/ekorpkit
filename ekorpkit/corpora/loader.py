@@ -23,7 +23,7 @@ class Corpora:
         self._metadata = None
         use_name_as_subdir = args.get("use_name_as_subdir", True)
         self.verbose = args.get("verbose", False)
-        self.column_info = self.args.get("column_info", None)
+        self.column_info = eKonf.to_dict(self.args.column_info)
 
         self._corpus_key = "corpus"
         self._text_key = "text"

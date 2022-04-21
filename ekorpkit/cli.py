@@ -1,11 +1,10 @@
 import os
 import logging
 import hydra
-import ekorpkit.utils.batch as batch
+import ekorpkit.utils.batch.batcher as batcher
 from ekorpkit import eKonf
 from pprint import pprint
 from wasabi import msg
-from ekorpkit.utils.batch.batcher import Batcher
 from .tasks.info import make_table
 
 
@@ -77,9 +76,11 @@ def init_environ(cfg, verbose=False):
             if verbose:
                 print(client)
 
-        batch.batcher_instance = Batcher(backend_handle=backend_handle, **env.batcher)
+        batcher.batcher_instance = batcher.Batcher(
+            backend_handle=backend_handle, **env.batcher
+        )
         if verbose:
-            print(batch.batcher_instance)
+            print(batcher.batcher_instance)
     if verbose:
         print()
 

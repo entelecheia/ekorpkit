@@ -1,8 +1,8 @@
 import codecs
 import os
-import ekorpkit.utils.batch.batcher as batcher
 import numpy as np
 import pandas as pd
+import ekorpkit.utils.batch.batcher as batcher
 from collections import OrderedDict
 from functools import partial, reduce
 from ekorpkit.io.file import get_filepaths, load_dataframe, save_dataframe
@@ -11,8 +11,6 @@ from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
 from hydra.utils import instantiate
 from ekorpkit import eKonf
-from omegaconf import DictConfig
-from omegaconf.listconfig import ListConfig
 from tqdm.auto import tqdm
 from wasabi import msg
 
@@ -75,9 +73,12 @@ def apply_pipe(df, pipe):
 
 
 def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
+    pipeline = eKonf.to_dict(pipeline)
+    pipeline_args = eKonf.to_dict(pipeline_args)
+
     pipeline_targets = []
     pipes = OrderedDict()
-    if isinstance(pipeline, (list, ListConfig)):
+    if isinstance(pipeline, list):
         for pipe in pipeline:
             pipes[pipe] = pipe
     elif isinstance(pipeline, str):
@@ -91,9 +92,9 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
     if verbose:
         print(f"Applying pipeline: {pipes}")
     for pipe, pipe_arg_name in pipes.items():
-        args = dict(pipeline_args.get(pipe_arg_name, {}))
+        args = pipeline_args.get(pipe_arg_name, {})
         if pipe != pipe_arg_name:
-            args_override = dict(pipeline_args.get(pipe, {}))
+            args_override = pipeline_args.get(pipe, {})
             args.update(args_override)
         if args and isinstance(args, dict):
             args.update(update_args)
@@ -103,6 +104,7 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
 
 
 def eval_columns(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     expressions = args.get("expressions", None)
     engine = args.get("engine", None)
@@ -114,14 +116,14 @@ def eval_columns(df, args):
     if verbose:
         print(f"Eval columns: {args}")
     if eval_at == "dataframe":
-        if isinstance(expressions, (list, ListConfig)):
+        if isinstance(expressions, list):
             for expr in expressions:
                 df.eval(expr, engine=engine, inplace=True)
         else:
             for col, expr in expressions.items():
                 df[col] = df.eval(expr, engine=engine)
     else:
-        if isinstance(expressions, (list, ListConfig)):
+        if isinstance(expressions, list):
             for expr in expressions:
                 pd.eval(expr, engine=engine, inplace=True, target=df)
         else:
@@ -134,6 +136,7 @@ def eval_columns(df, args):
 
 
 def combine_columns(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     columns = args.get("columns", None)
     if columns is None:
@@ -151,6 +154,7 @@ def combine_columns(df, args):
 
 
 def drop(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     labels = args.get("labels", None)
     axis = args.get("axis", 1)
@@ -174,6 +178,7 @@ def drop(df, args):
 
 
 def melt(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     id_vars = args.get("id_vars", None)
     value_vars = args.get("value_vars", None)
@@ -207,6 +212,7 @@ def melt(df, args):
 
 
 def plot(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     plot_cfg = args.get("visualize", {}).get("plot", {})
     if "_target_" not in plot_cfg:
@@ -248,6 +254,7 @@ def plot(df, args):
 
 
 def pivot(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     index = args.get("index", None)
     columns = args.get("columns", None)
@@ -265,12 +272,6 @@ def pivot(df, args):
         return df
     if verbose:
         print(f"Pivoting columns: {args}")
-    if isinstance(index, (list, ListConfig)):
-        index = list(index)
-    if isinstance(columns, (list, ListConfig)):
-        columns = list(columns)
-    if isinstance(values, (list, ListConfig)):
-        values = list(values)
     if len(values) == 1:
         values = values[0]
     df = df.pivot(index=index, columns=columns, values=values)
@@ -291,6 +292,7 @@ def pivot(df, args):
 def split_sampling(df, args):
     from sklearn.model_selection import train_test_split
 
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     stratify_on = args.get("stratify_on", None)
     random_state = args.get("random_state", 123)
@@ -298,10 +300,6 @@ def split_sampling(df, args):
     unique_key = args.get("unique_key", "id")
     test_size = args.get("test_size", 0.1)
     dev_size = args.get("dev_size", None)
-    if isinstance(stratify_on, ListConfig):
-        stratify_on = list(stratify_on)
-    if isinstance(groupby, ListConfig):
-        groupby = list(groupby)
     if verbose:
         print(f"Split sampling: {args}")
 
@@ -383,6 +381,7 @@ def split_sampling(df, args):
 
 
 def top_values(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     groupby = args.get("groupby", None)
     value_var = args.get("value_var", None)
@@ -394,8 +393,6 @@ def top_values(df, args):
     use_batcher = args.get("use_batcher", True)
     minibatch_size = args.get("minibatch_size", None)
 
-    if isinstance(groupby, ListConfig):
-        groupby = list(groupby)
     if verbose:
         print(f"Split sampling: {args}")
 
@@ -435,6 +432,7 @@ def top_values(df, args):
 
 
 def sampling(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     random_state = args.get("random_state", 123)
     groupby = args.get("groupby", None)
@@ -442,8 +440,6 @@ def sampling(df, args):
     value_var = args.get("value_var", None)
     columns_to_keep = args.get("columns_to_keep", None)
 
-    if isinstance(groupby, ListConfig):
-        groupby = list(groupby)
     if verbose:
         print(f"Split sampling: {args}")
 
@@ -491,6 +487,7 @@ def sampling(df, args):
 
 
 def aggregate_columns(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     onto_column = args.get("onto", None)
     aggregations = args.get("aggregations", None)
@@ -504,16 +501,12 @@ def aggregate_columns(df, args):
         if verbose:
             print("No groupby specified")
         return df
-    if isinstance(groupby_cloumns, ListConfig):
-        groupby_cloumns = list(groupby_cloumns)
     separator = codecs.decode(args["separator"], "unicode_escape")
 
     num_docs = df.shape[0]
     if verbose:
         print(f"Aggregating columns: {args}")
     if aggregations:
-        if isinstance(aggregations, DictConfig):
-            aggregations = dict(aggregations)
         df = df.groupby(groupby_cloumns, as_index=False).agg(aggregations)
     else:
         df[onto_column].fillna("", inplace=True)
@@ -534,6 +527,7 @@ def aggregate_columns(df, args):
 
 
 def explode_splits(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
@@ -543,8 +537,6 @@ def explode_splits(df, args):
     separator = codecs.decode(args["separator"], "unicode_escape")
     id_key = args.get("id_key", "id")
     split_key = args.get("split_key", "seg_id")
-    if isinstance(id_key, ListConfig):
-        id_key = list(id_key)
     if verbose:
         print(f"Exploding column: {args}")
 
@@ -559,6 +551,7 @@ def explode_splits(df, args):
 
 
 def rename_columns(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     new_names = args.get("new_names", None)
     if new_names is None:
@@ -591,6 +584,7 @@ def reset_index(df, args):
 
 
 def normalize(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
@@ -625,6 +619,7 @@ def normalize(df, args):
 
 
 def fillna(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
@@ -644,6 +639,7 @@ def fillna(df, args):
 
 
 def segment(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     use_batcher = args.get("use_batcher", True)
     minibatch_size = args.get("minibatch_size", None)
@@ -681,6 +677,7 @@ def segment(df, args):
 
 
 def tokenize(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     use_batcher = args.get("use_batcher", True)
     minibatch_size = args.get("minibatch_size", None)
@@ -718,6 +715,7 @@ def tokenize(df, args):
 
 
 def extract_tokens(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     use_batcher = args.get("use_batcher", True)
     nouns_ony = args.get("nouns_ony", True)
@@ -764,6 +762,7 @@ def extract_tokens(df, args):
 
 
 def chunk(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     use_batcher = args.get("use_batcher", True)
     minibatch_size = args.get("minibatch_size", None)
@@ -800,7 +799,33 @@ def chunk(df, args):
     return df
 
 
+def general_function(df, args):
+    args = eKonf.to_dict(args)
+    verbose = args.get("verbose", False)
+    apply_to = args.get("apply_to", None)
+    _function = args.get("function", None)
+    _params = args.get("parameters", None)
+    if verbose:
+        print(f"{_function} with [{_params}]")
+
+    with elapsed_timer(format_time=True) as elapsed:
+        if apply_to is None:
+            df = getattr(df, _function)(**_params)
+        else:
+            if isinstance(apply_to, str):
+                apply_to = [apply_to]
+            for key in apply_to:
+                if verbose:
+                    print(f"\nPreprocessing column: {key}")
+                df[key] = getattr(df[key], _function)(**_params)
+
+        if verbose:
+            msg.good("\n >> elapsed time to replace: {}\n".format(elapsed()))
+    return df
+
+
 def replace_whitespace(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
@@ -825,6 +850,7 @@ def replace_whitespace(df, args):
 
 
 def replace_regex(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
@@ -852,6 +878,7 @@ def replace_regex(df, args):
 
 
 def remove_startswith(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
@@ -882,6 +909,7 @@ def remove_startswith(df, args):
 
 
 def filter_length(df, args, **kwargs):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
@@ -939,6 +967,7 @@ def filter_length(df, args, **kwargs):
 
 
 def filter_query(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     query = args.get("query", None)
     if query is None:
@@ -964,6 +993,7 @@ def filter_query(df, args):
 
 
 def drop_duplicates(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", None)
     if apply_to is None:
@@ -989,6 +1019,7 @@ def drop_duplicates(df, args):
 
 
 def save_samples(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     sample_length_to_print = args.get("sample_length_to_print", 1000)
@@ -1034,6 +1065,7 @@ def save_samples(df, args):
 def stdout_samples(df, args):
     from contextlib import redirect_stdout
 
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     sample_length_to_print = args.get("sample_length_to_print", 1000)
@@ -1091,13 +1123,14 @@ def stdout_samples(df, args):
 
 
 def save_as_text(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     corpus_name = args.get("corpus_name", "corpus")
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
     doc_separator = args.get("doc_separator", "\n\n")
-    if isinstance(apply_to, (list, ListConfig)):
+    if isinstance(apply_to, list):
         apply_to = apply_to[0]
 
     os.makedirs(os.path.abspath(output_dir), exist_ok=True)
@@ -1122,6 +1155,7 @@ def save_as_text(df, args):
 
 
 def split_dataframe(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     num_splits = args.get("num_splits", 1)
     if num_splits <= 1:
@@ -1132,6 +1166,7 @@ def split_dataframe(df, args):
 
 
 def concat_dataframes(dfs, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     if isinstance(dfs, list):
         if verbose:
@@ -1146,6 +1181,7 @@ def concat_dataframes(dfs, args):
 def merge_dataframe(df=None, args=None):
     if args is None:
         raise ValueError("args must be specified")
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     filepath = args.get("filepath", None)
     data_dir = args.get("data_dir", None)
@@ -1158,16 +1194,10 @@ def merge_dataframe(df=None, args=None):
         raise ValueError("merge_on or (left_on and right_on) must be specified")
     if isinstance(merge_on, str):
         merge_on = [merge_on]
-    elif isinstance(merge_on, ListConfig):
-        merge_on = list(merge_on)
     if isinstance(left_on, str):
         left_on = [left_on]
-    elif isinstance(left_on, ListConfig):
-        left_on = list(left_on)
     if isinstance(right_on, str):
         right_on = [right_on]
-    elif isinstance(right_on, ListConfig):
-        right_on = list(right_on)
 
     if filepath:
         filepaths = get_filepaths(filepath)
@@ -1189,6 +1219,7 @@ def merge_dataframe(df=None, args=None):
 
 
 def save_metadata(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     filepath = args.get("filepath", None)
     filetype = args.get("filetype", None)
@@ -1199,7 +1230,7 @@ def save_metadata(df, args):
         print(f"Saving metadata: {args}")
 
     meta_info = column_info.get("meta", None)
-    if isinstance(meta_info, (dict, DictConfig)):
+    if isinstance(meta_info, dict):
         meta_columns = list(meta_info.keys())
         if "split" in meta_columns and "split" not in df.columns:
             df["split"] = split_name
@@ -1207,7 +1238,7 @@ def save_metadata(df, args):
         save_dataframe(df_meta, filepath, filetype, verbose)
 
     data_info = column_info.get("data", None)
-    if isinstance(data_info, (dict, DictConfig)):
+    if isinstance(data_info, dict):
         data_columns = list(data_info.keys())
         if "split" in data_columns and "split" not in df.columns:
             df["split"] = split_name
@@ -1217,6 +1248,7 @@ def save_metadata(df, args):
 
 
 def save_dataframe_pipe(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     filepath = args.get("filepath", None)
     filetype = args.get("filetype", None)
@@ -1258,20 +1290,16 @@ def save_dataframe_pipe(df, args):
 def load_dataframe_pipe(df=None, args=None):
     if args is None:
         raise ValueError("args must be specified")
+
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     filepath = args.get("filepath", None)
     data_dir = args.get("data_dir", None)
     data_file = args.get("data_file", None)
     dtype = args.get("dtype", None)
-    if isinstance(dtype, DictConfig):
-        dtype = dict(dtype)
-    elif isinstance(dtype, (list, ListConfig)):
+    if isinstance(dtype, list):
         dtype = {k: "str" for k in dtype}
     parse_dates = args.get("parse_dates", False)
-    if isinstance(parse_dates, DictConfig):
-        parse_dates = dict(parse_dates)
-    elif isinstance(parse_dates, ListConfig):
-        parse_dates = list(parse_dates)
 
     if filepath:
         filepaths = get_filepaths(filepath)
@@ -1294,6 +1322,7 @@ def load_dataframe_pipe(df=None, args=None):
 
 
 def save_as_json(df, args):
+    args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     corpus_name = args.get("corpus_name", "corpus")
     output_dir = args.get("output_dir", ".")

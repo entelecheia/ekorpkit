@@ -97,16 +97,26 @@ class Corpus:
         return s
 
     @property
-    def id_key(self):
+    def ID(self):
         return self._id_key
 
     @property
-    def id_keys(self):
+    def IDs(self):
         return self._id_keys
 
     @property
-    def text_key(self):
+    def TEXT(self):
         return self._text_key
+
+    @property
+    def DATA(self):
+        return list(self._data_keys.keys())
+
+    @property
+    def METADATA(self):
+        if self._meta_kyes is None:
+            return None
+        return list(self._meta_kyes.keys())
 
     @property
     def data(self):
