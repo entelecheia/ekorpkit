@@ -3,7 +3,7 @@ defaults:
   - /preprocessor/normalizer: formal_ko
   - /fetch/downloader: dataframe
 
-name: secreport_tone_kr
+name: analystsent_kr
 domain: econ
 task: classification
 lang: ko
@@ -23,7 +23,7 @@ fetch:
     test: test.csv
     dev: dev.csv
   downloader:
-    output_file: secreport_tone_kr.csv
+    output_file: analystsent_kr.csv
     pipeline:
       _pipeline_:
         - load_dataframe
@@ -56,7 +56,6 @@ fetch:
 
 pipeline:
   _transform_:
-    - save_metadata
   _preprocess_:  
     - normalize
   normalize:

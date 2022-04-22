@@ -47,7 +47,6 @@ fetch:
 
 pipeline:
   _transform_:
-    - save_metadata
   _preprocess_:  
     - normalize
   normalize:

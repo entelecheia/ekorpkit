@@ -116,7 +116,8 @@ class DatasetBuilder:
         self.info["info_updated"] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
         eKonf.save(config=eKonf.to_config(self.info), f=self.info_path)
-
+        if self.verbose:
+            msg.good(f"Saving updated info file: {self.info_path}")
         pprint(self.info)
 
     def build(self):
@@ -209,8 +210,8 @@ class DatasetBuilder:
                     msg.good(
                         f" >> elapsed time to calculate statistics before processing: {elapsed()}"
                     )
-                    if verbose:
-                        pprint(stat_info)
+                    # if verbose:
+                    #     pprint(stat_info)
 
                 info.update(stat_info)
         else:
@@ -231,8 +232,8 @@ class DatasetBuilder:
             with elapsed_timer(format_time=True) as elapsed:
                 stat_info = summary_stats(df, **self.stat_args)
                 msg.good(f" >> elapsed time to calculate statistics: {elapsed()}")
-                if verbose:
-                    pprint(stat_info)
+                # if verbose:
+                #     pprint(stat_info)
 
             info.update(stat_info)
             return info

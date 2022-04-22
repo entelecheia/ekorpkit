@@ -55,4 +55,3 @@ fetch:
 
 pipeline:
   _transform_:
-    - save_metadata

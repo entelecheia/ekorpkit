@@ -6,7 +6,6 @@ defaults:
   - fillna: fillna
   - normalize: normalize
   - segment: segment
-  - replace_whitespace: whitespace
   - replace_regex: regex
   - filter_length: default
   - drop_duplicates: drop

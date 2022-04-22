@@ -1,0 +1,9 @@
+defaults:
+  - default
+
+_target_: ekorpkit.datasets.dataset.Dataset
+autoload: true
+column_info:
+  keys:
+    id: id
+  data:

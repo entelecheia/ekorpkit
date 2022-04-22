@@ -13,15 +13,18 @@ class Datasets:
         if isinstance(self.names, str):
             self.names = [self.names]
         self.data_dir = args.data_dir
+        self.data_files = self.args.get("data_files", None)
         self.verbose = args.get("verbose", False)
-        self.column_info = eKonf.to_dict(self.args.column_info)
+        use_name_as_subdir = args.get("use_name_as_subdir", True)
+
+        self.column_info = eKonf.to_dict(self.args.get("column_info", {}))
         self.split_info = eKonf.to_dict(self.args.splits)
         self.datasets = {}
 
         self._id_key = "id"
         self._id_separator = "_"
         self._dataset_key = "dataset"
-        self._keys = self.column_info["keys"]
+        self._keys = self.column_info.get("keys", None)
         self._id_keys = self._keys[self._id_key]
         if isinstance(self._id_keys, str):
             self._id_keys = [self._id_keys]
@@ -30,9 +33,14 @@ class Datasets:
         with elapsed_timer(format_time=True) as elapsed:
             for name in self.names:
                 print(f"processing {name}")
-                data_dir = f"{self.data_dir}/{name}"
-                args["data_dir"] = data_dir
                 args["name"] = name
+                args["data_dir"] = self.data_dir
+                args["use_name_as_subdir"] = use_name_as_subdir
+                if self.data_files is not None:
+                    if name in self.data_files:
+                        args["data_files"] = self.data_files[name]
+                    elif "train" in self.data_files:
+                        args["data_files"] = self.data_files
                 dataset = Dataset(**args)
                 self.datasets[name] = dataset
             print(f"\n >>> Elapsed time: {elapsed()} <<< ")
@@ -40,7 +48,7 @@ class Datasets:
     def __str__(self):
         classname = self.__class__.__name__
         s = f"{classname}\n----------\n"
-        for name in self.corpora.keys():
+        for name in self.datasets.keys():
             s += f"{str(name)}\n"
         return s
 
@@ -59,10 +67,12 @@ class Datasets:
 
     @property
     def DATA(self):
+        if self._data_keys is None:
+            return None
         return list(self._data_keys.keys())
 
-    def __getitem__(self, split):
-        return self.splits[split]
+    def concatenate(self, append_dataset_name=True):
+        self.concat_datasets(append_dataset_name=append_dataset_name)
 
     def concat_datasets(self, append_dataset_name=True):
         self.splits = {}

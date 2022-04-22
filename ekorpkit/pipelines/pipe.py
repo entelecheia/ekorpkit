@@ -824,31 +824,6 @@ def general_function(df, args):
     return df
 
 
-def replace_whitespace(df, args):
-    args = eKonf.to_dict(args)
-    verbose = args.get("verbose", False)
-    apply_to = args.get("apply_to", "text")
-    if apply_to is None:
-        if verbose:
-            print("No columns specified")
-        return df
-    if isinstance(apply_to, str):
-        apply_to = [apply_to]
-    replace_with = args.get("replace_with", " ")
-    if verbose:
-        print(f"Replacing whitespace with [{replace_with}]")
-    for key in apply_to:
-        if verbose:
-            print(f"\nPreprocessing column: {key}")
-        with elapsed_timer(format_time=True) as elapsed:
-            df[key] = df[key].str.replace(r"\s+", replace_with)
-            if verbose:
-                msg.good(
-                    "\n >> elapsed time to replace whitespace: {}\n".format(elapsed())
-                )
-    return df
-
-
 def replace_regex(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)

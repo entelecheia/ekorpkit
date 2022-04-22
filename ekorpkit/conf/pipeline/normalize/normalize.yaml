@@ -1,5 +1,6 @@
 defaults:
   - /method: normalize
+  - /preprocessor/normalizer: default
 
 apply_to: ${oc.select:..apply_to, text}
 verbose: ${oc.select:..verbose, true}

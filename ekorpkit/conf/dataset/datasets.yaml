@@ -13,4 +13,3 @@ column_info:
   keys:
     id: id
   data:
-    id: int
