@@ -4,7 +4,6 @@ defaults:
 _target_: ekorpkit.datasets.loader.Datasets
 name: 
 data_dir: ${dir.dataset}/dataset
-autoload: true
 splits:
   train:
   dev:
@@ -13,3 +12,8 @@ column_info:
   keys:
     id: id
   data:
+autorun:
+  - load
+  # - name: concatenate
+  #   args:
+  #     append_dataset_name: true

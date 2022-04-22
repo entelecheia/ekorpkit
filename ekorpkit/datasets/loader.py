@@ -111,4 +111,4 @@ class Datasets:
                 dfs.append(df)
             self.splits[split] = pd.concat(dfs, ignore_index=True)
         if self.verbose:
-            msg.good(f"concatenated {len(self.datasets)} datasets")
+            msg.good(f"concatenated {len(self.datasets)} dataset(s)")
