@@ -1,7 +1,6 @@
 from ekorpkit.utils.func import humanbytes
 from hydra.utils import instantiate
 from ekorpkit.pipelines.pipe import apply
-from omegaconf.dictconfig import DictConfig
 from omegaconf.listconfig import ListConfig
 
 

@@ -7,3 +7,10 @@ use_name_as_subdir: true
 autoload: false
 verbose: ${oc.select:..verbose, true}
 collapse_ids: false
+column_info:
+  keys:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str

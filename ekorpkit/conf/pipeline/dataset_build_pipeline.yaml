@@ -4,12 +4,9 @@ defaults:
   - rename_columns: rename
   - reset_index: reset
   - save_metadata: default
-
   - fillna: fillna
   - normalize: normalize
   - segment: segment
-  - replace_whitespace: whitespace
-  - replace_regex: regex
   - filter_length: default
   - drop_duplicates: drop
   - save_samples: samples
@@ -22,8 +19,6 @@ _preprocess_:
   # - fillna
   # - normalize
   # - segment
-  # - replace_whitespace
-  # - replace_regex
   # - filter_length
   # - drop_duplicates
 apply_to: ${oc.select:..column_info.keys.text, text}

@@ -13,9 +13,18 @@ LICENSE = "Copyright of the corpus is owned by the authors."
 
 class Corpus:
     def __init__(self, **args):
-        self.args = eKonf.to_config(args)
-        self.name = self.args.name
-        self.data_dir = Path(self.args.data_dir)
+        self.args = eKonf.to_dict(args)
+        self.name = self.args["name"]
+        if isinstance(self.name, list):
+            self.name = self.name[0]
+        self.verbose = self.args.get("verbose", False)
+        self.autoload = self.args.get("autoload", False)
+        self.automerge = self.args.get("automerge", False)
+        use_name_as_subdir = args.get("use_name_as_subdir", True)
+
+        self.data_dir = Path(self.args["data_dir"])
+        if use_name_as_subdir:
+            self.data_dir = self.data_dir / self.name
         self.metadata_dir = self.args.get("metadata_dir", None)
         if self.metadata_dir is None:
             self.metadata_dir = self.data_dir
@@ -24,25 +33,24 @@ class Corpus:
         self.info_file = self.data_dir / f"info-{self.name}.yaml"
         self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
         if self.info:
-            self.args = eKonf.merge(self.args, self.info)
+            if self.verbose:
+                msg.good(f"Loaded info file: {self.info_file}")
+            self.args = eKonf.to_dict(eKonf.merge(self.args, self.info))
             self.info = eKonf.to_dict(self.info)
-        self.verbose = self.args.get("verbose", False)
-        self.autoload = self.args.get("autoload", False)
-        self.automerge = self.args.get("automerge", False)
-        self.metadata_merged = False
 
         if self.verbose:
             msg.info(f"Intantiating a corpus {self.name} with a config:")
             pprint(eKonf.to_dict(self.args))
 
         self.filetype = self.args.get("filetype", "csv")
-        self.data_files = self.args.data_files
+        self.data_files = self.args.get("data_files", None)
         self.meta_files = self.args.get("meta_files", None)
         if self.data_files is None:
             self.data_files = {
                 "train": f"{self.name}*{self.filetype}*",
             }
 
+        self.collapse_ids = self.args.get("collapse_ids", False)
         self.segment_separator = self.args.get("segment_separator", "\n\n")
         self.sentence_separator = self.args.get("sentence_separator", "\n")
         self.segment_separator = codecs.decode(self.segment_separator, "unicode_escape")
@@ -55,16 +63,12 @@ class Corpus:
         self.split_info = self.args.get("splits", None)
         if self.column_info is None:
             raise ValueError("Column info can't be None")
-        self.column_info = eKonf.to_dict(self.column_info)
-        if self.split_info:
-            self.split_info = eKonf.to_dict(self.split_info)
-        self._keys = self.column_info["keys"]
-        self._timestamp = self.column_info.get("timestamp", None)
-        self.collapse_ids = self.args.get("collapse_ids", False)
 
         self._id_key = "id"
         self._text_key = "text"
         self._merge_meta_on_key = "merge_meta_on"
+        self._keys = self.column_info["keys"]
+        self._timestamp = self.column_info.get("timestamp", None)
         self._timestamp_key = "timestamp"
         for k in [self._id_key, self._text_key, self._merge_meta_on_key]:
             if self._keys.get(k, None) is None:
@@ -83,6 +87,8 @@ class Corpus:
 
         self._data = None
         self._metadata = None
+        self._metadata_merged = False
+        self._loaded = False
 
         if self.autoload:
             self.load()
@@ -97,16 +103,28 @@ class Corpus:
         return s
 
     @property
-    def id_key(self):
+    def ID(self):
         return self._id_key
 
     @property
-    def id_keys(self):
+    def IDs(self):
         return self._id_keys
 
     @property
-    def text_key(self):
+    def TEXT(self):
         return self._text_key
+
+    @property
+    def DATA(self):
+        if self._data_keys is None:
+            return None
+        return list(self._data_keys.keys())
+
+    @property
+    def METADATA(self):
+        if self._meta_kyes is None:
+            return None
+        return list(self._meta_kyes.keys())
 
     @property
     def data(self):
@@ -193,6 +211,7 @@ class Corpus:
             print(f"Data loaded {len(self._data)} rows")
             print(self._data.head(3))
             print(self._data.tail(3))
+        self._loaded = True
 
     def load_metadata(self):
         if self.meta_files is None:
@@ -224,14 +243,14 @@ class Corpus:
             print(self._metadata.tail(3))
 
     def merge_metadata(self):
-        if self._metadata is None or self.metadata_merged:
+        if self._metadata is None or self._metadata_merged:
             return
         self._data = self._data.merge(
             self._metadata,
             on=self._merge_meta_on,
             how="left",
         )
-        self.metadata_merged = True
+        self._metadata_merged = True
         if self.verbose:
             print(f"Metadata merged to data")
             print(self._data.head(3))

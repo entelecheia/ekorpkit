@@ -1,6 +1,0 @@
-defaults:
-  - /method: replace_whitespace
-
-apply_to: ${oc.select:..apply_to, text}
-replace_with: ' '
-verbose: ${oc.select:..verbose, true}

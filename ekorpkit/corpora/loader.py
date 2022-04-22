@@ -18,44 +18,40 @@ class Corpora:
             self.metadata_dir = self.data_dir
         self.data_files = self.args.get("data_files", None)
         self.meta_files = self.args.get("meta_files", None)
+        use_name_as_subdir = args.get("use_name_as_subdir", True)
+        self.verbose = args.get("verbose", False)
+        self.column_info = eKonf.to_dict(self.args.get("column_info", {}))
+
         self.corpora = {}
         self._data = None
         self._metadata = None
-        use_name_as_subdir = args.get("use_name_as_subdir", True)
-        self.verbose = args.get("verbose", False)
-        self.column_info = self.args.get("column_info", None)
+        self._loaded = False
 
         self._corpus_key = "corpus"
         self._text_key = "text"
         self._id_key = "id"
         self._id_separator = "_"
 
-        if self.column_info:
-            self._keys = self.column_info["keys"]
-            if self._keys is not None:
-                for k in [self._id_key, self._text_key]:
-                    if isinstance(self._keys[k], str):
-                        self._keys[k] = [self._keys[k]]
-                    else:
-                        self._keys[k] = list(self._keys[k])
-                self._id_keys = self._keys[self._id_key]
-            else:
-                self._id_keys = [self._id_key]
-            self._data_keys = self.column_info.get("data", None)
-            self._meta_kyes = self.column_info.get("meta", None)
+        self._keys = self.column_info.get("keys", None)
+        if self._keys is not None:
+            for k in [self._id_key, self._text_key]:
+                if isinstance(self._keys[k], str):
+                    self._keys[k] = [self._keys[k]]
+                else:
+                    self._keys[k] = list(self._keys[k])
+            self._id_keys = self._keys[self._id_key]
+        else:
+            self._id_keys = [self._id_key]
+        self._data_keys = self.column_info.get("data", None)
+        self._meta_kyes = self.column_info.get("meta", None)
 
         with elapsed_timer(format_time=True) as elapsed:
             for name in self.names:
                 print(f"processing {name}")
-                if use_name_as_subdir:
-                    data_dir = f"{self.data_dir}/{name}"
-                    metadata_dir = f"{self.metadata_dir}/{name}"
-                else:
-                    data_dir = self.data_dir
-                    metadata_dir = self.metadata_dir
-                args["data_dir"] = data_dir
-                args["metadata_dir"] = metadata_dir
                 args["name"] = name
+                args["data_dir"] = self.data_dir
+                args["metadata_dir"] = self.metadata_dir
+                args["use_name_as_subdir"] = use_name_as_subdir
                 if self.data_files is not None:
                     if name in self.data_files:
                         args["data_files"] = self.data_files[name]
@@ -93,6 +89,12 @@ class Corpora:
         return self._text_key
 
     @property
+    def DATA(self):
+        if self._data_keys is None:
+            return None
+        return list(self._data_keys.keys())
+
+    @property
     def data(self):
         return self._data
 
@@ -101,10 +103,17 @@ class Corpora:
         return self._metadata
 
     def load(self):
-        for corpus in self:
-            corpus.load()
+        for _name in self.corpora:
+            self.corpora[_name].load()
+        self._loaded = True
+
+    def concatenate(self, append_corpus_name=True):
+        self.concat_corpora(append_corpus_name=append_corpus_name)
 
     def concat_corpora(self, append_corpus_name=True):
+        if not self._loaded:
+            self.load()
+
         dfs = []
         df_metas = []
         if append_corpus_name:
@@ -113,6 +122,8 @@ class Corpora:
 
         for name in self.corpora:
             df = self.corpora[name]._data
+            if df is None:
+                self.load()
             if append_corpus_name:
                 df[self._corpus_key] = name
             dfs.append(df)

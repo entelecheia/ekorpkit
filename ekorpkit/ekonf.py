@@ -1,4 +1,5 @@
 import functools
+from pprint import pprint
 import random
 import hydra
 import pathlib
@@ -152,6 +153,37 @@ class eKonf:
     ) -> None:
         OmegaConf.save(config, f, resolve=resolve)
 
+    @staticmethod
+    def pprint(cfg: Any, **kwargs):
+        pprint(cfg, **kwargs)
+
+    @staticmethod
+    def print(cfg: Any, **kwargs):
+        pprint(cfg, **kwargs)
+
+    @staticmethod
+    def call(cfg: Any, obj: object):
+        call(cfg, obj)
+
+
+def call(cfg: Any, obj: object):
+    if isinstance(cfg, list):
+        for _run in cfg:
+            if isinstance(_run, str):
+                getattr(obj, _run)()
+            elif isinstance(_run, dict):
+                _run = eKonf.to_dict(_run)
+                getattr(obj, _run["name"])(**_run["args"])
+
+
+def pprint(cfg: Any, **kwargs):
+    import pprint
+
+    if is_config(cfg):
+        pprint.pprint(to_dict(cfg), **kwargs)
+    else:
+        print(cfg)
+
 
 def compose(
     overrides: List[str] = [],
@@ -245,13 +277,15 @@ def to_dict(
     cfg: Any,
 ):
     if isinstance(cfg, dict):
-        return cfg
-    return OmegaConf.to_container(
-        cfg,
-        resolve=True,
-        throw_on_missing=False,
-        structured_config_mode=SCMode.DICT,
-    )
+        cfg = to_config(cfg)
+    if isinstance(cfg, (DictConfig, ListConfig)):
+        return OmegaConf.to_container(
+            cfg,
+            resolve=True,
+            throw_on_missing=False,
+            structured_config_mode=SCMode.DICT,
+        )
+    return cfg
 
 
 def is_config(

@@ -1,8 +1,9 @@
 defaults:
   - _build
+  - /preprocessor/normalizer: formal_ko
   - /fetch/downloader: dataframe
 
-name: secreport_tone_kr
+name: analystsent_kr
 domain: econ
 task: classification
 lang: ko
@@ -13,7 +14,7 @@ column_info:
   data:
     id: int
     seq: int
-    labels: int
+    labels: str
     text: str
 
 fetch:
@@ -22,19 +23,27 @@ fetch:
     test: test.csv
     dev: dev.csv
   downloader:
-    output_file: secreport_tone_kr.csv
+    output_file: analystsent_kr.csv
     pipeline:
       _pipeline_:
         - load_dataframe
         - rename_columns
         - drop_duplicates
-        # - reset_index
+        - replace
+        - reset_index
         - split_sampling
       rename_columns:
         new_names:
           SEQ: seq
           SENTENCE: text
           TAG: labels
+      replace:
+        apply_to: labels
+        parameters:
+          to_replace:
+            0: neutral
+            1: positive
+            -1: negative
       split_sampling:
         stratify_on: labels
         dev_size: 0.2
@@ -44,3 +53,11 @@ fetch:
         train_file: train.csv
         test_file: test.csv
         dev_file: dev.csv
+
+pipeline:
+  _transform_:
+  _preprocess_:  
+    - normalize
+  normalize:
+    preprocessor:
+      normalizer: ${dataset.simple.preprocessor.normalizer}        

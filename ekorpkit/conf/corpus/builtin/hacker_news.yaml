@@ -38,10 +38,3 @@ pipeline:
     # - filter_length
     # - segment
     # - drop_duplicates
-    # - replace_regex
-
-  replace_regex:
-    patterns:
-      \n+: \n
-    
-

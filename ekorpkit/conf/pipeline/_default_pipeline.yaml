@@ -6,8 +6,6 @@ defaults:
   - fillna: fillna
   - normalize: normalize
   - segment: segment
-  - replace_whitespace: whitespace
-  - replace_regex: regex
   - filter_length: default
   - drop_duplicates: drop
   - save_samples: samples
@@ -29,9 +27,10 @@ defaults:
   - drop: default
   - pivot: default
   - plot: default
+  - replace: default
 
 apply_to: ${oc.select:..apply_to, text}
-data_dir: ${oc.select:..data_dir, ''} 
+data_dir: ${oc.select:..data_dir, ''}
 data_file: ${oc.select:..data_file, ''}
 use_batcher: true
 verbose: ${oc.select:..verbose, true}

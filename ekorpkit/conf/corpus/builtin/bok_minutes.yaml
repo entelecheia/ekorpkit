@@ -40,8 +40,6 @@ pipeline:
     - fillna
     - normalize
     # - segment
-    # - replace_whitespace
-    # - replace_regex
     - filter_length
     - drop_duplicates
 

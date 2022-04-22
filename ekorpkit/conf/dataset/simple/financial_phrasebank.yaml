@@ -1,21 +1,18 @@
 defaults:
   - _build
-  - /preprocessor/normalizer: formal_ko
-  - /fetch/downloader: dataframe
+  - /fetch/downloader: hfds
 
-name: mp_tone_kr
+name: financial_phrasebank
 domain: econ
 task: classification
-lang: ko
+lang: en
 column_info: 
   keys:
     id: id
     text: text
   data:
     id: int
-    topic: str
-    date: str
-    labels: int
+    labels: str
     text: str
 
 fetch:
@@ -24,17 +21,28 @@ fetch:
     test: test.csv
     dev: dev.csv
   downloader:
-    output_file: mp_tone_kr.csv
+    output_file: financial_phrasebank.csv
+    subsets: sentences_allagree
+    splits: train
     pipeline:
       _pipeline_:
         - load_dataframe
         - rename_columns
         - drop_duplicates
         - reset_index
+        - replace
         - split_sampling
       rename_columns:
         new_names:
-          category: labels
+          sentence: text
+          label: labels
+      replace:
+        apply_to: labels
+        parameters:
+          to_replace:
+            0: negative
+            1: neutral
+            2: positive
       split_sampling:
         stratify_on: labels
         dev_size: 0.2
@@ -47,8 +55,3 @@ fetch:
 
 pipeline:
   _transform_:
-  _preprocess_:  
-    - normalize
-  normalize:
-    preprocessor:
-      normalizer: ${dataset.simple.preprocessor.normalizer}
