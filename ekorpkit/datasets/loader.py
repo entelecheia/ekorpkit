@@ -48,16 +48,7 @@ class Datasets:
                     self.split_info = list(dataset.splits.keys())
             print(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
-        self._autorun()
-
-    def _autorun(self):
-        if isinstance(self._autorun_list, list):
-            for _run in self._autorun_list:
-                if isinstance(_run, str):
-                    getattr(self, _run)()
-                elif isinstance(_run, dict):
-                    _run = eKonf.to_dict(_run)
-                    getattr(self, _run["name"])(**_run["args"])
+        eKonf.call(self._autorun_list, self)
 
     def __str__(self):
         classname = self.__class__.__name__

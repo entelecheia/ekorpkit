@@ -161,6 +161,20 @@ class eKonf:
     def print(cfg: Any, **kwargs):
         pprint(cfg, **kwargs)
 
+    @staticmethod
+    def call(cfg: Any, obj: object):
+        call(cfg, obj)
+
+
+def call(cfg: Any, obj: object):
+    if isinstance(cfg, list):
+        for _run in cfg:
+            if isinstance(_run, str):
+                getattr(obj, _run)()
+            elif isinstance(_run, dict):
+                _run = eKonf.to_dict(_run)
+                getattr(obj, _run["name"])(**_run["args"])
+
 
 def pprint(cfg: Any, **kwargs):
     import pprint

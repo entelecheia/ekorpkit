@@ -7,15 +7,15 @@ from ekorpkit.io.file import load_dataframe, save_dataframe
 
 class SimpleTraner:
     def __init__(self, **args):
-        args = eKonf.to_config(args)
-        os.makedirs(args.output_dir, exist_ok=True)
-        os.makedirs(args.cache_dir, exist_ok=True)
-        os.makedirs(args.pred_output_dir, exist_ok=True)
-        os.makedirs(args.result_dir, exist_ok=True)
+        args = eKonf.to_dict(args)
+        os.makedirs(args["output_dir"], exist_ok=True)
+        os.makedirs(args["cache_dir"], exist_ok=True)
+        os.makedirs(args["pred_output_dir"], exist_ok=True)
+        os.makedirs(args["result_dir"], exist_ok=True)
         self.args = args
         self.dataset_cfg = args.get("dataset_cfg", None)
-        self.model_cfg = eKonf.to_dict(args.config)
-        self.prediction_args = eKonf.to_dict(args.prediction)
+        self.model_cfg = args["config"]
+        self.prediction_args = args["prediction"]
         self.verbose = args.get("verbose", True)
         self.model_pipeline = self.args.get("_pipeline_", [])
         if self.model_pipeline is None:
@@ -28,8 +28,7 @@ class SimpleTraner:
 
     def apply_pipeline(self):
         print(f"Applying pipeline: {self.model_pipeline}")
-        for pipe in self.model_pipeline:
-            getattr(self, pipe)()
+        eKonf.call(self.model_pipeline, self)
 
     def load_datasets(self):
         if self.dataset_cfg is None:
@@ -127,14 +126,14 @@ class SimpleTrainerClassification(SimpleTraner):
             self.load_datasets()
 
         self.model_cfg["labels_list"] = self.train_data["labels"].unique().tolist()
-        args.num_labels = len(self.model_cfg["labels_list"])
+        args["num_labels"] = len(self.model_cfg["labels_list"])
 
         # Create a NERModel
         model = ClassificationModel(
-            args.model_type,
-            args.model_uri,
-            num_labels=args.num_labels,
-            cuda_device=args.cuda_device,
+            args["model_type"],
+            args["model_uri"],
+            num_labels=args["num_labels"],
+            cuda_device=args["cuda_device"],
             args=self.model_cfg,
         )
 
