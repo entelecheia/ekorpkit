@@ -37,7 +37,6 @@ pipeline:
     - reset_index
   _preprocess_:  
     # - normalize
-    # - replace_regex
     # - filter_length
     - remove_startswith
     - segment
@@ -47,10 +46,6 @@ pipeline:
     new_names:
       ABSTRACT_TEXT: text
       APPLICATION_ID: appl_id
-
-  replace_regex:
-    patterns:
-      \s+: ' '
 
   remove_startswith:
     startswith:

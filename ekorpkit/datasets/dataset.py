@@ -89,6 +89,8 @@ class Dataset:
         return list(self._data_keys.keys())
 
     def load(self):
+        if self._loaded:
+            return
         for split, data_file in self.data_files.items():
             data_file = self.data_dir / data_file
             df = load_dataframe(data_file, dtype=self._data_keys)

@@ -7,18 +7,19 @@ from .dataset import Dataset
 
 class Datasets:
     def __init__(self, **args):
-        args = eKonf.to_config(args)
+        args = eKonf.to_dict(args)
         self.args = args
-        self.names = args.name
+        self.names = args.get("name")
         if isinstance(self.names, str):
             self.names = [self.names]
-        self.data_dir = args.data_dir
-        self.data_files = self.args.get("data_files", None)
         self.verbose = args.get("verbose", False)
+        self.data_dir = args["data_dir"]
+        self._data_files = self.args.get("data_files", None)
+        self._autorun_list = self.args.get("autorun", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
-        self.column_info = eKonf.to_dict(self.args.get("column_info", {}))
-        self.split_info = eKonf.to_dict(self.args.splits)
+        self.column_info = self.args.get("column_info", {})
+        self.split_info = self.args.get("splits")
         self.datasets = {}
 
         self._id_key = "id"
@@ -36,14 +37,27 @@ class Datasets:
                 args["name"] = name
                 args["data_dir"] = self.data_dir
                 args["use_name_as_subdir"] = use_name_as_subdir
-                if self.data_files is not None:
-                    if name in self.data_files:
-                        args["data_files"] = self.data_files[name]
-                    elif "train" in self.data_files:
-                        args["data_files"] = self.data_files
+                if self._data_files is not None:
+                    if name in self._data_files:
+                        args["data_files"] = self._data_files[name]
+                    elif "train" in self._data_files:
+                        args["data_files"] = self._data_files
                 dataset = Dataset(**args)
                 self.datasets[name] = dataset
+                if self.split_info is None:
+                    self.split_info = list(dataset.splits.keys())
             print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+
+        self._autorun()
+
+    def _autorun(self):
+        if isinstance(self._autorun_list, list):
+            for _run in self._autorun_list:
+                if isinstance(_run, str):
+                    getattr(self, _run)()
+                elif isinstance(_run, dict):
+                    _run = eKonf.to_dict(_run)
+                    getattr(self, _run["name"])(**_run["args"])
 
     def __str__(self):
         classname = self.__class__.__name__
@@ -71,6 +85,11 @@ class Datasets:
             return None
         return list(self._data_keys.keys())
 
+    def load(self):
+        for _name in self.datasets:
+            self.datasets[_name].load()
+        self._loaded = True
+
     def concatenate(self, append_dataset_name=True):
         self.concat_datasets(append_dataset_name=append_dataset_name)
 
@@ -93,4 +112,3 @@ class Datasets:
             self.splits[split] = pd.concat(dfs, ignore_index=True)
         if self.verbose:
             msg.good(f"concatenated {len(self.datasets)} datasets")
-            print(self._data.head())

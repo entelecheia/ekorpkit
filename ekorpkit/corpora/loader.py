@@ -103,8 +103,8 @@ class Corpora:
         return self._metadata
 
     def load(self):
-        for corpus in self:
-            corpus.load()
+        for _name in self.corpora:
+            self.corpora[_name].load()
         self._loaded = True
 
     def concatenate(self, append_corpus_name=True):

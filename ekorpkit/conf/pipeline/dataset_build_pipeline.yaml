@@ -7,7 +7,6 @@ defaults:
   - fillna: fillna
   - normalize: normalize
   - segment: segment
-  - replace_regex: regex
   - filter_length: default
   - drop_duplicates: drop
   - save_samples: samples

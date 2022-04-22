@@ -816,7 +816,7 @@ def general_function(df, args):
                 apply_to = [apply_to]
             for key in apply_to:
                 if verbose:
-                    print(f"\nPreprocessing column: {key}")
+                    print(f"\nprocessing column: {key}")
                 df[key] = getattr(df[key], _function)(**_params)
 
         if verbose:

@@ -9,7 +9,6 @@ defaults:
   - fillna: fillna
   - normalize: normalize
   - segment: segment
-  - replace_regex: regex
   - remove_startswith: default
   - filter_length: default
   - drop_duplicates: drop
