@@ -111,8 +111,8 @@ def test_build_corpora():
     cfg["name"] = ["bok_minutes", "fomc_minutes"]
     cfg["data_dir"] = "./data/tmp"
     crps = eKonf.instantiate(cfg)
-    # crps.load()
-    crps.concat_corpora()
+    # crps.concat_corpora()
+    
     assert len(crps.corpora) == 2
 
 
@@ -130,7 +130,7 @@ def test_build_datasets():
     cfg['data_dir'] = './data/tmp'
     eKonf.pprint(cfg)
     ds = eKonf.instantiate(cfg)
-    ds.concat_datasets()
+    # ds.concat_datasets()
 
     assert len(ds.datasets) == 1
 

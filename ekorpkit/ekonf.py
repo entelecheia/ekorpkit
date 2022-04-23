@@ -9,6 +9,7 @@ from hydra.utils import get_method
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
 from ekorpkit.utils.func import lower_case_with_underscores
+from . import _version
 
 DictKeyType = Union[str, int, Enum, float, bool]
 
@@ -18,6 +19,8 @@ OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
 )
+
+_ekorpkit_path_ = pathlib.Path(__file__).parent
 
 
 def partial(_partial_, *args, **kwargs):
@@ -36,6 +39,9 @@ class _Keys(str, Enum):
 
 class eKonf:
     """ekorpkit config primary class"""
+
+    __version__ = _version.get_versions()["version"]
+    _ekorpkit_path_ = pathlib.Path(__file__).parent
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
@@ -92,6 +98,8 @@ class eKonf:
 
     @staticmethod
     def to_yaml(cfg: Any, *, resolve: bool = True, sort_keys: bool = False) -> str:
+        if resolve:
+            cfg = to_dict(cfg)
         return to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
 
     @staticmethod

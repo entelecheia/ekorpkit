@@ -30,6 +30,8 @@ class Corpus:
             self.metadata_dir = self.data_dir
         else:
             self.metadata_dir = Path(self.metadata_dir)
+            if use_name_as_subdir:
+                self.metadata_dir = self.metadata_dir / self.name
         self.info_file = self.data_dir / f"info-{self.name}.yaml"
         self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
         if self.info:

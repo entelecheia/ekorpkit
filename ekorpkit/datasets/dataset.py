@@ -43,7 +43,6 @@ class Dataset:
         self.description = self.args.get("description", "")
         self.license = self.args.get("license", "")
         self.column_info = self.args.get("column_info")
-        self.split_info = self.args.get("splits", None)
         if self.column_info is None:
             raise ValueError("Column info can't be None")
 

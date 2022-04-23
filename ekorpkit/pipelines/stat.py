@@ -3,7 +3,21 @@ from hydra.utils import instantiate
 from ekorpkit.pipelines.pipe import apply
 from omegaconf.listconfig import ListConfig
 
+class SummaryInfo():
+    def __init__(self, **args):
+        self.args = args
 
+    def load(self):
+        pass
+    
+    def update_stats(self):
+        pass
+
+    def save(self):
+        pass
+
+
+        
 def summary_stats(
     df,
     key_columns=None,

@@ -9,9 +9,17 @@ class Datasets:
     def __init__(self, **args):
         args = eKonf.to_dict(args)
         self.args = args
-        self.names = args.get("name")
-        if isinstance(self.names, str):
-            self.names = [self.names]
+        self.name = args["name"]
+        self.datasets = args.get("datasets", None)
+        if self.datasets is None:
+            self.datasets = self.name
+        if isinstance(self.datasets, str):
+            self.datasets = {self.datasets: None}
+        elif isinstance(self.datasets, list):
+            self.datasets = {name: None for name in self.datasets}
+        if isinstance(self.name, list):
+            self.name = "-".join(self.name)
+
         self.verbose = args.get("verbose", False)
         self.data_dir = args["data_dir"]
         self._data_files = self.args.get("data_files", None)
@@ -19,8 +27,7 @@ class Datasets:
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
         self.column_info = self.args.get("column_info", {})
-        self.split_info = self.args.get("splits")
-        self.datasets = {}
+        self.splits = None
 
         self._id_key = "id"
         self._id_separator = "_"
@@ -32,11 +39,12 @@ class Datasets:
         self._data_keys = self.column_info.get("data", None)
 
         with elapsed_timer(format_time=True) as elapsed:
-            for name in self.names:
+            for name in self.datasets:
                 print(f"processing {name}")
                 args["name"] = name
                 args["data_dir"] = self.data_dir
                 args["use_name_as_subdir"] = use_name_as_subdir
+                args["verbose"] = self.verbose
                 if self._data_files is not None:
                     if name in self._data_files:
                         args["data_files"] = self._data_files[name]
@@ -44,8 +52,8 @@ class Datasets:
                         args["data_files"] = self._data_files
                 dataset = Dataset(**args)
                 self.datasets[name] = dataset
-                if self.split_info is None:
-                    self.split_info = list(dataset.splits.keys())
+                if self.splits is None:
+                    self.splits = {split: None for split in dataset.data_files}
             print(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
         eKonf.call(self._autorun_list, self)
@@ -85,13 +93,11 @@ class Datasets:
         self.concat_datasets(append_dataset_name=append_dataset_name)
 
     def concat_datasets(self, append_dataset_name=True):
-        self.splits = {}
-
         if append_dataset_name:
             if self._dataset_key not in self._id_keys:
                 self._id_keys.append(self._dataset_key)
 
-        for split in self.split_info:
+        for split in self.splits:
             dfs = []
             for name in self.datasets:
                 df = self.datasets[name][split]

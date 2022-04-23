@@ -4,6 +4,7 @@ filetype: ${oc.select:.builtin.filetype, null}
 autoload: true
 verbose: ${oc.select:..verbose, true}
 column_info:
-  keys: ${oc.select:..builtin.column_info.keys, null}
-  data: ${oc.select:..builtin.column_info.data, null}
+  keys:
+    id: id
+  data:
 use_name_as_subdir: true
