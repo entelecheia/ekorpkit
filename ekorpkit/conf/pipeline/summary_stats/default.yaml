@@ -1,0 +1,7 @@
+defaults:
+  - /method: summary_stats
+  - /info/stats: default
+
+output_dir: ${oc.select:..data_dir, .}
+output_file:
+verbose: ${oc.select:..verbose, true}

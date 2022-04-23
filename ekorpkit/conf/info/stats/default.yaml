@@ -1,9 +1,8 @@
 defaults:
   - /method/len_bytes: default
-  # - /method/len_words: default
-  # - /method/len_segments: default
-  # - /method/len_sents: default
 
+_target_: ekorpkit.pipelines.stat.summary_stats
+_partial_: true
 num_workers: ${oc.select:task.num_workers, 1}
 key_columns: ${oc.select:..key_columns, ''}
 num_columns:
