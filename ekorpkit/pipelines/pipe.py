@@ -821,6 +821,7 @@ def general_function(df, args):
 
         if verbose:
             msg.good("\n >> elapsed time to replace: {}\n".format(elapsed()))
+            print(df.head())
     return df
 
 
@@ -1294,6 +1295,31 @@ def load_dataframe_pipe(df=None, args=None):
             ]
         )
         return df
+
+
+def summary_stats(df, args):
+    args = eKonf.to_dict(args)
+    verbose = args.get("verbose", False)
+    output_dir = args.get("output_dir", ".")
+    output_file = args.get("output_file", None)
+    stat_args = args.get("stats", None)
+    if stat_args is None:
+        msg.warn("No stats specified")
+        return df
+    if output_file is None:
+        output_file = "summary_stats.csv"
+    if verbose:
+        print(f"Summary stats: {args}")
+    os.makedirs(os.path.abspath(output_dir), exist_ok=True)
+    info_path = f"{output_dir}/{output_file}"
+    stat_fn = eKonf.instantiate(stat_args)
+    stats = stat_fn(df)
+    eKonf.save(stats, f=info_path)
+    if verbose:
+        msg.good(f"Saving summary stats: {info_path}")
+        eKonf.pprint(stats)
+
+    return df
 
 
 def save_as_json(df, args):

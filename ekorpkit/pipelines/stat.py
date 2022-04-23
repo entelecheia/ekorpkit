@@ -68,6 +68,8 @@ class SummaryInfo:
             stats.update(stats)
 
         if split_name:
+            if split_name not in self.splits:
+                self.splits[split_name] = {}
             self.splits[split_name].update(stats)
         else:
             self.stats.update(stats)

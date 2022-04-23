@@ -1,7 +1,9 @@
+import os
 import pandas as pd
 from wasabi import msg
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.io.file import save_dataframe
 from .dataset import Dataset
 
 
@@ -23,13 +25,16 @@ class Datasets:
         self.verbose = args.get("verbose", False)
         self.data_dir = args["data_dir"]
         self._data_files = self.args.get("data_files", None)
+        self.filetype = self.args.get("filetype", "csv")
         self._autorun_list = self.args.get("autorun", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
         self.column_info = self.args.get("column_info", {})
         self.splits = None
+        self._datasets_concatenated = False
 
         self._id_key = "id"
+        self._org_id_key = "org_id"
         self._id_separator = "_"
         self._dataset_key = "dataset"
         self._keys = self.column_info.get("keys", None)
@@ -109,3 +114,23 @@ class Datasets:
             self.splits[split] = pd.concat(dfs, ignore_index=True)
         if self.verbose:
             msg.good(f"concatenated {len(self.datasets)} dataset(s)")
+        self._datasets_concatenated = True
+
+    def persist(self):
+        if len(self.datasets) < 2:
+            msg.war(f"more than one dataset required to persist")
+            return
+        if not self._datasets_concatenated:
+            msg.warn(f"datasets not concatenated yet, calling concatenate()")
+            self.concatenate()
+
+        data_dir = self.data_dir + self.name
+        os.makedirs(data_dir, exist_ok=True)
+
+        for split, df in self.splits.items():
+            data_file = f"{data_dir}/{self.name}-{split}.{self.filetype}"
+            df.rename({self._id_key: self._org_id_key}, inplace=True)
+            df.reset_index().rename({"index": self._id_key}, inplace=True)
+            save_dataframe(df, data_file)
+            if self.verbose:
+                msg.good(f"saved {data_file}")

@@ -1,4 +1,3 @@
-from tabnanny import verbose
 from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
@@ -129,7 +128,7 @@ class DatasetBuilder:
             if df is None:
                 raise ValueError("dataframe is None")
 
-            if verbose:
+            if self.verbose:
                 print(df.head())
                 print(df.shape)
 
