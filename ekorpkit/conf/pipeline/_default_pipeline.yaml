@@ -28,6 +28,7 @@ defaults:
   - pivot: default
   - plot: default
   - replace: default
+  - summary_stats: default
 
 apply_to: ${oc.select:..apply_to, text}
 data_dir: ${oc.select:..data_dir, ''}

@@ -153,7 +153,6 @@ def summary_stats(
 ):
 
     args = eKonf.to_dict(args)
-    key_columns = args.get("key_columns", None)
     num_columns = args.get("num_columns", None)
     agg_funcs = args.get("agg_funcs", None)
     rename_columns = args.get("rename_columns", None)
@@ -163,7 +162,9 @@ def summary_stats(
 
     df = df.copy(deep=True)
     num_workers = num_workers if num_workers else 1
-    text_keys = key_columns["text"]
+    text_keys = args.get("text_keys")
+    if text_keys is None:
+        text_keys = 'text'
     if isinstance(text_keys, list):
         for col in text_keys:
             df[col].fillna("", inplace=True)

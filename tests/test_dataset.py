@@ -26,3 +26,15 @@ def test_build_datasets():
     ds.persist()
 
     assert len(ds.datasets) == 2
+
+
+def test_datafame_pipeline():
+    cfg = eKonf.compose(config_group="pipeline=dataframe_pipeline")
+    cfg.verbose = True
+    cfg.data_dir = "./data/tmp/financial_phrasebank"
+    cfg.data_file = "financial_phrasebank-train.csv"
+    cfg._pipeline_ = ["load_dataframe", "summary_stats"]
+    cfg.summary_stats.output_file = "stats.yaml"
+    eKonf.instantiate(cfg)
+
+    assert os.path.exists(f"{cfg.data_dir}/{cfg.summary_stats.output_file}")

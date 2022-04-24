@@ -14,3 +14,4 @@ rename_columns:
   num_bytes_sum: num_bytes
 convert_to_humanbytes:
   num_bytes: human_bytes
+text_keys: ${oc.select:..key_columns.text, 'text'}

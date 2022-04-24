@@ -1302,7 +1302,7 @@ def summary_stats(df, args):
     verbose = args.get("verbose", False)
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
-    stat_args = args.get("stats", None)
+    stat_args = args.get("info", {}).get("stats", None)
     if stat_args is None:
         msg.warn("No stats specified")
         return df
@@ -1344,7 +1344,7 @@ def save_as_json(df, args):
 
 
 def process_dataframe(**cfg):
-    args = eKonf.to_config(cfg)
+    args = eKonf.to_dict(cfg)
     verbose = args.get("verbose", False)
     process_pipeline = args.get("_pipeline_", [])
     if process_pipeline is None:
