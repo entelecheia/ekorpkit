@@ -21,6 +21,9 @@ class Datasets:
             self.datasets = {name: None for name in self.datasets}
         if isinstance(self.name, list):
             self.name = "-".join(self.name)
+        self.info = args.copy()
+        self.info["name"] = self.name
+        self.info["datasets"] = self.datasets
 
         self.verbose = args.get("verbose", False)
         self.data_dir = args["data_dir"]
@@ -28,6 +31,8 @@ class Datasets:
         self.filetype = self.args.get("filetype", "csv")
         self._autorun_list = self.args.get("autorun", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
+
+        self.info_args = self.args.get("info", None)
 
         self.column_info = self.args.get("column_info", {})
         self.splits = None
@@ -124,13 +129,31 @@ class Datasets:
             msg.warn(f"datasets not concatenated yet, calling concatenate()")
             self.concatenate()
 
-        data_dir = self.data_dir + self.name
+        data_dir = f"{self.data_dir}/{self.name}"
         os.makedirs(data_dir, exist_ok=True)
 
+        summary_info = None
+        if self.info_args:
+            self.info_args["data_dir"] = data_dir
+            self.info_args["name"] = self.name
+            self.info_args["info_file"] = None
+            summary_info = eKonf.instantiate(self.info_args)
+        if summary_info:
+            summary_info.load(self.info)
+
         for split, df in self.splits.items():
-            data_file = f"{data_dir}/{self.name}-{split}.{self.filetype}"
+            data_file = f"{self.name}-{split}.{self.filetype}"
+            data_path = f"{data_dir}/{data_file}"
             df.rename({self._id_key: self._org_id_key}, inplace=True)
             df.reset_index().rename({"index": self._id_key}, inplace=True)
-            save_dataframe(df, data_file)
+            save_dataframe(df, data_path)
             if self.verbose:
-                msg.good(f"saved {data_file}")
+                msg.good(f"saved {data_path}")
+            if summary_info:
+                stats = {"data_file": data_file}
+                summary_info.init_stats(split_name=split, stats=stats)
+                summary_info.calculate_stats(df, split)
+        if summary_info and df is not None:
+            dtypes = df.dtypes.apply(lambda x: x.name).to_dict()
+            self.column_info["data"] = dtypes
+            summary_info.save(info={"column_info": self.column_info})

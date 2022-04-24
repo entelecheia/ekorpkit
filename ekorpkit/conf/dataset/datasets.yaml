@@ -1,5 +1,6 @@
 defaults:
   - default
+  - /info: dataset_build
 
 _target_: ekorpkit.datasets.loader.Datasets
 name: 

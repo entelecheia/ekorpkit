@@ -14,9 +14,10 @@ class SummaryInfo:
         self.stat_args = self.args.get("stats", None)
         self.data_dir = self.args.get("data_dir", None)
         self.verbose = self.args.get("verbose", False)
-        self.info_path = Path(self.data_dir) / self.args.get(
-            "info_file", f"info-{self.name}.yaml"
-        )
+        self.info_file = self.args.get("info_file", None)
+        if self.info_file is None:
+            self.info_file = f"info-{self.name}.yaml"
+        self.info_path = Path(self.data_dir) / self.info_file
         self.info_list = self.args.get("info_list", [])
         self.stat_before_processing = self.args.get("stat_before_processing", None)
         self.update_files_info = self.args.get("update_files_info", {})
@@ -53,7 +54,7 @@ class SummaryInfo:
             stats["name"] = split_name
 
         stat_args = self.stat_before_processing
-        if stat_args is not None:
+        if stat_args is not None and df is not None:
             with elapsed_timer(format_time=True) as elapsed:
                 for k, v in self.stat_args.items():
                     if k not in stat_args:
@@ -134,8 +135,11 @@ class SummaryInfo:
 
         self.info["info_updated"] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
-    def save(self):
+    def save(self, info={}):
         self._update_info()
+        for key in info:
+            if key in self.info_list and info.get(key) is not None:
+                self.info[key] = info[key]
 
         eKonf.save(self.info, f=self.info_path)
         if self.verbose:
