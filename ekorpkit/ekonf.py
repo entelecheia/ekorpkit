@@ -11,16 +11,20 @@ from typing import Any, List, IO, Dict, Union, Tuple, Optional
 from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
+
+def __ekorpkit_path__():
+    return pathlib.Path(__file__).parent.as_posix()
+
+
 DictKeyType = Union[str, int, Enum, float, bool]
 
+OmegaConf.register_new_resolver("__ekorpkit_path__", __ekorpkit_path__)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
 )
-
-_ekorpkit_path_ = pathlib.Path(__file__).parent
 
 
 def partial(_partial_, *args, **kwargs):
@@ -41,7 +45,7 @@ class eKonf:
     """ekorpkit config primary class"""
 
     __version__ = _version.get_versions()["version"]
-    _ekorpkit_path_ = pathlib.Path(__file__).parent
+    __ekorpkit_path__ = pathlib.Path(__file__).parent.as_posix()
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")

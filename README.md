@@ -198,7 +198,9 @@ mecab.tokenize(text)
 
 ## References
 
-- [Hydra](https://hydra.cc/)
+- [Hydra](https://hydra.cc)
+- [Hugging Face](https://huggingface.co)
+- [Simple Transformers](https://simpletransformers.ai)
 - [Korpora](https://github.com/ko-nlp/Korpora)
 - [The Pile](https://github.com/EleutherAI/the-pile)
 - [soynlp](https://github.com/lovit/soynlp)

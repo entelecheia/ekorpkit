@@ -1,5 +1,6 @@
+ekorpkit: ${__ekorpkit_path__:}
 workspace: ./workspace
-project: ${.workspace}/projects/${app_name} 
+project: ${.workspace}/projects/${app_name}
 data: ${.workspace}/data
 log: ${.project}/logs
 tmp: ${.data}/tmp
@@ -9,5 +10,5 @@ runtime: ${oc.select:hydra:runtime.cwd, .}
 model: ${.data}/models
 output: ${.data}/outputs
 dataset: ${.data}/datasets
-# dataset_processed: ${.workspace}/datasets/processed
 corpus: ${.dataset}/corpus/ekorpkit
+resource: ${.ekorpkit}/resources
