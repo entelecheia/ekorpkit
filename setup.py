@@ -63,7 +63,7 @@ setup(
     extras_require=get_extra_requires("requirements-extra.txt"),
     keywords=[],
     packages=find_packages(),
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     include_package_data=True,
     entry_points={
         "console_scripts": ["ekorpkit=ekorpkit.cli:hydra_main"],
