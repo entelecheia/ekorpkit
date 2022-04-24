@@ -1,9 +1,11 @@
 name: ${oc.select:.builtin.name, null} 
 data_dir: ${dir.dataset}/dataset
-filetype: ${oc.select:.builtin.filetype, null}
+filetype: ${oc.select:.builtin.filetype, csv}
 autoload: true
 verbose: ${oc.select:..verbose, true}
 column_info:
-  keys: ${oc.select:..builtin.column_info.keys, null}
-  data: ${oc.select:..builtin.column_info.data, null}
+  keys:
+    id: id
+    text: text
+  data:
 use_name_as_subdir: true

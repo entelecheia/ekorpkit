@@ -1,7 +1,6 @@
 defaults:
   - /fetch: t5
   - /info: t5_build
-  - /info/stat: t5
   - /pipeline: t5_build_pipeline
 
 _target_: ekorpkit.io.fetch.build.DatasetBuilder

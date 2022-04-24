@@ -1,7 +1,6 @@
 defaults:
   - /fetch: corpus
   - /info: corpus_build
-  - /info/stat: corpus
   - /pipeline: corpus_build_pipeline
 
 _target_: ekorpkit.io.fetch.build.DatasetBuilder

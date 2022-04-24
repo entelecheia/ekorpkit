@@ -1,13 +1,8 @@
-from tabnanny import verbose
-import time
 from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
-from ekorpkit.utils.func import humanbytes, get_modified_time
-from ekorpkit.pipelines.stat import summary_stats
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit.io.file import load_dataframe
-from pprint import pprint
 from hydra.utils import instantiate
 from wasabi import msg
 
@@ -38,7 +33,7 @@ def build_simple(**args):
 
 class DatasetBuilder:
     def __init__(self, **args) -> None:
-        self.args = args
+        self.args = eKonf.to_dict(args)
         self.name = args.get("name", None)
         self.data_dir = args.get("data_dir", None)
         self.data_filetype = args.get("filetype", "parquet")
@@ -46,7 +41,6 @@ class DatasetBuilder:
         self.verbose = self.args.get("verbose", False)
 
         self.fetch_args = args.get("fetch", None)
-        self.fetch_args = eKonf.to_dict(self.fetch_args)
         self.fetch_dir = self.fetch_args.get("data_dir", None)
         self.fetch_sources = self.fetch_args.get("data_sources", None)
         if isinstance(self.fetch_sources, str):
@@ -62,9 +56,8 @@ class DatasetBuilder:
         self.loader = self.fetch_args.get("loader", None)
 
         self.info_args = self.args.get("info", None)
-        self._load_info()
+        self.summary_info = None
 
-        self.stat_args = self.info_args.get("stat", None)
         self.pipeline_args = self.args.get("pipeline", {})
         self.transform_pipeline = self.pipeline_args.get("_transform_", [])
         self.process_pipeline = self.pipeline_args.get("_preprocess_", [])
@@ -73,76 +66,30 @@ class DatasetBuilder:
         if self.process_pipeline is None:
             self.process_pipeline = []
 
-    def _load_info(self):
-        self.info_path = Path(self.data_dir) / self.info_args.get(
-            "info_file", f"info-{self.name}.yaml"
-        )
-        if self.info_path.exists():
-            self.info = eKonf.to_dict(eKonf.load(self.info_path))
-        else:
-            self.info = {}
-        for key in self.info_args.info_list:
-            if self.args.get(key) is not None:
-                self.info[key] = self.args[key]
-
-    def _update_info(self, split_infos):
-        self.info["splits"] = split_infos
-
-        files_info = {key: {} for key in self.info_args.update_files_info}
-        for i, (split_name, split_info) in enumerate(split_infos.items()):
-            for key, val in self.info_args.update_files_info.items():
-                if val in split_info:
-                    files_info[key][split_name] = split_info[val]
-            for key, val in self.info_args.aggregate_info.items():
-                if val in split_info:
-                    if i == 0:
-                        self.info[key] = split_info[val]
-                    else:
-                        self.info[key] += split_info[val]
-        self.info["size_in_human_bytes"] = humanbytes(self.info["size_in_bytes"])
-
-        for key in self.info_args.update_files_info:
-            self.info[key] = files_info[key]
-
-        for key, value in self.info_args.modified_info.items():
-            vals = [
-                get_modified_time(f"{self.data_dir}/{split[value]}")
-                for split in self.info["splits"].values()
-                if value in split
-            ]
-            vals = [v for v in vals if v is not None]
-            if vals:
-                self.info[key] = max(vals)
-        self.info["info_updated"] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-
-        eKonf.save(config=eKonf.to_config(self.info), f=self.info_path)
-        if self.verbose:
-            msg.good(f"Saving updated info file: {self.info_path}")
-        pprint(self.info)
-
     def build(self):
         if self.downloader:
             if self.downloader.get("_target_", None):
-                instantiate(self.downloader, _recursive_=False)
+                eKonf.instantiate(self.downloader)
             pipeline_args = self.downloader.get("pipeline", None)
             if pipeline_args:
-                instantiate(pipeline_args, _recursive_=False)
+                eKonf.instantiate(pipeline_args)
 
-        split_infos = {}
+        if self.info_args:
+            self.summary_info = eKonf.instantiate(self.info_args)
+        if self.summary_info:
+            self.summary_info.load(self.args)
+
         for split_name, split_data_source in self.fetch_sources.items():
             if split_data_source is None:
                 continue
-            split_info = self._process_split(split_name)
-            if split_info:
-                split_infos[split_name] = split_info
+            self._process_split(split_name)
 
-        if split_infos:
-            self._update_info(split_infos)
-            print(
-                f"\nCorpus [{self.name}] is built to [{self.data_dir}] from [{self.fetch_dir}]"
-            )
-        else:
-            print(f"\nNo splits found for [{self.name}]")
+        if self.summary_info:
+            self.summary_info.save()
+
+        print(
+            f"\nCorpus [{self.name}] is built to [{self.data_dir}] from [{self.fetch_dir}]"
+        )
 
     def _process_split(self, split_name):
 
@@ -181,7 +128,7 @@ class DatasetBuilder:
             if df is None:
                 raise ValueError("dataframe is None")
 
-            if verbose:
+            if self.verbose:
                 print(df.head())
                 print(df.shape)
 
@@ -191,34 +138,20 @@ class DatasetBuilder:
                 )
                 df = apply_pipeline(df, self.transform_pipeline, self.pipeline_args)
 
-            info = {
-                "name": split_name,
-                "dataset_name": self.name,
-                "data_file": output_file.name,
-                # 'meta_file': None,
-            }
-            if output_meta_file.is_file():
-                info["meta_file"] = output_meta_file.name
+            if self.summary_info and self.calculate_stats:
+                stats = {
+                    "name": split_name,
+                    "dataset_name": self.name,
+                    "data_file": output_file.name,
+                }
+                if output_meta_file.is_file():
+                    stats["meta_file"] = output_meta_file.name
+                self.summary_info.init_stats(df, split_name, stats)
 
-            stat_args = self.info_args.get("stat_before_processing", None)
-            if stat_args:
-                with elapsed_timer(format_time=True) as elapsed:
-                    for k, v in self.stat_args.items():
-                        if k not in stat_args:
-                            stat_args[k] = v
-                    stat_info = summary_stats(df, **stat_args)
-                    msg.good(
-                        f" >> elapsed time to calculate statistics before processing: {elapsed()}"
-                    )
-                    # if verbose:
-                    #     pprint(stat_info)
-
-                info.update(stat_info)
         else:
             msg.info(f"{output_file} already exists")
             if self.calculate_stats or self.preprocess_text:
                 df = load_dataframe(output_file, self.data_filetype)
-                info = self.info["splits"][split_name]
 
         if df is None:
             print("No datasets found")
@@ -228,12 +161,5 @@ class DatasetBuilder:
             print(f"\nProcessing dataframe with pipeline: {self.process_pipeline}")
             df = apply_pipeline(df, self.process_pipeline, self.pipeline_args)
 
-        if self.calculate_stats:
-            with elapsed_timer(format_time=True) as elapsed:
-                stat_info = summary_stats(df, **self.stat_args)
-                msg.good(f" >> elapsed time to calculate statistics: {elapsed()}")
-                # if verbose:
-                #     pprint(stat_info)
-
-            info.update(stat_info)
-            return info
+        if self.calculate_stats and self.summary_info:
+            self.summary_info.calculate_stats(df, split_name)

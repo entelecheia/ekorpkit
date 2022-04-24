@@ -1,0 +1,40 @@
+defaults:
+  - stats: default
+
+_target_: ekorpkit.pipelines.stat.SummaryInfo
+name: ${oc.select:..name,''} 
+data_dir: ${oc.select:..data_dir, .}
+info_file: info-${.name}.yaml
+info_list:
+  - name
+  - fullname
+  - domain
+  - task
+  - lang
+  - description
+  - license
+  - homepage
+  - version
+  - num_examples
+  - size_in_bytes
+  - size_in_human_bytes
+  - data_files_modified
+  - info_updated
+  - data_files
+  - column_info
+update_files_info:
+  data_files: data_file
+  meta_files: meta_file
+update_info:
+  - fullname
+  - lang
+  - domain
+  - task
+  - description
+  - license
+  - homepage
+  - version
+modified_info:
+  data_files_modified: data_file
+key_columns: ${oc.select:..column_info.keys, ''}
+verbose: ${oc.select:..verbose, false}

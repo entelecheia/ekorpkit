@@ -11,6 +11,7 @@ defaults:
   - drop_duplicates: drop
   - save_samples: samples
   - save_dataframe: default
+  - replace: default
  
 _transform_:
   - reset_index

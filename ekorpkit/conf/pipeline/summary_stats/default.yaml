@@ -1,0 +1,12 @@
+defaults:
+  - /method: summary_stats
+  - /info/stats: default
+
+apply_to: ${oc.select:..apply_to, text}
+output_dir: ${oc.select:..data_dir, .}
+output_file:
+verbose: ${oc.select:..verbose, true}
+info:
+  text_keys: ${..apply_to}
+  stats:
+    text_keys: ${..text_keys}

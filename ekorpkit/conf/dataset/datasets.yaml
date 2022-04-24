@@ -1,17 +1,11 @@
 defaults:
   - default
+  - /info: dataset_build
 
 _target_: ekorpkit.datasets.loader.Datasets
 name: 
+datasets:
 data_dir: ${dir.dataset}/dataset
-splits:
-  train:
-  dev:
-  test:
-column_info:
-  keys:
-    id: id
-  data:
 autorun:
   - load
   # - name: concatenate

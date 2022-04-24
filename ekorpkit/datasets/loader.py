@@ -1,7 +1,9 @@
+import os
 import pandas as pd
 from wasabi import msg
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.io.file import save_dataframe
 from .dataset import Dataset
 
 
@@ -9,20 +11,35 @@ class Datasets:
     def __init__(self, **args):
         args = eKonf.to_dict(args)
         self.args = args
-        self.names = args.get("name")
-        if isinstance(self.names, str):
-            self.names = [self.names]
+        self.name = args["name"]
+        self.datasets = args.get("datasets", None)
+        if self.datasets is None:
+            self.datasets = self.name
+        if isinstance(self.datasets, str):
+            self.datasets = {self.datasets: None}
+        elif isinstance(self.datasets, list):
+            self.datasets = {name: None for name in self.datasets}
+        if isinstance(self.name, list):
+            self.name = "-".join(self.name)
+        self.info = args.copy()
+        self.info["name"] = self.name
+        self.info["datasets"] = self.datasets
+
         self.verbose = args.get("verbose", False)
         self.data_dir = args["data_dir"]
         self._data_files = self.args.get("data_files", None)
+        self.filetype = self.args.get("filetype", "csv")
         self._autorun_list = self.args.get("autorun", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
+        self.info_args = self.args.get("info", None)
+
         self.column_info = self.args.get("column_info", {})
-        self.split_info = self.args.get("splits")
-        self.datasets = {}
+        self.splits = None
+        self._datasets_concatenated = False
 
         self._id_key = "id"
+        self._org_id_key = "org_id"
         self._id_separator = "_"
         self._dataset_key = "dataset"
         self._keys = self.column_info.get("keys", None)
@@ -32,11 +49,12 @@ class Datasets:
         self._data_keys = self.column_info.get("data", None)
 
         with elapsed_timer(format_time=True) as elapsed:
-            for name in self.names:
+            for name in self.datasets:
                 print(f"processing {name}")
                 args["name"] = name
                 args["data_dir"] = self.data_dir
                 args["use_name_as_subdir"] = use_name_as_subdir
+                args["verbose"] = self.verbose
                 if self._data_files is not None:
                     if name in self._data_files:
                         args["data_files"] = self._data_files[name]
@@ -44,8 +62,8 @@ class Datasets:
                         args["data_files"] = self._data_files
                 dataset = Dataset(**args)
                 self.datasets[name] = dataset
-                if self.split_info is None:
-                    self.split_info = list(dataset.splits.keys())
+                if self.splits is None:
+                    self.splits = {split: None for split in dataset.data_files}
             print(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
         eKonf.call(self._autorun_list, self)
@@ -85,13 +103,11 @@ class Datasets:
         self.concat_datasets(append_dataset_name=append_dataset_name)
 
     def concat_datasets(self, append_dataset_name=True):
-        self.splits = {}
-
         if append_dataset_name:
             if self._dataset_key not in self._id_keys:
                 self._id_keys.append(self._dataset_key)
 
-        for split in self.split_info:
+        for split in self.splits:
             dfs = []
             for name in self.datasets:
                 df = self.datasets[name][split]
@@ -103,3 +119,41 @@ class Datasets:
             self.splits[split] = pd.concat(dfs, ignore_index=True)
         if self.verbose:
             msg.good(f"concatenated {len(self.datasets)} dataset(s)")
+        self._datasets_concatenated = True
+
+    def persist(self):
+        if len(self.datasets) < 2:
+            msg.war(f"more than one dataset required to persist")
+            return
+        if not self._datasets_concatenated:
+            msg.warn(f"datasets not concatenated yet, calling concatenate()")
+            self.concatenate()
+
+        data_dir = f"{self.data_dir}/{self.name}"
+        os.makedirs(data_dir, exist_ok=True)
+
+        summary_info = None
+        if self.info_args:
+            self.info_args["data_dir"] = data_dir
+            self.info_args["name"] = self.name
+            self.info_args["info_file"] = None
+            summary_info = eKonf.instantiate(self.info_args)
+        if summary_info:
+            summary_info.load(self.info)
+
+        for split, df in self.splits.items():
+            data_file = f"{self.name}-{split}.{self.filetype}"
+            data_path = f"{data_dir}/{data_file}"
+            df.rename({self._id_key: self._org_id_key}, inplace=True)
+            df.reset_index().rename({"index": self._id_key}, inplace=True)
+            save_dataframe(df, data_path)
+            if self.verbose:
+                msg.good(f"saved {data_path}")
+            if summary_info:
+                stats = {"data_file": data_file}
+                summary_info.init_stats(split_name=split, stats=stats)
+                summary_info.calculate_stats(df, split)
+        if summary_info and df is not None:
+            dtypes = df.dtypes.apply(lambda x: x.name).to_dict()
+            self.column_info["data"] = dtypes
+            summary_info.save(info={"column_info": self.column_info})

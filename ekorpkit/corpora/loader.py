@@ -7,12 +7,20 @@ from .corpus import Corpus
 
 class Corpora:
     def __init__(self, **args):
-        args = eKonf.to_config(args)
+        args = eKonf.to_dict(args)
         self.args = args
-        self.names = args.name
-        if isinstance(self.names, str):
-            self.names = [self.names]
-        self.data_dir = args.data_dir
+        self.name = args["name"]
+        self.corpora = args.get("corpora", None)
+        if self.corpora is None:
+            self.corpora = self.name
+        if isinstance(self.corpora, str):
+            self.corpora = {self.corpora: None}
+        elif isinstance(self.corpora, list):
+            self.corpora = {name: None for name in self.corpora}
+        if isinstance(self.name, list):
+            self.name = "-".join(self.name)
+
+        self.data_dir = args["data_dir"]
         self.metadata_dir = self.args.get("metadata_dir", None)
         if self.metadata_dir is None:
             self.metadata_dir = self.data_dir
@@ -22,7 +30,6 @@ class Corpora:
         self.verbose = args.get("verbose", False)
         self.column_info = eKonf.to_dict(self.args.get("column_info", {}))
 
-        self.corpora = {}
         self._data = None
         self._metadata = None
         self._loaded = False
@@ -46,7 +53,7 @@ class Corpora:
         self._meta_kyes = self.column_info.get("meta", None)
 
         with elapsed_timer(format_time=True) as elapsed:
-            for name in self.names:
+            for name in self.corpora:
                 print(f"processing {name}")
                 args["name"] = name
                 args["data_dir"] = self.data_dir
