@@ -112,27 +112,8 @@ def test_build_corpora():
     cfg["data_dir"] = "./data/tmp"
     crps = eKonf.instantiate(cfg)
     # crps.concat_corpora()
-    
+
     assert len(crps.corpora) == 2
-
-
-def test_build_datasets():
-    cfg = eKonf.compose(config_group="dataset/simple=financial_phrasebank")
-    cfg["data_dir"] = "./data/tmp/financial_phrasebank"
-    cfg.fetch.data_dir = cfg.data_dir
-    cfg.fetch.overwrite = True
-    cfg.fetch.calculate_stats = True
-    db = eKonf.instantiate(cfg)
-    db.build()
-
-    cfg = eKonf.compose(config_group='dataset')
-    cfg['name'] = ['financial_phrasebank']
-    cfg['data_dir'] = './data/tmp'
-    eKonf.pprint(cfg)
-    ds = eKonf.instantiate(cfg)
-    # ds.concat_datasets()
-
-    assert len(ds.datasets) == 1
 
 
 def test_about():
