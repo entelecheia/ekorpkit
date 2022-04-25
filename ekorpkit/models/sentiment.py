@@ -32,23 +32,32 @@ class Lexicon:
     def _load_lexicon(self, lexicon_path=None):
         lexicon_path = lexicon_path or self._lexicon_path
         df = load_dataframe(lexicon_path)
+        df = df.dropna(subset=[self._word_key])
         df[self._word_key] = df[self._word_key].apply(self._prepare_word)
-        df[self._arr_word_key] = df[self._word_key].str.split(self._lexicon_ngram_delim)
-        df[self._ngram_len_key] = df[self._arr_word_key].apply(len)
-        df.sort_values(by=self._ngram_len_key, ascending=False, inplace=True)
-        self._lexicon = df[
-            [self._word_key, self._arr_word_key, self._ngram_len_key]
-            + self._lexicon_tags
-        ]
+        if self._lexicon_ngram_delim:
+            df[self._arr_word_key] = df[self._word_key].str.split(
+                self._lexicon_ngram_delim
+            )
+            df[self._ngram_len_key] = df[self._arr_word_key].apply(len)
+            df.sort_values(by=self._ngram_len_key, ascending=False, inplace=True)
+            self._lexicon = df[
+                [self._word_key, self._arr_word_key, self._ngram_len_key]
+                + self._lexicon_tags
+            ]
+        else:
+            self._lexicon = df[[self._word_key] + self._lexicon_tags]
 
     def _prepare_word(self, word, ngram_delim=None, strip_pos=None, as_list=False):
         ngram_delim = ngram_delim or self._ngram_delim
         strip_pos = strip_pos or self._ignore_pos
-        _word = [
-            token.split("/")[0] if strip_pos else token
-            for token in word.lower().split(ngram_delim)
-        ]
-        return _word if as_list else ngram_delim.join(_word)
+        if ngram_delim:
+            _word = [
+                token.split("/")[0] if strip_pos else token
+                for token in word.lower().split(ngram_delim)
+            ]
+            return _word if as_list else ngram_delim.join(_word)
+        else:
+            return word.lower().split("/")[0] if strip_pos else word.lower()
 
     def _prepare_tokens(
         self, tokens, ngram_delim=None, strip_pos=None, ngram_distiance_tolerance=None
@@ -67,7 +76,7 @@ class Lexicon:
                 token_dict[token][self._token_count_key] += 1
             else:
                 token_dict[token] = {self._token_count_key: 1}
-            if ngram_distiance_tolerance > 0:
+            if ngram_distiance_tolerance > 0 and ngram_delim:
                 ngram = self._prepare_word(token, ngram_delim, strip_pos, True)
                 if len(ngram) > 1:
                     ngrams_dict[token] = ngram
@@ -137,7 +146,7 @@ class Lexicon:
         else:
             df_token = df
             df_ngram = None
-        senti_tokens = df_token[df_token.word.isin(token_dict.keys())]
+        senti_tokens = df_token[df_token[self._word_key].isin(token_dict.keys())]
         if df_ngram is not None:
             check = df_ngram._word.apply(
                 lambda x: self.check_subset_tokens(
