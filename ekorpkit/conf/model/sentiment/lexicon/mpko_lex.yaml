@@ -4,7 +4,7 @@ source: https://github.com/entelecheia/eKoNLPy
 lang: ko
 ngram_delim: ;
 lexicon_path: ${dir.resource}/lexicons/mpko/mp_polarity_lexicon_lex.parquet
-lexicon_tags: 
+lexicon_features:
   - label
   - polarity
   - intensity
@@ -13,6 +13,6 @@ lexicon_tags:
 word_key: word
 ignore_pos: false
 analyze:
-  tags:
+  features:
   ngram_distiance_tolerance: 0
   ngram_delim: ${..ngram_delim}

@@ -1,10 +1,11 @@
 _target_: ekorpkit.models.sentiment.Lexicon
-name: Loughran-McDonald Sentiment lexicon
+name: lm
+fullname: Loughran-McDonald Sentiment lexicon
 source: https://sraf.nd.edu/loughranmcdonald-master-dictionary
 lang: en
 ngram_delim:
 lexicon_path: ${dir.resource}/lexicons/LM.parquet
-lexicon_tags: 
+lexicon_features:
   - Negative
   - Positive
   - Uncertainty
@@ -16,6 +17,6 @@ lexicon_tags:
 word_key: Word
 ignore_pos: false
 analyze:
-  tags:
+  features:
   ngram_distiance_tolerance: 0
   ngram_delim: ${..ngram_delim}

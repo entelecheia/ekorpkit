@@ -12,7 +12,7 @@ class Lexicon:
         self.source = args.get("source", None)
         self.lang = args.get("lang", None)
         self._lexicon_ngram_delim = args.get("ngram_delim", ";")
-        self._lexicon_tags = args["lexicon_tags"]
+        self._lexicon_features = args["lexicon_features"]
         self._lexicon_path = args["lexicon_path"]
         self._word_key = args.get("word_key", "word")
         self._arr_word_key = "_" + self._word_key
@@ -21,7 +21,7 @@ class Lexicon:
         self._ignore_pos = self.args.get("ignore_pos", False)
         self._lexicon = None
         self._analyze_args = args.get("analyze", {})
-        self._tags = self._analyze_args.get("tags", None)
+        self._features = self._analyze_args.get("features", None)
         self._ngram_distiance_tolerance = self._analyze_args.get(
             "ngram_distiance_tolerance", 0
         )
@@ -42,10 +42,10 @@ class Lexicon:
             df.sort_values(by=self._ngram_len_key, ascending=False, inplace=True)
             self._lexicon = df[
                 [self._word_key, self._arr_word_key, self._ngram_len_key]
-                + self._lexicon_tags
+                + self._lexicon_features
             ]
         else:
-            self._lexicon = df[[self._word_key] + self._lexicon_tags]
+            self._lexicon = df[[self._word_key] + self._lexicon_features]
 
     def _prepare_word(self, word, ngram_delim=None, strip_pos=None, as_list=False):
         ngram_delim = ngram_delim or self._ngram_delim
@@ -83,8 +83,8 @@ class Lexicon:
         return token_dict, ngrams_dict
 
     @property
-    def n_tags(self):
-        return len(self._lexicon_tags)
+    def n_features(self):
+        return len(self._lexicon_features)
 
     def __len__(self):
         return len(self._lexicon)
@@ -104,7 +104,7 @@ class Lexicon:
         s += f"name: {self.name}\n"
         s += f"source: {self.source}\n"
         s += f"lang: {self.lang}\n"
-        s += f"tags: {self._lexicon_tags}\n"
+        s += f"lexicon_features: {self._lexicon_features}\n"
         s += f"lexicon_path: {self._lexicon_path}\n"
         s += f"word_key: {self._word_key}\n"
         s += f"ignore_pos: {self._ignore_pos}\n"
@@ -124,12 +124,12 @@ class Lexicon:
     def analyze(
         self,
         tokens: list,
-        tags=None,
+        features=None,
         ngram_distiance_tolerance=None,
         ngram_delim=None,
         **kwargs,
     ):
-        tags = tags or self._lexicon_tags
+        features = features or self._features or self._lexicon_features
         ignore_pos = self._ignore_pos
         ngram_distiance_tolerance = (
             ngram_distiance_tolerance or self._ngram_distiance_tolerance
@@ -146,23 +146,26 @@ class Lexicon:
         else:
             df_token = df
             df_ngram = None
-        senti_tokens = df_token[df_token[self._word_key].isin(token_dict.keys())]
+        token_features = df_token[df_token[self._word_key].isin(token_dict.keys())]
         if df_ngram is not None:
-            check = df_ngram._word.apply(
+            check = df_ngram[self._arr_word_key].apply(
                 lambda x: self.check_subset_tokens(
                     x, ngrams_dict, ngram_distiance_tolerance
                 )
             )
-            senti_ngrams = df_ngram.loc[list(check.dropna().index), :]
-            senti_ngrams[self._word_key] = check
-            senti_tokens = pd.concat(
-                [senti_tokens, senti_ngrams], axis=0
-            ).drop_duplicates(subset=self._word_key, keep="first")
+            ngram_features = df_ngram.loc[list(check.dropna().index), :]
+            if not ngram_features.empty:
+                ngram_features[self._word_key] = check
+                token_features = pd.concat(
+                    [token_features, ngram_features], axis=0
+                ).drop_duplicates(subset=self._word_key, keep="first")
 
-        senti_dict = senti_tokens.set_index(self._word_key)[tags].to_dict("index")
+        feature_dict = token_features.set_index(self._word_key)[features].to_dict("index")
 
         return_dict = {}
-        for token, sentiment in senti_dict.items():
-            sentiment.update(token_dict[token])
-            return_dict[token] = sentiment
+        for token, features in feature_dict.items():
+            if not isinstance(token, str):
+                continue
+            features.update(token_dict[token])
+            return_dict[token] = features
         return return_dict
