@@ -155,6 +155,9 @@ class Corpora:
             raise KeyError(f"{name} not in corpora")
         return self.corpora[name]
 
+    def __len__(self):
+        return len(self.corpora)
+
     def merge_metadata(self):
         if self._metadata is None:
             return

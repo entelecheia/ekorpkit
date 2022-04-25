@@ -80,6 +80,9 @@ class Datasets:
             raise KeyError(f"{name} not in datasets")
         return self.datasets[name]
 
+    def __len__(self):
+        return len(self.datasets)
+
     @property
     def ID(self):
         return self._id_key

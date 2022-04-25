@@ -136,9 +136,12 @@ class Corpus:
     def metadata(self):
         return self._metadata
 
+    def __len__(self):
+        return len(self._data)
+
     @property
     def num_rows(self) -> int:
-        """Number of rows in the dataset (same as :meth:`Dataset.__len__`)."""
+        """Number of rows in the corpus (same as :meth:`Corpus.__len__`)."""
         if self._data.index is not None:
             return len(self._data.index)
         return len(self._data)

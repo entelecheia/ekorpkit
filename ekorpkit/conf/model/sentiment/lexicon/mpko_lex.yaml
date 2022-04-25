@@ -1,0 +1,18 @@
+_target_: ekorpkit.models.sentiment.Lexicon
+name: mpko_tone_lex
+source: https://github.com/entelecheia/eKoNLPy
+lang: ko
+ngram_delim: ;
+lexicon_path: ${dir.resource}/lexicons/mpko/mp_polarity_lexicon_lex.parquet
+lexicon_tags: 
+  - label
+  - polarity
+  - intensity
+  - pos_score
+  - neg_score
+word_key: word
+ignore_pos: false
+analyze:
+  tags:
+  ngram_distiance_tolerance: 0
+  ngram_delim: ${..ngram_delim}

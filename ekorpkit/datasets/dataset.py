@@ -75,6 +75,9 @@ class Dataset:
     def __getitem__(self, split):
         return self.splits[split]
 
+    def __len__(self):
+        return len(self._data)
+
     @property
     def ID(self):
         return self._id_key
