@@ -136,7 +136,13 @@ class MeCab:  # APIs are inspried by KoNLPy
         else:
             return self._parse_mecab(text)
 
-    def pos(self, sentence, flatten=True, join=False, include_whitespace_token=True):
+    def pos(
+        self,
+        sentence,
+        flatten=True,
+        concat_surface_and_pos=False,
+        include_whitespace_token=True,
+    ):
         sentence = sentence.strip()
         if include_whitespace_token:
             sent_ptr = 0
@@ -154,7 +160,7 @@ class MeCab:  # APIs are inspried by KoNLPy
         else:
             res = self._pos(sentence, flatten=flatten)
 
-        return [s[0] + "/" + s[1] if join else s for s in res]
+        return [s[0] + "/" + s[1] if concat_surface_and_pos else s for s in res]
 
     def _pos(self, sentence, flatten=True):
         if flatten:
@@ -176,7 +182,7 @@ class MeCab:  # APIs are inspried by KoNLPy
             for surface, _ in self.pos(
                 sentence,
                 flatten=flatten,
-                join=False,
+                concat_surface_and_pos=False,
                 include_whitespace_token=include_whitespace_token,
             )
         ]
@@ -193,7 +199,7 @@ class MeCab:  # APIs are inspried by KoNLPy
             for surface, pos in self.pos(
                 sentence,
                 flatten=flatten,
-                join=False,
+                concat_surface_and_pos=False,
                 include_whitespace_token=include_whitespace_token,
             )
             if pos in noun_pos

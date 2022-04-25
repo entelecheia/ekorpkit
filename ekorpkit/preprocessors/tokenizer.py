@@ -490,7 +490,7 @@ class MecabTokenizer(Tokenizer):
 
         return self._tokenizer.pos(
             text,
-            join=False,
+            concat_surface_and_pos=False,
             flatten=self._flatten,
             include_whitespace_token=self._include_whitespace_token,
         )
