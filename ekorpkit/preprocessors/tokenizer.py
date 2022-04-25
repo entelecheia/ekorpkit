@@ -88,6 +88,10 @@ class Tokenizer:
             print(f"\treturn_type: {self.return_type}")
             print(f"\tstopwords_path: {self._stopwords_path}")
 
+    def __call__(self, text):
+        """Calling a tokenizer instance like a function just calls the tokenize method."""
+        return self.tokenize(text)
+
     def parse(self, text):
         return text.split()
 
