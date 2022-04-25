@@ -1,9 +1,12 @@
-_target_: ekorpkit.models.sentiment.Lexicon
+defaults:
+   - _default
+
 name: kosac_polarity
 fullname: The KOrean Sentiment Analysis Corpus
 source: http://word.snu.ac.kr/kosac
 lang: ko
 ngram_delim: ;
+ngram_max_n: 3
 lexicon_path: ${dir.resource}/lexicons/kosac/polarity.parquet
 lexicon_features:
   - COMP

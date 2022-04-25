@@ -1,9 +1,10 @@
-_target_: ekorpkit.models.sentiment.Lexicon
+defaults:
+   - _default
+
 name: lm
 fullname: Loughran-McDonald Sentiment lexicon
 source: https://sraf.nd.edu/loughranmcdonald-master-dictionary
 lang: en
-ngram_delim:
 lexicon_path: ${dir.resource}/lexicons/LM.parquet
 lexicon_features:
   - Negative
@@ -15,8 +16,3 @@ lexicon_features:
   - Interesting
   - Modal
 word_key: Word
-ignore_pos: false
-analyze:
-  features:
-  ngram_distiance_tolerance: 0
-  ngram_delim: ${..ngram_delim}

@@ -32,4 +32,5 @@ extract:
   no_space_for_non_nouns: false
   stopwords:
   stopwords_path: ${oc.select:..stopwords_path, null}
+postags:
 verbose: ${oc.select:..verbose, false}
