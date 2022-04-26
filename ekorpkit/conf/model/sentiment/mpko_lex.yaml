@@ -1,0 +1,14 @@
+defaults:
+  - /preprocessor/tokenizer: mecab
+  - lexicon: mpko_lex
+
+_target_: ekorpkit.models.sentiment.analyser.MPKOL
+name: mpko_lex
+features:
+  polarity:
+    labels:
+      negative: (-1, -0.2)
+      neutral: (-0.2, 0.2)
+      positive: (0.2, 1)
+predict:
+  features: polarity

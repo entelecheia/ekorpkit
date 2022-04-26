@@ -1,0 +1,18 @@
+defaults:
+   - _default
+
+name: lm
+fullname: Loughran-McDonald Sentiment lexicon
+source: https://sraf.nd.edu/loughranmcdonald-master-dictionary
+lang: en
+lexicon_path: ${dir.resource}/lexicons/LM.parquet
+lexicon_features:
+  - Negative
+  - Positive
+  - Uncertainty
+  - Litigious
+  - Constraining
+  - Superfluous
+  - Interesting
+  - Modal
+word_key: Word

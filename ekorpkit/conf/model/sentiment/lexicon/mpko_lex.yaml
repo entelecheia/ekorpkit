@@ -1,0 +1,22 @@
+defaults:
+   - _default
+
+name: mpko_tone_lex
+fullname: Korean Monetary Policy Tone Lexicon - Lexical Approach
+source: https://github.com/entelecheia/eKoNLPy
+lang: ko
+ngram_delim: ;
+ngram_max_n: 5
+lexicon_path: ${dir.resource}/lexicons/mpko/mp_polarity_lexicon_lex.parquet
+lexicon_features:
+  - label
+  - polarity
+  - intensity
+  - pos_score
+  - neg_score
+word_key: word
+ignore_pos: false
+postag_delim: /
+postag_length: 2
+analyze:
+  ngram_distiance_tolerance: 1

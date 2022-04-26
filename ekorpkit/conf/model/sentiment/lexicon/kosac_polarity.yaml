@@ -1,0 +1,37 @@
+defaults:
+  - _default
+
+name: kosac_polarity
+fullname: The KOrean Sentiment Analysis Corpus
+source: http://word.snu.ac.kr/kosac
+lang: ko
+ngram_delim: ;
+ngram_max_n: 3
+lexicon_path: ${dir.resource}/lexicons/kosac/polarity.parquet
+lexicon_features:
+  - COMP
+  - NEG
+  - NEUT
+  - None
+  - POS
+  - max.value
+  - max.prop
+word_key: ngram
+ignore_pos: false
+stop_postags:
+  - SF
+  - SP
+  - SS
+  - SE
+  - SO
+  - SW
+  - UN
+  - UV
+  - UE
+  - OL
+  - OH
+  - "ON"
+analyze:
+  features:
+  ngram_distiance_tolerance: 0
+  ngram_delim: ${..ngram_delim}

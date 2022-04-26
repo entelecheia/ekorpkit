@@ -1,0 +1,24 @@
+defaults:
+  - /preprocessor/tokenizer: nltk
+  - lexicon: lm
+
+_target_: ekorpkit.models.sentiment.analyser.LMSA
+name: lm
+features:
+  polarity:
+    labels:
+      negative: (-1, -0.2)
+      neutral: (-0.2, 0.2)
+      positive: (0.2, 1)
+    lexicon_features:
+      - Negative
+      - Positive
+predict:
+  features: polarity
+preprocessor:
+  tokenizer:
+    tokenize:
+      concat_surface_and_pos: false
+    nltk:
+      lemmatize: false
+      stem: false

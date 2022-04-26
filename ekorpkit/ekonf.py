@@ -11,16 +11,92 @@ from typing import Any, List, IO, Dict, Union, Tuple, Optional
 from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
+
+def __ekorpkit_path__():
+    return pathlib.Path(__file__).parent.as_posix()
+
+
+def compose(
+    overrides: List[str] = [],
+    config_group: str = None,
+    *,
+    return_as_dict: bool = False,
+    throw_on_resolution_failure: bool = True,
+    throw_on_missing: bool = False,
+    config_name="ekonf",
+    verbose: bool = False,
+):
+    """
+    Compose your configuration from config groups and overrides (overrides=["override_name"])
+
+    :param overrides: List of overrides to apply
+    :param config_group: Config group name to select ('config_group=name')
+    :param return_as_dict: Return the composed config as a dict
+    :param throw_on_resolution_failure: Throw if resolution fails
+    :param throw_on_missing: Throw if a config is missing
+    :param config_name: Name of the config to compose
+    :param verbose: Print the composed config
+
+    :return: The composed config
+    """
+    if config_group:
+        _task = config_group.split("=")
+        if len(_task) == 2:
+            key, value = _task
+        else:
+            key = _task[0]
+            value = None
+    else:
+        key = None
+        value = None
+    if key and value:
+        with hydra.initialize_config_module(config_module="ekorpkit.conf"):
+            cfg = hydra.compose(config_name=config_name, overrides=overrides)
+            cfg = select(
+                cfg,
+                key=key,
+                default=None,
+                throw_on_missing=False,
+                throw_on_resolution_failure=False,
+            )
+            if cfg:
+                overide = config_group
+            else:
+                overide = f"+{config_group}"
+            if overrides:
+                overrides.append(overide)
+            else:
+                overrides = [overide]
+    if verbose:
+        print(f"compose config with overrides: {overrides}")
+    with hydra.initialize_config_module(config_module="ekorpkit.conf"):
+        cfg = hydra.compose(config_name=config_name, overrides=overrides)
+        if key:
+            cfg = select(
+                cfg,
+                key=key,
+                default=None,
+                throw_on_missing=throw_on_missing,
+                throw_on_resolution_failure=throw_on_resolution_failure,
+            )
+        if verbose:
+            print(cfg)
+        if return_as_dict and isinstance(cfg, DictConfig):
+            return to_dict(cfg)
+        return cfg
+
+
+config = compose()
+
 DictKeyType = Union[str, int, Enum, float, bool]
 
+OmegaConf.register_new_resolver("__ekorpkit_path__", __ekorpkit_path__)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
 )
-
-_ekorpkit_path_ = pathlib.Path(__file__).parent
 
 
 def partial(_partial_, *args, **kwargs):
@@ -41,7 +117,8 @@ class eKonf:
     """ekorpkit config primary class"""
 
     __version__ = _version.get_versions()["version"]
-    _ekorpkit_path_ = pathlib.Path(__file__).parent
+    __ekorpkit_path__ = pathlib.Path(__file__).parent.as_posix()
+    config = compose()
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
@@ -191,76 +268,6 @@ def pprint(cfg: Any, **kwargs):
         pprint.pprint(to_dict(cfg), **kwargs)
     else:
         print(cfg)
-
-
-def compose(
-    overrides: List[str] = [],
-    config_group: str = None,
-    *,
-    return_as_dict: bool = False,
-    throw_on_resolution_failure: bool = True,
-    throw_on_missing: bool = False,
-    config_name="ekonf",
-    verbose: bool = False,
-):
-    """
-    Compose your configuration from config groups and overrides (overrides=["override_name"])
-
-    :param overrides: List of overrides to apply
-    :param config_group: Config group name to select ('config_group=name')
-    :param return_as_dict: Return the composed config as a dict
-    :param throw_on_resolution_failure: Throw if resolution fails
-    :param throw_on_missing: Throw if a config is missing
-    :param config_name: Name of the config to compose
-    :param verbose: Print the composed config
-
-    :return: The composed config
-    """
-    if config_group:
-        _task = config_group.split("=")
-        if len(_task) == 2:
-            key, value = _task
-        else:
-            key = _task[0]
-            value = None
-    else:
-        key = None
-        value = None
-    if key and value:
-        with hydra.initialize_config_module(config_module="ekorpkit.conf"):
-            cfg = hydra.compose(config_name=config_name, overrides=overrides)
-            cfg = select(
-                cfg,
-                key=key,
-                default=None,
-                throw_on_missing=False,
-                throw_on_resolution_failure=False,
-            )
-            if cfg:
-                overide = config_group
-            else:
-                overide = f"+{config_group}"
-            if overrides:
-                overrides.append(overide)
-            else:
-                overrides = [overide]
-    if verbose:
-        print(f"compose config with overrides: {overrides}")
-    with hydra.initialize_config_module(config_module="ekorpkit.conf"):
-        cfg = hydra.compose(config_name=config_name, overrides=overrides)
-        if key:
-            cfg = select(
-                cfg,
-                key=key,
-                default=None,
-                throw_on_missing=throw_on_missing,
-                throw_on_resolution_failure=throw_on_resolution_failure,
-            )
-        if verbose:
-            print(cfg)
-        if return_as_dict and isinstance(cfg, DictConfig):
-            return to_dict(cfg)
-        return cfg
 
 
 def select(
