@@ -19,7 +19,18 @@ lexicon_features:
 word_key: ngram
 ignore_pos: false
 stop_postags:
-  ["SF", "SP", "SS", "SE", "SO", "SW", "UN", "UV", "UE", "OL", "OH", "ON"]
+  - SF
+  - SP
+  - SS
+  - SE
+  - SO
+  - SW
+  - UN
+  - UV
+  - UE
+  - OL
+  - OH
+  - "ON"
 analyze:
   features:
   ngram_distiance_tolerance: 0

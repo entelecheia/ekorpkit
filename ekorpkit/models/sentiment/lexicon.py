@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
 from ekorpkit.io.file import load_dataframe
 
@@ -192,63 +191,3 @@ class Lexicon:
             features.update(token_dict[token])
             return_dict[token] = features
         return return_dict
-
-
-class BaseSentimentAnalyser:
-    __metaclass__ = ABCMeta
-    """
-    A base class for sentiment analysis.
-    """
-
-    EPSILON = 1e-6
-
-    def __init__(self, preprocessor=None, lexicon=None, **kwargs):
-        self._predict = kwargs.get("predict") or {}
-        self._eval = kwargs.get("eval") or {}
-
-        self._tokenizer = preprocessor["tokenizer"]
-        if eKonf.is_instantiatable(self._tokenizer):
-            if self.verbose:
-                print(f"[ekorpkit]: instantiating {self._tokenizer['_target_']}...")
-            self._tokenizer = eKonf.instantiate(self._tokenizer)
-
-        self._lexicon = lexicon
-        if eKonf.is_instantiatable(self._lexicon):
-            if self.verbose:
-                print(f"[ekorpkit]: instantiating {self._lexicon['_target_']}...")
-            self._lexicon = eKonf.instantiate(self._lexicon)
-
-    def tokenize(self, text):
-        """
-        :type text: str
-        :returns: list
-        """
-        return self._tokenizer.tokenize(text)
-
-    @abstractmethod
-    def _get_score(self, features, feature_type="polarity"):
-        """Get score for features.
-
-        :returns: int
-        """
-        raise NotImplementedError("Must override segment")
-
-    @abstractmethod
-    def _assign_class(self, score, feature_type="polarity"):
-        """Assign class to a score.
-
-        :returns: str
-        """
-        raise NotImplementedError("Must override segment")
-
-    def predict(self, text, feature_type="polarity"):
-        """Get score for a list of terms.
-
-        :returns: dict
-        """
-        tokens = self.tokenize(text)
-        features = self._lexicon.analyze(tokens)
-
-        score = self._get_score(features, feature_type=feature_type)
-
-        return self._assign_class(score, feature_type=feature_type)

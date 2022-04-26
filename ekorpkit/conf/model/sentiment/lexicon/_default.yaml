@@ -1,4 +1,4 @@
-_target_: ekorpkit.models.sentiment.Lexicon
+_target_: ekorpkit.models.sentiment.lexicon.Lexicon
 name: 
 fullname:
 source: 
