@@ -1,0 +1,13 @@
+defaults:
+  - /preprocessor/tokenizer: nltk
+  - lexicon: lm
+
+_target_: ekorpkit.model.sentiment.BaseSentimentAnalyzer
+name: lm
+feature_aggregate:
+  rename: 
+    Positive: pos
+    Negative: neg}
+  agg: 
+    Positive: 'lambda x: x[x>0].count()'
+    Negative: 'lambda x: x[x>0].count()'
