@@ -37,6 +37,13 @@ class BaseSentimentAnalyser:
         """
         return self._tokenizer.tokenize(text)
 
+    def analyze(self, text, **kwargs):
+        """
+        :type text: str
+        :returns: list
+        """
+        return self._lexicon.analyze(self.tokenize(text), **kwargs)
+
     @abstractmethod
     def _get_score(self, tokens, lexicon_features, feature="polarity"):
         """Get score for features.
@@ -59,7 +66,8 @@ class BaseSentimentAnalyser:
         :returns: dict
         """
         tokens = self.tokenize(text)
-        lexicon_features = self._lexicon.analyze(tokens)
+        lex_feats = self._features.get(feature).get("lexicon_features")
+        lexicon_features = self._lexicon.analyze(tokens, features=lex_feats)
 
         score = self._get_score(tokens, lexicon_features, feature=feature)
 
