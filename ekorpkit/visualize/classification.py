@@ -3,17 +3,12 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from pathlib import Path
 from .base import set_style, set_figure
+from ekorpkit import eKonf
 
 
 def plot_confusion_matrix(
-    confusion_matrix,
-    display_labels="auto",
-    matrix_labels=None,
-    include_values=True,
-    include_percentages=True,
-    summary_stats=True,
-    cbar=True,
-    cmap="Blues",
+    cm_data,
+    confusion_matrix={},
     savefig={},
     plot={},
     figure={},
@@ -25,35 +20,50 @@ def plot_confusion_matrix(
 
     Arguments
     ---------
-    confusion_matrix:       confusion matrix to be passed in
-    display_labels:         List of strings containing the display_labels to be displayed on the x,y axis. Default is 'auto'
-    matrix_labels:          List of strings that represent the labels row by row to be shown in each square.
-    include_values:         If True, show the raw number in the confusion matrix. Default is True.
-    include_percentages:    If True, show the proportions for each category. Default is True.
-    summary_stats:          If True, display summary statistics below the figure. Default is True.
-    cbar:                   If True, show the color bar. The cbar values are based off the values in the confusion matrix.
-                            Default is True.
-    cmap:                   Colormap of the values displayed from matplotlib.pyplot.cm. Default is 'Blues'
+    cm_data:                confusion matrix to be passed in
+    confusion_matrix:       dictionary of arguments to pass to seaborn.heatmap
+        display_labels:         List of strings containing the display_labels to be displayed on the x,y axis. Default is 'auto'
+        matrix_labels:          List of strings that represent the labels row by row to be shown in each square.
+        include_values:         If True, show the raw number in the confusion matrix. Default is True.
+        include_percentages:    If True, show the proportions for each category. Default is True.
+        summary_stats:          If True, display summary statistics below the figure. Default is True.
+        cbar:                   If True, show the color bar. The cbar values are based off the values in the confusion matrix.
+                                Default is True.
+        cmap:                   Colormap of the values displayed from matplotlib.pyplot.cm. Default is 'Blues'
     """
-    # CODE TO GENERATE TEXT INSIDE EACH SQUARE
-    blanks = ["" for i in range(confusion_matrix.size)]
+    cfg = eKonf.compose(
+        config_group="visualize/plot=confusion_matrix", return_as_dict=True
+    )
 
-    if matrix_labels and len(matrix_labels) == confusion_matrix.size:
+    confusion_matrix = confusion_matrix or cfg["confusion_matrix"]
+    savefig = savefig or cfg["savefig"]
+    plot = plot or cfg["plot"]
+    figure = figure or cfg["figure"]
+
+    display_labels = confusion_matrix.get("display_labels") or "auto"
+    matrix_labels = confusion_matrix.get("matrix_labels")
+    include_values = confusion_matrix.get("include_values") or True
+    include_percentages = confusion_matrix.get("include_percentages") or True
+    summary_stats = confusion_matrix.get("summary_stats") or True
+    cbar = confusion_matrix.get("cbar") or True
+    cmap = confusion_matrix.get("cmap") or "Blues"
+
+    # CODE TO GENERATE TEXT INSIDE EACH SQUARE
+    blanks = ["" for i in range(cm_data.size)]
+
+    if matrix_labels and len(matrix_labels) == cm_data.size:
         matrix_labels = ["{}\n".format(value) for value in matrix_labels]
     else:
         matrix_labels = blanks
 
     if include_values:
-        matrix_values = [
-            "{0:0.0f}\n".format(value) for value in confusion_matrix.flatten()
-        ]
+        matrix_values = ["{0:0.0f}\n".format(value) for value in cm_data.flatten()]
     else:
         matrix_values = blanks
 
     if include_percentages:
         matrix_percentages = [
-            "{0:.2%}".format(value)
-            for value in confusion_matrix.flatten() / np.sum(confusion_matrix)
+            "{0:.2%}".format(value) for value in cm_data.flatten() / np.sum(cm_data)
         ]
     else:
         matrix_percentages = blanks
@@ -62,20 +72,18 @@ def plot_confusion_matrix(
         f"{v1}{v2}{v3}".strip()
         for v1, v2, v3 in zip(matrix_labels, matrix_values, matrix_percentages)
     ]
-    box_labels = np.asarray(box_labels).reshape(
-        confusion_matrix.shape[0], confusion_matrix.shape[1]
-    )
+    box_labels = np.asarray(box_labels).reshape(cm_data.shape[0], cm_data.shape[1])
 
     # CODE TO GENERATE SUMMARY STATISTICS & TEXT FOR SUMMARY STATS
     if summary_stats:
         # Accuracy is sum of diagonal divided by total observations
-        accuracy = np.trace(confusion_matrix) / float(np.sum(confusion_matrix))
+        accuracy = np.trace(cm_data) / float(np.sum(cm_data))
 
         # if it is a binary confusion matrix, show some more stats
-        if len(confusion_matrix) == 2:
+        if len(cm_data) == 2:
             # Metrics for Binary Confusion Matrices
-            precision = confusion_matrix[1, 1] / sum(confusion_matrix[:, 1])
-            recall = confusion_matrix[1, 1] / sum(confusion_matrix[1, :])
+            precision = cm_data[1, 1] / sum(cm_data[:, 1])
+            recall = cm_data[1, 1] / sum(cm_data[1, :])
             f1_score = 2 * precision * recall / (precision + recall)
             stats_text = "\n\nAccuracy={:0.3f}\nPrecision={:0.3f}\nRecall={:0.3f}\nF1 Score={:0.3f}".format(
                 accuracy, precision, recall, f1_score
@@ -93,7 +101,7 @@ def plot_confusion_matrix(
     ax = plt.gca()
 
     sns.heatmap(
-        confusion_matrix,
+        cm_data,
         annot=box_labels,
         fmt="",
         cmap=cmap,

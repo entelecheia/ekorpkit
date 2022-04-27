@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from pathlib import Path
-from .base import _get_font_name
+from .base import _configure_font
 
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
@@ -34,7 +34,7 @@ def generate_wordclouds(
     wordclouds as plots
     """
 
-    fontname, fontpath = _get_font_name(fontpath=fontpath)
+    fontname, fontpath = _configure_font(fontpath=fontpath)
     plt.rcParams["font.family"] = fontname
 
     # for individual masked wordclouds
@@ -151,7 +151,7 @@ def create_wordcloud(
     if figsize is not None and isinstance(figsize, str):
         figsize = eval(figsize)
     # if not fontpath:
-    fontpath, fontpath = _get_font_name(fontpath=fontpath)
+    fontpath, fontpath = _configure_font(fontpath=fontpath)
 
     if mask_path is not None and Path(mask_path).is_file():
         if verbose:
