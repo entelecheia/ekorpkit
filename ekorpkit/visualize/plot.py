@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
-from matplotlib import ticker
 from pathlib import Path
-from .base import _get_font_name
+from .base import set_style, set_figure
 
 
 def treemap(
@@ -56,7 +55,7 @@ def lineplot(df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **
     sns.lineplot(data=data[ycols], linewidth=linewidth)
     set_figure(ax, **figure)
     fname = savefig.get("fname", None)
-    
+
     if fname:
         Path(fname).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(**savefig)
@@ -86,7 +85,7 @@ def stackplot(
         labels = ycols
     plt.stackplot(data[xcol], data[ycols].T, labels=labels)
     set_figure(ax, **figure)
-    
+
     fname = savefig.get("fname", None)
     if fname:
         Path(fname).parent.mkdir(parents=True, exist_ok=True)
@@ -94,9 +93,8 @@ def stackplot(
         if verbose:
             print(f"Saved figure to {fname}")
 
-def barplot(
-    df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **kwargs
-):
+
+def barplot(df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **kwargs):
     if df is None:
         if verbose:
             print("No data to plot")
@@ -107,7 +105,7 @@ def barplot(
         figsize = eval(figsize)
     ycols = columns.yvalue
     xcol = columns.xvalue
-    index = columns.get('index', None)
+    index = columns.get("index", None)
     if index:
         df.index = list(index)
         xcol = None
@@ -115,90 +113,13 @@ def barplot(
 
     # plt.figure(figsize=figsize, tight_layout=True)
     stacked = plot.get("stacked", False)
-    ax = data.plot(x=xcol, y=ycols, kind='bar', stacked=stacked, figsize=figsize)
+    ax = data.plot(x=xcol, y=ycols, kind="bar", stacked=stacked, figsize=figsize)
     set_figure(ax, **figure)
     plt.tight_layout()
-    
+
     fname = savefig.get("fname", None)
     if fname:
         Path(fname).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(**savefig)
         if verbose:
             print(f"Saved figure to {fname}")
-
-
-def set_figure(
-    ax,
-    xlabel=None,
-    ylabel=None,
-    title=None,
-    legend=None,
-    xlim=None,
-    ylim=None,
-    xticks=None,
-    yticks=None,
-    xticklabels=None,
-    yticklabels=None,
-    xtickmajorformatterfunc=None,
-    ytickmajorformatterfunc=None,
-    **kwargs,
-):
-    if xlabel is not None:
-        if isinstance(xlabel, str):
-            ax.set_xlabel(xlabel)
-        else:
-            ax.set_xlabel(**xlabel)
-    if ylabel is not None:
-        if isinstance(ylabel, str):
-            ax.set_ylabel(ylabel)
-        else:
-            ax.set_ylabel(**ylabel)
-    if title is not None:
-        if isinstance(title, str):
-            ax.set_title(title)
-        else:
-            ax.set_title(**title)
-    if legend is not None:
-        ax.legend(**legend)
-    if xticks is not None:
-        if isinstance(xticks, str):
-            ax.set_xticks(eval(xticks))
-        else:
-            if xticks.get("labels", None) or xticks.get("ticks", None):
-                ax.set_xticks(**xticks)
-    if yticks is not None:
-        if isinstance(yticks, str):
-            ax.set_yticks(eval(yticks))
-        else:
-            if yticks.get("labels", None) or yticks.get("ticks", None):
-                ax.set_yticks(**yticks)
-    if xticklabels is not None:
-        if not xticklabels.get("labels", None):
-            xticklabels['labels'] = ax.get_xticks().tolist()
-        ax.set_xticklabels(**xticklabels)
-    if yticklabels is not None:
-        if not yticklabels.get("labels", None):
-            yticklabels['labels'] = ax.get_yticks().tolist()
-        ax.set_yticklabels(**yticklabels)
-    if xlim is not None:
-        if isinstance(xlim, str):
-            ax.set_xlim(eval(xlim))
-        else:
-            ax.set_xlim(**xlim)
-    if ylim is not None:
-        if isinstance(ylim, str):
-            ax.set_ylim(eval(ylim))
-        else:
-            ax.set_ylim(**ylim)
-    if xtickmajorformatterfunc is not None:
-        ax.xaxis.set_major_formatter(eval(xtickmajorformatterfunc))
-    if ytickmajorformatterfunc is not None:
-        ax.yaxis.set_major_formatter(eval(ytickmajorformatterfunc))
-
-
-def set_style(style, rcParams, fontpath=None, **kwargs):
-    fontname, fontpath = _get_font_name(fontpath=fontpath)
-    rcParams["font.family"] = fontname
-
-    plt.style.use(style)
-    plt.rcParams.update(rcParams)

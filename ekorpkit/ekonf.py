@@ -380,6 +380,8 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
                                   the exception of Structured Configs (and their fields).
                         all     : Passed objects are dicts, lists and primitives without
                                   a trace of OmegaConf containers
+                   _partial_: If True, return functools.partial wrapped method or object
+                              False by default. Configure per target.
                    _args_: List-like of positional arguments
     :param args: Optional positional parameters pass-through
     :param kwargs: Optional named parameters to override

@@ -37,6 +37,7 @@ datasets				: transformers, dataset, model
 tensorflow				: transformers, model
 # tf-nightly 				: transformers, model
 google-api-python-client	: transformers, model
+# yellowbrick             : model, visualize
 
 modin					: pandas
 ray						: pandas
