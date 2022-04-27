@@ -29,8 +29,9 @@ plot:
     axes.unicode_minus: False
     axes.labelsize: 14
     text.color: dimgrey
-    font.family:
+    font.family: sans-serif
   fontpath:
+  language:
 figure:
   xlabel:
     xlabel: Predicted label

@@ -106,8 +106,8 @@ def set_figure(
         ax.yaxis.set_major_formatter(eval(ytickmajorformatterfunc))
 
 
-def set_style(style, rcParams, fontpath=None, **kwargs):
-    if fontpath:
+def set_style(style, rcParams, fontpath=None, language=None, **kwargs):
+    if language:
         fontname, fontpath = _get_font_name(fontpath=fontpath)
         rcParams["font.family"] = fontname
 
