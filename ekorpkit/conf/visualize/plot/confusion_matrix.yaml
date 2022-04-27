@@ -30,6 +30,7 @@ plot:
     axes.labelsize: 14
     text.color: dimgrey
     font.family:
+  fontpath:
 figure:
   xlabel:
     xlabel: Predicted label
