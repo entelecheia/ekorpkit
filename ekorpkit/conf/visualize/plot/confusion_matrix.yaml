@@ -1,5 +1,5 @@
 _target_: ekorpkit.visualize.classification.plot_confusion_matrix
-confusion_matrix:
+# confusion_matrix:
 # confusion matrix to be passed in
 display_labels: auto
 # List of strings containing the display_labels to be displayed on the x,y axis. Default is 'auto'

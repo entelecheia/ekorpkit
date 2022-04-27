@@ -102,14 +102,15 @@ def plot_confusion_matrix(
         yticklabels=display_labels,
     )
 
-    xlabel = figure.get("xlabel", {}).get("xlabel")
+    fig_args = figure.copy()
+    xlabel = fig_args.get("xlabel", {}).get("xlabel")
     if xlabel:
         xlabel = xlabel + stats_text
     else:
         xlabel = stats_text
-    figure.get("xlabel", {}).update({"xlabel": xlabel})
+    fig_args.get("xlabel", {}).update({"xlabel": xlabel})
 
-    set_figure(ax, **figure)
+    set_figure(ax, **fig_args)
 
     plt.tight_layout()
     fname = savefig.get("fname", None)
