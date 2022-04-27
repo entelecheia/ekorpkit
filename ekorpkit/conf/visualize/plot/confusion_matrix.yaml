@@ -29,6 +29,7 @@ plot:
     axes.unicode_minus: False
     axes.labelsize: 14
     text.color: dimgrey
+    font.family:
 figure:
   xlabel:
     xlabel: Predicted label
