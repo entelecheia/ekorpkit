@@ -25,12 +25,10 @@ savefig:
 plot:
   figsize: (10, 5)
   style: fivethirtyeight
-  fontpath:
   rcParams:
     axes.unicode_minus: False
     axes.labelsize: 14
     text.color: dimgrey
-    font.family: NanumGothic
 figure:
   xlabel:
     xlabel: Predicted label
