@@ -1,6 +1,5 @@
-_target_: ekorpkit.visualize.plot.lineplot
 output_dir: ${oc.select:..output_dir, .}
-output_file: ${oc.select:..output_file, lineplot.png}
+output_file: ${oc.select:..output_file, plot1.png}
 verbose: ${oc.select:verbose, true}
 savefig:
   fname: ${..output_dir}/${..output_file}
@@ -15,6 +14,7 @@ plot:
     font.family: NanumGothic
     # savefig.edgecolor: black
   fontpath:
+  language:
 columns:
   xvalue:
   yvalue:

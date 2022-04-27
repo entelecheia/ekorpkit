@@ -1,9 +1,9 @@
 defaults:
   - /preprocessor/tokenizer: nltk
-  - lexicon: lm
+  - lexicon: hiv4
 
-_target_: ekorpkit.models.sentiment.analyser.LMSA
-name: lmsa
+_target_: ekorpkit.models.sentiment.analyser.HIV4SA
+name: hiv4sa
 features:
   polarity:
     labels:
@@ -11,8 +11,8 @@ features:
       neutral: (-0.2, 0.2)
       positive: (0.2, 1)
     lexicon_features:
-      - Negative
-      - Positive
+      - Positiv
+      - Negativ
 predict:
   features: polarity
 preprocessor:

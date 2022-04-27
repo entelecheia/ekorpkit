@@ -4,7 +4,86 @@ from matplotlib import font_manager, rc
 from pathlib import Path
 
 
-def _get_font_name(set_font_for_matplot=True, fontpath=None, verbose=False):
+def set_figure(
+    ax,
+    xlabel=None,
+    ylabel=None,
+    title=None,
+    legend=None,
+    xlim=None,
+    ylim=None,
+    xticks=None,
+    yticks=None,
+    xticklabels=None,
+    yticklabels=None,
+    xtickmajorformatterfunc=None,
+    ytickmajorformatterfunc=None,
+    **kwargs,
+):
+    if xlabel is not None:
+        if isinstance(xlabel, str):
+            ax.set_xlabel(xlabel)
+        else:
+            ax.set_xlabel(**xlabel)
+    if ylabel is not None:
+        if isinstance(ylabel, str):
+            ax.set_ylabel(ylabel)
+        else:
+            ax.set_ylabel(**ylabel)
+    if title is not None:
+        if isinstance(title, str):
+            ax.set_title(title)
+        else:
+            ax.set_title(**title)
+    if legend is not None:
+        ax.legend(**legend)
+    if xticks is not None:
+        if isinstance(xticks, str):
+            ax.set_xticks(eval(xticks))
+        else:
+            if xticks.get("labels", None) or xticks.get("ticks", None):
+                ax.set_xticks(**xticks)
+    if yticks is not None:
+        if isinstance(yticks, str):
+            ax.set_yticks(eval(yticks))
+        else:
+            if yticks.get("labels", None) or yticks.get("ticks", None):
+                ax.set_yticks(**yticks)
+    if xticklabels is not None:
+        if not xticklabels.get("labels", None):
+            xticklabels["labels"] = ax.get_xticks().tolist()
+        ax.set_xticklabels(**xticklabels)
+    if yticklabels is not None:
+        if not yticklabels.get("labels", None):
+            yticklabels["labels"] = ax.get_yticks().tolist()
+        ax.set_yticklabels(**yticklabels)
+    if xlim is not None:
+        if isinstance(xlim, str):
+            ax.set_xlim(eval(xlim))
+        else:
+            ax.set_xlim(**xlim)
+    if ylim is not None:
+        if isinstance(ylim, str):
+            ax.set_ylim(eval(ylim))
+        else:
+            ax.set_ylim(**ylim)
+    if xtickmajorformatterfunc is not None:
+        ax.xaxis.set_major_formatter(eval(xtickmajorformatterfunc))
+    if ytickmajorformatterfunc is not None:
+        ax.yaxis.set_major_formatter(eval(ytickmajorformatterfunc))
+
+
+def set_style(style, rcParams, fontpath=None, language=None, **kwargs):
+    if language or (fontpath and Path(fontpath).is_file()):
+        fontname, fontpath = _configure_font(fontpath=fontpath)
+        if fontname:
+            rcParams["font.family"] = fontname
+
+    plt.style.use(style)
+    plt.rcParams.update(rcParams)
+
+
+def _configure_font(set_font_for_matplot=True, fontpath=None, verbose=False):
     if not fontpath:
         if platform.system() == "Darwin":
             fontpath = "/System/Library/Fonts/Supplemental/AppleGothic.ttf"
@@ -12,6 +91,8 @@ def _get_font_name(set_font_for_matplot=True, fontpath=None, verbose=False):
             fontpath = "c:/Windows/Fonts/malgun.ttf"
         elif platform.system() == "Linux":
             fontpath = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+        if verbose:
+            print("Font path:", fontpath)
 
     if not Path(fontpath).is_file():
         fontname = None
