@@ -108,7 +108,8 @@ def set_figure(
 
 def set_style(style, rcParams, fontpath=None, **kwargs):
     fontname, fontpath = _get_font_name(fontpath=fontpath)
-    rcParams["font.family"] = fontname
+    if "font.family" in rcParams:
+        rcParams["font.family"] = fontname
 
     plt.style.use(style)
     plt.rcParams.update(rcParams)
