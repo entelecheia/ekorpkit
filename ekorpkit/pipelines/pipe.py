@@ -1198,6 +1198,7 @@ def save_metadata(df, args):
         print(f"Saving metadata: {args}")
 
     meta_info = column_info.get("meta", None)
+    meta_columns = []
     if isinstance(meta_info, dict):
         meta_columns = list(meta_info.keys())
         if "split" in meta_columns and "split" not in df.columns:

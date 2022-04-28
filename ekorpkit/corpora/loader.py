@@ -26,6 +26,8 @@ class Corpora:
             self.metadata_dir = self.data_dir
         self.data_files = self.args.get("data_files", None)
         self.meta_files = self.args.get("meta_files", None)
+        autoload = self.args.get("autoload", False)
+        automerge = self.args.get("automerge", False)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
         self.verbose = args.get("verbose", False)
         self.column_info = eKonf.to_dict(self.args.get("column_info", {}))
@@ -58,6 +60,8 @@ class Corpora:
                 args["name"] = name
                 args["data_dir"] = self.data_dir
                 args["metadata_dir"] = self.metadata_dir
+                args["autoload"] = autoload
+                args["automerge"] = automerge
                 args["use_name_as_subdir"] = use_name_as_subdir
                 if self.data_files is not None:
                     if name in self.data_files:
@@ -157,14 +161,3 @@ class Corpora:
 
     def __len__(self):
         return len(self.corpora)
-
-    def merge_metadata(self):
-        if self._metadata is None:
-            return
-        self._data = self._data.merge(
-            self._metadata,
-            on=self._id_keys,
-            how="left",
-            suffixes=("", "_metadata"),
-            validate="one_to_one",
-        )

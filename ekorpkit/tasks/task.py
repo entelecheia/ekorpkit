@@ -33,7 +33,6 @@ def topic_tasks(**cfg):
 def corpora_tasks(**cfg):
     args = eKonf.to_config(cfg)
     corpus_cfg = args.corpus
-    merge_metadata = args.get("merge_metadata", False)
     pipeline = args.get("pipeline", {})
     if pipeline is None:
         raise Exception("Pipeline is missing")
@@ -43,8 +42,6 @@ def corpora_tasks(**cfg):
         corpora.load()
         corpora.concat_corpora()
 
-        if merge_metadata:
-            corpora.merge_metadata()
         _pipeline_ = pipeline.get("_pipeline_", {})
         df = apply_pipeline(corpora._data, _pipeline_, pipeline)
         print(f"\n >>> Elapsed time: {elapsed()} <<< ")
@@ -73,7 +70,9 @@ def corpus_tasks(**cfg):
                 corpus.merge_metadata()
             update_args = {"corpus_name": corpus.name}
             _pipeline_ = pipeline.get("_pipeline_", {})
-            df = apply_pipeline(corpus._data, _pipeline_, pipeline, update_args=update_args)
+            df = apply_pipeline(
+                corpus._data, _pipeline_, pipeline, update_args=update_args
+            )
         print(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
     return df
