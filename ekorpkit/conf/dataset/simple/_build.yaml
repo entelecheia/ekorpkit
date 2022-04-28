@@ -1,11 +1,12 @@
 defaults:
   - /fetch: simple
   - /info: dataset_build
-  - /pipeline: dataset_build_pipeline
+  - /pipeline: dataset_build
 
 _target_: ekorpkit.io.fetch.build.DatasetBuilder
-name: 
+name:
 category: general
 data_dir: ${dir.dataset}/simple/${.name}
 filetype: .csv
 verbose: ${oc.select:..verbose, true}
+autoload: true

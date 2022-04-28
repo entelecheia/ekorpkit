@@ -1,11 +1,12 @@
 defaults:
   - /fetch: t5
   - /info: t5_build
-  - /pipeline: t5_build_pipeline
+  - /pipeline: t5_build
 
 _target_: ekorpkit.io.fetch.build.DatasetBuilder
-name: 
+name:
 category: general
 data_dir: ${dir.dataset}/t5/${.name}
 filetype: .csv
 verbose: ${oc.select:..verbose, true}
+autoload: true

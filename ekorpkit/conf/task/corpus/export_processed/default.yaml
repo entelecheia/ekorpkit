@@ -1,5 +1,5 @@
 defaults:
-   - /pipeline: corpus_task_pipeline
+   - /pipeline: corpus_task
 
 _target_: ekorpkit.corpora.loader.do_corpus_tasks
 name: export_processed

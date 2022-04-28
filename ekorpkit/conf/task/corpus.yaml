@@ -1,13 +1,15 @@
 defaults:
   - _default
-  - /pipeline: corpus_task_pipeline
-  - override /cmd@_global_: corpus_task
+  - /corpus: corpora
+  - /pipeline: corpus_task
 
+_target_: ekorpkit.tasks.task.corpus_tasks
+corpus: ${oc.select:..corpus, default}
 name: corpus_task
 merge_metadata: true
 data_dir:
 data_file:
-apply_to: 
+apply_to:
   - text
 output_dir: ${dir.data}/${project}/corpus
 pipeline:

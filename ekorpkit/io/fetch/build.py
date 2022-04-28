@@ -11,24 +11,21 @@ def build_corpus(**args):
     cfg = args.get("corpus", {}).get("builtin", None)
     # print(cfg)
     if cfg:
-        db = DatasetBuilder(**cfg)
-        db.build()
+        DatasetBuilder(**cfg)
 
 
 def build_t5(**args):
     cfg = args.get("dataset", {}).get("t5", None)
     # print(cfg)
     if cfg:
-        db = DatasetBuilder(**cfg)
-        db.build()
+        DatasetBuilder(**cfg)
 
 
 def build_simple(**args):
     cfg = args.get("dataset", {}).get("simple", None)
     # print(cfg)
     if cfg:
-        db = DatasetBuilder(**cfg)
-        db.build()
+        DatasetBuilder(**cfg)
 
 
 class DatasetBuilder:
@@ -39,6 +36,7 @@ class DatasetBuilder:
         self.data_filetype = args.get("filetype", "parquet")
         self.column_info = self.args.get("column_info", None)
         self.verbose = self.args.get("verbose", False)
+        self.autoload = self.args.get("autoload", False)
 
         self.fetch_args = args.get("fetch", None)
         self.fetch_dir = self.fetch_args.get("data_dir", None)
@@ -65,6 +63,9 @@ class DatasetBuilder:
             self.transform_pipeline = []
         if self.process_pipeline is None:
             self.process_pipeline = []
+
+        if self.autoload:
+            self.build()
 
     def build(self):
         if self.downloader:
@@ -100,7 +101,7 @@ class DatasetBuilder:
         output_meta_file = (
             output_dir / f"meta-{self.name}-{split_name}{self.data_filetype}"
         )
-        sample_file_prefix = f"{str(output_dir)}/sample-{self.name}-{split_name}-"
+        sample_file_prefix = f"{str(output_dir)}/sample-{self.name}-{split_name}"
         pipe = "save_metadata"
         if pipe in self.pipeline_args:
             if pipe not in self.transform_pipeline:

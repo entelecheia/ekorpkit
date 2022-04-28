@@ -1,9 +1,10 @@
 # @package _global_
-_target_: ekorpkit.cli.about
+_key_:
+_target_:
 defaults:
   - _self_
   - about: default
-  - cmd: null
+  - cmd: default
   - dir: default
   - env: default
   - mode: default

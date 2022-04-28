@@ -118,5 +118,4 @@ pipeline:
       normalizer: ${corpus.builtin.preprocessor.normalizer}
   segment:
     preprocessor:
-      normalizer: ${corpus.builtin.preprocessor.normalizer}
       segmenter: ${corpus.builtin.preprocessor.segmenter}

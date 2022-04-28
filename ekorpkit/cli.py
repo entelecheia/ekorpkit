@@ -12,6 +12,13 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
 
 
+def cmd(**args):
+    cfg = eKonf.to_config(args)
+    if cfg._key_:
+        cfg = eKonf.select(cfg, cfg._key_)
+        eKonf.instantiate(cfg)
+
+
 def listup(**args):
     ekorpkit_dir = os.path.dirname(os.path.abspath(__file__))
     corpus_info = {}
@@ -25,8 +32,6 @@ def listup(**args):
 def about(**args):
     from . import __version__
 
-    cfg = eKonf.to_config(args)
-    args = cfg.about.app
     print()
     for k, v in args.items():
         print(f"{k:11} : {v}")

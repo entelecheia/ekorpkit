@@ -75,6 +75,10 @@ class Datasets:
             s += f"{str(name)}\n"
         return s
 
+    def __iter__(self):
+        for dataset in self.datasets.values():
+            yield dataset
+
     def __getitem__(self, name):
         if name not in self.datasets:
             raise KeyError(f"{name} not in datasets")

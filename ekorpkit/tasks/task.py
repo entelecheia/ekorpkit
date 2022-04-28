@@ -33,33 +33,39 @@ def topic_tasks(**cfg):
 def corpora_tasks(**cfg):
     args = eKonf.to_config(cfg)
     corpus_cfg = args.corpus
-    merge_metadata = args.task.get("merge_metadata", False)
-    pipeline = args.task.get("pipeline", {})
+    merge_metadata = args.get("merge_metadata", False)
+    pipeline = args.get("pipeline", {})
     if pipeline is None:
         raise Exception("Pipeline is missing")
 
     with elapsed_timer(format_time=True) as elapsed:
-        corpora = instantiate(corpus_cfg, _recursive_=False)
+        corpora = eKonf.instantiate(corpus_cfg)
         corpora.load()
         corpora.concat_corpora()
 
         if merge_metadata:
             corpora.merge_metadata()
         _pipeline_ = pipeline.get("_pipeline_", {})
-        apply_pipeline(corpora._data, _pipeline_, pipeline)
+        df = apply_pipeline(corpora._data, _pipeline_, pipeline)
         print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+
+    return df
 
 
 def corpus_tasks(**cfg):
+    from ekorpkit.corpora import Corpus
+
     args = eKonf.to_config(cfg)
     corpus_cfg = args.corpus
-    merge_metadata = args.task.get("merge_metadata", False)
-    pipeline = args.task.get("pipeline", {})
+    merge_metadata = args.get("merge_metadata", False)
+    pipeline = args.get("pipeline", {})
     if pipeline is None:
         raise Exception("Pipeline is missing")
 
     with elapsed_timer(format_time=True) as elapsed:
-        corpora = instantiate(corpus_cfg, _recursive_=False)
+        corpora = eKonf.instantiate(corpus_cfg)
+        if isinstance(corpora, Corpus):
+            corpora = [corpora]
 
         for corpus in corpora:
             print(f"::: processing {corpus.name}")
@@ -67,8 +73,10 @@ def corpus_tasks(**cfg):
                 corpus.merge_metadata()
             update_args = {"corpus_name": corpus.name}
             _pipeline_ = pipeline.get("_pipeline_", {})
-            apply_pipeline(corpus._data, _pipeline_, pipeline, update_args=update_args)
+            df = apply_pipeline(corpus._data, _pipeline_, pipeline, update_args=update_args)
         print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+
+    return df
 
 
 def transfomer_finetune(**cfg):
@@ -85,7 +93,7 @@ def transfomer_finetune(**cfg):
 
 def dataframe_tasks(**cfg):
     args = eKonf.to_config(cfg)
-    pipeline_args = args.task.get("pipeline", {})
+    pipeline_args = args.get("pipeline", {})
 
     if pipeline_args._target_:
         df = instantiate(pipeline_args, _recursive_=False)
@@ -93,3 +101,5 @@ def dataframe_tasks(**cfg):
             raise Exception("No dataframe found")
     else:
         raise Exception("Dataframe instantiation target is missing")
+
+    return df

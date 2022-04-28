@@ -1,6 +1,6 @@
 defaults:
   - _default
-  - /pipeline: dataframe_pipeline
+  - /pipeline: dataframe
 
 _target_: ekorpkit.io.download.hfds.HFDS
 subsets: 
