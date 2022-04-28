@@ -45,9 +45,10 @@ ray						: pandas
 # swifter					: pandas
 
 # sysrsync				: fetch
-wget					: fetch
-py7zr					: fetch
-zstandard				: fetch
+wget					: fetch, dataset
+py7zr					: fetch, dataset
+zstandard				: fetch, dataset
+cached-path             : fetch, dataset
 
 pymongo					: database
 

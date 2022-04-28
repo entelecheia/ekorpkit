@@ -273,8 +273,8 @@ class Segmenter(BaseSegmenter):
         if len(text) <= self._max_split_length:
             return self.segment(text)
         else:
-            if self.verbose:
-                print(f"==> too long text: {len(text)}")
+            # if self.verbose:
+            #     print(f"==> too long text: {len(text)}")
             text_chunk = text[: self._max_split_length]
             next_chunk = text[self._max_split_length :]
             sentences = []

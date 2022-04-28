@@ -604,8 +604,6 @@ def normalize(df, args):
         print("instantiating normalizer")
     normalizer = instantiate(normalizer)
     for key in apply_to:
-        if verbose:
-            print(f"\nPreprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
                 normalizer.normalize,
@@ -660,8 +658,6 @@ def segment(df, args):
         print("instantiating segmenter")
     segmenter = instantiate(segmenter)
     for key in apply_to:
-        if verbose:
-            print(f"\nPreprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
                 segmenter.segment_article,
@@ -908,8 +904,6 @@ def filter_length(df, args, **kwargs):
     if verbose:
         print(f"Filtering by length: {args}")
     for key in apply_to:
-        if verbose:
-            print(f"\nPreprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             if min_length and min_length > 0:
                 n_docs = df.shape[0]
@@ -922,7 +916,7 @@ def filter_length(df, args, **kwargs):
                 df = df[idx]
                 if verbose:
                     print(
-                        f"{(n_docs-df.shape[0])} documents removed due to length is less than {min_length}"
+                        f"{(n_docs-df.shape[0])} of {n_docs} documents removed due to length is less than {min_length}"
                     )
             if max_length and max_length > 0:
                 n_docs = df.shape[0]
@@ -935,7 +929,7 @@ def filter_length(df, args, **kwargs):
                 df = df[idx]
                 if verbose:
                     print(
-                        f"{(n_docs-df.shape[0])} documents removed due to length is greater than {max_length}"
+                        f"{(n_docs-df.shape[0])} of {n_docs} documents removed due to length is greater than {max_length}"
                     )
             if verbose:
                 msg.good("\n >> elapsed time to filter length: {}\n".format(elapsed()))
@@ -981,15 +975,13 @@ def drop_duplicates(df, args):
     if verbose:
         print(f"Dropping duplicates: {args}")
     with elapsed_timer(format_time=True) as elapsed:
-        for key in apply_to:
-            num_docs = df.shape[0]
-            df = df.drop_duplicates(subset=[key])
-            n_docs = df.shape[0]
-            if verbose:
-                print(
-                    f"{n_docs} documents after dropping {(num_docs-n_docs)} duplicates from [{key}]"
-                )
+        num_docs = df.shape[0]
+        df = df.drop_duplicates(subset=apply_to)
+        n_docs = df.shape[0]
         if verbose:
+            print(
+                f"{n_docs} documents after dropping {(num_docs-n_docs)} duplicates from [{apply_to}]"
+            )
             msg.good("\n >> elapsed time to drop duplicates: {}\n".format(elapsed()))
     return df
 
@@ -1215,15 +1207,18 @@ def save_metadata(df, args):
 
     data_info = column_info.get("data", None)
     if isinstance(data_info, dict):
-        data_columns = list(data_info.keys())
-        if "split" in data_columns and "split" not in df.columns:
-            df["split"] = split_name
+        data_keys = list(data_info.keys())
+        # if "split" in data_columns and "split" not in df.columns:
+        #     df["split"] = split_name
+        data_columns = [
+            col for col in df.columns if col not in meta_columns or col in data_keys
+        ]
         df = df[data_columns]
 
     return df
 
 
-def save_dataframe_pipe(df, args):
+def _save_dataframe(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     filepath = args.get("filepath", None)
@@ -1263,7 +1258,7 @@ def save_dataframe_pipe(df, args):
     return df
 
 
-def load_dataframe_pipe(df=None, args=None):
+def _load_dataframe(df=None, args=None):
     if args is None:
         raise ValueError("args must be specified")
 

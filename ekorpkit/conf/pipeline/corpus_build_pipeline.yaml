@@ -14,14 +14,13 @@ defaults:
   - drop_duplicates: drop
   - save_samples: samples
   - save_dataframe: default
+  - melt: default
   
 _transform_:
   - reset_index
   - save_metadata
 _preprocess_:
   - fillna
-  # - normalize
-  # - segment
   - filter_length
   - drop_duplicates
 apply_to: ${oc.select:..column_info.keys.text, text}
