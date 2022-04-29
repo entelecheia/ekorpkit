@@ -17,7 +17,7 @@ extract:
     - NNPS
   stop_postags:
     - "."
-postags:
+tagset:
   CC: Coordinating conjunction
   CD: Cardinal number
   DT: Determiner

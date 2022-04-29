@@ -17,6 +17,7 @@ from . import _version
 
 log = logging.getLogger(__name__)
 
+
 def __ekorpkit_path__():
     return pathlib.Path(__file__).parent.as_posix()
 
@@ -185,7 +186,7 @@ class eKonf:
         return to_config(cfg)
 
     @staticmethod
-    def to_yaml(cfg: Any, *, resolve: bool = True, sort_keys: bool = False) -> str:
+    def to_yaml(cfg: Any, *, resolve: bool = False, sort_keys: bool = False) -> str:
         if resolve:
             cfg = to_dict(cfg)
         return to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
@@ -361,7 +362,7 @@ def merge(
     return eKonf.merge(*configs)
 
 
-def to_yaml(cfg: Any, *, resolve: bool = True, sort_keys: bool = False) -> str:
+def to_yaml(cfg: Any, *, resolve: bool = False, sort_keys: bool = False) -> str:
     return OmegaConf.to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
 
 
