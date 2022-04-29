@@ -1,6 +1,8 @@
+import logging
 import pandas as pd
 from .base import BaseSentimentAnalyser
 
+log = logging.getLogger(__name__)
 
 class HIV4SA(BaseSentimentAnalyser):
     """

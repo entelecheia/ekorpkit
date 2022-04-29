@@ -32,7 +32,7 @@ class Tokenizer:
         self._normalize = normalize
         if eKonf.is_instantiatable(self._normalize):
             if self.verbose:
-                print(f"[ekorpkit]: instantiating {self._normalize['_target_']}...")
+                log.info(f"instantiating {self._normalize['_target_']}...")
             self._normalize = eKonf.instantiate(self._normalize)
             # print(f"[ekorpkit]: {self._normalize.__name__} is instantiated.")
 
@@ -79,9 +79,9 @@ class Tokenizer:
             self._stopwords += stopwords
 
         if self.verbose:
-            print(f"{self.__class__.__name__} initialized with:")
-            print(f"\treturn_as_list: {self._return_as_list}")
-            print(f"\tstopwords_path: {self._stopwords_path}")
+            log.info(f"{self.__class__.__name__} initialized with:")
+            log.info(f"\treturn_as_list: {self._return_as_list}")
+            log.info(f"\tstopwords_path: {self._stopwords_path}")
 
     def __call__(self, text):
         """Calling a tokenizer instance like a function just calls the tokenize method."""
@@ -332,12 +332,12 @@ class NLTKTokenizer(Tokenizer):
         self.lemmatizer = nltk.get("lemmatizer", None)
         if eKonf.is_instantiatable(self.lemmatizer):
             if self.verbose:
-                print(f"[ekorpkit]: instantiating {self.lemmatizer['_target_']}...")
+                log.info(f"instantiating {self.lemmatizer['_target_']}...")
             self.lemmatizer = eKonf.instantiate(self.lemmatizer)
         self.stemmer = nltk.get("stemmer", None)
         if eKonf.is_instantiatable(self.stemmer):
             if self.verbose:
-                print(f"[ekorpkit]: instantiating {self.stemmer['_target_']}...")
+                log.info(f"instantiating {self.stemmer['_target_']}...")
             self.stemmer = eKonf.instantiate(self.stemmer)
         do_lemmatize = nltk.get("lemmatize", False)
         do_stem = nltk.get("stem", False)
@@ -416,7 +416,7 @@ class PynoriTokenizer(Tokenizer):
         pynori={},
         **kwargs,
     ):
-        logging.warning("Initializing Pynori...")
+        log.info("Initializing Pynori...")
 
         super().__init__(**kwargs)
         if pynori is None:
@@ -462,7 +462,7 @@ class MecabTokenizer(Tokenizer):
         **kwargs,
     ):
 
-        logging.warning("Initializing mecab...")
+        log.info("Initializing mecab...")
         super().__init__(**kwargs)
         self.mecab = mecab
         try:
@@ -501,7 +501,7 @@ class BWPTokenizer(Tokenizer):
         bwp={},
         **kwargs,
     ):
-        logging.warning("Initializing BertWordPieceTokenizer...")
+        log.info("Initializing BertWordPieceTokenizer...")
         super().__init__(**kwargs)
         try:
             from transformers import BertTokenizerFast

@@ -1,5 +1,8 @@
+import logging
 from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
+
+log = logging.getLogger(__name__)
 
 
 class BaseSentimentAnalyser:
@@ -21,13 +24,13 @@ class BaseSentimentAnalyser:
         self._tokenizer = preprocessor["tokenizer"]
         if eKonf.is_instantiatable(self._tokenizer):
             if self.verbose:
-                print(f"[ekorpkit]: instantiating {self._tokenizer['_target_']}...")
+                log.info(f"instantiating {self._tokenizer['_target_']}...")
             self._tokenizer = eKonf.instantiate(self._tokenizer)
 
         self._lexicon = lexicon
         if eKonf.is_instantiatable(self._lexicon):
             if self.verbose:
-                print(f"[ekorpkit]: instantiating {self._lexicon['_target_']}...")
+                log.info(f"instantiating {self._lexicon['_target_']}...")
             self._lexicon = eKonf.instantiate(self._lexicon)
 
     def tokenize(self, text):

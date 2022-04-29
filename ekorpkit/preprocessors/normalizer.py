@@ -1,10 +1,13 @@
-# -*- encoding:utf8 -*-
-
-from ftfy import TextFixerConfig, fix_text
+import logging
 import unicodedata
 import re
+from ftfy import TextFixerConfig, fix_text
 from .hanja import translate as hanja2hangle
 from .hangle import compose, decompose
+
+
+log = logging.getLogger(__name__)
+
 
 doublespace_pattern = re.compile(r"\s+")
 repeatchars_pattern = re.compile(r"(\w)\\1{2,}")
