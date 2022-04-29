@@ -30,7 +30,7 @@ def topic_tasks(**cfg):
             else:
                 log.warning(f"{subtask} is not a valid subtask")
 
-        log.info(f"\n >>> Elapsed time: {elapsed()} <<< ")
+        log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
 
 def corpora_tasks(**cfg):
@@ -47,7 +47,7 @@ def corpora_tasks(**cfg):
 
         _pipeline_ = pipeline.get("_pipeline_", {})
         df = apply_pipeline(corpora._data, _pipeline_, pipeline)
-        print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+        log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
     return df
 
@@ -76,7 +76,7 @@ def corpus_tasks(**cfg):
             df = apply_pipeline(
                 corpus._data, _pipeline_, pipeline, update_args=update_args
             )
-        log.info(f"\n >>> Elapsed time: {elapsed()} <<< ")
+        log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
     return df
 

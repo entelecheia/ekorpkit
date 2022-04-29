@@ -100,7 +100,7 @@ config = compose()
 DictKeyType = Union[str, int, Enum, float, bool]
 
 OmegaConf.register_new_resolver("__ekorpkit_path__", __ekorpkit_path__)
-OmegaConf.register_new_resolver("__home_path__", __ekorpkit_path__)
+OmegaConf.register_new_resolver("__home_path__", __home_path__)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)

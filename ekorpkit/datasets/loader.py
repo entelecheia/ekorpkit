@@ -67,7 +67,7 @@ class Datasets:
                 self.datasets[name] = dataset
                 if self.splits is None:
                     self.splits = {split: None for split in dataset.data_files}
-            log.info(f"\n >>> Elapsed time: {elapsed()} <<< ")
+            log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
         eKonf.call(self._autorun_list, self)
 

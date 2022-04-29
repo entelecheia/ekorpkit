@@ -78,7 +78,7 @@ class Corpora:
                         args["meta_files"] = self.meta_files
                 corpus = Corpus(**args)
                 self.corpora[name] = corpus
-            log.info(f"\n >>> Elapsed time: {elapsed()} <<< ")
+            log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
     def __str__(self):
         classname = self.__class__.__name__
