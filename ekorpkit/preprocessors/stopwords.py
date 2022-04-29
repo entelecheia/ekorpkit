@@ -73,4 +73,6 @@ class Stopwords:
             if self.verbose:
                 log.info(f"Loading stopwords for {language} from NLTK")
             return stopwords.words(language)
+
+        log.warning(f"No stopwords for {language} in NLTK")
         return []
