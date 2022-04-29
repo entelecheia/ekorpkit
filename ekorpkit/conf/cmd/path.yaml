@@ -1,4 +1,7 @@
 # @package _global_
+defaults:
+  - default
+  
 path:
 extract_archive: true
 force_extract: false

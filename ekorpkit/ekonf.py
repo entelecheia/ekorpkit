@@ -36,19 +36,25 @@ def path(
 ):
     if verbose:
         log.info(
-            "cached_path: {}, extract_archive: {}, force_extract: {}, cache_dir: {}".format(
+            "caching path: {}, extract_archive: {}, force_extract: {}, cache_dir: {}".format(
                 url_or_filename, extract_archive, force_extract, cache_dir
             )
         )
 
     if url_or_filename:
         try:
-            return cached_path(
+            _path = cached_path(
                 url_or_filename,
                 extract_archive=extract_archive,
                 force_extract=force_extract,
                 cache_dir=cache_dir,
             ).as_posix()
+
+            if verbose:
+                log.info(f"cached path: {_path}")
+
+            return _path
+
         except Exception as e:
             log.error(e)
             return None
@@ -587,8 +593,6 @@ def _init_env_(cfg, verbose=False):
         )
         if verbose:
             log.info(batcher.batcher_instance)
-    if verbose:
-        print()
 
 
 def _stop_env_(cfg, verbose=False):
