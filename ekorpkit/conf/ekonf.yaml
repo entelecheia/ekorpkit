@@ -18,6 +18,7 @@ defaults:
   - preprocessor/tokenizer: default
 
   - override hydra/help: help
+  - override hydra/job_logging: custom
 
 app_name: ${about.app.name}
 project: ${app_name}

@@ -41,7 +41,7 @@ from transformers import (
     XLMRobertaTokenizer,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 MODEL_CLASSES = {
     "auto": (AutoConfig, AutoModelWithLMHead, AutoTokenizer),
@@ -151,7 +151,7 @@ def train_tokenizer(
         os.makedirs(output_dir, exist_ok=True)
 
         tokenizer.save_model(output_dir)
-        logger.info(
+        log.info(
             " Training of {} tokenizer complete. Saved to {}.".format(
                 tokenizer_name, output_dir
             )

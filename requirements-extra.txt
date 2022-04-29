@@ -48,7 +48,7 @@ ray						: pandas
 wget					: fetch, dataset
 py7zr					: fetch, dataset
 zstandard				: fetch, dataset
-cached-path             : fetch, dataset
+# cached-path             : fetch, dataset
 
 pymongo					: database
 

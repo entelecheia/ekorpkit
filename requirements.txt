@@ -2,11 +2,12 @@ numpy
 tqdm
 openpyxl
 pandas
-wasabi
 hydra-core
+hydra-colorlog
 gdown
 chardet
 rehash
 requests
 scipy
+cached-path
 pytablewriter>=0.64.0

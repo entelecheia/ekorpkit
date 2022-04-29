@@ -6,8 +6,7 @@ from pprint import pprint
 from .tasks.info import make_table
 
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
+log = logging.getLogger(__name__)
 
 
 def cmd(**args):
@@ -35,7 +34,6 @@ def about(**args):
         print(f"{k:11} : {v}")
     print(f"{'version':11} : {__version__}")
     print("\nExecute `ekorpkit --help` to see what eKorpkit provides")
-    # print(cfg)
 
 
 def listfiles(**args):
@@ -49,22 +47,20 @@ def listfiles(**args):
 
 @hydra.main(config_path="conf", config_name="config")
 def hydra_main(cfg) -> None:
-    # log.info("eKorpkit Command Line Interface for Hydra")
     verbose = cfg.verbose
     if verbose:
-        print("\n## eKorpkit Command Line Interface for Hydra ##\n")
+        log.info("\n## eKorpkit Command Line Interface for Hydra ##\n")
     if cfg.get("print_config"):
-        print("## hydra configuration ##")
+        log.info("## hydra configuration ##")
         print(eKonf.to_yaml(cfg))
 
     if cfg.get("print_resolved_config"):
-        print("## hydra configuration resolved ##")
-        args = eKonf.to_dict(cfg)
-        pprint(args)
+        log.info("## hydra configuration resolved ##")
+        eKonf.pprint(cfg)
         print()
 
     if verbose:
-        print(f"Hydra working directory : {os.getcwd()}\n")
+        log.info(f"Hydra working directory : {os.getcwd()}\n")
 
     if cfg.get("_target_"):
         eKonf._init_env_(cfg, verbose)
@@ -72,7 +68,6 @@ def hydra_main(cfg) -> None:
         eKonf.instantiate(cfg)
 
         eKonf._stop_env_(cfg, verbose)
-    # print(HydraConfig.get())
 
 
 if __name__ == "__main__":

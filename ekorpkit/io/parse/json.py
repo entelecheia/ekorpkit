@@ -2,13 +2,16 @@ import codecs
 import simdjson
 import orjson as json
 import jsonpath_ng as jpath
-from wasabi import msg
+import logging
 from hydra.utils import instantiate
 from omegaconf.listconfig import ListConfig
 from ekorpkit.utils.func import any_to_utf8
 from tqdm import tqdm
 from joblib import Parallel, delayed
 from ekorpkit.utils.batch.batcher import tqdm_joblib
+
+
+log = logging.getLogger(__name__)
 
 
 parser = simdjson.Parser()
@@ -52,7 +55,7 @@ def load_json(contents):
     try:
         return [json.loads(contents)]
     except json.JSONDecodeError:
-        print(f"Error parsing {contents}")
+        log.critical(f"Error parsing {contents}")
         raise Exception
 
 
@@ -67,7 +70,7 @@ def load_jsonlines(contents):
         try:
             js = json.loads(line)
         except json.JSONDecodeError as err:
-            print(f"Skipping lineno {lineno} - colno:{err.colno} msg:{err.msg}")
+            log.warning(f"Skipping lineno {lineno} - colno:{err.colno} msg:{err.msg}")
         if js:
             data.append(js)
 
@@ -91,7 +94,7 @@ def parse_data(contents, parse_args, default_items, num_workers=1):
             contents = any_to_utf8(contents)
             # contents = ftfy.fix_text(any_to_utf8(contents))
         except Exception:
-            msg.fail(f"Decoding error")
+            log.warning(f"Decoding error")
             print(contents)
             return documents
 
@@ -108,7 +111,7 @@ def parse_data(contents, parse_args, default_items, num_workers=1):
         contents = [contents]
 
     if num_workers > 1 and multiprocessing_at == "parse_data":
-        print(
+        log.info(
             f"Starting multiprocessing with {num_workers} processes at {multiprocessing_at}"
         )
         desciption = default_items.get("filename", "::parse_data()")
@@ -122,7 +125,7 @@ def parse_data(contents, parse_args, default_items, num_workers=1):
                 documents += result
     else:
         if len(contents) > 1000:
-            print("Number of data in the contents: {}".format(len(contents)))
+            log.info("Number of data in the contents: {}".format(len(contents)))
         for i, content in enumerate(contents):
             # print(content)
             if len(content) > 0:
@@ -149,7 +152,7 @@ def parse_json(data, parse_args, default_items={}, num_workers=1):
     if isinstance(data, list):
         totalcount = len(data)
         if num_workers > 1 and totalcount > num_workers:
-            print(
+            log.info(
                 f"Starting multiprocessing with {num_workers} processes at parse_json"
             )
             desciption = default_items.get("filename", "::parse_json()")
@@ -162,7 +165,7 @@ def parse_json(data, parse_args, default_items={}, num_workers=1):
                     documents += result
         else:
             if totalcount > 1000:
-                print("Total number of documents: {}".format(totalcount))
+                log.info("Total number of documents: {}".format(totalcount))
             for ix, doc in enumerate(data):
                 documents += data_to_document(doc, data_args, default_items)
     else:
@@ -219,8 +222,8 @@ def get_item_value(item, key):
             print(key, type(key))
             raise ValueError("key must be str or list")
     except Exception as e:
-        print(item)
-        print(key, type(key))
+        log.critical(item)
+        log.critical(key, type(key))
         print(e)
         raise e
         # return None

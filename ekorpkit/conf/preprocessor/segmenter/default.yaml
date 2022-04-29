@@ -27,6 +27,6 @@ filter_sentence_length:
 chunk:
   chunk_size: 300
   chunk_overlap: false
-return_type: str
+return_as_list: false
 print_args: false
 verbose: ${oc.select:..verbose, true}

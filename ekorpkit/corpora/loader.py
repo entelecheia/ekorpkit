@@ -1,8 +1,11 @@
 import pandas as pd
-from wasabi import msg
+import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from .corpus import Corpus
+
+
+log = logging.getLogger(__name__)
 
 
 class Corpora:
@@ -56,7 +59,7 @@ class Corpora:
 
         with elapsed_timer(format_time=True) as elapsed:
             for name in self.corpora:
-                print(f"processing {name}")
+                log.info(f"processing {name}")
                 args["name"] = name
                 args["data_dir"] = self.data_dir
                 args["metadata_dir"] = self.metadata_dir
@@ -75,7 +78,7 @@ class Corpora:
                         args["meta_files"] = self.meta_files
                 corpus = Corpus(**args)
                 self.corpora[name] = corpus
-            print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+            log.info(f"\n >>> Elapsed time: {elapsed()} <<< ")
 
     def __str__(self):
         classname = self.__class__.__name__
@@ -147,7 +150,7 @@ class Corpora:
         if len(df_metas) > 0:
             self._metadata = pd.concat(df_metas, ignore_index=True)
         if self.verbose:
-            msg.good(f"concatenated {len(dfs)} corpora")
+            log.info(f"concatenated {len(dfs)} corpora")
             print(self._data.head())
 
     def __iter__(self):

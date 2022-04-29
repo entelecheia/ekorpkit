@@ -1,3 +1,4 @@
+import logging
 import os
 import functools
 import random
@@ -10,16 +11,19 @@ from hydra.core.config_store import ConfigStore
 from hydra.utils import get_method
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
-from wasabi import msg
 from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
 
+log = logging.getLogger(__name__)
+
 def __ekorpkit_path__():
     return pathlib.Path(__file__).parent.as_posix()
 
+
 def __home_path__():
     return pathlib.Path.home().as_posix()
+
 
 def compose(
     overrides: List[str] = [],
@@ -265,6 +269,7 @@ class eKonf:
     def _stop_env_(cfg, verbose=False):
         _stop_env_(cfg, verbose=verbose)
 
+
 def call(cfg: Any, obj: object):
     if isinstance(cfg, list):
         for _run in cfg:
@@ -420,7 +425,7 @@ def _init_env_(cfg, verbose=False):
     for env_name, env_value in env.get("os", {}).items():
         if env_value:
             if verbose:
-                msg.info(f"setting environment variable {env_name} to {env_value}")
+                log.info(f"setting environment variable {env_name} to {env_value}")
             os.environ[env_name] = str(env_value)
 
     if env.distributed_framework.initialize:
@@ -431,7 +436,7 @@ def _init_env_(cfg, verbose=False):
             ray_cfg = env.get("ray", None)
             ray_cfg = eKonf.to_container(ray_cfg, resolve=True)
             if verbose:
-                msg.info(f"initializing ray with {ray_cfg}")
+                log.info(f"initializing ray with {ray_cfg}")
             ray.init(**ray_cfg)
             backend_handle = ray
 
@@ -441,16 +446,16 @@ def _init_env_(cfg, verbose=False):
             dask_cfg = env.get("dask", None)
             dask_cfg = eKonf.to_container(dask_cfg, resolve=True)
             if verbose:
-                msg.info(f"initializing dask client with {dask_cfg}")
+                log.info(f"initializing dask client with {dask_cfg}")
             client = Client(**dask_cfg)
             if verbose:
-                print(client)
+                log.info(client)
 
         batcher.batcher_instance = batcher.Batcher(
             backend_handle=backend_handle, **env.batcher
         )
         if verbose:
-            print(batcher.batcher_instance)
+            log.info(batcher.batcher_instance)
     if verbose:
         print()
 
@@ -466,12 +471,11 @@ def _stop_env_(cfg, verbose=False):
             if ray.is_initialized():
                 ray.shutdown()
                 if verbose:
-                    msg.info("shutting down ray")
+                    log.info("shutting down ray")
 
         # elif modin_engine == 'dask':
         #     from dask.distributed import Client
 
         #     if Client.initialized():
         #         client.close()
-        #         msg.info(f'shutting down dask client')
-
+        #         log.info(f'shutting down dask client')

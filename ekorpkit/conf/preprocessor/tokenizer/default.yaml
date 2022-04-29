@@ -16,7 +16,7 @@ tokenize:
   userdic_path: ${oc.select:..userdic_path, null}
 tokenize_article:
   sentence_separator: '\n'
-  return_type: str
+  return_as_list: false
 extract:
   postags:
   noun_postags:

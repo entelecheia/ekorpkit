@@ -4,8 +4,8 @@ from abc import ABCMeta
 from ekorpkit.io.load.list import load_wordlist
 from ekorpkit import eKonf
 
-logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
-logger = logging.getLogger(__name__)
+
+log = logging.getLogger(__name__)
 
 
 class Tokenizer:
@@ -46,13 +46,8 @@ class Tokenizer:
         if self._punct_postags is None:
             self._punct_postags = ["SF", "SP", "SSO", "SSC", "SY"]
 
-        return_type = tokenize_article.get("return_type", "str")
-        self.return_type = str(return_type).lower().strip()
-        if self.return_type not in ["str", "list"]:
-            raise ValueError(
-                f"Invalid return_type: {self.return_type}. "
-                f"Valid values are 'str' and 'list'."
-            )
+        return_as_list = tokenize_article.get("return_as_list")
+        self._return_as_list = return_as_list or True
         self._sentence_separator = tokenize_article.get("sentence_separator", None)
         if self._sentence_separator is None:
             self._sentence_separator = "\n"
@@ -76,7 +71,7 @@ class Tokenizer:
                 self._stopwords_path, lowercase=True, verbose=self.verbose
             )
             if self.verbose:
-                logger.info(f"Loaded {len(self._stopwords)} stopwords")
+                log.info(f"Loaded {len(self._stopwords)} stopwords")
         else:
             self._stopwords = []
         stopwords = extract.get("stopwords", None)
@@ -85,7 +80,7 @@ class Tokenizer:
 
         if self.verbose:
             print(f"{self.__class__.__name__} initialized with:")
-            print(f"\treturn_type: {self.return_type}")
+            print(f"\treturn_as_list: {self._return_as_list}")
             print(f"\tstopwords_path: {self._stopwords_path}")
 
     def __call__(self, text):
@@ -102,24 +97,24 @@ class Tokenizer:
             return term_pos[0]
         return term_pos
 
-    def tokenize_article(self, article, return_type=None):
+    def tokenize_article(self, article, return_as_list=None):
         if article is None:
             return None
-        if return_type is None:
-            return_type = self.return_type
+        if return_as_list is None:
+            return_as_list = self._return_as_list
 
         tokenized_article = []
         for sent in article.split(self._sentence_separator):
             sent = sent.strip()
-            tokens = self.tokenize(sent, return_type=return_type)
+            tokens = self.tokenize(sent, return_as_list=return_as_list)
             tokenized_article.append(tokens)
         return (
             tokenized_article
-            if str(return_type) == "list"
+            if return_as_list
             else self._sentence_separator.join(tokenized_article)
         )
 
-    def tokenize(self, text, return_type="list"):
+    def tokenize(self, text, return_as_list="list"):
         if isinstance(text, list):
             return text
         text = str(text)
@@ -137,7 +132,7 @@ class Tokenizer:
                 term_pos = [self._to_token(token) for token in self.parse(text)]
         else:
             term_pos = []
-        return term_pos if str(return_type) == "list" else " ".join(term_pos)
+        return term_pos if return_as_list else " ".join(term_pos)
 
     def pos(self, text):
         return self.tokenize(text)
@@ -158,7 +153,7 @@ class Tokenizer:
             return term_pos
         return tokens
 
-    def extract(self, text, nouns_only=False, return_type="list"):
+    def extract(self, text, nouns_only=False, return_as_list="list"):
         if nouns_only:
             tokens = _extract(
                 text,
@@ -174,7 +169,7 @@ class Tokenizer:
                 no_space_for_non_nouns=self._no_space_for_non_nouns,
                 stopwords=self._stopwords,
             )
-        return tokens if return_type == "list" else " ".join(tokens)
+        return tokens if return_as_list == "list" else " ".join(tokens)
 
     def extract_article(self, article, nouns_only=False):
         if article is None:
@@ -184,12 +179,12 @@ class Tokenizer:
         for sent in article.split(self._sentence_separator):
             sent = sent.strip()
             tokens = self.extract(
-                sent, nouns_only=nouns_only, return_type=self.return_type
+                sent, nouns_only=nouns_only, return_as_list=self._return_as_list
             )
             tokens_article.append(tokens)
         return (
             tokens_article
-            if self.return_type == "list"
+            if self._return_as_list
             else self._sentence_separator.join(tokens_article)
         )
 
@@ -210,7 +205,7 @@ class Tokenizer:
 
         tokens = [token for token in tokens if token.lower() not in self._stopwords]
 
-        return tokens if self.return_type == "list" else " ".join(tokens)
+        return tokens if self._return_as_list else " ".join(tokens)
 
     def filter_article_stopwords(self, article):
         if article is None:
@@ -221,7 +216,7 @@ class Tokenizer:
             tokens_article.append(self.filter_stopwords(sent))
         return (
             tokens_article
-            if self.return_type == "list"
+            if self._return_as_list
             else self._sentence_separator.join(tokens_article)
         )
 

@@ -5,7 +5,6 @@ from pathlib import Path
 import pandas as pd
 from ekorpkit import eKonf
 from glob import glob
-from hydra.utils import instantiate
 
 
 class Pathobook:

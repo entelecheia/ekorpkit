@@ -16,6 +16,8 @@ defaults:
   - tokenizer: null
 
   - override hydra/help: help
+  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: colorlog
 
 app_name: ${about.app.name}
 project: ${app_name}

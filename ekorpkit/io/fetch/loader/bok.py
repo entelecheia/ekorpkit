@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import glob
@@ -7,6 +8,9 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from ekorpkit import eKonf
+
+
+log = logging.getLogger(__name__)
 
 
 class BOKMniutes:
@@ -43,7 +47,7 @@ class BOKMniutes:
             self.convert_hwp_to_txt()
             self.build_minutes()
         else:
-            print(f"{self.output_file} already exists. skipping..")
+            log.info(f"{self.output_file} already exists. skipping..")
 
     def build_minutes(self):
 
@@ -59,14 +63,14 @@ class BOKMniutes:
 
         if not self.force_download:
             if os.path.isfile(self.output_file):
-                print("minutes file already exists. combining with the existing file..")
+                log.info("minutes file already exists. combining with the existing file..")
                 minutes_df = pd.read_csv(self.output_file, index_col=None)
                 df = minutes_df.combine_first(df)
                 df = df.drop_duplicates(subset=["id"])
 
         df.to_csv(self.output_file, encoding="utf-8", index=False)
         print(df.tail())
-        print(f"Saved {len(docs)} documents to {self.output_file}")
+        log.info(f"Saved {len(docs)} documents to {self.output_file}")
 
     def convert_hwp_to_txt(self):
         for filepath in glob.glob(os.path.join(self.raw_hwp_dir, "*.hwp")):
@@ -76,12 +80,12 @@ class BOKMniutes:
             self.minutes_txt_files.append(txt_file)
 
             if os.path.exists(txt_file):
-                print(f"{txt_file} already exists")
+                log.info(f"{txt_file} already exists")
                 continue
 
             command = f"hwp5txt --output={txt_file} {hwp_file}"
             subprocess.Popen(command, shell=True)
-            print(f"converted {hwp_file} to {txt_file}")
+            log.info(f"converted {hwp_file} to {txt_file}")
 
     def get_minutes_files(self):
         for info in self.minutes_urls:

@@ -10,7 +10,7 @@ from typing import List, Tuple, Optional
 from . import model
 
 
-LOGGER = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 DATA_DIR = Path(__file__).absolute().parent.joinpath("data")
 DEFAULT_MODEL_DIR = DATA_DIR.joinpath("model")
@@ -67,14 +67,14 @@ class Guess:
             or ``None`` if no programming language is detected.
         """
         if not source_code.strip():
-            LOGGER.warning("Empty source code provided")
+            log.warning("Empty source code provided")
             return None
 
         language_probabilities = self.probabilities(source_code)
         probabilities = [value for _, value in language_probabilities]
         if not self._is_reliable(probabilities):
             if self.verbose > 5:
-                LOGGER.warning("No programming language detected")
+                log.warning("No programming language detected")
             return None
 
         language_name, _ = language_probabilities[0]
@@ -91,7 +91,7 @@ class Guess:
         :return: list of language names associated with their probability.
         """
         if not self.is_trained:
-            LOGGER.error("Cannot predict using an untrained model")
+            log.error("Cannot predict using an untrained model")
             raise GuesslangError(
                 f"Cannot predict using the untrained model located at "
                 f"{self._saved_model_dir}. "
@@ -113,10 +113,10 @@ class Guess:
         :return: training accuracy, a value between 0 and 1.
         """
 
-        LOGGER.debug("Run safety checks before starting the training")
+        log.debug("Run safety checks before starting the training")
 
         if self.is_trained:
-            LOGGER.error("Model already trained")
+            log.error("Model already trained")
             raise GuesslangError(
                 f"The current model located at {self._saved_model_dir} "
                 f"is already trained"
@@ -126,31 +126,31 @@ class Guess:
         for dirname in model.DATASET.values():
             dataset_path = input_path.joinpath(dirname)
             if not dataset_path.is_dir():
-                LOGGER.error(f"Dataset directory missing {dataset_path}")
+                log.error(f"Dataset directory missing {dataset_path}")
                 raise GuesslangError(f"No dataset directory: {dataset_path}")
 
-        LOGGER.debug("Run the training")
+        log.debug("Run the training")
         extensions = list(self._extension_map)
         with TemporaryDirectory() as model_logs_dir:
             estimator = model.build(model_logs_dir, extensions)
             metrics = model.train(estimator, source_files_dir, max_steps)
-            LOGGER.info(f"Training metrics: {metrics}")
+            log.info(f"Training metrics: {metrics}")
             model.save(estimator, self._saved_model_dir)
 
-        LOGGER.debug(f"Test newly trained model {self._saved_model_dir}")
+        log.debug(f"Test newly trained model {self._saved_model_dir}")
         self._model = model.load(self._saved_model_dir)
         matches = model.test(self._model, source_files_dir, self._extension_map)
 
         report_file = Path(self._saved_model_dir).joinpath(TEST_REPORT_FILE)
         json_data = json.dumps(matches, indent=2, sort_keys=True)
         report_file.write_text(json_data)
-        LOGGER.debug(f"Test report stored in {report_file}")
+        log.debug(f"Test report stored in {report_file}")
 
         languages = self._language_map.keys()
         total = sum(sum(values.values()) for values in matches.values())
         success = sum(matches[language][language] for language in languages)
         accuracy = success / total
-        LOGGER.debug(f"Accuracy = {success} / {total} = {accuracy:.2%}")
+        log.debug(f"Accuracy = {success} / {total} = {accuracy:.2%}")
         return accuracy
 
     @staticmethod

@@ -31,12 +31,8 @@ except ImportError:  # Python 3.5+
         pass
 
 
-urllib3_log = logging.getLogger("urllib3")
-urllib3_log.setLevel(logging.CRITICAL)
-
-# Instantiate a logger object
-logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
-logger = logging.getLogger(__name__)
+logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+log = logging.getLogger(__name__)
 
 
 def download_filings(**args):
@@ -54,7 +50,7 @@ def download_filings(**args):
     )
     companies_info_filepath = os.path.join(output_dir, config["companies_info_file"])
     if len(config["filing_types"]) == 0:
-        logger.info(f"Please provide at least one filing type")
+        log.info(f"Please provide at least one filing type")
         exit()
 
     # If the indices and/or download folder doesn't exist, create them
@@ -98,7 +94,7 @@ def download_filings(**args):
     if os.path.exists(filings_metadata_filepath):
         old_df = []
         series_to_download = []
-        logger.info(f"\nReading filings metadata...\n")
+        log.info(f"\nReading filings metadata...\n")
 
         for _, series in pd.read_csv(filings_metadata_filepath, dtype=str).iterrows():
             if os.path.exists(os.path.join(raw_filings_dir, series["filename"])):
@@ -110,7 +106,7 @@ def download_filings(**args):
                 series_to_download.append((series.to_frame()).T)
 
         if len(series_to_download) == 0:
-            logger.info(
+            log.info(
                 f"\nThere are no more filings to download for the given years, quarters and companies"
             )
             exit()
@@ -126,7 +122,7 @@ def download_filings(**args):
     for i in range(len(df)):
         list_of_series.append(df.iloc[i])
 
-    logger.info(f"\nDownloading {len(df)} filings...\n")
+    log.info(f"\nDownloading {len(df)} filings...\n")
 
     final_series = []
     for series in tqdm(list_of_series, ncols=100):
@@ -145,7 +141,7 @@ def download_filings(**args):
             final_df = pd.concat([old_df, final_df])
             final_df.to_csv(filings_metadata_filepath, index=False, header=True)
 
-    logger.info(f"\nFinal dataframe exported to {filings_metadata_filepath}")
+    log.info(f"\nFinal dataframe exported to {filings_metadata_filepath}")
 
 
 def download_indices(
@@ -157,7 +153,7 @@ def download_indices(
     user_agent: str,
     base_url: str = "https://www.sec.gov/Archives/edgar/full-index/",
 ):
-    logger.info("Downloading EDGAR Index files")
+    log.info("Downloading EDGAR Index files")
 
     for quarter in quarters:
         if quarter not in [1, 2, 3, 4]:
@@ -177,7 +173,7 @@ def download_indices(
                     os.path.join(indices_folder, index_filename)
                 ):
                     if first_iteration:
-                        logger.info(f"Skipping {index_filename}")
+                        log.info(f"Skipping {index_filename}")
                     continue
 
                 url = f"{base_url}/{year}/QTR{quarter}/master.zip"
@@ -189,7 +185,7 @@ def download_indices(
                             retries=5, backoff_factor=0.2, session=session
                         ).get(url=url, headers={"User-agent": user_agent})
                     except requests.exceptions.RetryError as e:
-                        logger.info(f'Failed downloading "{index_filename}" - {e}')
+                        log.info(f'Failed downloading "{index_filename}" - {e}')
                         failed_indices.append(index_filename)
                         continue
 
@@ -212,14 +208,14 @@ def download_indices(
                         encoding="utf-8",
                     ) as f:
                         f.write("".join(lines))
-                        logger.info(f"{index_filename} downloaded")
+                        log.info(f"{index_filename} downloaded")
 
         first_iteration = False
         if len(failed_indices) > 0:
-            logger.info(f"Could not download the following indices:\n{failed_indices}")
+            log.info(f"Could not download the following indices:\n{failed_indices}")
             user_input = input("Retry (Y/N): ")
             if user_input in ["Y", "y", "yes"]:
-                logger.info(f"Retry downloading failed indices")
+                log.info(f"Retry downloading failed indices")
             else:
                 break
         else:
@@ -253,7 +249,7 @@ def get_specific_indices(
                         line.strip() for line in f.readlines() if line.strip() != ""
                     ]
             else:
-                logger.debug(f"Please provide a valid cik_ticker file path")
+                log.debug(f"Please provide a valid cik_ticker file path")
                 exit()
 
     if isinstance(cik_tickers, List) and len(cik_tickers):
@@ -271,7 +267,7 @@ def get_specific_indices(
             Timeout,
             RetryError,
         ) as err:
-            logger.info(f'Failed downloading "{company_tickers_url}" - {err}')
+            log.info(f'Failed downloading "{company_tickers_url}" - {err}')
             exit()
 
         company_tickers = json.loads(request.content)
@@ -288,7 +284,7 @@ def get_specific_indices(
                 if c_t in ticker2cik:
                     ciks.append(str(ticker2cik[c_t]))  # If Ticker
                 else:
-                    logger.debug(f'Could not find CIK for "{c_t}"')
+                    log.debug(f'Could not find CIK for "{c_t}"')
 
     dfs_list = []
 
@@ -369,11 +365,11 @@ def scrap(
                 break
 
         if retries_exceeded:
-            logger.debug(f'Retries exceeded, could not download "{html_index}"')
+            log.debug(f'Retries exceeded, could not download "{html_index}"')
             return None
 
     except (RequestException, HTTPError, ConnectionError, Timeout, RetryError) as err:
-        logger.debug(
+        log.debug(
             f"Request for {html_index} failed due to network-related error: {err}"
         )
         return None
@@ -396,7 +392,7 @@ def scrap(
             series["Period of Report"] = period_of_report
 
     if period_of_report is None:
-        logger.debug(f'Can not crawl "Period of Report" for {html_index}')
+        log.debug(f'Can not crawl "Period of Report" for {html_index}')
         return None
 
     # Assign metadata to dataframe
@@ -459,7 +455,7 @@ def scrap(
                     break
 
             if retries_exceeded:
-                logger.debug(f'Retries exceeded, could not download "{company_url}"')
+                log.debug(f'Retries exceeded, could not download "{company_url}"')
                 return None
 
         except (
@@ -469,7 +465,7 @@ def scrap(
             Timeout,
             RetryError,
         ) as err:
-            logger.debug(
+            log.debug(
                 f"Request for {company_url} failed due to network-related error: {err}"
             )
             return None
@@ -630,11 +626,11 @@ def download(url, filename, download_folder, user_agent):
                 break
 
         if retries_exceeded:
-            logger.debug(f'Retries exceeded, could not download "{filename}" - "{url}"')
+            log.debug(f'Retries exceeded, could not download "{filename}" - "{url}"')
             return False
 
     except (RequestException, HTTPError, ConnectionError, Timeout, RetryError) as err:
-        logger.debug(f"Request for {url} failed due to network-related error: {err}")
+        log.debug(f"Request for {url} failed due to network-related error: {err}")
         return False
 
     with open(filepath, "wb") as f:

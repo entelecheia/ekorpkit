@@ -1,12 +1,15 @@
-from wasabi import msg
+import logging
 from .json import load_json
+
+
+log = logging.getLogger(__name__)
 
 
 def mail_to_json(contents):
     try:
         import mailparser
     except ImportError:
-        msg.warn(
+        log.warning(
             "mailparser is not installed. Please install it with `pip install mailparser`"
         )
     try:

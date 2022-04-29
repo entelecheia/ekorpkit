@@ -1,14 +1,16 @@
-# import os
+import logging
 import codecs
 import pandas as pd
 from pathlib import Path
 from pprint import pprint
-from wasabi import msg
 from ekorpkit import eKonf
 from ekorpkit.io.file import load_dataframe, get_filepaths
 
 DESCRIPTION = "Corpus for Language Models"
 LICENSE = "Copyright of the corpus is owned by the authors."
+
+
+log = logging.getLogger(__name__)
 
 
 class Corpus:
@@ -36,12 +38,12 @@ class Corpus:
         self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
         if self.info:
             if self.verbose:
-                msg.good(f"Loaded info file: {self.info_file}")
+                log.info(f"Loaded info file: {self.info_file}")
             self.args = eKonf.to_dict(eKonf.merge(self.args, self.info))
             self.info = eKonf.to_dict(self.info)
 
         if self.verbose:
-            msg.info(f"Intantiating a corpus {self.name} with a config:")
+            log.info(f"Intantiating a corpus {self.name} with a config:")
             pprint(eKonf.to_dict(self.args))
 
         self.filetype = self.args.get("filetype", "csv")
@@ -163,7 +165,7 @@ class Corpus:
                 self._data[self._timestamp_key], format=_format, **_params
             )
             if self.verbose:
-                msg.info(f"Loaded timestamp column {self._timestamp_key}")
+                log.info(f"Loaded timestamp column {self._timestamp_key}")
         elif _timestamp_col in self._metadata.columns:
             self._metadata[self._timestamp_key] = pd.to_datetime(
                 self._metadata[_timestamp_col], format=_format, **_params
@@ -172,7 +174,7 @@ class Corpus:
             self._metadata = self._metadata.drop(self._timestamp_key, axis=1)
             self._data = self._data.merge(df_dt, on=self._merge_meta_on, how="left")
             if self.verbose:
-                msg.info(f"Timestamp column {self._timestamp_key} added to data")
+                log.info(f"Timestamp column {self._timestamp_key} added to data")
                 print(self._data.head())
 
     def load(self):
@@ -213,7 +215,7 @@ class Corpus:
             dfs.append(df[list(self._data_keys.keys())])
         self._data = pd.concat(dfs)
         if self.verbose:
-            print(f"Data loaded {len(self._data)} rows")
+            log.info(f"Data loaded {len(self._data)} rows")
             print(self._data.head(3))
             print(self._data.tail(3))
         self._loaded = True
@@ -243,7 +245,7 @@ class Corpus:
             dfs.append(df)
         self._metadata = pd.concat(dfs)
         if self.verbose:
-            print(f"Metadata loaded {len(self._metadata)} rows")
+            log.info(f"Metadata loaded {len(self._metadata)} rows")
             print(self._metadata.head(3))
             print(self._metadata.tail(3))
 
@@ -257,6 +259,6 @@ class Corpus:
         )
         self._metadata_merged = True
         if self.verbose:
-            print(f"Metadata merged to data")
+            log.info(f"Metadata merged to data")
             print(self._data.head(3))
             print(self._data.tail(3))

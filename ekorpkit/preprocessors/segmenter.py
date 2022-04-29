@@ -33,7 +33,7 @@ class Segmenter(BaseSegmenter):
         filter_programming_language=False,
         filter_sentence_length={},
         chunk={},
-        return_type="list",
+        return_as_list=True,
         verbose=False,
         print_args=False,
         **kwargs,
@@ -83,7 +83,7 @@ class Segmenter(BaseSegmenter):
         self._out_sentence_separator = codecs.decode(
             out_sentence_separator, "unicode_escape"
         )
-        self._return_type = return_type
+        self._return_as_list = return_as_list
         self._max_split_length = max_split_length
         self._max_split_iterations = max_split_iterations
         self._keep_segment = keep_segment
@@ -112,7 +112,7 @@ class Segmenter(BaseSegmenter):
             print(f"in_sentence_separator = {self._in_sentence_separator}")
             print(f"out_segment_separator = {self._out_segment_separator}")
             print(f"out_sentence_separator = {self._out_sentence_separator}")
-            print(f"return_type = {self._return_type}")
+            print(f"return_as_list = {self._return_as_list}")
             print(f"max_split_length = {self._max_split_length}")
             print(f"max_split_iterations = {self._max_split_iterations}")
             print(f"keep_segment = {self._keep_segment}")
@@ -217,14 +217,14 @@ class Segmenter(BaseSegmenter):
                             continue
 
                 sentences = self.filter_sentence_length(sentences)
-                if self._return_type == "list":
+                if self._return_as_list:
                     segments.append(sentences)
                 else:
                     segments.append(self._out_sentence_separator.join(sentences))
 
         return (
             segments
-            if self._return_type == "list"
+            if self._return_as_list
             else self._out_segment_separator.join(segments)
         )
 
@@ -331,7 +331,7 @@ class Segmenter(BaseSegmenter):
                     max_length=self._chunk_size,
                     overlap=self._chunk_overlap,
                 )
-                if self._return_type != "list":
+                if self._return_as_list != "list":
                     chunks = [
                         self._out_sentence_separator.join(chunk) for chunk in chunks
                     ]
@@ -339,7 +339,7 @@ class Segmenter(BaseSegmenter):
 
         return (
             segments
-            if self._return_type == "list"
+            if self._return_as_list
             else self._out_segment_separator.join(segments)
         )
 

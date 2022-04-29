@@ -1,12 +1,15 @@
+import logging
 from io import StringIO
 from zipfile import ZipFile
 import pandas as pd
 from tqdm import tqdm
 from ekorpkit.io.parse.json import parse_data
 from joblib import Parallel, delayed
-from wasabi import msg
 from ekorpkit.utils.batch.batcher import tqdm_joblib
 from ekorpkit.io.file import get_files_from_archive, get_filepaths
+
+
+log = logging.getLogger(__name__)
 
 
 def load_data(split_name, **loader_cfg):
@@ -28,7 +31,7 @@ def load_data(split_name, **loader_cfg):
         multiprocessing_at = "_load_archive"
         loader_cfg["multiprocessing_at"] = multiprocessing_at
     if processes > 2 and multiprocessing_at == "load_data":
-        print(
+        log.info(
             f"Starting multiprocessing with {processes} processes at {multiprocessing_at}"
         )
         desciption = "::load_data()"
@@ -41,7 +44,7 @@ def load_data(split_name, **loader_cfg):
                 documents += result
     else:
         for fno, filepath in enumerate(filepaths):
-            msg.info(f"==> processing {(fno+1)}/{num_files} files <==")
+            log.info(f"==> processing {(fno+1)}/{num_files} files <==")
             documents += _load_archive(
                 filepath, filetype, default_items, loader_cfg, num_workers
             )
@@ -64,7 +67,7 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
         and multiprocessing_at == "_load_archive"
         and num_files > num_workers
     ):
-        print(
+        log.info(
             f"Starting multiprocessing with {num_workers} processes at {multiprocessing_at}"
         )
         desciption = "::_load_archive()"
@@ -90,7 +93,7 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
                 with open(file, "rb") as f:
                     contents = f.read()
         except Exception as e:
-            print(f"Error reading {filename}", e)
+            log.critical(f"Error reading {filename}", e)
             continue
             # raise ValueError(f'Error reading {file}')
 
@@ -121,9 +124,9 @@ def load_csv_data(split_name, **loader_cfg):
     filepaths = get_filepaths(data_files, data_dir)
 
     documents = []
-    print(f"Loading [{split_name}] documents from {len(filepaths)} csv files")
+    log.info(f"Loading [{split_name}] documents from {len(filepaths)} csv files")
     for filepath in filepaths:
-        print("==> processing {}".format(filepath))
+        log.info("==> processing {}".format(filepath))
         if filepath.endswith(".zip"):
             with ZipFile(filepath) as zf:
                 for f_csv in zf.namelist():
@@ -147,7 +150,7 @@ def load_hfds(split_name, **loader_cfg):
         subsets = [subsets]
     elif not isinstance(subsets, list):
         subsets = [None]
-    print(
+    log.info(
         f"Loading [{split_name}] documents from huggingface datasets [{dataset_name}]"
     )
     dfs = []
@@ -173,9 +176,9 @@ def load_tsv_data(split_name, **loader_cfg):
     constants = data_args.get("constants", None)
 
     documents = []
-    print(f"Loading [{split_name}] documents from {len(filepaths)} files")
+    log.info(f"Loading [{split_name}] documents from {len(filepaths)} files")
     for filepath in filepaths:
-        print("==> processing {}".format(filepath))
+        log.info("==> processing {}".format(filepath))
         if filepath.endswith(".zip"):
             with ZipFile(filepath) as zf:
                 for f_csv in zf.namelist():

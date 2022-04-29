@@ -1,10 +1,12 @@
+import logging
 from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit.io.file import load_dataframe
 from hydra.utils import instantiate
-from wasabi import msg
+
+log = logging.getLogger(__name__)
 
 
 def build_corpus(**args):
@@ -88,7 +90,7 @@ class DatasetBuilder:
         if self.summary_info:
             self.summary_info.save()
 
-        print(
+        log.info(
             f"\nCorpus [{self.name}] is built to [{self.data_dir}] from [{self.fetch_dir}]"
         )
 
@@ -128,7 +130,7 @@ class DatasetBuilder:
         if not output_file.exists() or self.overwrite:
             with elapsed_timer(format_time=True) as elapsed:
                 df = instantiate(self.loader, split_name=split_name, _recursive_=False)
-                msg.good(f" >> elapsed time to load and parse data: {elapsed()}")
+                log.info(f" >> elapsed time to load and parse data: {elapsed()}")
 
             if df is None:
                 raise ValueError("dataframe is None")
@@ -138,7 +140,7 @@ class DatasetBuilder:
                 print(df.shape)
 
             if self.transform_pipeline and len(self.transform_pipeline) > 0:
-                print(
+                log.info(
                     f"\nTransforming dataframe with pipeline: {self.transform_pipeline}"
                 )
                 df = apply_pipeline(df, self.transform_pipeline, self.pipeline_args)
@@ -154,16 +156,16 @@ class DatasetBuilder:
                 self.summary_info.init_stats(df=df, split_name=split_name, stats=stats)
 
         else:
-            msg.info(f"{output_file} already exists")
+            log.info(f"{output_file} already exists")
             if self.calculate_stats or self.preprocess_text:
                 df = load_dataframe(output_file, self.data_filetype)
 
         if df is None:
-            print("No datasets found")
+            log.warning("No datasets found")
             return None
 
         if self.process_pipeline and len(self.process_pipeline) > 0:
-            print(f"\nProcessing dataframe with pipeline: {self.process_pipeline}")
+            log.info(f"\nProcessing dataframe with pipeline: {self.process_pipeline}")
             df = apply_pipeline(df, self.process_pipeline, self.pipeline_args)
 
         if self.calculate_stats and self.summary_info:

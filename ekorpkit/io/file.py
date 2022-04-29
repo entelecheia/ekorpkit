@@ -1,9 +1,12 @@
+import logging
 import os
 import pandas as pd
 from glob import glob
 from pathlib import Path
-from wasabi import msg
 from ekorpkit.utils.func import elapsed_timer
+
+
+log = logging.getLogger(__name__)
 
 
 def get_filepaths(
@@ -20,7 +23,7 @@ def get_filepaths(
             filepaths += glob(file, recursive=recursive)
     filepaths = [fp for fp in filepaths if Path(fp).is_file()]
     if verbose:
-        print(f"\nProcessing [{len(filepaths)}] files from [{filename_patterns}]")
+        log.info(f"\nProcessing [{len(filepaths)}] files from [{filename_patterns}]")
 
     return filepaths
 
@@ -30,21 +33,21 @@ def get_files_from_archive(archive_path, filetype=None):
     from zipfile import ZipFile
 
     if ".tar.gz" in archive_path:
-        print(f"::Extracting files from {archive_path} with tar.gz")
+        log.info(f"::Extracting files from {archive_path} with tar.gz")
         archive_handle = tarfile.open(archive_path, "r:gz")
         files = [
             (file, file.name) for file in archive_handle.getmembers() if file.isfile()
         ]
         open_func = archive_handle.extractfile
     elif ".tar.bz2" in archive_path:
-        print(f"::Extracting files from {archive_path} with tar.bz2")
+        log.info(f"::Extracting files from {archive_path} with tar.bz2")
         archive_handle = tarfile.open(archive_path, "r:bz2")
         files = [
             (file, file.name) for file in archive_handle.getmembers() if file.isfile()
         ]
         open_func = archive_handle.extractfile
     elif ".zip" in archive_path:
-        print(f"::Extracting files from {archive_path} with zip")
+        log.info(f"::Extracting files from {archive_path} with zip")
         archive_handle = ZipFile(archive_path)
         files = [
             (file, file.encode("cp437").decode("euc-kr"))
@@ -72,7 +75,7 @@ def save_dataframe(
     **kwargs,
 ):
     if df is None:
-        msg.warn("Dataframe is None")
+        log.warning("Dataframe is None")
         return df
     if columns_to_keep is not None:
         df = df[columns_to_keep]
@@ -84,7 +87,7 @@ def save_dataframe(
     if filetype is None:
         filetype = os.path.splitext(filepath)[1]
 
-    print(f"\nSaving dataframe as {filepath}")
+    log.info(f"\nSaving dataframe as {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype:
             df.to_csv(filepath, index=index)
@@ -93,11 +96,11 @@ def save_dataframe(
         else:
             raise ValueError("filetype must be .csv or .parquet")
         if verbose:
-            msg.good("\n >> elapsed time to save data: {}\n".format(elapsed()))
+            log.info("\n >> elapsed time to save data: {}\n".format(elapsed()))
 
 
 def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwargs):
-    print("Loading data from {}".format(filepath))
+    log.info("Loading data from {}".format(filepath))
     if filetype is None:
         filetype = os.path.splitext(filepath)[1]
     with elapsed_timer(format_time=True) as elapsed:
@@ -108,5 +111,5 @@ def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwa
         else:
             raise ValueError("filetype must be .csv or .parquet")
         if verbose:
-            msg.good(" >> elapsed time to load data: {}".format(elapsed()))
+            log.info(" >> elapsed time to load data: {}".format(elapsed()))
     return df

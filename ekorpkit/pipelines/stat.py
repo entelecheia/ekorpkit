@@ -1,10 +1,13 @@
+import logging
 import time
 from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.utils.func import humanbytes, get_modified_time
 from ekorpkit.pipelines.pipe import apply
 from ekorpkit.utils.func import elapsed_timer
-from wasabi import msg
+
+
+log = logging.getLogger(__name__)
 
 
 class SummaryInfo:
@@ -44,12 +47,12 @@ class SummaryInfo:
             self.splits = self.info["splits"]
 
         if self.verbose:
-            msg.good(f"Loading info file: {self.info_path}")
+            log.info(f"Loading info file: {self.info_path}")
             eKonf.pprint(self.info)
 
     def init_stats(self, df=None, split_name=None, stats={}):
         if self.verbose:
-            msg.good(f"Initializing statistics for split: {split_name}")
+            log.info(f"Initializing statistics for split: {split_name}")
         if split_name:
             stats["name"] = split_name
 
@@ -63,7 +66,7 @@ class SummaryInfo:
                 stat_fn = eKonf.instantiate(stat_args)
                 stats = stat_fn(df)
                 # stats = summary_stats(df, **stat_args)
-                msg.good(
+                log.info(
                     f" >> elapsed time to calculate statistics before processing: {elapsed()}"
                 )
             stats.update(stats)
@@ -77,13 +80,13 @@ class SummaryInfo:
 
     def calculate_stats(self, df, split_name=None):
         if self.verbose:
-            msg.good(f"Calculating statistics for split: {split_name}")
+            log.info(f"Calculating statistics for split: {split_name}")
         if split_name and split_name not in self.splits:
             self.init_stats(df, split_name)
         with elapsed_timer(format_time=True) as elapsed:
             stat_fn = eKonf.instantiate(self.stat_args)
             stats = stat_fn(df)
-            msg.good(f" >> elapsed time to calculate statistics: {elapsed()}")
+            log.info(f" >> elapsed time to calculate statistics: {elapsed()}")
 
         if split_name:
             self.splits[split_name].update(stats)
@@ -143,7 +146,7 @@ class SummaryInfo:
 
         eKonf.save(self.info, f=self.info_path)
         if self.verbose:
-            msg.good(f"Saving updated info file: {self.info_path}")
+            log.info(f"Saving updated info file: {self.info_path}")
             eKonf.pprint(self.info)
 
 
@@ -164,7 +167,7 @@ def summary_stats(
     num_workers = num_workers if num_workers else 1
     text_keys = args.get("text_keys")
     if text_keys is None:
-        text_keys = 'text'
+        text_keys = "text"
     if isinstance(text_keys, list):
         for col in text_keys:
             df[col].fillna("", inplace=True)
