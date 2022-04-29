@@ -58,7 +58,7 @@ def apply(
 
 def apply_pipe(df, pipe):
     fn = instantiate(pipe["method"], _recursive_=False)
-    log.info(f"\nApplying pipe: {fn}")
+    log.info(f"Applying pipe: {fn}")
     if isinstance(df, list):
         if "concat_dataframes" in str(fn):
             return fn(df, pipe)
@@ -615,7 +615,7 @@ def normalize(df, args):
                 verbose=verbose,
             )
             if verbose:
-                log.info("\n >> elapsed time to normalize: {}\n".format(elapsed()))
+                log.info(" >> elapsed time to normalize: {}".format(elapsed()))
     return df
 
 
@@ -634,7 +634,7 @@ def fillna(df, args):
         log.info(f"Filling missing values: {args}")
     for key in apply_to:
         if verbose:
-            log.info(f"\nPreprocessing column: {key}")
+            log.info(f"Preprocessing column: {key}")
         df[key].fillna(fill_with, inplace=True)
     return df
 
@@ -671,7 +671,7 @@ def segment(df, args):
                 minibatch_size=minibatch_size,
             )
             if verbose:
-                log.info("\n >> elapsed time to segment: {}\n".format(elapsed()))
+                log.info(" >> elapsed time to segment: {}".format(elapsed()))
     return df
 
 
@@ -698,7 +698,7 @@ def tokenize(df, args):
     tokenizer = instantiate(tokenizer)
     for key in apply_to:
         if verbose:
-            log.info(f"\nPreprocessing column: {key}")
+            log.info(f"Preprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
                 tokenizer.tokenize_article,
@@ -709,7 +709,7 @@ def tokenize(df, args):
                 minibatch_size=minibatch_size,
             )
             if verbose:
-                log.info("\n >> elapsed time to segment: {}\n".format(elapsed()))
+                log.info(" >> elapsed time to segment: {}".format(elapsed()))
     return df
 
 
@@ -745,7 +745,7 @@ def extract_tokens(df, args):
 
     for key in apply_to:
         if verbose:
-            print(f"\nPreprocessing column: {key}")
+            print(f"Preprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
                 extract_func,
@@ -756,7 +756,7 @@ def extract_tokens(df, args):
                 minibatch_size=minibatch_size,
             )
             if verbose:
-                log.info("\n >> elapsed time to segment: {}\n".format(elapsed()))
+                log.info(" >> elapsed time to segment: {}".format(elapsed()))
     return df
 
 
@@ -783,7 +783,7 @@ def chunk(df, args):
     segmenter = instantiate(segmenter)
     for key in apply_to:
         if verbose:
-            log.info(f"\nPreprocessing column: {key}")
+            log.info(f"Preprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
                 segmenter.chunk_article,
@@ -794,7 +794,7 @@ def chunk(df, args):
                 minibatch_size=minibatch_size,
             )
             if verbose:
-                log.info("\n >> elapsed time to segment: {}\n".format(elapsed()))
+                log.info(" >> elapsed time to segment: {}".format(elapsed()))
     return df
 
 
@@ -815,11 +815,11 @@ def general_function(df, args):
                 apply_to = [apply_to]
             for key in apply_to:
                 if verbose:
-                    log.info(f"\nprocessing column: {key}")
+                    log.info(f"processing column: {key}")
                 df[key] = getattr(df[key], _function)(**_params)
 
         if verbose:
-            log.info("\n >> elapsed time to replace: {}\n".format(elapsed()))
+            log.info(" >> elapsed time to replace: {}".format(elapsed()))
             print(df.head())
     return df
 
@@ -843,12 +843,12 @@ def replace_regex(df, args):
         log.info(f"Replacing regex: {args}")
     for key in apply_to:
         if verbose:
-            log.info(f"\nPreprocessing column: {key}")
+            log.info(f"Preprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             for pat, repl in patterns.items():
                 df[key] = df[key].str.replace(pat, repl, regex=True).str.strip()
             if verbose:
-                log.info("\n >> elapsed time to replace regex: {}\n".format(elapsed()))
+                log.info(" >> elapsed time to replace regex: {}".format(elapsed()))
     return df
 
 
@@ -878,7 +878,7 @@ def remove_startswith(df, args):
                 df.loc[idx, key] = df.loc[idx, key].str[start_pos:].str.strip()
             if verbose:
                 log.info(
-                    "\n >> elapsed time to remove startswith: {}\n".format(elapsed())
+                    " >> elapsed time to remove startswith: {}\n".format(elapsed())
                 )
     return df
 
@@ -935,7 +935,7 @@ def filter_length(df, args, **kwargs):
                         f"{(n_docs-df.shape[0])} of {n_docs} documents removed due to length is greater than {max_length}"
                     )
             if verbose:
-                log.info("\n >> elapsed time to filter length: {}\n".format(elapsed()))
+                log.info(" >> elapsed time to filter length: {}".format(elapsed()))
     return df
 
 
@@ -955,13 +955,13 @@ def filter_query(df, args):
     with elapsed_timer(format_time=True) as elapsed:
         for qry in query:
             if verbose:
-                log.info(f"\nPreprocessing query: {qry}")
+                log.info(f"Preprocessing query: {qry}")
             n_docs = df.shape[0]
             df = df.query(qry, engine="python")
             if verbose:
                 log.info(f"filtered {df.shape[0]} out of {n_docs} documents by {qry}")
         if verbose:
-            log.info("\n >> elapsed time to filter query: {}\n".format(elapsed()))
+            log.info(" >> elapsed time to filter query: {}".format(elapsed()))
     return df
 
 
@@ -985,7 +985,7 @@ def drop_duplicates(df, args):
             log.info(
                 f"{n_docs} documents after dropping {(num_docs-n_docs)} duplicates from [{apply_to}]"
             )
-            log.info("\n >> elapsed time to drop duplicates: {}\n".format(elapsed()))
+            log.info(" >> elapsed time to drop duplicates: {}".format(elapsed()))
     return df
 
 

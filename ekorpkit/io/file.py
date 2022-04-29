@@ -23,7 +23,7 @@ def get_filepaths(
             filepaths += glob(file, recursive=recursive)
     filepaths = [fp for fp in filepaths if Path(fp).is_file()]
     if verbose:
-        log.info(f"\nProcessing [{len(filepaths)}] files from [{filename_patterns}]")
+        log.info(f"Processing [{len(filepaths)}] files from [{filename_patterns}]")
 
     return filepaths
 
@@ -87,7 +87,7 @@ def save_dataframe(
     if filetype is None:
         filetype = os.path.splitext(filepath)[1]
 
-    log.info(f"\nSaving dataframe as {filepath}")
+    log.info(f"Saving dataframe as {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype:
             df.to_csv(filepath, index=index)
@@ -96,7 +96,7 @@ def save_dataframe(
         else:
             raise ValueError("filetype must be .csv or .parquet")
         if verbose:
-            log.info("\n >> elapsed time to save data: {}\n".format(elapsed()))
+            log.info(" >> elapsed time to save data: {}".format(elapsed()))
 
 
 def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwargs):
