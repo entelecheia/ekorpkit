@@ -2,7 +2,6 @@ import os
 import logging
 import hydra
 from ekorpkit import eKonf
-from pprint import pprint
 from .tasks.info import make_table
 
 
@@ -17,7 +16,7 @@ def cmd(**args):
 
 
 def listup(**args):
-    ekorpkit_dir = os.path.dirname(os.path.abspath(__file__))
+    ekorpkit_dir = eKonf.__ekorpkit_path__
     corpus_info = {}
     for name in args["corpus"]["preset"]["corpus"]:
         info_path = f"{ekorpkit_dir}/resources/corpora/{name}.yaml"
@@ -34,15 +33,6 @@ def about(**args):
         print(f"{k:11} : {v}")
     print(f"{'version':11} : {__version__}")
     print("\nExecute `ekorpkit --help` to see what eKorpkit provides")
-
-
-def listfiles(**args):
-    cfg = eKonf.to_config(args)
-    args = cfg.corpus
-    # corpus_paths = load_corpus_paths(args.corpus_dir, args.name, corpus_type=args.corpus_type,
-    #     corpus_filetype=args.corpus_filetype, filename_pattern=args.filename_pattern)
-    # for i_corpus, (corpus_name, corpus_file) in enumerate(corpus_paths):
-    #     print(f'{i_corpus:3} - {corpus_name} : {corpus_file}')
 
 
 @hydra.main(config_path="conf", config_name="config")

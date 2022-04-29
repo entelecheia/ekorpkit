@@ -93,12 +93,13 @@ class LMSA(BaseSentimentAnalyser):
 
         :returns: str
         """
+        label_key = feature + "_label"
         labels = self._features.get(feature).get("labels")
         if labels:
-            score["label"] = ""
+            score[label_key] = ""
             for label, thresh in labels.items():
                 if isinstance(thresh, str):
                     thresh = eval(thresh)
                 if score[feature] >= thresh[0] and score[feature] <= thresh[1]:
-                    score["label"] = label
+                    score[label_key] = label
         return score
