@@ -39,7 +39,7 @@ def about(**args):
 def hydra_main(cfg) -> None:
     verbose = cfg.verbose
     if verbose:
-        log.info("\n## eKorpkit Command Line Interface for Hydra ##\n")
+        log.info("## eKorpkit Command Line Interface for Hydra ##")
     if cfg.get("print_config"):
         log.info("## hydra configuration ##")
         print(eKonf.to_yaml(cfg))
@@ -47,10 +47,9 @@ def hydra_main(cfg) -> None:
     if cfg.get("print_resolved_config"):
         log.info("## hydra configuration resolved ##")
         eKonf.pprint(cfg)
-        print()
 
     if verbose:
-        log.info(f"Hydra working directory : {os.getcwd()}\n")
+        log.info(f"Hydra working directory : {os.getcwd()}")
 
     if cfg.get("_target_"):
         eKonf._init_env_(cfg, verbose)

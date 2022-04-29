@@ -1,5 +1,6 @@
 # @package _global_
 path:
-extract_archive: false
+extract_archive: true
 force_extract: false
-cached_path: ${cached_path:${.path},${.extract_archive},${.force_extract}}
+verbose: false
+cached_path: ${cached_path:${.path},${.extract_archive},${.force_extract},${dir.cache},${.verbose}}

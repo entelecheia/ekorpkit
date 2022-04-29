@@ -3,13 +3,13 @@ home: ${__home_path__:}
 workspace: ${.home}/.ekorpkit
 project: ${.workspace}/projects/${project}
 data: ${.workspace}/data
+tmp: ${.workspace}/.tmp
+cache: ${.workspace}/.cache
 log: ${.project}/logs
-tmp: ${.data}/tmp
-cache: ${.tmp}/.cache
 archive: ${.data}/archive
-runtime: ${oc.select:hydra:runtime.cwd, .}
 model: ${.data}/models
 output: ${.data}/outputs
 dataset: ${.data}/datasets
 corpus: ${.dataset}/corpus
 resource: ${.ekorpkit}/resources
+runtime: ${oc.select:hydra:runtime.cwd, .}

@@ -31,13 +31,23 @@ def path(
     url_or_filename,
     extract_archive: bool = False,
     force_extract: bool = False,
+    cache_dir=None,
+    verbose: bool = False,
 ):
+    if verbose:
+        log.info(
+            "cached_path: {}, extract_archive: {}, force_extract: {}, cache_dir: {}".format(
+                url_or_filename, extract_archive, force_extract, cache_dir
+            )
+        )
+
     if url_or_filename:
         try:
             return cached_path(
                 url_or_filename,
                 extract_archive=extract_archive,
                 force_extract=force_extract,
+                cache_dir=cache_dir,
             ).as_posix()
         except Exception as e:
             log.error(e)
@@ -294,6 +304,7 @@ class eKonf:
         url_or_filename,
         extract_archive: bool = False,
         force_extract: bool = False,
+        cache_dir=None,
     ):
         """
         Given something that might be a URL or local path, determine which.
@@ -345,11 +356,6 @@ class eKonf:
         url_or_filename :
             A URL or path to parse and possibly download.
 
-        cache_dir :
-            The directory to cache downloads. If not specified, the global default cache directory
-            will be used (``~/.cache/cached_path``). This can be set to something else with
-            :func:`set_cache_dir()`.
-
         extract_archive :
             If ``True``, then zip or tar.gz archives will be automatically extracted.
             In which case the directory is returned.
@@ -361,6 +367,11 @@ class eKonf:
             .. caution::
                 Use this flag with caution! This can lead to race conditions if used
                 from multiple processes on the same file.
+
+        cache_dir :
+            The directory to cache downloads. If not specified, the global default cache directory
+            will be used (``~/.cache/cached_path``). This can be set to something else with
+            :func:`set_cache_dir()`.
 
         Returns
         -------
@@ -385,6 +396,7 @@ class eKonf:
             url_or_filename,
             extract_archive=extract_archive,
             force_extract=force_extract,
+            cache_dir=cache_dir,
         )
 
 
