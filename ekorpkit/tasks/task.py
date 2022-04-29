@@ -1,6 +1,5 @@
 import logging
 from ekorpkit import eKonf
-from hydra.utils import instantiate
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.pipelines.pipe import apply_pipeline
 
@@ -87,7 +86,7 @@ def transfomer_finetune(**cfg):
     dataset_cfg = args.dataset
 
     if model_cfg._target_:
-        model = instantiate(model_cfg, dataset_cfg=dataset_cfg, _recursive_=False)
+        model = eKonf.instantiate(model_cfg, dataset_cfg=dataset_cfg)
         model.apply_pipeline()
     else:
         raise Exception("Model instantiation target is missing")
@@ -98,7 +97,7 @@ def dataframe_tasks(**cfg):
     pipeline_args = args.get("pipeline", {})
 
     if pipeline_args._target_:
-        df = instantiate(pipeline_args, _recursive_=False)
+        df = eKonf.instantiate(pipeline_args)
         if df is None:
             raise Exception("No dataframe found")
     else:

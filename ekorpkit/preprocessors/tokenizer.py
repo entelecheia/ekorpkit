@@ -34,7 +34,6 @@ class Tokenizer:
             if self.verbose:
                 log.info(f"instantiating {self._normalize['_target_']}...")
             self._normalize = eKonf.instantiate(self._normalize)
-            # print(f"[ekorpkit]: {self._normalize.__name__} is instantiated.")
 
         self._lowercase = tokenize.get("lowercase", False)
         self._flatten = tokenize.get("flatten", True)
@@ -46,8 +45,6 @@ class Tokenizer:
         if self._punct_postags is None:
             self._punct_postags = ["SF", "SP", "SSO", "SSC", "SY"]
 
-        return_as_list = tokenize_article.get("return_as_list")
-        self._return_as_list = return_as_list or True
         self._sentence_separator = tokenize_article.get("sentence_separator", None)
         if self._sentence_separator is None:
             self._sentence_separator = "\n"
@@ -65,23 +62,19 @@ class Tokenizer:
         if self._stop_postags is None:
             self._stop_postags = ["SP"]
         self._no_space_for_non_nouns = extract.get("no_space_for_non_nouns", False)
-        self._stopwords_path = extract.get("stopwords_path", None)
-        if self._stopwords_path is not None:
-            self._stopwords = load_wordlist(
-                self._stopwords_path, lowercase=True, verbose=self.verbose
-            )
-            if self.verbose:
-                log.info(f"Loaded {len(self._stopwords)} stopwords")
-        else:
-            self._stopwords = []
-        stopwords = extract.get("stopwords", None)
-        if stopwords is not None:
-            self._stopwords += stopwords
 
+        stopwords = kwargs.get("stopwords")
+        self._stopwords = stopwords
+        if eKonf.is_instantiatable(self._stopwords):
+            if self.verbose:
+                log.info(f"instantiating {self._stopwords['_target_']}...")
+            self._stopwords = eKonf.instantiate(self._stopwords)
+
+        return_as_list = kwargs.get("return_as_list")
+        self._return_as_list = return_as_list or True
         if self.verbose:
             log.info(f"{self.__class__.__name__} initialized with:")
             log.info(f"\treturn_as_list: {self._return_as_list}")
-            log.info(f"\tstopwords_path: {self._stopwords_path}")
 
     def __call__(self, text):
         """Calling a tokenizer instance like a function just calls the tokenize method."""
@@ -203,7 +196,7 @@ class Tokenizer:
         else:
             tokens = self.tokenize(text_or_tokens)
 
-        tokens = [token for token in tokens if token.lower() not in self._stopwords]
+        tokens = [token for token in tokens if not self._stopwords(token)]
 
         return tokens if self._return_as_list else " ".join(tokens)
 
@@ -211,13 +204,13 @@ class Tokenizer:
         if article is None:
             return None
 
-        tokens_article = []
+        token_article = []
         for sent in article.split(self._sentence_separator):
-            tokens_article.append(self.filter_stopwords(sent))
+            token_article.append(self.filter_stopwords(sent))
         return (
-            tokens_article
+            token_article
             if self._return_as_list
-            else self._sentence_separator.join(tokens_article)
+            else self._sentence_separator.join(token_article)
         )
 
     def nouns(self, text):
@@ -250,7 +243,7 @@ def _extract(
     noun_postags=["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"],
     stop_postags=["SP"],
     no_space_for_non_nouns=False,
-    stopwords=[],
+    stopwords=None,
     **kwargs,
 ):
     if isinstance(tokenized_text, str):
@@ -314,8 +307,8 @@ def _extract(
                 if token[1] not in stop_postags
             ]
 
-    if stopwords is not None and len(stopwords) > 0:
-        _tokens = [token for token in _tokens if token.lower() not in stopwords]
+    if stopwords is not None:
+        _tokens = [token for token in _tokens if not stopwords(token)]
     return _tokens
 
 

@@ -633,8 +633,6 @@ def fillna(df, args):
     if verbose:
         log.info(f"Filling missing values: {args}")
     for key in apply_to:
-        if verbose:
-            log.info(f"Preprocessing column: {key}")
         df[key].fillna(fill_with, inplace=True)
     return df
 
@@ -697,8 +695,6 @@ def tokenize(df, args):
         log.info("instantiating tokenizer")
     tokenizer = instantiate(tokenizer)
     for key in apply_to:
-        if verbose:
-            log.info(f"Preprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
                 tokenizer.tokenize_article,
@@ -744,8 +740,6 @@ def extract_tokens(df, args):
         extract_func = tokenizer.extract_tokens
 
     for key in apply_to:
-        if verbose:
-            print(f"Preprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
                 extract_func,
@@ -756,7 +750,7 @@ def extract_tokens(df, args):
                 minibatch_size=minibatch_size,
             )
             if verbose:
-                log.info(" >> elapsed time to segment: {}".format(elapsed()))
+                log.info(" >> elapsed time to extract tokens: {}".format(elapsed()))
     return df
 
 
@@ -782,8 +776,6 @@ def chunk(df, args):
         log.info("instantiating segmenter")
     segmenter = instantiate(segmenter)
     for key in apply_to:
-        if verbose:
-            log.info(f"Preprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
                 segmenter.chunk_article,
@@ -842,8 +834,6 @@ def replace_regex(df, args):
     if verbose:
         log.info(f"Replacing regex: {args}")
     for key in apply_to:
-        if verbose:
-            log.info(f"Preprocessing column: {key}")
         with elapsed_timer(format_time=True) as elapsed:
             for pat, repl in patterns.items():
                 df[key] = df[key].str.replace(pat, repl, regex=True).str.strip()

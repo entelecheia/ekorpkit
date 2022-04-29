@@ -5,7 +5,7 @@ defaults:
 apply_to: ${oc.select:..apply_to, text}
 verbose: ${oc.select:..verbose, true}
 use_batcher: ${oc.select:..use_batcher, true}
-nouns_ony: true
+nouns_only: true
 filter_stopwords_only: false
 stopwords_path:
 preprocessor:

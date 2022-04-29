@@ -1,0 +1,7 @@
+_target_: ekorpkit.preprocessors.stopwords.Stopwords
+name: stopwords
+lowercase: true
+stopwords:
+stopwords_path: ${oc.select:..stopwords_path, null}
+nltk_stopwords: english
+verbose: ${oc.select:..verbose, false}
