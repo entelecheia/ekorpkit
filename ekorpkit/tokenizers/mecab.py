@@ -6,7 +6,7 @@ from pathlib import Path
 import logging
 
 
-logging.basicConfig(format="[MeCab]: %(message)s", level=logging.WARNING)
+log = logging.getLogger(__name__)
 
 
 Feature = namedtuple(
@@ -72,7 +72,7 @@ class MeCab:  # APIs are inspried by KoNLPy
             "mecab-python3",
         ], "Wrong backend! Currently, we support [`fugashi`, `mecab-python3`] backend."
         if self.verbose:
-            logging.info(f"MeCab uses {self.backend} as backend.")
+            log.info(f"MeCab uses {self.backend} as backend.")
 
         if not dicdir:
             dicdir = DICDIR
@@ -82,7 +82,7 @@ class MeCab:  # APIs are inspried by KoNLPy
             self.userdic_path = userdic_path
             MECAB_ARGS += '-u "{}" '.format(userdic_path)
         if self.verbose:
-            logging.info(
+            log.info(
                 f"Mecab uses system dictionary: {dicdir}, user dictionary: {userdic_path}"
             )
         try:

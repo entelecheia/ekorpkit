@@ -70,8 +70,7 @@ class Tokenizer:
                 log.info(f"instantiating {self._stopwords['_target_']}...")
             self._stopwords = eKonf.instantiate(self._stopwords)
 
-        return_as_list = kwargs.get("return_as_list")
-        self._return_as_list = return_as_list or True
+        self._return_as_list = kwargs.get("return_as_list", False)
         if self.verbose:
             log.info(f"{self.__class__.__name__} initialized with:")
             log.info(f"\treturn_as_list: {self._return_as_list}")
@@ -409,7 +408,7 @@ class PynoriTokenizer(Tokenizer):
         pynori={},
         **kwargs,
     ):
-        log.info("Initializing Pynori...")
+        log.info(f"Initializing Pynori with {pynori}...")
 
         super().__init__(**kwargs)
         if pynori is None:
@@ -455,7 +454,7 @@ class MecabTokenizer(Tokenizer):
         **kwargs,
     ):
 
-        log.info("Initializing mecab...")
+        log.info(f"Initializing mecab with {mecab}...")
         super().__init__(**kwargs)
         self.mecab = mecab
         try:

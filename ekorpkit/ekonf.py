@@ -413,6 +413,7 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
              if _target_ is a callable: the return value of the call
     """
     if config.get("_target_") is None:
+        log.warning("No target specified in config")
         return None
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:

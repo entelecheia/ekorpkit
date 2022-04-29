@@ -10,7 +10,6 @@ from ekorpkit.io.file import get_filepaths, load_dataframe, save_dataframe
 from ekorpkit.utils import print_status
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
-from hydra.utils import instantiate
 from ekorpkit import eKonf
 from tqdm.auto import tqdm
 
@@ -57,7 +56,7 @@ def apply(
 
 
 def apply_pipe(df, pipe):
-    fn = instantiate(pipe["method"], _recursive_=False)
+    fn = eKonf.instantiate(pipe["method"])
     log.info(f"Applying pipe: {fn}")
     if isinstance(df, list):
         if "concat_dataframes" in str(fn):
@@ -249,9 +248,9 @@ def plot(df, args):
             if verbose:
                 log.info(f"Plotting: {plot_cfg}")
                 # print(df_sub.head())
-            instantiate(plot_cfg, df=df_sub, _recursive_=False)
+            eKonf.instantiate(plot_cfg, df=df_sub)
     else:
-        instantiate(plot_cfg, df=df, _recursive_=False)
+        eKonf.instantiate(plot_cfg, df=df)
 
     return df
 
@@ -605,7 +604,7 @@ def normalize(df, args):
         log.info(f"Normalizing text: {args}")
     if verbose:
         log.info("instantiating normalizer")
-    normalizer = instantiate(normalizer)
+    normalizer = eKonf.instantiate(normalizer)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
@@ -657,7 +656,7 @@ def segment(df, args):
     if verbose:
         log.info(f"Splitting text: {args}")
         log.info("instantiating segmenter")
-    segmenter = instantiate(segmenter)
+    segmenter = eKonf.instantiate(segmenter)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
@@ -693,7 +692,7 @@ def tokenize(df, args):
     if verbose:
         log.info(f"Tokenizing text: {args}")
         log.info("instantiating tokenizer")
-    tokenizer = instantiate(tokenizer)
+    tokenizer = eKonf.instantiate(tokenizer)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
@@ -731,7 +730,7 @@ def extract_tokens(df, args):
     if verbose:
         log.info(f"Extracting tokens: {args}")
         log.info("instantiating tokenizer")
-    tokenizer = instantiate(tokenizer)
+    tokenizer = eKonf.instantiate(tokenizer)
     if filter_stopwords_only:
         extract_func = tokenizer.filter_article_stopwords
     elif nouns_ony:
@@ -774,7 +773,7 @@ def chunk(df, args):
     if verbose:
         log.info(f"Chunking text: {args}")
         log.info("instantiating segmenter")
-    segmenter = instantiate(segmenter)
+    segmenter = eKonf.instantiate(segmenter)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = apply(
@@ -890,7 +889,7 @@ def filter_length(df, args, **kwargs):
             log.warning("No length specified")
         return df
     len_func = args["method"].get("len_bytes", None)
-    len_func = instantiate(len_func, _recursive_=False)
+    len_func = eKonf.instantiate(len_func)
     _check_max_len = partial(check_max_len, max_len=max_length, len_func=len_func)
     _check_min_len = partial(check_min_len, min_len=min_length, len_func=len_func)
 
