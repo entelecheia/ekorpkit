@@ -1,13 +1,16 @@
+import os
 import functools
-from pprint import pprint
 import random
 import hydra
 import pathlib
+import ekorpkit.utils.batch.batcher as batcher
+from pprint import pprint
 from enum import Enum
 from hydra.core.config_store import ConfigStore
 from hydra.utils import get_method
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
+from wasabi import msg
 from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
@@ -15,6 +18,8 @@ from . import _version
 def __ekorpkit_path__():
     return pathlib.Path(__file__).parent.as_posix()
 
+def __home_path__():
+    return pathlib.Path.home().as_posix()
 
 def compose(
     overrides: List[str] = [],
@@ -91,6 +96,7 @@ config = compose()
 DictKeyType = Union[str, int, Enum, float, bool]
 
 OmegaConf.register_new_resolver("__ekorpkit_path__", __ekorpkit_path__)
+OmegaConf.register_new_resolver("__home_path__", __ekorpkit_path__)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
@@ -117,7 +123,8 @@ class eKonf:
     """ekorpkit config primary class"""
 
     __version__ = _version.get_versions()["version"]
-    __ekorpkit_path__ = pathlib.Path(__file__).parent.as_posix()
+    __ekorpkit_path__ = __ekorpkit_path__()
+    __home_path__ = __home_path__()
     config = compose()
 
     def __init__(self) -> None:
@@ -250,6 +257,13 @@ class eKonf:
     def call(cfg: Any, obj: object):
         call(cfg, obj)
 
+    @staticmethod
+    def _init_env_(cfg, verbose=False):
+        _init_env_(cfg, verbose=verbose)
+
+    @staticmethod
+    def _stop_env_(cfg, verbose=False):
+        _stop_env_(cfg, verbose=verbose)
 
 def call(cfg: Any, obj: object):
     if isinstance(cfg, list):
@@ -398,3 +412,66 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     if _Keys.RECURSIVE not in kwargs:
         kwargs[_Keys.RECURSIVE] = _recursive_
     return hydra.utils.instantiate(config, *args, **kwargs)
+
+
+def _init_env_(cfg, verbose=False):
+    env = cfg.env
+    backend = env.distributed_framework.backend
+    for env_name, env_value in env.get("os", {}).items():
+        if env_value:
+            if verbose:
+                msg.info(f"setting environment variable {env_name} to {env_value}")
+            os.environ[env_name] = str(env_value)
+
+    if env.distributed_framework.initialize:
+        backend_handle = None
+        if backend == "ray":
+            import ray
+
+            ray_cfg = env.get("ray", None)
+            ray_cfg = eKonf.to_container(ray_cfg, resolve=True)
+            if verbose:
+                msg.info(f"initializing ray with {ray_cfg}")
+            ray.init(**ray_cfg)
+            backend_handle = ray
+
+        elif backend == "dask":
+            from dask.distributed import Client
+
+            dask_cfg = env.get("dask", None)
+            dask_cfg = eKonf.to_container(dask_cfg, resolve=True)
+            if verbose:
+                msg.info(f"initializing dask client with {dask_cfg}")
+            client = Client(**dask_cfg)
+            if verbose:
+                print(client)
+
+        batcher.batcher_instance = batcher.Batcher(
+            backend_handle=backend_handle, **env.batcher
+        )
+        if verbose:
+            print(batcher.batcher_instance)
+    if verbose:
+        print()
+
+
+def _stop_env_(cfg, verbose=False):
+    env = cfg.env
+    backend = env.distributed_framework.backend
+
+    if env.distributed_framework.initialize:
+        if backend == "ray":
+            import ray
+
+            if ray.is_initialized():
+                ray.shutdown()
+                if verbose:
+                    msg.info("shutting down ray")
+
+        # elif modin_engine == 'dask':
+        #     from dask.distributed import Client
+
+        #     if Client.initialized():
+        #         client.close()
+        #         msg.info(f'shutting down dask client')
+

@@ -1,10 +1,8 @@
 import os
 import logging
 import hydra
-import ekorpkit.utils.batch.batcher as batcher
 from ekorpkit import eKonf
 from pprint import pprint
-from wasabi import msg
 from .tasks.info import make_table
 
 
@@ -49,68 +47,6 @@ def listfiles(**args):
     #     print(f'{i_corpus:3} - {corpus_name} : {corpus_file}')
 
 
-def init_environ(cfg, verbose=False):
-    env = cfg.env
-    backend = env.distributed_framework.backend
-    for env_name, env_value in env.get("os", {}).items():
-        if env_value:
-            if verbose:
-                msg.info(f"setting environment variable {env_name} to {env_value}")
-            os.environ[env_name] = str(env_value)
-
-    if env.distributed_framework.initialize:
-        backend_handle = None
-        if backend == "ray":
-            import ray
-
-            ray_cfg = env.get("ray", None)
-            ray_cfg = eKonf.to_container(ray_cfg, resolve=True)
-            if verbose:
-                msg.info(f"initializing ray with {ray_cfg}")
-            ray.init(**ray_cfg)
-            backend_handle = ray
-
-        elif backend == "dask":
-            from dask.distributed import Client
-
-            dask_cfg = env.get("dask", None)
-            dask_cfg = eKonf.to_container(dask_cfg, resolve=True)
-            if verbose:
-                msg.info(f"initializing dask client with {dask_cfg}")
-            client = Client(**dask_cfg)
-            if verbose:
-                print(client)
-
-        batcher.batcher_instance = batcher.Batcher(
-            backend_handle=backend_handle, **env.batcher
-        )
-        if verbose:
-            print(batcher.batcher_instance)
-    if verbose:
-        print()
-
-
-def stop_environ(cfg, verbose=False):
-    env = cfg.env
-    backend = env.distributed_framework.backend
-
-    if env.distributed_framework.initialize:
-        if backend == "ray":
-            import ray
-
-            if ray.is_initialized():
-                ray.shutdown()
-                if verbose:
-                    msg.info("shutting down ray")
-
-        # elif modin_engine == 'dask':
-        #     from dask.distributed import Client
-
-        #     if Client.initialized():
-        #         client.close()
-        #         msg.info(f'shutting down dask client')
-
-
 @hydra.main(config_path="conf", config_name="config")
 def hydra_main(cfg) -> None:
     # log.info("eKorpkit Command Line Interface for Hydra")
@@ -131,11 +67,11 @@ def hydra_main(cfg) -> None:
         print(f"Hydra working directory : {os.getcwd()}\n")
 
     if cfg.get("_target_"):
-        init_environ(cfg, verbose)
+        eKonf._init_env_(cfg, verbose)
 
         eKonf.instantiate(cfg)
 
-        stop_environ(cfg, verbose)
+        eKonf._stop_env_(cfg, verbose)
     # print(HydraConfig.get())
 
 

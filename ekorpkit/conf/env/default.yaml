@@ -4,6 +4,7 @@ os:
   # MODIN_OUT_OF_CORE: 'true'
   # MALLOC_TRIM_THRESHOLD_: 65536
   WANDB_API_KEY:
+  CACHED_PATH_CACHE_ROOT: ${dir.cache}
 distributed_framework: 
   backend: joblib
   initialize: true
