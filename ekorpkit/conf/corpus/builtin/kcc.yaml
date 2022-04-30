@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: kcc
+  - /fetch/fetcher: kcc
   - /preprocessor/normalizer: formal_ko
   - override /fetch/loader/parser: plaintext_split
 

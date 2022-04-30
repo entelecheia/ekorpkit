@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: pubmed
+  - /fetch/fetcher: pubmed
   - /preprocessor/normalizer: formal_en_parantheses
   - /preprocessor/segmenter: pysbd_merge_article
   - override /fetch/loader/parser: pmc
@@ -28,8 +28,8 @@ column_info:
 
 fetch:
   data_sources:
-    train: ${..downloader.subset}/*.tar.gz
-  downloader:
+    train: ${..fetcher.subset}/*.tar.gz
+  fetcher:
     subset: oa_comm
   loader:
     # limit: 1

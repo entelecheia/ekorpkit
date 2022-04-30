@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: hfds
+  - /fetch/fetcher: hfds
 
 name: financial_phrasebank
 domain: econ
@@ -20,7 +20,7 @@ fetch:
     train: train.csv
     test: test.csv
     dev: dev.csv
-  downloader:
+  fetcher:
     output_file: financial_phrasebank.csv
     subsets: sentences_allagree
     splits: train

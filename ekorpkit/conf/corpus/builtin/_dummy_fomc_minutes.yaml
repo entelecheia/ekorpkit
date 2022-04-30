@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: _dummy
+  - /fetch/fetcher: _dummy
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
   - override /fetch/loader: csv
@@ -31,7 +31,7 @@ column_info:
 fetch:
   data_dir: ${oc.select:..data_dir, .}
   data_sources: 
-    train: ${..downloader.output_file}
+    train: ${..fetcher.output_file}
 
 pipeline:        
   _transform_:

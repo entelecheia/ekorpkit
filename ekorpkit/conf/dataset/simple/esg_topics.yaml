@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: dataframe
+  - /fetch/fetcher: dataframe
 
 name: esg_topics
 domain: econ
@@ -23,7 +23,7 @@ fetch:
     train: train.csv
     test: test.csv
     dev: dev.csv
-  downloader:
+  fetcher:
     output_file: esg_topics.csv
     pipeline:
       _pipeline_:

@@ -52,7 +52,7 @@ class DatasetBuilder:
         self.calculate_stats = self.fetch_args.get("calculate_stats", False)
         self.preprocess_text = self.fetch_args.get("preprocess_text", False)
 
-        self.downloader = self.fetch_args.get("downloader", None)
+        self.fetcher = self.fetch_args.get("fetcher", None)
         self.loader = self.fetch_args.get("loader", None)
 
         self.info_args = self.args.get("info", None)
@@ -70,10 +70,10 @@ class DatasetBuilder:
             self.build()
 
     def build(self):
-        if self.downloader:
-            if self.downloader.get("_target_", None):
-                eKonf.instantiate(self.downloader)
-            pipeline_args = self.downloader.get("pipeline", None)
+        if self.fetcher:
+            if self.fetcher.get("_target_", None):
+                eKonf.instantiate(self.fetcher)
+            pipeline_args = self.fetcher.get("pipeline", None)
             if pipeline_args:
                 eKonf.instantiate(pipeline_args)
 

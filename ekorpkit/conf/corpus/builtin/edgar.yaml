@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: edgar
+  - /fetch/fetcher: edgar
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd_merge_article
 

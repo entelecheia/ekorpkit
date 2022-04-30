@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - /fetch/downloader: nih_exporter
+  - /fetch/fetcher: nih_exporter
   - override /fetch/loader: csv
 
 name: nih_exporter

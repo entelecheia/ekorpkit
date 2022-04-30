@@ -95,7 +95,7 @@ def test_normalizer():
 
 
 def test_dummy_corpus():
-    cfg = eKonf.compose(config_group="fetch/downloader=_dummy")
+    cfg = eKonf.compose(config_group="fetch/fetcher=_dummy")
     cfg["name"] = "fomc_minutes"
     eKonf.instantiate(cfg)
     output_file = cfg["output_file"]
