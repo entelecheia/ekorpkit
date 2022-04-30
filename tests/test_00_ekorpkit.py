@@ -106,12 +106,12 @@ def test_dummy_corpus():
 
 def test_build_corpora():
     cfg = eKonf.compose(config_group="corpus/builtin=_dummy_fomc_minutes")
-    cfg["data_dir"] = "./data/tmp"
+    cfg["data_dir"] = "./data/tmp/fomc_minutes"
     db = eKonf.instantiate(cfg)
     db.build()
 
     cfg = eKonf.compose(config_group="corpus/builtin=_dummy_bok_minutes")
-    cfg["data_dir"] = "./data/tmp"
+    cfg["data_dir"] = "./data/tmp/bok_minutes"
     db = eKonf.instantiate(cfg)
     db.build()
 

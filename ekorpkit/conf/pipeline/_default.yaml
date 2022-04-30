@@ -1,29 +1,30 @@
 defaults:
-  - aggregate_columns: aggregate
+  - aggregate_columns: default
   - chunk: default
-  - combine_columns: combine
+  - combine_columns: default
   - concat_dataframes: default
-  - drop_duplicates: drop
+  - drop_duplicates: default
   - drop: default
   - eval_columns: default
   - explode_splits: default
   - extract_tokens: default
-  - fillna: fillna
+  - fillna: default
   - filter_length: default
   - filter_query: default
   - load_dataframe: default
   - melt: default
   - merge_dataframe: default
-  - normalize: normalize
+  - normalize: default
   - pivot: default
   - plot: default
-  - rename_columns: rename
+  - rename_columns: default
   - replace: default
-  - reset_index: reset
+  - reset_index: default
   - sampling: default
   - save_dataframe: default
-  - save_samples: samples
-  - segment: segment
+  - save_metadata: default
+  - save_samples: default
+  - segment: default
   - split_dataframe: default
   - split_sampling: default
   - stdout_samples: default
