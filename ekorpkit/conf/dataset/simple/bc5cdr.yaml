@@ -3,6 +3,7 @@ defaults:
 
 name: bc5cdr
 category: biomed
+task: ner
 loader:
   source_urls: 
     train: 1aShIT1B_8MYt-Y5Z76JVGIWSyO44N24Y

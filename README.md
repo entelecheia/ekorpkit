@@ -1,6 +1,6 @@
 # ekorpkit[iːkɔːkɪt]: (e)nglish (K)orean C(orp)us Tool(kit)
 
-[![PyPI version](https://badge.fury.io/py/ekorpkit.svg)](https://badge.fury.io/py/ekorpkit) [![release](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml) [![test](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml) [![codecov](https://codecov.io/gh/entelecheia/ekorpkit/branch/main/graph/badge.svg?token=8I4ORHRREL)](https://codecov.io/gh/entelecheia/ekorpkit) [![markdown-autodocs](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6497227.svg)](https://doi.org/10.5281/zenodo.6497227)
+[![PyPI version](https://badge.fury.io/py/ekorpkit.svg)](https://badge.fury.io/py/ekorpkit) [![release](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml) [![test](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml) [![codecov](https://codecov.io/gh/entelecheia/ekorpkit/branch/main/graph/badge.svg?token=8I4ORHRREL)](https://codecov.io/gh/entelecheia/ekorpkit) [![markdown-autodocs](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6497226.svg)](https://doi.org/10.5281/zenodo.6497226)
 
 eKorpkit provides a flexible interface for corpus management and analysis pipelines such as extraction, transformation, tokenization, training, and visualization.
 
@@ -77,13 +77,11 @@ There are more examples in the [notebooks](https://github.com/entelecheia/ekorpk
 #### Compose an ekorpkit config
 
 ```python
-# import ekorpkit.ekonf as eKonf
 from ekorpkit import eKonf
-from pprint import pprint
 
 cfg = eKonf.compose()
 print('Config type:', type(cfg))
-pprint(cfg)
+eKonf.pprint(cfg)
 ```
 
 #### Instantiating objects with an ekorpkit config
@@ -93,7 +91,7 @@ pprint(cfg)
 ```python
 config_group='preprocessor/tokenizer=nltk'
 cfg = eKonf.compose(config_group=config_group)
-pprint(eKonf.to_dict(cfg))
+eKonf.pprint(cfg)
 nltk = eKonf.instantiate(cfg)
 ```
 
@@ -139,7 +137,7 @@ nltk.tokenize(text)
 ```python
 config_group='preprocessor/tokenizer=mecab'
 cfg = eKonf.compose(config_group=config_group)
-pprint(eKonf.to_dict(cfg))
+eKonf.pprint(cfg)
 ```
 
 ```python
@@ -189,7 +187,7 @@ norm(text)
 ```python
 config_group='preprocessor/tokenizer=mecab'
 cfg = eKonf.compose(config_group=config_group)
-cfg['normalize'] = cfg_norm
+cfg.normalize = cfg_norm
 mecab = eKonf.instantiate(cfg)
 mecab.tokenize(text)
 ```
@@ -208,6 +206,31 @@ mecab.tokenize(text)
 - [kss](https://github.com/hyunwoongko/kss)
 - [fugashi](https://github.com/polm/fugashi)
 - [hanja](https://github.com/suminb/hanja)
+
+## Citation
+
+```tex
+@software{lee_2022_6497226,
+  author       = {Young Joon Lee},
+  title        = {eKorpkit: English Korean Corpus Toolkit},
+  month        = apr,
+  year         = 2022,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.6497226},
+  url          = {https://doi.org/10.5281/zenodo.6497226}
+}
+```
+
+```tex
+@software{lee_2022_ekorpkit,
+  author       = {Young Joon Lee},
+  title        = {eKorpkit: English Korean Corpus Toolkit},
+  month        = apr,
+  year         = 2022,
+  publisher    = {GitHub},
+  url          = {https://github.com/entelecheia/ekorpkit}
+}
+```
 
 ## License
 

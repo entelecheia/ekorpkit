@@ -18,9 +18,9 @@ class HIV4SA(BaseSentimentAnalyser):
 
         :returns: int
         """
+        lxfeat_names = self._features.get(feature).get("lexicon_features")
         lxfeat = pd.DataFrame.from_dict(lexicon_features, orient="index")
         score = {}
-        feature_names = self._features.get(feature).get("lexicon_features")
         if feature == "polarity":
             lxfeat["pos"] = lxfeat.apply(
                 lambda x: 1 * x["count"] if x["Positiv"] else 0, axis=1
@@ -37,6 +37,13 @@ class HIV4SA(BaseSentimentAnalyser):
             )
             score["polarity"] = polarity
             score["subjectivity"] = subjectivity
+        elif isinstance(lxfeat_names, str):
+            lxfeat[feature] = lxfeat.apply(
+                lambda x: 1 * x["count"] if x[lxfeat_names] else 0, axis=1
+            )
+            lxfeat_agg = lxfeat.agg({feature: "sum"})
+            feat_score = lxfeat_agg[feature] / (len(tokens) + self.EPSILON)
+            score[feature] = feat_score
 
         return score
 

@@ -3,6 +3,7 @@ defaults:
 
 name: ncbi-disease
 category: biomed
+task: ner
 loader:
   source_urls: 
     train: 1_ffUW3cf9GfA1XczIJVGmmEYQtBGkkG4
