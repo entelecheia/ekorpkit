@@ -1,7 +1,6 @@
 import logging
 import os
 import functools
-from pkgutil import extend_path
 import random
 import hydra
 import pathlib
@@ -12,8 +11,7 @@ from hydra.core.config_store import ConfigStore
 from hydra.utils import get_method
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
-from cached_path import cached_path
-from ekorpkit.io.gdown import cached_gdown, extractall
+from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
@@ -36,50 +34,13 @@ def path(
     cache_dir=None,
     verbose: bool = False,
 ):
-    if verbose:
-        log.info(
-            "caching path: {}, extract_archive: {}, force_extract: {}, cache_dir: {}".format(
-                url_or_filename, extract_archive, force_extract, cache_dir
-            )
-        )
-
-    if url_or_filename:
-        try:
-            if url_or_filename.startswith("gd://"):
-                if extract_archive:
-                    postprocess = extractall
-                else:
-                    postprocess = None
-
-                _path = cached_gdown(
-                    url_or_filename,
-                    verbose=verbose,
-                    postprocess=postprocess,
-                    cache_dir=cache_dir,
-                )
-            else:
-                if cache_dir is None:
-                    cache_dir = (
-                        pathlib.Path.home() / ".ekorpkit" / ".cache" / "cached_path"
-                    )
-                else:
-                    cache_dir = pathlib.Path(cache_dir) / "cached_path"
-
-                _path = cached_path(
-                    url_or_filename,
-                    extract_archive=extract_archive,
-                    force_extract=force_extract,
-                    cache_dir=cache_dir,
-                ).as_posix()
-
-            if verbose:
-                log.info(f"cached path: {_path}")
-
-            return _path
-
-        except Exception as e:
-            log.error(e)
-            return None
+    return cached_path(
+        url_or_filename,
+        extract_archive=extract_archive,
+        force_extract=force_extract,
+        cache_dir=cache_dir,
+        verbose=verbose,
+    )
 
 
 def compose(
