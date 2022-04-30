@@ -3,6 +3,7 @@ defaults:
 
 name: bc4chemd
 category: biomed
+task: ner
 loader:
   source_urls: 
     train: 1_puElo_L_48utYXj3ZF3HyJ3VltrHk3I

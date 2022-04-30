@@ -13,8 +13,13 @@ features:
     lexicon_features:
       - Positiv
       - Negativ
+  legal:
+    lexicon_features: Legal
 predict:
-  features: polarity
+  lexicon_features:
+  features:
+    - polarity
+    - legal
 preprocessor:
   tokenizer:
     tokenize:
