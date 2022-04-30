@@ -1,6 +1,4 @@
 import logging
-
-from langcodes import Language
 from ekorpkit.io.load.list import load_wordlist
 from ekorpkit import eKonf
 
@@ -60,7 +58,7 @@ class Stopwords:
         _word = word.lower() if self._lowercase else word
         return self._stopwords_fn(_word) or _word in self._stopwords_list
 
-    def _load_nltk_stopwords(self, language):
+    def _load_nltk_stopwords(self, language="english"):
         """
         :type language: str
         :returns: list
