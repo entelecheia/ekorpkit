@@ -71,17 +71,17 @@ class Corpus:
         self._id_key = "id"
         self._text_key = "text"
         self._merge_meta_on_key = "merge_meta_on"
-        self._keys = self.column_info["keys"]
+        self._keys = self.column_info["keys"] or {}
         self._timestamp = self.column_info.get("timestamp", None)
         self._timestamp_key = "timestamp"
         for k in [self._id_key, self._text_key, self._merge_meta_on_key]:
-            if self._keys.get(k, None) is None:
+            if self._keys.get(k) is None:
                 continue
             if isinstance(self._keys[k], str):
                 self._keys[k] = [self._keys[k]]
             else:
                 self._keys[k] = list(self._keys[k])
-        self._merge_meta_on = self._keys.get(self._merge_meta_on_key, None)
+        self._merge_meta_on = self._keys.get(self._merge_meta_on_key)
         if self._merge_meta_on is None:
             self._merge_meta_on = self._id_key
         self._id_keys = self._keys[self._id_key]
