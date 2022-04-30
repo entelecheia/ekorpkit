@@ -1,12 +1,4 @@
 defaults:
-  - filter_query: default
-  - filter_length: default
-  - explode_splits: default
-  - save_as_text: default
-  - save_dataframe: default
+  - _default
   
 _pipeline_:
-apply_to: 
-  - text
-use_batcher: true
-verbose: ${oc.select:..verbose, true}

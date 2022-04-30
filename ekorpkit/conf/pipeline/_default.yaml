@@ -9,6 +9,7 @@ defaults:
   - filter_length: default
   - drop_duplicates: drop
   - save_samples: samples
+  - load_dataframe: default
   - save_dataframe: default
   - concat_dataframes: default
   - split_dataframe: default
