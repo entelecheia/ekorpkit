@@ -1,6 +1,10 @@
+import logging
 import os
 import pandas as pd
 from ekorpkit import eKonf
+
+
+log = logging.getLogger(__name__)
 
 
 class DummyCorpus:
@@ -22,7 +26,7 @@ class DummyCorpus:
         if not os.path.exists(self.output_file) or self.force_download:
             self.build_corpus()
         else:
-            print(f"{self.output_file} already exists. skipping..")
+            log.info(f"{self.output_file} already exists. skipping..")
 
     def build_corpus(self):
 
@@ -33,7 +37,7 @@ class DummyCorpus:
 
         if not self.force_download:
             if os.path.isfile(self.output_file):
-                print("file already exists. combining with the existing file..")
+                log.info("file already exists. combining with the existing file..")
                 existing_df = pd.read_csv(self.output_file, index_col=None)
                 df = existing_df.combine_first(df)
                 df = df.drop_duplicates(subset=["id"])
@@ -41,7 +45,7 @@ class DummyCorpus:
         df.to_csv(self.output_file, encoding="utf-8", index=False)
         if self.verbose:
             print(df.tail())
-        print(f"Saved {len(docs)} documents to {self.output_file}")
+        log.info(f"Saved {len(docs)} documents to {self.output_file}")
 
 
 _dummy_data = {

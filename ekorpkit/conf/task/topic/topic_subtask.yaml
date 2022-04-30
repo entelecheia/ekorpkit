@@ -7,7 +7,7 @@ defaults:
   - topic_wordclouds: default
   - infer_topics: default
   - save_labels: default
-  # - /pipeline: topic_task_pipeline
+  # - /pipeline: topic_task
 
 name: topic_subtask
 num_workers: ${oc.select:..num_workers, 0}

@@ -8,6 +8,14 @@ def test_compose_config():
     assert type(cfg) == dict
 
 
+def test_about():
+    from ekorpkit.cli import about
+
+    cfg = eKonf.compose()
+    about(**cfg)
+    assert True
+
+
 def test_mecab_cfg():
     config_group = "preprocessor/tokenizer=mecab"
     cfg = eKonf.compose(config_group=config_group)
@@ -87,7 +95,7 @@ def test_normalizer():
 
 
 def test_dummy_corpus():
-    cfg = eKonf.compose(config_group="fetch/downloader=_dummy")
+    cfg = eKonf.compose(config_group="fetch/fetcher=_dummy")
     cfg["name"] = "fomc_minutes"
     eKonf.instantiate(cfg)
     output_file = cfg["output_file"]
@@ -116,9 +124,34 @@ def test_build_corpora():
     assert len(crps.corpora) == 2
 
 
-def test_about():
-    from ekorpkit.cli import about
+def test_corpus_task():
+    corpus_cfg = eKonf.compose(config_group="corpus=corpus")
+    corpus_cfg.name = "bok_minutes"
+    corpus_cfg.automerge = True
+    corpus_cfg.data_dir = "./data/tmp"
 
-    cfg = eKonf.compose()
-    about(**cfg)
-    assert True
+    cfg = eKonf.compose(config_group="task=corpus")
+    cfg.corpus = corpus_cfg
+    cfg.pipeline._pipeline_ = ["filter_query", "save_dataframe"]
+    cfg.pipeline.filter_query.query = "filename in ['BOK_20181130_20181218']"
+    cfg.pipeline.save_dataframe.output_dir = "./data/tmp"
+    cfg.pipeline.save_dataframe.output_file = "corpus_filtered.parquet"
+    eKonf.instantiate(cfg)
+
+    assert os.path.exists("./data/tmp/corpus_filtered.parquet")
+
+def test_corpora_task():
+    corpus_cfg = eKonf.compose(config_group="corpus=corpora")
+    corpus_cfg.name = ["bok_minutes", "fomc_minutes"]
+    corpus_cfg.automerge = True
+    corpus_cfg.data_dir = "./data/tmp"
+
+    cfg = eKonf.compose(config_group="task=corpora")
+    cfg.corpus = corpus_cfg
+    cfg.pipeline._pipeline_ = ["filter_query", "save_dataframe"]
+    cfg.pipeline.filter_query.query = "id == 0"
+    cfg.pipeline.save_dataframe.output_dir = "./data/tmp"
+    cfg.pipeline.save_dataframe.output_file = "corpora_filtered.parquet"
+    eKonf.instantiate(cfg)
+
+    assert os.path.exists("./data/tmp/corpora_filtered.parquet")

@@ -10,12 +10,7 @@
 # This software may be modified and distributed under the terms
 # of the BSD license.  See the LICENSE file for details.
 
-import logging
 from .base import Eojeol
-
-logging.basicConfig(
-    format="[Korean Sentence Splitter]: %(message)s", level=logging.WARNING
-)
 
 
 class MorphExtractor(object):

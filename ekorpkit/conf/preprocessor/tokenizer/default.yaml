@@ -1,3 +1,6 @@
+defaults:
+  - stopwords: default
+
 _target_: ekorpkit.preprocessors.tokenizer.Tokenizer
 normalize:
 tokenize:
@@ -16,7 +19,6 @@ tokenize:
   userdic_path: ${oc.select:..userdic_path, null}
 tokenize_article:
   sentence_separator: '\n'
-  return_type: str
 extract:
   postags:
   noun_postags:
@@ -30,7 +32,7 @@ extract:
   stop_postags:
     - SP
   no_space_for_non_nouns: false
-  stopwords:
-  stopwords_path: ${oc.select:..stopwords_path, null}
-postags:
+return_as_list: false
+stopwords_path: ${oc.select:..stopwords_path, null}
+tagset:
 verbose: ${oc.select:..verbose, false}

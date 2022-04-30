@@ -1,5 +1,0 @@
-defaults:
-  - _default
-  - override /cmd@_global_: transformer_finetune
-
-name: transformer_finetune

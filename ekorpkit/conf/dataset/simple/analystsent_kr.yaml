@@ -1,7 +1,7 @@
 defaults:
   - _build
   - /preprocessor/normalizer: formal_ko
-  - /fetch/downloader: dataframe
+  - /fetch/fetcher: dataframe
 
 name: analystsent_kr
 domain: econ
@@ -22,7 +22,7 @@ fetch:
     train: train.csv
     test: test.csv
     dev: dev.csv
-  downloader:
+  fetcher:
     output_file: analystsent_kr.csv
     pipeline:
       _pipeline_:

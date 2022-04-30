@@ -25,8 +25,7 @@ cli = click.Group()
 regex_flags = re.IGNORECASE | re.DOTALL | re.MULTILINE
 
 # Instantiate a logger object
-logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class HtmlStripper(HTMLParser):
@@ -475,7 +474,7 @@ class ExtractItems:
 
         if not found_10k:
             if documents:
-                logger.info(
+                log.info(
                     f'Could not find document type 10K for {filing_metadata["filename"]}'
                 )
             doc_10k = BeautifulSoup(content, "lxml")
@@ -487,7 +486,7 @@ class ExtractItems:
 
         # if not is_html and not documents:
         if filing_metadata["filename"].endswith("txt") and not documents:
-            logger.info(f'No <DOCUMENT> tag for {filing_metadata["filename"]}')
+            log.info(f'No <DOCUMENT> tag for {filing_metadata["filename"]}')
 
         # For non html clean all table items
         if self.remove_tables:
@@ -529,7 +528,7 @@ class ExtractItems:
                 json_content[f"item_{item_index}"] = item_section
 
         if all_items_null:
-            logger.info(f"Could not extract any item for {absolute_10k_filename}")
+            log.info(f"Could not extract any item for {absolute_10k_filename}")
             return None
 
         return json_content
@@ -567,17 +566,15 @@ def extract_items(**args):
         filings_metadata_df = filings_metadata_df.replace({np.nan: None})
 
     else:
-        logger.info(f'No such file "{filings_metadata_filepath}"')
+        log.info(f'No such file "{filings_metadata_filepath}"')
         return
 
     raw_filings_dir = os.path.join(output_dir, config["raw_filings_dir"])
     if not os.path.isdir(raw_filings_dir):
-        logger.info(f'No such directory: "{raw_filings_dir}')
+        log.info(f'No such directory: "{raw_filings_dir}')
         return
 
-    extracted_filings_dir = os.path.join(
-        output_dir, config["extracted_filings_dir"]
-    )
+    extracted_filings_dir = os.path.join(output_dir, config["extracted_filings_dir"])
 
     if not os.path.isdir(extracted_filings_dir):
         os.mkdir(extracted_filings_dir)
@@ -589,7 +586,7 @@ def extract_items(**args):
         extracted_files_dir=extracted_filings_dir,
     )
 
-    logger.info(f"Starting extraction...\n")
+    log.info(f"Starting extraction...\n")
 
     list_of_series = list(zip(*filings_metadata_df.iterrows()))[1]
 
@@ -602,6 +599,6 @@ def extract_items(**args):
             )
         )
 
-    logger.info(f"\nItem extraction is completed successfully.")
-    logger.info(f"{sum(processed)} files were processed.")
-    logger.info(f"Extracted filings are saved to: {extracted_filings_dir}")
+    log.info(f"\nItem extraction is completed successfully.")
+    log.info(f"{sum(processed)} files were processed.")
+    log.info(f"Extracted filings are saved to: {extracted_filings_dir}")

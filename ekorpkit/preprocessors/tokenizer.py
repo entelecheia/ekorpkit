@@ -4,8 +4,8 @@ from abc import ABCMeta
 from ekorpkit.io.load.list import load_wordlist
 from ekorpkit import eKonf
 
-logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
-logger = logging.getLogger(__name__)
+
+log = logging.getLogger(__name__)
 
 
 class Tokenizer:
@@ -32,9 +32,8 @@ class Tokenizer:
         self._normalize = normalize
         if eKonf.is_instantiatable(self._normalize):
             if self.verbose:
-                print(f"[ekorpkit]: instantiating {self._normalize['_target_']}...")
+                log.info(f"instantiating {self._normalize['_target_']}...")
             self._normalize = eKonf.instantiate(self._normalize)
-            # print(f"[ekorpkit]: {self._normalize.__name__} is instantiated.")
 
         self._lowercase = tokenize.get("lowercase", False)
         self._flatten = tokenize.get("flatten", True)
@@ -46,13 +45,6 @@ class Tokenizer:
         if self._punct_postags is None:
             self._punct_postags = ["SF", "SP", "SSO", "SSC", "SY"]
 
-        return_type = tokenize_article.get("return_type", "str")
-        self.return_type = str(return_type).lower().strip()
-        if self.return_type not in ["str", "list"]:
-            raise ValueError(
-                f"Invalid return_type: {self.return_type}. "
-                f"Valid values are 'str' and 'list'."
-            )
         self._sentence_separator = tokenize_article.get("sentence_separator", None)
         if self._sentence_separator is None:
             self._sentence_separator = "\n"
@@ -70,23 +62,18 @@ class Tokenizer:
         if self._stop_postags is None:
             self._stop_postags = ["SP"]
         self._no_space_for_non_nouns = extract.get("no_space_for_non_nouns", False)
-        self._stopwords_path = extract.get("stopwords_path", None)
-        if self._stopwords_path is not None:
-            self._stopwords = load_wordlist(
-                self._stopwords_path, lowercase=True, verbose=self.verbose
-            )
-            if self.verbose:
-                logger.info(f"Loaded {len(self._stopwords)} stopwords")
-        else:
-            self._stopwords = []
-        stopwords = extract.get("stopwords", None)
-        if stopwords is not None:
-            self._stopwords += stopwords
 
+        stopwords = kwargs.get("stopwords")
+        self._stopwords = stopwords
+        if eKonf.is_instantiatable(self._stopwords):
+            if self.verbose:
+                log.info(f"instantiating {self._stopwords['_target_']}...")
+            self._stopwords = eKonf.instantiate(self._stopwords)
+
+        self._return_as_list = kwargs.get("return_as_list", False)
         if self.verbose:
-            print(f"{self.__class__.__name__} initialized with:")
-            print(f"\treturn_type: {self.return_type}")
-            print(f"\tstopwords_path: {self._stopwords_path}")
+            log.info(f"{self.__class__.__name__} initialized with:")
+            log.info(f"\treturn_as_list: {self._return_as_list}")
 
     def __call__(self, text):
         """Calling a tokenizer instance like a function just calls the tokenize method."""
@@ -102,24 +89,24 @@ class Tokenizer:
             return term_pos[0]
         return term_pos
 
-    def tokenize_article(self, article, return_type=None):
+    def tokenize_article(self, article, return_as_list=None):
         if article is None:
             return None
-        if return_type is None:
-            return_type = self.return_type
+        if return_as_list is None:
+            return_as_list = self._return_as_list
 
         tokenized_article = []
         for sent in article.split(self._sentence_separator):
             sent = sent.strip()
-            tokens = self.tokenize(sent, return_type=return_type)
+            tokens = self.tokenize(sent, return_as_list=return_as_list)
             tokenized_article.append(tokens)
         return (
             tokenized_article
-            if str(return_type) == "list"
+            if return_as_list
             else self._sentence_separator.join(tokenized_article)
         )
 
-    def tokenize(self, text, return_type="list"):
+    def tokenize(self, text, return_as_list="list"):
         if isinstance(text, list):
             return text
         text = str(text)
@@ -137,7 +124,7 @@ class Tokenizer:
                 term_pos = [self._to_token(token) for token in self.parse(text)]
         else:
             term_pos = []
-        return term_pos if str(return_type) == "list" else " ".join(term_pos)
+        return term_pos if return_as_list else " ".join(term_pos)
 
     def pos(self, text):
         return self.tokenize(text)
@@ -158,7 +145,7 @@ class Tokenizer:
             return term_pos
         return tokens
 
-    def extract(self, text, nouns_only=False, return_type="list"):
+    def extract(self, text, nouns_only=False, return_as_list="list"):
         if nouns_only:
             tokens = _extract(
                 text,
@@ -174,7 +161,7 @@ class Tokenizer:
                 no_space_for_non_nouns=self._no_space_for_non_nouns,
                 stopwords=self._stopwords,
             )
-        return tokens if return_type == "list" else " ".join(tokens)
+        return tokens if return_as_list == "list" else " ".join(tokens)
 
     def extract_article(self, article, nouns_only=False):
         if article is None:
@@ -184,12 +171,12 @@ class Tokenizer:
         for sent in article.split(self._sentence_separator):
             sent = sent.strip()
             tokens = self.extract(
-                sent, nouns_only=nouns_only, return_type=self.return_type
+                sent, nouns_only=nouns_only, return_as_list=self._return_as_list
             )
             tokens_article.append(tokens)
         return (
             tokens_article
-            if self.return_type == "list"
+            if self._return_as_list
             else self._sentence_separator.join(tokens_article)
         )
 
@@ -208,21 +195,21 @@ class Tokenizer:
         else:
             tokens = self.tokenize(text_or_tokens)
 
-        tokens = [token for token in tokens if token.lower() not in self._stopwords]
+        tokens = [token for token in tokens if not self._stopwords(token)]
 
-        return tokens if self.return_type == "list" else " ".join(tokens)
+        return tokens if self._return_as_list else " ".join(tokens)
 
     def filter_article_stopwords(self, article):
         if article is None:
             return None
 
-        tokens_article = []
+        token_article = []
         for sent in article.split(self._sentence_separator):
-            tokens_article.append(self.filter_stopwords(sent))
+            token_article.append(self.filter_stopwords(sent))
         return (
-            tokens_article
-            if self.return_type == "list"
-            else self._sentence_separator.join(tokens_article)
+            token_article
+            if self._return_as_list
+            else self._sentence_separator.join(token_article)
         )
 
     def nouns(self, text):
@@ -255,7 +242,7 @@ def _extract(
     noun_postags=["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"],
     stop_postags=["SP"],
     no_space_for_non_nouns=False,
-    stopwords=[],
+    stopwords=None,
     **kwargs,
 ):
     if isinstance(tokenized_text, str):
@@ -319,8 +306,8 @@ def _extract(
                 if token[1] not in stop_postags
             ]
 
-    if stopwords is not None and len(stopwords) > 0:
-        _tokens = [token for token in _tokens if token.lower() not in stopwords]
+    if stopwords is not None:
+        _tokens = [token for token in _tokens if not stopwords(token)]
     return _tokens
 
 
@@ -337,12 +324,12 @@ class NLTKTokenizer(Tokenizer):
         self.lemmatizer = nltk.get("lemmatizer", None)
         if eKonf.is_instantiatable(self.lemmatizer):
             if self.verbose:
-                print(f"[ekorpkit]: instantiating {self.lemmatizer['_target_']}...")
+                log.info(f"instantiating {self.lemmatizer['_target_']}...")
             self.lemmatizer = eKonf.instantiate(self.lemmatizer)
         self.stemmer = nltk.get("stemmer", None)
         if eKonf.is_instantiatable(self.stemmer):
             if self.verbose:
-                print(f"[ekorpkit]: instantiating {self.stemmer['_target_']}...")
+                log.info(f"instantiating {self.stemmer['_target_']}...")
             self.stemmer = eKonf.instantiate(self.stemmer)
         do_lemmatize = nltk.get("lemmatize", False)
         do_stem = nltk.get("stem", False)
@@ -421,7 +408,7 @@ class PynoriTokenizer(Tokenizer):
         pynori={},
         **kwargs,
     ):
-        logging.warning("Initializing Pynori...")
+        log.info(f"Initializing Pynori with {pynori}...")
 
         super().__init__(**kwargs)
         if pynori is None:
@@ -467,7 +454,7 @@ class MecabTokenizer(Tokenizer):
         **kwargs,
     ):
 
-        logging.warning("Initializing mecab...")
+        log.info(f"Initializing mecab with {mecab}...")
         super().__init__(**kwargs)
         self.mecab = mecab
         try:
@@ -506,7 +493,7 @@ class BWPTokenizer(Tokenizer):
         bwp={},
         **kwargs,
     ):
-        logging.warning("Initializing BertWordPieceTokenizer...")
+        log.info("Initializing BertWordPieceTokenizer...")
         super().__init__(**kwargs)
         try:
             from transformers import BertTokenizerFast

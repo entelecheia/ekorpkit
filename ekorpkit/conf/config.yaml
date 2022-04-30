@@ -1,9 +1,10 @@
 # @package _global_
-_target_: ekorpkit.cli.about
+_key_:
+_target_:
 defaults:
   - _self_
   - about: default
-  - cmd: null
+  - cmd: default
   - dir: default
   - env: default
   - mode: default
@@ -15,6 +16,8 @@ defaults:
   - tokenizer: null
 
   - override hydra/help: help
+  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: colorlog
 
 app_name: ${about.app.name}
 project: ${app_name}

@@ -19,8 +19,6 @@ from .character_definition import (
 )
 from .rule import Table, Stats
 
-logging.basicConfig(format="[ekorpkit]: %(message)s", level=logging.WARNING)
-
 
 class Const:
     numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]

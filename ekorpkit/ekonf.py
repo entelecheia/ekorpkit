@@ -1,19 +1,46 @@
+import logging
+import os
 import functools
-from pprint import pprint
 import random
 import hydra
 import pathlib
+import ekorpkit.utils.batch.batcher as batcher
+from pprint import pprint
 from enum import Enum
 from hydra.core.config_store import ConfigStore
 from hydra.utils import get_method
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
+from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
 
+log = logging.getLogger(__name__)
+
+
 def __ekorpkit_path__():
     return pathlib.Path(__file__).parent.as_posix()
+
+
+def __home_path__():
+    return pathlib.Path.home().as_posix()
+
+
+def path(
+    url_or_filename,
+    extract_archive: bool = False,
+    force_extract: bool = False,
+    cache_dir=None,
+    verbose: bool = False,
+):
+    return cached_path(
+        url_or_filename,
+        extract_archive=extract_archive,
+        force_extract=force_extract,
+        cache_dir=cache_dir,
+        verbose=verbose,
+    )
 
 
 def compose(
@@ -91,9 +118,11 @@ config = compose()
 DictKeyType = Union[str, int, Enum, float, bool]
 
 OmegaConf.register_new_resolver("__ekorpkit_path__", __ekorpkit_path__)
+OmegaConf.register_new_resolver("__home_path__", __home_path__)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
+OmegaConf.register_new_resolver("cached_path", path)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
 )
@@ -117,7 +146,8 @@ class eKonf:
     """ekorpkit config primary class"""
 
     __version__ = _version.get_versions()["version"]
-    __ekorpkit_path__ = pathlib.Path(__file__).parent.as_posix()
+    __ekorpkit_path__ = __ekorpkit_path__()
+    __home_path__ = __home_path__()
     config = compose()
 
     def __init__(self) -> None:
@@ -174,7 +204,7 @@ class eKonf:
         return to_config(cfg)
 
     @staticmethod
-    def to_yaml(cfg: Any, *, resolve: bool = True, sort_keys: bool = False) -> str:
+    def to_yaml(cfg: Any, *, resolve: bool = False, sort_keys: bool = False) -> str:
         if resolve:
             cfg = to_dict(cfg)
         return to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
@@ -249,6 +279,114 @@ class eKonf:
     @staticmethod
     def call(cfg: Any, obj: object):
         call(cfg, obj)
+
+    @staticmethod
+    def _init_env_(cfg, verbose=False):
+        _init_env_(cfg, verbose=verbose)
+
+    @staticmethod
+    def _stop_env_(cfg, verbose=False):
+        _stop_env_(cfg, verbose=verbose)
+
+    @staticmethod
+    def path(
+        url_or_filename,
+        extract_archive: bool = False,
+        force_extract: bool = False,
+        cache_dir=None,
+    ):
+        """
+        Given something that might be a URL or local path, determine which.
+        If it's a remote resource, download the file and cache it, and
+        then return the path to the cached file. If it's already a local path,
+        make sure the file exists and return the path.
+
+        For URLs, the following schemes are all supported out-of-the-box:
+
+        * ``http`` and ``https``,
+        * ``s3`` for objects on `AWS S3`_,
+        * ``gs`` for objects on `Google Cloud Storage (GCS)`_, and
+        * ``hf`` for objects or repositories on `HuggingFace Hub`_.
+
+        You can also extend ``cached_path()`` to handle more schemes with :func:`add_scheme_client()`.
+
+        .. _AWS S3: https://aws.amazon.com/s3/
+        .. _Google Cloud Storage (GCS): https://cloud.google.com/storage
+        .. _HuggingFace Hub: https://huggingface.co/
+
+        Examples
+        --------
+
+        To download a file over ``https``::
+
+            cached_path("https://github.com/allenai/cached_path/blob/main/README.md")
+
+        To download an object on GCS::
+
+            cached_path("gs://allennlp-public-models/lerc-2020-11-18.tar.gz")
+
+        To download the PyTorch weights for the model `epwalsh/bert-xsmall-dummy`_
+        on HuggingFace, you could do::
+
+            cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
+
+        For paths or URLs that point to a tarfile or zipfile, you can append the path
+        to a specific file within the archive to the ``url_or_filename``, preceeded by a "!".
+        The archive will be automatically extracted (provided you set ``extract_archive`` to ``True``),
+        returning the local path to the specific file. For example::
+
+            cached_path("model.tar.gz!weights.th", extract_archive=True)
+
+        .. _epwalsh/bert-xsmall-dummy: https://huggingface.co/epwalsh/bert-xsmall-dummy
+
+        Parameters
+        ----------
+
+        url_or_filename :
+            A URL or path to parse and possibly download.
+
+        extract_archive :
+            If ``True``, then zip or tar.gz archives will be automatically extracted.
+            In which case the directory is returned.
+
+        force_extract :
+            If ``True`` and the file is an archive file, it will be extracted regardless
+            of whether or not the extracted directory already exists.
+
+            .. caution::
+                Use this flag with caution! This can lead to race conditions if used
+                from multiple processes on the same file.
+
+        cache_dir :
+            The directory to cache downloads. If not specified, the global default cache directory
+            will be used (``~/.cache/cached_path``). This can be set to something else with
+            :func:`set_cache_dir()`.
+
+        Returns
+        -------
+        :class:`pathlib.Path`
+            The local path to the (potentially cached) resource.
+
+        Raises
+        ------
+        ``FileNotFoundError``
+
+            If the resource cannot be found locally or remotely.
+
+        ``ValueError``
+            When the URL is invalid.
+
+        ``Other errors``
+            Other error types are possible as well depending on the client used to fetch
+            the resource.
+
+        """
+        return path(
+            url_or_filename,
+            extract_archive=extract_archive,
+            force_extract=force_extract,
+            cache_dir=cache_dir,
+        )
 
 
 def call(cfg: Any, obj: object):
@@ -342,7 +480,7 @@ def merge(
     return eKonf.merge(*configs)
 
 
-def to_yaml(cfg: Any, *, resolve: bool = True, sort_keys: bool = False) -> str:
+def to_yaml(cfg: Any, *, resolve: bool = False, sort_keys: bool = False) -> str:
     return OmegaConf.to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
 
 
@@ -393,8 +531,69 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
              if _target_ is a callable: the return value of the call
     """
     if config.get("_target_") is None:
+        log.warning("No target specified in config")
         return None
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
         kwargs[_Keys.RECURSIVE] = _recursive_
     return hydra.utils.instantiate(config, *args, **kwargs)
+
+
+def _init_env_(cfg, verbose=False):
+    env = cfg.env
+    backend = env.distributed_framework.backend
+    for env_name, env_value in env.get("os", {}).items():
+        if env_value:
+            if verbose:
+                log.info(f"setting environment variable {env_name} to {env_value}")
+            os.environ[env_name] = str(env_value)
+
+    if env.distributed_framework.initialize:
+        backend_handle = None
+        if backend == "ray":
+            import ray
+
+            ray_cfg = env.get("ray", None)
+            ray_cfg = eKonf.to_container(ray_cfg, resolve=True)
+            if verbose:
+                log.info(f"initializing ray with {ray_cfg}")
+            ray.init(**ray_cfg)
+            backend_handle = ray
+
+        elif backend == "dask":
+            from dask.distributed import Client
+
+            dask_cfg = env.get("dask", None)
+            dask_cfg = eKonf.to_container(dask_cfg, resolve=True)
+            if verbose:
+                log.info(f"initializing dask client with {dask_cfg}")
+            client = Client(**dask_cfg)
+            if verbose:
+                log.info(client)
+
+        batcher.batcher_instance = batcher.Batcher(
+            backend_handle=backend_handle, **env.batcher
+        )
+        if verbose:
+            log.info(batcher.batcher_instance)
+
+
+def _stop_env_(cfg, verbose=False):
+    env = cfg.env
+    backend = env.distributed_framework.backend
+
+    if env.distributed_framework.initialize:
+        if backend == "ray":
+            import ray
+
+            if ray.is_initialized():
+                ray.shutdown()
+                if verbose:
+                    log.info("shutting down ray")
+
+        # elif modin_engine == 'dask':
+        #     from dask.distributed import Client
+
+        #     if Client.initialized():
+        #         client.close()
+        #         log.info(f'shutting down dask client')

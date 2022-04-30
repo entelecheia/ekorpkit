@@ -30,8 +30,7 @@ from transformers import (
     load_tf_weights_in_electra,
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def convert_tf_checkpoint_to_pytorch(
@@ -69,18 +68,18 @@ def load_tf2_weights_in_electra(
         import numpy as np
         import tensorflow as tf
     except ImportError:
-        logger.error(
+        log.error(
             "Loading a TensorFlow model in PyTorch, requires TensorFlow to be installed. Please see "
             "https://www.tensorflow.org/install/ for installation instructions."
         )
         raise
     tf_path = os.path.abspath(tf_checkpoint_path)
-    logger.info("Converting TensorFlow checkpoint from {}".format(tf_path))
+    log.info("Converting TensorFlow checkpoint from {}".format(tf_path))
     # Load weights from TF model
     init_vars = tf.train.list_variables(tf_path)
     names = []
     arrays = []
-    logger.info("Loading names and arrays from TensorFlow checkpoint.\n")
+    log.info("Loading names and arrays from TensorFlow checkpoint.\n")
     for name, shape in init_vars:
 
         m_names = name.split("/")
@@ -91,10 +90,10 @@ def load_tf2_weights_in_electra(
             "phase",
             "step",
         ]:
-            logger.info(f" - Skipping non-model layer {name}")
+            log.info(f" - Skipping non-model layer {name}")
             continue
         if "optimizer" in name:
-            logger.info(f" - Skipping optimization layer {name}")
+            log.info(f" - Skipping optimization layer {name}")
             continue
 
         array = tf.train.load_variable(tf_path, name)
@@ -108,27 +107,27 @@ def load_tf2_weights_in_electra(
         # remove variable name ending: .ATTRIBUTES/VARIABLE_VALUE
         name = name.replace("/.ATTRIBUTES/VARIABLE_VALUE", "")
 
-        logger.info("Loading TF weight {} with shape {}".format(name, shape))
+        log.info("Loading TF weight {} with shape {}".format(name, shape))
         names.append(name)
 
-    logger.info("Converting TensorFlow weights to PyTorch weights.\n")
+    log.info("Converting TensorFlow weights to PyTorch weights.\n")
     for name, array in zip(names, arrays):
         original_name: str = name
         try:
             if discriminator_or_generator == "discriminator":
                 if name.startswith("model/generator/") or name.startswith("generator/"):
-                    logger.info(f"Skipping generator: {original_name}")
+                    log.info(f"Skipping generator: {original_name}")
                     continue
             elif discriminator_or_generator == "generator":
                 if name.startswith("model/discriminator/") and not name.startswith(
                     "model/discriminator/electra/embeddings"
                 ):
-                    logger.info(f"Skipping discriminator: {original_name}")
+                    log.info(f"Skipping discriminator: {original_name}")
                     continue
                 elif name.startswith("electra/") and not name.startswith(
                     "electra/embeddings/"
                 ):
-                    logger.info(f"Skipping discriminator: {original_name}")
+                    log.info(f"Skipping discriminator: {original_name}")
                     continue
                 elif name.startswith("generator/"):
                     name = name.replace("generator/", "electra/")

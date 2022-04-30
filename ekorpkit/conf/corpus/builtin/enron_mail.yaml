@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: _web
+  - /fetch/fetcher: _web
   - /preprocessor/normalizer: formal_en
   - override /fetch/loader/parser: email
 
@@ -29,7 +29,7 @@ column_info:
 fetch:
   data_sources: 
     train: '*.tar.gz'
-  downloader:
+  fetcher:
     urls:
       enron_mail_20150507.tar.gz: https://www.cs.cmu.edu/~./enron/enron_mail_20150507.tar.gz
   loader:

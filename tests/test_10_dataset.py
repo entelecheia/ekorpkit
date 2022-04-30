@@ -29,7 +29,7 @@ def test_build_datasets():
 
 
 def test_datafame_pipeline():
-    cfg = eKonf.compose(config_group="pipeline=dataframe_pipeline")
+    cfg = eKonf.compose(config_group="pipeline=dataframe")
     cfg.verbose = True
     cfg.data_dir = "./data/tmp/financial_phrasebank"
     cfg.data_file = "financial_phrasebank-train.csv"

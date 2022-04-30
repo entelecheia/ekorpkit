@@ -6,7 +6,7 @@ mecab:
   userdic_path: ${..tokenize.userdic_path}
   backend: mecab-python3
   verbose: ${oc.select:..verbose, false}
-postags:
+tagset:
   NNG: 일반 명사
   NNP: 고유 명사
   NNB: 의존 명사

@@ -1,10 +1,13 @@
 import os
 import pandas as pd
-from wasabi import msg
+import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.file import save_dataframe
 from .dataset import Dataset
+
+
+log = logging.getLogger(__name__)
 
 
 class Datasets:
@@ -50,7 +53,7 @@ class Datasets:
 
         with elapsed_timer(format_time=True) as elapsed:
             for name in self.datasets:
-                print(f"processing {name}")
+                log.info(f"processing {name}")
                 args["name"] = name
                 args["data_dir"] = self.data_dir
                 args["use_name_as_subdir"] = use_name_as_subdir
@@ -64,7 +67,7 @@ class Datasets:
                 self.datasets[name] = dataset
                 if self.splits is None:
                     self.splits = {split: None for split in dataset.data_files}
-            print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+            log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
         eKonf.call(self._autorun_list, self)
 
@@ -74,6 +77,10 @@ class Datasets:
         for name in self.datasets.keys():
             s += f"{str(name)}\n"
         return s
+
+    def __iter__(self):
+        for dataset in self.datasets.values():
+            yield dataset
 
     def __getitem__(self, name):
         if name not in self.datasets:
@@ -121,15 +128,15 @@ class Datasets:
                 dfs.append(df)
             self.splits[split] = pd.concat(dfs, ignore_index=True)
         if self.verbose:
-            msg.good(f"concatenated {len(self.datasets)} dataset(s)")
+            log.info(f"concatenated {len(self.datasets)} dataset(s)")
         self._datasets_concatenated = True
 
     def persist(self):
         if len(self.datasets) < 2:
-            msg.war(f"more than one dataset required to persist")
+            log.warning(f"more than one dataset required to persist")
             return
         if not self._datasets_concatenated:
-            msg.warn(f"datasets not concatenated yet, calling concatenate()")
+            log.warning(f"datasets not concatenated yet, calling concatenate()")
             self.concatenate()
 
         data_dir = f"{self.data_dir}/{self.name}"
@@ -151,7 +158,7 @@ class Datasets:
             df.reset_index().rename({"index": self._id_key}, inplace=True)
             save_dataframe(df, data_path)
             if self.verbose:
-                msg.good(f"saved {data_path}")
+                log.info(f"saved {data_path}")
             if summary_info:
                 stats = {"data_file": data_file}
                 summary_info.init_stats(split_name=split, stats=stats)

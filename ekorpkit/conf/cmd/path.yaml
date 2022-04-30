@@ -1,0 +1,9 @@
+# @package _global_
+defaults:
+  - default
+  
+path:
+extract_archive: true
+force_extract: false
+verbose: false
+cached_path: ${cached_path:${.path},${.extract_archive},${.force_extract},${dir.cache},${.verbose}}

@@ -1,8 +1,11 @@
+import requests
+import wget
+import logging
 import os
 from bs4 import BeautifulSoup
-import wget
-from wasabi import msg
-import requests
+
+
+log = logging.getLogger(__name__)
 
 
 class ExPORTER:
@@ -26,12 +29,12 @@ class ExPORTER:
             self.download_files(subset)
 
     def download_files(self, subset):
-        msg.info(f"\nsubset: {subset}\n")
+        log.info(f"\nsubset: {subset}\n")
         output_dir = self.output_dir + "/" + subset
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
         if os.listdir(output_dir) and not self.force_download:
-            msg.info("Files already downloaded. Skipping.")
+            log.info("Files already downloaded. Skipping.")
             return
 
         url = self.download_urls[subset]
@@ -42,12 +45,12 @@ class ExPORTER:
         links = [a["href"] for a in soup.find_all("a", href=True)]
         links = [link for link in links if target in link]
 
-        msg.good(f"Found {len(links)} links in Exporter")
+        log.info(f"Found {len(links)} links in Exporter")
         for i, link in enumerate(links):
             filename = os.path.basename(link)
             filepath = os.path.join(output_dir, filename)
             if not os.path.isfile(filepath) or os.path.getsize(filepath) == 0:
-                msg.good(f"\nDownloading file {i+1} of {len(links)}: {link}")
+                log.info(f"\nDownloading file {i+1} of {len(links)}: {link}")
                 wget.download(self.base_url + link, filepath)
             else:
-                msg.info(f"File {filename} already exists. Skipping.")
+                log.info(f"File {filename} already exists. Skipping.")

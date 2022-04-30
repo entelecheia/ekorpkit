@@ -1,4 +1,4 @@
-#!python
+import logging
 import multiprocessing
 from contextlib import closing
 import scipy.sparse as ssp
@@ -9,6 +9,9 @@ from tqdm import tqdm
 import contextlib
 
 batcher_instance = None
+
+log = logging.getLogger(__name__)
+
 
 class Batcher(object):
     """Scheduler to handle parallel jobs on minibatches
@@ -266,33 +269,39 @@ class Batcher(object):
         if verbose is None:
             verbose = self.verbose
         if verbose > 1:
-            print(
-                " backend:",
-                backend,
-                " minibatch_size:",
-                self.minibatch_size,
-                " procs:",
-                procs,
-                " input_split:",
-                input_split,
-                " merge_output:",
-                merge_output,
-                " len(data):",
-                len(data),
-                "len(args):",
-                len(args),
+            log.info(
+                "%s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+                % (
+                    " backend:",
+                    backend,
+                    " minibatch_size:",
+                    self.minibatch_size,
+                    " procs:",
+                    procs,
+                    " input_split:",
+                    input_split,
+                    " merge_output:",
+                    merge_output,
+                    " len(data):",
+                    len(data),
+                    "len(args):",
+                    len(args),
+                )
             )
 
         if verbose > 10:
-            print(
-                " len(data):",
-                len(data),
-                "len(args):",
-                len(args),
-                "[type(x) for x in data]:",
-                [type(x) for x in data],
-                "[type(x) for x in args]:",
-                [type(x) for x in args],
+            log.info(
+                "%s %s %s %s %s %s %s %s"
+                % (
+                    " len(data):",
+                    len(data),
+                    "len(args):",
+                    len(args),
+                    "[type(x) for x in data]:",
+                    [type(x) for x in data],
+                    "[type(x) for x in args]:",
+                    [type(x) for x in args],
+                )
             )
 
         if not (input_split):
@@ -399,14 +408,17 @@ class Batcher(object):
         if merge_output:
             return self.merge_batches(self.collect_batches(results, backend=backend))
         if verbose > 2:
-            print(
-                " Task:",
-                task,
-                " backend:",
-                backend,
-                " backend_handle:",
-                backend_handle,
-                " completed",
+            log.info(
+                "%s %s %s %s %s %s %s"
+                % (
+                    " Task:",
+                    task,
+                    " backend:",
+                    backend,
+                    " backend_handle:",
+                    backend_handle,
+                    " completed",
+                )
             )
         return results
 

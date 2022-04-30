@@ -13,8 +13,23 @@ features:
     lexicon_features:
       - Negative
       - Positive
+  uncertainty:
+    lexicon_features: Uncertainty
+  litigious:
+    lexicon_features: Litigious
+  constraining:
+    lexicon_features: Constraining
+  superfluous:
+    lexicon_features: Superfluous
+  interesting:
+    lexicon_features: Interesting
+  modal:
+    lexicon_features: Modal
 predict:
-  features: polarity
+  lexicon_features:
+  features:
+    - polarity
+    - uncertainty
 preprocessor:
   tokenizer:
     tokenize:

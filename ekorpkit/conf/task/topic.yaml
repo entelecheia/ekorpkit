@@ -1,7 +1,6 @@
 defaults:
   - _default
   - topic: topic_subtask
-  - override /cmd@_global_: topic_task
 
 name: topic_task
 output_dir: ${dir.output}/${project}/topic

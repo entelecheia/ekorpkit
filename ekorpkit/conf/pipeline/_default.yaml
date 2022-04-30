@@ -1,0 +1,38 @@
+defaults:
+  - aggregate_columns: aggregate
+  - chunk: default
+  - combine_columns: combine
+  - concat_dataframes: default
+  - drop_duplicates: drop
+  - drop: default
+  - eval_columns: default
+  - explode_splits: default
+  - extract_tokens: default
+  - fillna: fillna
+  - filter_length: default
+  - filter_query: default
+  - load_dataframe: default
+  - melt: default
+  - merge_dataframe: default
+  - normalize: normalize
+  - pivot: default
+  - plot: default
+  - rename_columns: rename
+  - replace: default
+  - reset_index: reset
+  - sampling: default
+  - save_dataframe: default
+  - save_samples: samples
+  - segment: segment
+  - split_dataframe: default
+  - split_sampling: default
+  - stdout_samples: default
+  - summary_stats: default
+  - tokenize: default
+  - top_values: default
+
+apply_to: ${oc.select:..apply_to, text}
+data_dir: ${oc.select:..data_dir, ''}
+data_file: ${oc.select:..data_file, ''}
+use_batcher: true
+verbose: ${oc.select:..verbose, true}

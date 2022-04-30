@@ -16,7 +16,7 @@ def lmdata(**args):
                 instantiate(task_args, parent=args, _recursive_=False)
             else:
                 print(f"{subtask} is not a valid subtask")
-        print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+        print(f">>> Elapsed time: {elapsed()} <<< ")
 
 
 def build_vocab(**args):

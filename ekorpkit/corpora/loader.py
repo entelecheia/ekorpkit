@@ -1,8 +1,11 @@
 import pandas as pd
-from wasabi import msg
+import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from .corpus import Corpus
+
+
+log = logging.getLogger(__name__)
 
 
 class Corpora:
@@ -26,6 +29,8 @@ class Corpora:
             self.metadata_dir = self.data_dir
         self.data_files = self.args.get("data_files", None)
         self.meta_files = self.args.get("meta_files", None)
+        autoload = self.args.get("autoload", False)
+        automerge = self.args.get("automerge", False)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
         self.verbose = args.get("verbose", False)
         self.column_info = eKonf.to_dict(self.args.get("column_info", {}))
@@ -54,10 +59,12 @@ class Corpora:
 
         with elapsed_timer(format_time=True) as elapsed:
             for name in self.corpora:
-                print(f"processing {name}")
+                log.info(f"processing {name}")
                 args["name"] = name
                 args["data_dir"] = self.data_dir
                 args["metadata_dir"] = self.metadata_dir
+                args["autoload"] = autoload
+                args["automerge"] = automerge
                 args["use_name_as_subdir"] = use_name_as_subdir
                 if self.data_files is not None:
                     if name in self.data_files:
@@ -71,7 +78,7 @@ class Corpora:
                         args["meta_files"] = self.meta_files
                 corpus = Corpus(**args)
                 self.corpora[name] = corpus
-            print(f"\n >>> Elapsed time: {elapsed()} <<< ")
+            log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
     def __str__(self):
         classname = self.__class__.__name__
@@ -143,7 +150,7 @@ class Corpora:
         if len(df_metas) > 0:
             self._metadata = pd.concat(df_metas, ignore_index=True)
         if self.verbose:
-            msg.good(f"concatenated {len(dfs)} corpora")
+            log.info(f"concatenated {len(dfs)} corpora")
             print(self._data.head())
 
     def __iter__(self):
@@ -157,14 +164,3 @@ class Corpora:
 
     def __len__(self):
         return len(self.corpora)
-
-    def merge_metadata(self):
-        if self._metadata is None:
-            return
-        self._data = self._data.merge(
-            self._metadata,
-            on=self._id_keys,
-            how="left",
-            suffixes=("", "_metadata"),
-            validate="one_to_one",
-        )

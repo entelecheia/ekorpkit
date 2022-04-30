@@ -1,8 +1,12 @@
+import logging
 import codecs
 import re
 import math
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
+
+
+log = logging.getLogger(__name__)
 
 
 Offset = namedtuple("Offset", ["this", "next", "prev_cum_len", "this_cum_len"])
@@ -33,7 +37,7 @@ class Segmenter(BaseSegmenter):
         filter_programming_language=False,
         filter_sentence_length={},
         chunk={},
-        return_type="list",
+        return_as_list=True,
         verbose=False,
         print_args=False,
         **kwargs,
@@ -83,7 +87,7 @@ class Segmenter(BaseSegmenter):
         self._out_sentence_separator = codecs.decode(
             out_sentence_separator, "unicode_escape"
         )
-        self._return_type = return_type
+        self._return_as_list = return_as_list
         self._max_split_length = max_split_length
         self._max_split_iterations = max_split_iterations
         self._keep_segment = keep_segment
@@ -108,30 +112,32 @@ class Segmenter(BaseSegmenter):
         self.verbose = verbose
         self._kwargs = kwargs
         if print_args:
-            print(f"in_segment_separator = {self._in_segment_separator}")
-            print(f"in_sentence_separator = {self._in_sentence_separator}")
-            print(f"out_segment_separator = {self._out_segment_separator}")
-            print(f"out_sentence_separator = {self._out_sentence_separator}")
-            print(f"return_type = {self._return_type}")
-            print(f"max_split_length = {self._max_split_length}")
-            print(f"max_split_iterations = {self._max_split_iterations}")
-            print(f"keep_segment = {self._keep_segment}")
-            print(f"merge_lines = {self._merge_lines}")
-            print(f"merge_level = {self._merge_level}")
-            print(f"empty_lines_threshold = {self._empty_lines_threshold}")
-            print(f"broken_lines_threshold = {self._broken_lines_threshold}")
-            print(f"filter_language = {self._filter_language}")
-            print(f"detection_level = {self._detection_level}")
-            print(f"languages_to_keep = {self._languages_to_keep}")
-            print(f"min_language_probability = {self._min_language_probability}")
-            print(f"filter_programming_language = {self._filter_programming_language}")
-            print(f"filter_sentence_length = {self._filter_sentence_length}")
-            print(f"min_num_words = {self._min_num_words}")
-            print(f"min_length = {self._min_length}")
-            print(f"chunk_size = {self._chunk_size}")
-            print(f"chunk_overlap = {self._chunk_overlap}")
-            print(f"verbose = {self.verbose}")
-            print(f"kwargs = {self._kwargs}")
+            log.info(f"in_segment_separator = {self._in_segment_separator}")
+            log.info(f"in_sentence_separator = {self._in_sentence_separator}")
+            log.info(f"out_segment_separator = {self._out_segment_separator}")
+            log.info(f"out_sentence_separator = {self._out_sentence_separator}")
+            log.info(f"return_as_list = {self._return_as_list}")
+            log.info(f"max_split_length = {self._max_split_length}")
+            log.info(f"max_split_iterations = {self._max_split_iterations}")
+            log.info(f"keep_segment = {self._keep_segment}")
+            log.info(f"merge_lines = {self._merge_lines}")
+            log.info(f"merge_level = {self._merge_level}")
+            log.info(f"empty_lines_threshold = {self._empty_lines_threshold}")
+            log.info(f"broken_lines_threshold = {self._broken_lines_threshold}")
+            log.info(f"filter_language = {self._filter_language}")
+            log.info(f"detection_level = {self._detection_level}")
+            log.info(f"languages_to_keep = {self._languages_to_keep}")
+            log.info(f"min_language_probability = {self._min_language_probability}")
+            log.info(
+                f"filter_programming_language = {self._filter_programming_language}"
+            )
+            log.info(f"filter_sentence_length = {self._filter_sentence_length}")
+            log.info(f"min_num_words = {self._min_num_words}")
+            log.info(f"min_length = {self._min_length}")
+            log.info(f"chunk_size = {self._chunk_size}")
+            log.info(f"chunk_overlap = {self._chunk_overlap}")
+            log.info(f"verbose = {self.verbose}")
+            log.info(f"kwargs = {self._kwargs}")
 
         self._guess = None
 
@@ -151,11 +157,11 @@ class Segmenter(BaseSegmenter):
             else 0
         )
         if self.verbose:
-            print(f"num_empty_lines={num_empty_lines}")
-            print(f"num_lines_endswith_period={num_lines_endswith_period}")
-            print(f"num_lines={num_lines}")
-            print(f"empty_lines_ratio={empty_lines_ratio}")
-            print(f"broken_lines_ratio={broken_lines_ratio}")
+            log.info(f"num_empty_lines={num_empty_lines}")
+            log.info(f"num_lines_endswith_period={num_lines_endswith_period}")
+            log.info(f"num_lines={num_lines}")
+            log.info(f"empty_lines_ratio={empty_lines_ratio}")
+            log.info(f"broken_lines_ratio={broken_lines_ratio}")
         if empty_lines_ratio > self._empty_lines_threshold:
             return True
         if broken_lines_ratio > self._broken_lines_threshold:
@@ -175,7 +181,7 @@ class Segmenter(BaseSegmenter):
             merge_lines = self._merge_lines
         if merge_lines and self._merge_level == "article":
             if self.verbose > 10:
-                print("=> merging lines of the article")
+                log.info("=> merging lines of the article")
             article = re.sub(r"\s+", " ", article)
 
         if self._keep_segment:
@@ -192,7 +198,7 @@ class Segmenter(BaseSegmenter):
                         continue
                 if merge_lines and self._merge_level == "segment":
                     if self.verbose > 10:
-                        print("=> merging lines of the segment")
+                        log.info("=> merging lines of the segment")
                     segment = re.sub(r"\s+", " ", segment)
 
                 if self._filter_language and self._detection_level == "segment":
@@ -213,18 +219,18 @@ class Segmenter(BaseSegmenter):
                         try:
                             sentences.extend(self._split_sentences(sent))
                         except Exception as e:
-                            print(f"===> skipping segment {i}: {e}")
+                            log.info(f"===> skipping segment {i}: {e}")
                             continue
 
                 sentences = self.filter_sentence_length(sentences)
-                if self._return_type == "list":
+                if self._return_as_list:
                     segments.append(sentences)
                 else:
                     segments.append(self._out_sentence_separator.join(sentences))
 
         return (
             segments
-            if self._return_type == "list"
+            if self._return_as_list
             else self._out_segment_separator.join(segments)
         )
 
@@ -248,7 +254,7 @@ class Segmenter(BaseSegmenter):
             and lang["score"] < self._min_language_probability
         ):
             if self.verbose > 5:
-                print(f"===> lang={lang} not in languages_to_keep")
+                log.info(f"===> lang={lang} not in languages_to_keep")
             return True
         return False
 
@@ -262,9 +268,9 @@ class Segmenter(BaseSegmenter):
         lang = self._guess.language_name(text)
         if lang is not None:
             if self.verbose > 5:
-                print(f"===> Programming language: {lang}")
+                log.info(f"===> Programming language: {lang}")
             if self.verbose > 10:
-                print(text)
+                log.info(text)
             return True
         return False
 
@@ -273,8 +279,8 @@ class Segmenter(BaseSegmenter):
         if len(text) <= self._max_split_length:
             return self.segment(text)
         else:
-            if self.verbose:
-                print(f"==> too long text: {len(text)}")
+            # if self.verbose:
+            #     log.info(f"==> too long text: {len(text)}")
             text_chunk = text[: self._max_split_length]
             next_chunk = text[self._max_split_length :]
             sentences = []
@@ -297,7 +303,7 @@ class Segmenter(BaseSegmenter):
                 split_iter += 1
             if split_iter >= self._max_split_iterations:
                 if self.verbose:
-                    print(f"==> too many split iterations: {split_iter}")
+                    log.critical(f"==> too many split iterations: {split_iter}")
                 raise Exception(f"Maximum number of iterations reached: {split_iter}")
             return sentences
 
@@ -331,7 +337,7 @@ class Segmenter(BaseSegmenter):
                     max_length=self._chunk_size,
                     overlap=self._chunk_overlap,
                 )
-                if self._return_type != "list":
+                if self._return_as_list != "list":
                     chunks = [
                         self._out_sentence_separator.join(chunk) for chunk in chunks
                     ]
@@ -339,7 +345,7 @@ class Segmenter(BaseSegmenter):
 
         return (
             segments
-            if self._return_type == "list"
+            if self._return_as_list
             else self._out_segment_separator.join(segments)
         )
 
@@ -424,9 +430,9 @@ class SimpleSegmenter(Segmenter):
 
         self.separator = codecs.decode(simple["separator"], "unicode_escape")
         self.remove_newlines = simple["remove_newlines"]
-        print(f"segment_separator: -->{self.separator}<--")
+        log.info(f"segment_separator: -->{self.separator}<--")
         if self.remove_newlines:
-            print("Remove newlines inside segments")
+            log.info("Remove newlines inside segments")
         super().__init__(**kwargs)
 
     def segment(self, text):
@@ -456,7 +462,7 @@ class PySBDSegmenter(Segmenter):
 
 class KSSSegmenter(Segmenter):
     def __init__(self, kss={}, **kwargs):
-        from ekorpkit.preprocessors import KSS
+        from ekorpkit.preprocessors.kss import KSS
 
         kss = kss or {}
         if not kss:

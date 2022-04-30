@@ -1,34 +1,33 @@
+import logging
 from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit.io.file import load_dataframe
 from hydra.utils import instantiate
-from wasabi import msg
+
+log = logging.getLogger(__name__)
 
 
 def build_corpus(**args):
     cfg = args.get("corpus", {}).get("builtin", None)
     # print(cfg)
     if cfg:
-        db = DatasetBuilder(**cfg)
-        db.build()
+        DatasetBuilder(**cfg)
 
 
 def build_t5(**args):
     cfg = args.get("dataset", {}).get("t5", None)
     # print(cfg)
     if cfg:
-        db = DatasetBuilder(**cfg)
-        db.build()
+        DatasetBuilder(**cfg)
 
 
 def build_simple(**args):
     cfg = args.get("dataset", {}).get("simple", None)
     # print(cfg)
     if cfg:
-        db = DatasetBuilder(**cfg)
-        db.build()
+        DatasetBuilder(**cfg)
 
 
 class DatasetBuilder:
@@ -39,6 +38,7 @@ class DatasetBuilder:
         self.data_filetype = args.get("filetype", "parquet")
         self.column_info = self.args.get("column_info", None)
         self.verbose = self.args.get("verbose", False)
+        self.autoload = self.args.get("autoload", False)
 
         self.fetch_args = args.get("fetch", None)
         self.fetch_dir = self.fetch_args.get("data_dir", None)
@@ -52,7 +52,7 @@ class DatasetBuilder:
         self.calculate_stats = self.fetch_args.get("calculate_stats", False)
         self.preprocess_text = self.fetch_args.get("preprocess_text", False)
 
-        self.downloader = self.fetch_args.get("downloader", None)
+        self.fetcher = self.fetch_args.get("fetcher", None)
         self.loader = self.fetch_args.get("loader", None)
 
         self.info_args = self.args.get("info", None)
@@ -66,11 +66,14 @@ class DatasetBuilder:
         if self.process_pipeline is None:
             self.process_pipeline = []
 
+        if self.autoload:
+            self.build()
+
     def build(self):
-        if self.downloader:
-            if self.downloader.get("_target_", None):
-                eKonf.instantiate(self.downloader)
-            pipeline_args = self.downloader.get("pipeline", None)
+        if self.fetcher:
+            if self.fetcher.get("_target_", None):
+                eKonf.instantiate(self.fetcher)
+            pipeline_args = self.fetcher.get("pipeline", None)
             if pipeline_args:
                 eKonf.instantiate(pipeline_args)
 
@@ -87,7 +90,7 @@ class DatasetBuilder:
         if self.summary_info:
             self.summary_info.save()
 
-        print(
+        log.info(
             f"\nCorpus [{self.name}] is built to [{self.data_dir}] from [{self.fetch_dir}]"
         )
 
@@ -100,7 +103,7 @@ class DatasetBuilder:
         output_meta_file = (
             output_dir / f"meta-{self.name}-{split_name}{self.data_filetype}"
         )
-        sample_file_prefix = f"{str(output_dir)}/sample-{self.name}-{split_name}-"
+        sample_file_prefix = f"{str(output_dir)}/sample-{self.name}-{split_name}"
         pipe = "save_metadata"
         if pipe in self.pipeline_args:
             if pipe not in self.transform_pipeline:
@@ -118,12 +121,16 @@ class DatasetBuilder:
             if pipe not in self.process_pipeline:
                 self.process_pipeline.append(pipe)
             self.pipeline_args[pipe]["filepath"] = str(output_file)
+            columns_to_keep = self.column_info.get("data")
+            if columns_to_keep:
+                columns_to_keep = list(columns_to_keep.keys())
+            self.pipeline_args[pipe]["columns_to_keep"] = columns_to_keep
 
         df = None
         if not output_file.exists() or self.overwrite:
             with elapsed_timer(format_time=True) as elapsed:
                 df = instantiate(self.loader, split_name=split_name, _recursive_=False)
-                msg.good(f" >> elapsed time to load and parse data: {elapsed()}")
+                log.info(f" >> elapsed time to load and parse data: {elapsed()}")
 
             if df is None:
                 raise ValueError("dataframe is None")
@@ -133,7 +140,7 @@ class DatasetBuilder:
                 print(df.shape)
 
             if self.transform_pipeline and len(self.transform_pipeline) > 0:
-                print(
+                log.info(
                     f"\nTransforming dataframe with pipeline: {self.transform_pipeline}"
                 )
                 df = apply_pipeline(df, self.transform_pipeline, self.pipeline_args)
@@ -146,19 +153,19 @@ class DatasetBuilder:
                 }
                 if output_meta_file.is_file():
                     stats["meta_file"] = output_meta_file.name
-                self.summary_info.init_stats(df, split_name, stats)
+                self.summary_info.init_stats(df=df, split_name=split_name, stats=stats)
 
         else:
-            msg.info(f"{output_file} already exists")
+            log.info(f"{output_file} already exists")
             if self.calculate_stats or self.preprocess_text:
                 df = load_dataframe(output_file, self.data_filetype)
 
         if df is None:
-            print("No datasets found")
+            log.warning("No datasets found")
             return None
 
         if self.process_pipeline and len(self.process_pipeline) > 0:
-            print(f"\nProcessing dataframe with pipeline: {self.process_pipeline}")
+            log.info(f"\nProcessing dataframe with pipeline: {self.process_pipeline}")
             df = apply_pipeline(df, self.process_pipeline, self.pipeline_args)
 
         if self.calculate_stats and self.summary_info:

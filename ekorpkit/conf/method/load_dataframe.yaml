@@ -1,2 +1,2 @@
 _partial_: true
-_target_: ekorpkit.pipelines.pipe.load_dataframe_pipe
+_target_: ekorpkit.pipelines.pipe._load_dataframe

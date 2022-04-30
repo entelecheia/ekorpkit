@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: kcbert
+  - /fetch/fetcher: kcbert
   - /preprocessor/normalizer: informal_ko
   - /preprocessor/segmenter: kss_merge_article
   - override /fetch/loader/parser: plaintext_split

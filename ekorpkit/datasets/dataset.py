@@ -1,9 +1,12 @@
+import logging
 from pathlib import Path
 from pprint import pprint
 from ekorpkit import eKonf
-from wasabi import msg
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit.io.file import load_dataframe
+
+
+log = logging.getLogger(__name__)
 
 
 class Dataset:
@@ -23,12 +26,12 @@ class Dataset:
         self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
         if self.info:
             if self.verbose:
-                msg.good(f"Loaded info file: {self.info_file}")
+                log.info(f"Loaded info file: {self.info_file}")
             self.args = eKonf.to_dict(eKonf.merge(self.args, self.info))
             self.info = eKonf.to_dict(self.info)
 
         if self.verbose:
-            msg.info(f"Intantiating a dataset {self.name} with a config:")
+            log.info(f"Intantiating a dataset {self.name} with a config:")
             pprint(eKonf.to_dict(self.args))
 
         self.filetype = self.args.get("filetype", "csv")

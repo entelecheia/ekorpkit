@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: kowiki
+  - /fetch/fetcher: kowiki
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss
   - override /fetch/loader/parser: jsonlines

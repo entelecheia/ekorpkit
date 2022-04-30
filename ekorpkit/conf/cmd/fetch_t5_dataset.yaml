@@ -1,2 +1,5 @@
 # @package _global_
-_target_: ekorpkit.io.fetch.build_t5
+defaults:
+  - default
+
+_key_: dataset.t5

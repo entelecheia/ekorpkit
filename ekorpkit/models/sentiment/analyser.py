@@ -1,5 +1,8 @@
+import logging
 import pandas as pd
 from .base import BaseSentimentAnalyser
+
+log = logging.getLogger(__name__)
 
 
 class HIV4SA(BaseSentimentAnalyser):
@@ -17,6 +20,7 @@ class HIV4SA(BaseSentimentAnalyser):
         """
         lxfeat = pd.DataFrame.from_dict(lexicon_features, orient="index")
         score = {}
+        feature_names = self._features.get(feature).get("lexicon_features")
         if feature == "polarity":
             lxfeat["pos"] = lxfeat.apply(
                 lambda x: 1 * x["count"] if x["Positiv"] else 0, axis=1
@@ -65,6 +69,7 @@ class LMSA(BaseSentimentAnalyser):
 
         :returns: int
         """
+        lxfeat_names = self._features.get(feature).get("lexicon_features")
         lxfeat = pd.DataFrame.from_dict(lexicon_features, orient="index")
         score = {}
         if feature == "polarity":
@@ -81,8 +86,15 @@ class LMSA(BaseSentimentAnalyser):
             subjectivity = (lxfeat_agg["pos"] + lxfeat_agg["neg"]) / (
                 len(tokens) + self.EPSILON
             )
-            score["polarity"] = polarity
+            score[feature] = polarity
             score["subjectivity"] = subjectivity
+        elif isinstance(lxfeat_names, str):
+            lxfeat[feature] = lxfeat.apply(
+                lambda x: 1 * x["count"] if x[lxfeat_names] > 0 else 0, axis=1
+            )
+            lxfeat_agg = lxfeat.agg({feature: "sum"})
+            feat_score = lxfeat_agg[feature] / (len(tokens) + self.EPSILON)
+            score[feature] = feat_score
 
         return score
 
@@ -91,12 +103,13 @@ class LMSA(BaseSentimentAnalyser):
 
         :returns: str
         """
+        label_key = feature + "_label"
         labels = self._features.get(feature).get("labels")
         if labels:
-            score["label"] = ""
+            score[label_key] = ""
             for label, thresh in labels.items():
                 if isinstance(thresh, str):
                     thresh = eval(thresh)
                 if score[feature] >= thresh[0] and score[feature] <= thresh[1]:
-                    score["label"] = label
+                    score[label_key] = label
         return score

@@ -1,2 +1,5 @@
 # @package _global_
-_target_: ekorpkit.io.fetch.build_corpus
+defaults:
+  - default
+
+_key_: corpus.builtin

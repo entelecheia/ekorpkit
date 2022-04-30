@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: _gcs
+  - /fetch/fetcher: _gcs
 
 domain: biomed
 task: ner
@@ -20,7 +20,7 @@ fetch:
     train: train.tsv
     dev: dev.tsv
     test: test.tsv
-  downloader:
+  fetcher:
     source_prefix: gs://scifive/finetune/${..name}
     data_sources:
       train.tsv: ${..source_prefix}/train.tsv_cleaned.tsv

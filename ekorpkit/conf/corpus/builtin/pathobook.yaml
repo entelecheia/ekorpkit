@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - /fetch/downloader: pathobook
+  - /fetch/fetcher: pathobook
   - override /fetch/loader: csv
 
 name: pathobook
@@ -28,7 +28,7 @@ column_info:
 fetch:
   data_dir:  ${dir.dataset}/source/${.name}
   data_sources: 
-    train: ${..downloader.output_file}
+    train: ${..fetcher.output_file}
 
 
 pipeline:

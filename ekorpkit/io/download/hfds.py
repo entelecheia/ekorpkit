@@ -1,7 +1,11 @@
+import logging
+import logging
 import os
 import pandas as pd
 from ekorpkit import eKonf
 from ekorpkit.io.file import save_dataframe
+
+log = logging.getLogger(__name__)
 
 
 class HFDS:
@@ -25,7 +29,7 @@ class HFDS:
         if not os.path.exists(self.output_file) or self.force_download:
             self.build_hfds()
         else:
-            print(f"{self.output_file} already exists. skipping..")
+            log.info(f"{self.output_file} already exists. skipping..")
 
     def build_hfds(self):
         from datasets import load_dataset

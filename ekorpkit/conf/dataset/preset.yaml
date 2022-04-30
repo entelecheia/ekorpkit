@@ -1,6 +1,6 @@
 defaults:
   - datasets
-  - /pipeline: dataset_load_pipeline
+  - /pipeline: dataset_load
 
 name: ${oc.select:.preset.name, null}
 data_dir: ${oc.select:.preset.data_dir, ${dir.dataset}/dataset}

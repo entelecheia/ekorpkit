@@ -13,7 +13,7 @@ from tensorflow.estimator import ModeKeys, Estimator
 from tensorflow.python.training.tracking.tracking import AutoTrackable
 
 
-LOGGER = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 DATASET = {
     ModeKeys.TRAIN: "train",
@@ -94,7 +94,7 @@ def train(estimator: Estimator, data_root_dir: str, max_steps: int) -> Any:
         throttle_secs=throttle_secs,
     )
 
-    LOGGER.debug("Train the model")
+    log.debug("Train the model")
     results = tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
     training_metrics = results[0]
     return training_metrics
@@ -122,7 +122,7 @@ def test(
     values = {language: 0 for language in mapping.values()}
     matches = {language: deepcopy(values) for language in values}
 
-    LOGGER.debug("Test the model")
+    log.debug("Test the model")
     input_function = _build_input_fn(data_root_dir, ModeKeys.PREDICT)
     for test_item in input_function():
         content = test_item[0]

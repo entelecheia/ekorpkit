@@ -1,5 +1,0 @@
-defaults:
-  - corpus_task
-  - override /cmd@_global_: corpora_task
-
-name: corpora_task

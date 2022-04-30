@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: bok
+  - /fetch/fetcher: bok
   - /preprocessor/normalizer: formal_ko
   - override /fetch/loader: csv
 
@@ -29,7 +29,7 @@ column_info:
 
 fetch:
   data_sources: 
-    train: ${..downloader.output_file}
+    train: ${..fetcher.output_file}
 
 pipeline:
   _transform_:

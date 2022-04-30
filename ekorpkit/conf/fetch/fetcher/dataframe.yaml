@@ -1,6 +1,6 @@
 defaults:
   - _default
-  - /pipeline: dataframe_pipeline
+  - /pipeline: dataframe
 
 pipeline:
   data_dir: ${..output_dir}

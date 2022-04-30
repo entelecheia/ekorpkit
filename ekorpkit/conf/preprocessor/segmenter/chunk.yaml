@@ -1,6 +1,7 @@
 defaults:
   - default
 
+_target_: ekorpkit.preprocessors.segmenter.Segmenter
 split:
   keep_segment: ${oc.select:..keep_segment, false}
 chunk:

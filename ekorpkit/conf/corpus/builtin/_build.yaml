@@ -1,7 +1,7 @@
 defaults:
   - /fetch: corpus
   - /info: corpus_build
-  - /pipeline: corpus_build_pipeline
+  - /pipeline: corpus_build
 
 _target_: ekorpkit.io.fetch.build.DatasetBuilder
 name:
@@ -11,3 +11,4 @@ filetype: .parquet
 segment_separator: \n\n
 sentence_separator: \n
 verbose: ${oc.select:..verbose, true}
+autoload: true

@@ -1,8 +1,11 @@
+import logging
 import os
 import sklearn
 from ekorpkit import eKonf
-from hydra.utils import instantiate
 from ekorpkit.io.file import load_dataframe, save_dataframe
+
+
+log = logging.getLogger(__name__)
 
 
 class SimpleTraner:
@@ -27,14 +30,14 @@ class SimpleTraner:
         self.to_predict = {}
 
     def apply_pipeline(self):
-        print(f"Applying pipeline: {self.model_pipeline}")
+        log.info(f"Applying pipeline: {self.model_pipeline}")
         eKonf.call(self.model_pipeline, self)
 
     def load_datasets(self):
         if self.dataset_cfg is None:
-            print("No dataset config found")
+            log.warning("No dataset config found")
             return
-        dataset = instantiate(self.dataset_cfg, _recursive_=False)
+        dataset = eKonf.instantiate(self.dataset_cfg)
         self.splits = dataset.splits
 
         self.train_data = self.splits["train"]
@@ -173,13 +176,13 @@ class SimpleTrainerClassification(SimpleTraner):
         self.prediction_key = self.pred_keys["prediction"]
 
         if data_files is None:
-            print("No data files are provided")
+            log.warning("No data files are provided")
             return
 
         if isinstance(data_files, str):
             data_files = [data_files]
         for data_file in data_files:
-            print(f"Loading {data_file}")
+            log.info(f"Loading {data_file}")
             filepath = os.path.join(data_dir, data_file)
             df = load_dataframe(filepath, verbose=self.verbose)
             if columns_to_keep is not None:
@@ -195,7 +198,7 @@ class SimpleTrainerClassification(SimpleTraner):
 
     def save_predictions(self):
         for data_file, preds in self.predictions.items():
-            print(f"Saving predictions for {data_file}")
+            log.info(f"Saving predictions for {data_file}")
             df = self.pred_data[data_file]
             df[self.prediction_key] = preds
             filepath = os.path.join(self.args.pred_output_dir, data_file)
@@ -209,7 +212,7 @@ class SimpleTrainerClassification(SimpleTraner):
 
         self.predictions = {}
         for data_file, to_predict in self.to_predict.items():
-            print(f"Predicting {data_file}")
+            log.info(f"Predicting {data_file}")
             predictions, raw_outputs = self.model.predict(to_predict)
             self.predictions[data_file] = predictions
             if self.verbose:

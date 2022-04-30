@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/downloader: enwiki
+  - /fetch/fetcher: enwiki
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
   - override /fetch/loader/parser: jsonlines

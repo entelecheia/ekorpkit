@@ -1,0 +1,13 @@
+defaults:
+  - _default
+ 
+_transform_:
+  - reset_index
+_preprocess_:
+  - save_samples
+  # - fillna
+  # - normalize
+  # - segment
+  # - filter_length
+  # - drop_duplicates
+apply_to: ${oc.select:..column_info.keys.text, text}
