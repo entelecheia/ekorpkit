@@ -462,7 +462,7 @@ class PySBDSegmenter(Segmenter):
 
 class KSSSegmenter(Segmenter):
     def __init__(self, kss={}, **kwargs):
-        from ekorpkit.preprocessors import KSS
+        from ekorpkit.preprocessors.kss import KSS
 
         kss = kss or {}
         if not kss:
