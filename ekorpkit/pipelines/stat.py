@@ -52,9 +52,14 @@ class SummaryInfo:
 
     def init_stats(self, df=None, split_name=None, stats={}):
         if self.verbose:
-            log.info(f"Initializing statistics for split: {split_name}")
+            log.info(
+                f"Initializing statistics for split: {split_name} with stats: {stats}"
+            )
         if split_name:
             stats["name"] = split_name
+            self.splits[split_name] = stats
+        else:
+            self.stats.update(stats)
 
         stat_args = self.stat_before_processing
         if stat_args is not None and df is not None:
@@ -72,11 +77,13 @@ class SummaryInfo:
             stats.update(stats)
 
         if split_name:
-            if split_name not in self.splits:
-                self.splits[split_name] = {}
             self.splits[split_name].update(stats)
+            if self.verbose:
+                log.info(f" >> updated splits: {self.splits}")
         else:
             self.stats.update(stats)
+            if self.verbose:
+                log.info(f" >> updated stats: {self.stats}")
 
     def calculate_stats(self, df, split_name=None):
         if self.verbose:
