@@ -24,6 +24,7 @@ def apply(
     verbose=False,
     use_batcher=True,
     minibatch_size=None,
+    num_workers=None,
     **kwargs,
 ):
     batcher_instance = batcher.batcher_instance
@@ -34,6 +35,8 @@ def apply(
             batcher_minibatch_size = 1000
         if minibatch_size is None:
             minibatch_size = batcher_minibatch_size
+        if num_workers is not None:
+            batcher_instance.procs = num_workers
         if batcher_instance.procs > 1:
             batcher_instance.minibatch_size = min(
                 int(len(series) / batcher_instance.procs) + 1, minibatch_size
@@ -477,13 +480,7 @@ def sampling(df, args):
         grp_dists = pd.concat([grp_all, grp_sample], axis=1)
         print(grp_dists)
 
-    output_dir = args.get("output_dir", ".")
-    output_file = args.get("output_file", None)
-    if output_file:
-        filepath = f"{output_dir}/{output_file}"
-        save_dataframe(
-            df_sample, filepath, verbose=verbose, columns_to_keep=columns_to_keep
-        )
+    _save_output_dataframe(df_sample, args)
 
     return df
 
@@ -633,6 +630,48 @@ def fillna(df, args):
         log.info(f"Filling missing values: {args}")
     for key in apply_to:
         df[key].fillna(fill_with, inplace=True)
+    return df
+
+
+def predict(df, args):
+    args = eKonf.to_dict(args)
+    verbose = args.get("verbose", False)
+    num_workers = args.get("num_workers", 1)
+    use_batcher = args.get("use_batcher", True)
+    apply_to = args.get("apply_to", "text")
+    if apply_to is None:
+        if verbose:
+            log.warning("No columns specified")
+        return df
+    model = args.get("model", None)
+    if model is None:
+        if verbose:
+            log.warning("No model specified")
+        return df
+    if isinstance(apply_to, list):
+        apply_to = apply_to[0]
+    if verbose:
+        log.info(f"Predicting: {args}")
+        log.info("instantiating model")
+    model = eKonf.instantiate(model)
+
+    key = apply_to
+    with elapsed_timer(format_time=True) as elapsed:
+        predictions = apply(
+            model.predict,
+            df[key],
+            description=f"Predicting [{key}]",
+            verbose=verbose,
+            use_batcher=use_batcher,
+            num_workers=num_workers,
+        )
+        pred_df = pd.DataFrame(predictions.tolist(), index=predictions.index)
+        df = df.join(pred_df)
+        if verbose:
+            log.info(" >> elapsed time to predict: {}".format(elapsed()))
+
+    _save_output_dataframe(df, args)
+
     return df
 
 
@@ -1349,3 +1388,13 @@ def process_dataframe(**cfg):
             log.warning("No dataframe returned")
 
     return df
+
+
+def _save_output_dataframe(df, args):
+    output_dir = args.get("output_dir", ".")
+    output_file = args.get("output_file", None)
+    columns_to_keep = args.get("columns_to_keep", None)
+    verbose = args.get("verbose", False)
+    if output_file:
+        filepath = f"{output_dir}/{output_file}"
+        save_dataframe(df, filepath, verbose=verbose, columns_to_keep=columns_to_keep)

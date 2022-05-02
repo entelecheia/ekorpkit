@@ -1,15 +1,15 @@
+archive: ${.data}/archive
+cache: ${.workspace}/.cache
+corpus: ${.dataset}/corpus
+data: ${.workspace}/data
+dataset: ${.data}/datasets
 ekorpkit: ${__ekorpkit_path__:}
 home: ${__home_path__:}
-workspace: ${.home}/.ekorpkit
-project: ${.workspace}/projects/${project}
-data: ${.workspace}/data
-tmp: ${.workspace}/.tmp
-cache: ${.workspace}/.cache
 log: ${.project}/logs
-archive: ${.data}/archive
 model: ${.data}/models
-output: ${.data}/outputs
-dataset: ${.data}/datasets
-corpus: ${.dataset}/corpus
+output: ${.project}/outputs
+project: ${.workspace}/projects/${project}
 resource: ${.ekorpkit}/resources
 runtime: ${oc.select:hydra:runtime.cwd, .}
+tmp: ${.workspace}/.tmp
+workspace: ${.home}/.ekorpkit

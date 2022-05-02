@@ -1,11 +1,8 @@
 # @package _global_
-
-# default running mode
-default_mode: true
 debug_mode: false
 print_config: false
 print_resolved_config: false
-num_workers: 1
+num_workers: 2
 verbose: false
 ignore_warnings: true
 

@@ -113,6 +113,8 @@ def compose(
         return cfg
 
 
+_env_initialized = False
+
 config = compose()
 
 DictKeyType = Union[str, int, Enum, float, bool]
@@ -148,7 +150,7 @@ class eKonf:
     __version__ = _version.get_versions()["version"]
     __ekorpkit_path__ = __ekorpkit_path__()
     __home_path__ = __home_path__()
-    config = compose()
+    config = config
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
@@ -530,6 +532,8 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     :return: if _target_ is a class name: the instantiated object
              if _target_ is a callable: the return value of the call
     """
+    if not _env_initialized:
+        _init_env_()
     if config.get("_target_") is None:
         log.warning("No target specified in config")
         return None
@@ -539,7 +543,9 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     return hydra.utils.instantiate(config, *args, **kwargs)
 
 
-def _init_env_(cfg, verbose=False):
+def _init_env_(cfg=None, verbose=False):
+    if cfg is None:
+        cfg = config
     env = cfg.env
     backend = env.distributed_framework.backend
     for env_name, env_value in env.get("os", {}).items():
@@ -576,6 +582,8 @@ def _init_env_(cfg, verbose=False):
         )
         if verbose:
             log.info(batcher.batcher_instance)
+
+    _env_initialized_ = True
 
 
 def _stop_env_(cfg, verbose=False):

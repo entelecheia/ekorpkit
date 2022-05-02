@@ -17,6 +17,7 @@ defaults:
   - normalize: default
   - pivot: default
   - plot: default
+  - predict: default
   - rename_columns: default
   - replace: default
   - reset_index: default
@@ -33,7 +34,10 @@ defaults:
   - top_values: default
 
 apply_to: ${oc.select:..apply_to, text}
-data_dir: ${oc.select:..data_dir, ''}
-data_file: ${oc.select:..data_file, ''}
+data_dir: ${oc.select:..data_dir, ${dir.project}/data}
+data_file: ${oc.select:..data_file, null}
+output_dir: ${oc.select:..output_dir, ${dir.output}/pipeline}
+output_file: ${oc.select:..output_file, null}
+num_workers: ${oc.select:..num_workers,1}
 use_batcher: true
-verbose: ${oc.select:..verbose, true}
+verbose: ${oc.select:..verbose, false}

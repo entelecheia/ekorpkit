@@ -79,7 +79,7 @@ def save_dataframe(
         return df
     if columns_to_keep is not None:
         df = df[columns_to_keep]
-    if verbose:
+    if verbose > 1:
         print(df.tail())
 
     output_dir = os.path.dirname(filepath)
@@ -97,6 +97,8 @@ def save_dataframe(
             raise ValueError("filetype must be .csv or .parquet")
         if verbose:
             log.info(" >> elapsed time to save data: {}".format(elapsed()))
+    if verbose:
+        print(f" >> saved dataframe to {filepath}")
 
 
 def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwargs):

@@ -5,19 +5,17 @@ defaults:
   - _self_
   - about: default
   - cmd: default
+  - corpus: _loader
+  - dataset: _loader
   - dir: default
   - env: default
   - mode: default
-  - corpus: _loader
-  - dataset: _loader
+  - model: default
+  - project: default
   - task: _default
-  - model: null
-  - project: null
-  - tokenizer: null
 
   - override hydra/help: help
   - override hydra/hydra_logging: colorlog
   - override hydra/job_logging: colorlog
 
 app_name: ${about.app.name}
-project: ${app_name}
