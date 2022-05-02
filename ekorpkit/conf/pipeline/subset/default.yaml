@@ -4,6 +4,6 @@ defaults:
 head_n:
 tail_n:
 sample_n:
-sample_fraction:
+sample_frac:
 random_state: 123
 verbose: ${oc.select:..verbose, true}

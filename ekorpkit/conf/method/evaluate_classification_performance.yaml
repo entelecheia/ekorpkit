@@ -1,0 +1,3 @@
+_partial_: true
+_target_: ekorpkit.models.metrics.evaluate_classification_performance
+average: weighted

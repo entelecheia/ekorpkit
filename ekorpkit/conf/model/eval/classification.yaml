@@ -1,0 +1,23 @@
+defaults:
+  - /pipeline/load_dataframe: default
+  - /visualize/plot: confusion_matrix
+  - /method: evaluate_classification_performance 
+
+_target_: ekorpkit.models.eval.eval_classification
+data:
+data_dir: 
+data_file: 
+column_info:
+  actual:
+  predicted:
+pipeline:
+  data_dir: ${..data_dir}
+  data_file: ${..data_file}
+method:
+  average: weighted
+output_dir: ${oc.select:..output_dir, .}
+output_file: ${oc.select:..output_file, confusion_matrix.png}
+visualize:
+  output_dir: ${..output_dir}
+  output_file: ${..output_file}
+verbose: ${oc.select:..verbose, false}

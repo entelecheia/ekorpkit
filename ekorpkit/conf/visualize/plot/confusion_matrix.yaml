@@ -1,4 +1,6 @@
 _target_: ekorpkit.visualize.classification.plot_confusion_matrix
+# data: confusion matrix to be passed in
+data:
 confusion_matrix:
   display_labels: auto
   # List of strings containing the display_labels to be displayed on the x,y axis. Default is 'auto'
@@ -21,6 +23,7 @@ plot:
   rcParams:
     axes.unicode_minus: False
     axes.labelsize: 14
+    axes.grid: false
     text.color: dimgrey
     font.family: sans-serif
   fontpath:

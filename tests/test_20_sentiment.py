@@ -35,10 +35,22 @@ def test_predict_sentiments():
     cfg.output_dir = "./data/tmp/predict"
     cfg.dataset = ds_cfg
     cfg._pipeline_ = ["subset", "predict"]
-    cfg.subset.sample_n = 5
+    cfg.subset.sample_frac = 0.5
     cfg.predict.model = model_cfg
     cfg.predict.output_file = f"{ds_cfg.name}.parquet"
     cfg.num_workers = 1
     df = eKonf.instantiate(cfg)
 
-    assert len(df) == 15
+    assert len(df) > 0
+
+
+def test_eval_sentiments():
+    eval_cfg = eKonf.compose(config_group="model/eval=classification")
+    eval_cfg.column_info.actual = "labels"
+    eval_cfg.column_info.predicted = "polarity_label"
+    eval_cfg.data_dir = "./data/tmp/predict"
+    eval_cfg.data_file = "financial_phrasebank.parquet"
+    eval_cfg.output_dir = "./data/tmp/eval"
+    eKonf.instantiate(eval_cfg)
+
+    assert os.path.exists(eval_cfg.output_dir)

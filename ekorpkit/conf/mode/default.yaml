@@ -2,7 +2,7 @@
 debug_mode: false
 print_config: false
 print_resolved_config: false
-num_workers: 2
+num_workers: 1
 verbose: false
 ignore_warnings: true
 

@@ -7,7 +7,7 @@ from ekorpkit import eKonf
 
 
 def plot_confusion_matrix(
-    cm_data,
+    data,
     confusion_matrix={},
     savefig={},
     plot={},
@@ -20,7 +20,7 @@ def plot_confusion_matrix(
 
     Arguments
     ---------
-    cm_data:                confusion matrix to be passed in
+    data:                   confusion matrix to be passed in
     confusion_matrix:       dictionary of arguments to pass to seaborn.heatmap
         display_labels:         List of strings containing the display_labels to be displayed on the x,y axis. Default is 'auto'
         matrix_labels:          List of strings that represent the labels row by row to be shown in each square.
@@ -49,21 +49,21 @@ def plot_confusion_matrix(
     cmap = confusion_matrix.get("cmap") or "Blues"
 
     # CODE TO GENERATE TEXT INSIDE EACH SQUARE
-    blanks = ["" for i in range(cm_data.size)]
+    blanks = ["" for i in range(data.size)]
 
-    if matrix_labels and len(matrix_labels) == cm_data.size:
+    if matrix_labels and len(matrix_labels) == data.size:
         matrix_labels = ["{}\n".format(value) for value in matrix_labels]
     else:
         matrix_labels = blanks
 
     if include_values:
-        matrix_values = ["{0:0.0f}\n".format(value) for value in cm_data.flatten()]
+        matrix_values = ["{0:0.0f}\n".format(value) for value in data.flatten()]
     else:
         matrix_values = blanks
 
     if include_percentages:
         matrix_percentages = [
-            "{0:.2%}".format(value) for value in cm_data.flatten() / np.sum(cm_data)
+            "{0:.2%}".format(value) for value in data.flatten() / np.sum(data)
         ]
     else:
         matrix_percentages = blanks
@@ -72,18 +72,18 @@ def plot_confusion_matrix(
         f"{v1}{v2}{v3}".strip()
         for v1, v2, v3 in zip(matrix_labels, matrix_values, matrix_percentages)
     ]
-    box_labels = np.asarray(box_labels).reshape(cm_data.shape[0], cm_data.shape[1])
+    box_labels = np.asarray(box_labels).reshape(data.shape[0], data.shape[1])
 
     # CODE TO GENERATE SUMMARY STATISTICS & TEXT FOR SUMMARY STATS
     if summary_stats:
         # Accuracy is sum of diagonal divided by total observations
-        accuracy = np.trace(cm_data) / float(np.sum(cm_data))
+        accuracy = np.trace(data) / float(np.sum(data))
 
         # if it is a binary confusion matrix, show some more stats
-        if len(cm_data) == 2:
+        if len(data) == 2:
             # Metrics for Binary Confusion Matrices
-            precision = cm_data[1, 1] / sum(cm_data[:, 1])
-            recall = cm_data[1, 1] / sum(cm_data[1, :])
+            precision = data[1, 1] / sum(data[:, 1])
+            recall = data[1, 1] / sum(data[1, :])
             f1_score = 2 * precision * recall / (precision + recall)
             stats_text = "\n\nAccuracy={:0.3f}\nPrecision={:0.3f}\nRecall={:0.3f}\nF1 Score={:0.3f}".format(
                 accuracy, precision, recall, f1_score
@@ -101,7 +101,7 @@ def plot_confusion_matrix(
     ax = plt.gca()
 
     sns.heatmap(
-        cm_data,
+        data,
         annot=box_labels,
         fmt="",
         cmap=cmap,
