@@ -436,6 +436,41 @@ def top_values(df, args):
     return df
 
 
+def subset(df, args):
+    args = eKonf.to_dict(args)
+    verbose = args.get("verbose", False)
+    random_state = args.get("random_state", 123)
+    head_n = args.get("head_n", None)
+    tail_n = args.get("tail_n", None)
+    sample_n = args.get("sample_n", None)
+    sample_frac = args.get("sample_frac", None)
+    if not (head_n or tail_n or sample_n or sample_frac):
+        log.error("Must specify one of head_n, tail_n, sample_n, sample_frac")
+        return df
+
+    if verbose:
+        log.info(f"Subsetting: {args}")
+    dfs = []
+    if head_n:
+        dfs.append(df.head(head_n))
+    if tail_n:
+        dfs.append(df.tail(tail_n))
+    if sample_n:
+        dfs.append(df.sample(sample_n, random_state=random_state))
+    if sample_frac:
+        dfs.append(df.sample(frac=sample_frac, random_state=random_state))
+    if verbose:
+        log.info(f"Total rows: {len(df)}")
+
+    if len(dfs) > 0:
+        df = pd.concat(dfs)
+
+    if verbose:
+        log.info(f"Subset rows: {len(df)}")
+
+    return df
+
+
 def sampling(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
@@ -1370,26 +1405,6 @@ def save_as_json(df, args):
     return df
 
 
-def process_dataframe(**cfg):
-    args = eKonf.to_dict(cfg)
-    verbose = args.get("verbose", False)
-    process_pipeline = args.get("_pipeline_", [])
-    if process_pipeline is None:
-        process_pipeline = []
-    df = None
-    if len(process_pipeline) > 0:
-        df = apply_pipeline(None, process_pipeline, args)
-        if df is not None:
-            if isinstance(df, list):
-                df = pd.concat(df)
-            if verbose:
-                print(df.tail())
-        else:
-            log.warning("No dataframe returned")
-
-    return df
-
-
 def _save_output_dataframe(df, args):
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
@@ -1398,3 +1413,47 @@ def _save_output_dataframe(df, args):
     if output_file:
         filepath = f"{output_dir}/{output_file}"
         save_dataframe(df, filepath, verbose=verbose, columns_to_keep=columns_to_keep)
+
+
+def pipeline(**cfg):
+    from ekorpkit.corpora import Corpus
+    from ekorpkit.datasets import Dataset
+
+    args = eKonf.to_dict(cfg)
+    corpus = args.get("corpus")
+    dataset = args.get("dataset")
+    data_dir = args.get("data_dir")
+    data_file = args.get("data_file")
+    verbose = args.get("verbose", False)
+
+    if corpus and dataset is None:
+        dataset = corpus
+
+    df = None
+    if dataset:
+        dataset = eKonf.instantiate(dataset)
+        if isinstance(dataset, Corpus):
+            df = dataset.data
+        elif isinstance(dataset, Dataset):
+            df = list(dataset.splits.values())
+    elif data_dir and data_file:
+        filepath = f"{data_dir}/{data_file}"
+        df = load_dataframe(filepath, verbose=verbose)
+
+    process_pipeline = args.get("_pipeline_", [])
+    if process_pipeline is None:
+        process_pipeline = []
+
+    if len(process_pipeline) > 0:
+        df = apply_pipeline(df, process_pipeline, args)
+        if df is not None:
+            if isinstance(df, list):
+                df = pd.concat(df)
+            if verbose:
+                print(df.tail())
+        else:
+            log.warning("No dataframe returned")
+    else:
+        log.warning("No pipeline specified")
+
+    return df

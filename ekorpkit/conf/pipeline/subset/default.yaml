@@ -1,0 +1,9 @@
+defaults:
+  - /method: subset
+
+head_n:
+tail_n:
+sample_n:
+sample_fraction:
+random_state: 123
+verbose: ${oc.select:..verbose, true}

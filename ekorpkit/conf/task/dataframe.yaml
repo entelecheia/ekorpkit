@@ -1,6 +1,6 @@
 defaults:
   - _default
-  - /pipeline: dataframe
+  - /pipeline: pipeline
   # - /preprocessor/normalizer: formal_en
   # - /preprocessor/segmenter: pysbd
 

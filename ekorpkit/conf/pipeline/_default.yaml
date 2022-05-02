@@ -29,6 +29,7 @@ defaults:
   - split_dataframe: default
   - split_sampling: default
   - stdout_samples: default
+  - subset: default
   - summary_stats: default
   - tokenize: default
   - top_values: default

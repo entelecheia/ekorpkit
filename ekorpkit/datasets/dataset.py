@@ -50,6 +50,7 @@ class Dataset:
             raise ValueError("Column info can't be None")
 
         self._id_key = "id"
+        self._split_key = "split"
         self._keys = self.column_info["keys"]
         self._id_keys = self._keys[self._id_key]
         if isinstance(self._id_keys, str):
@@ -96,6 +97,7 @@ class Dataset:
         for split, data_file in self.data_files.items():
             data_file = self.data_dir / data_file
             df = load_dataframe(data_file, dtype=self._data_keys)
+            df[self._split_key] = split
             if self.process_pipeline and len(self.process_pipeline) > 0:
                 df = apply_pipeline(df, self.process_pipeline, self.pipeline_args)
             self.splits[split] = df
