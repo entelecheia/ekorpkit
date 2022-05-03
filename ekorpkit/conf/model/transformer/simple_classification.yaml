@@ -1,12 +1,12 @@
 defaults:
   - default
   - config: classification
-  - prediction: classification
+  - /model/prediction: classification
 
 _target_: ekorpkit.models.transformer.SimpleTrainerClassification
 model_class: classification
 labels: ${oc.select:dataset.labels, null}
-num_labels: 
+num_labels:
 use_cuda: true
 cuda_device: -1
 _pipeline_:

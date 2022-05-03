@@ -1,0 +1,21 @@
+defaults:
+  - pipeline: blank
+
+pipeline:
+  dataset:
+data_dir: ${oc.select:..data_dir, ${dir.project}/data}
+data_file:
+output_dir: ${oc.select:..output_dir, ${dir.output}/predictions}
+
+columns_to_keep:
+
+column_info:
+  actual:
+  predicted:
+keys:
+  prefix:
+  input_text: input_text
+  target_text: target_text
+  pred_text: pred_text
+
+task_prefix:

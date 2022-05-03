@@ -1,6 +1,3 @@
-defaults:
-  - override /model@_global_: default
-
 model_class:
 model_type: ${..pretrained.model_type}
 model_name: ${..pretrained.model_name}

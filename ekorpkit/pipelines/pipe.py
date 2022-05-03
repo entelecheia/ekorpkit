@@ -61,15 +61,18 @@ def apply(
 def apply_pipe(df, pipe):
     fn = eKonf.instantiate(pipe["method"])
     log.info(f"Applying pipe: {fn}")
-    if isinstance(df, list):
+    if isinstance(df, dict):
         if "concat_dataframes" in str(fn):
             return fn(df, pipe)
         else:
-            dfs = []
-            for df_no, df_each in enumerate(df):
-                log.info(f"Applying pipe to dataframe {(df_no+1)}/{len(df)}")
-                pipe["dataframe_no"] = df_no
-                dfs.append(fn(df_each, pipe))
+            dfs = {}
+            for df_no, df_name in enumerate(df):
+                df_each = df[df_name]
+                log.info(
+                    f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
+                )
+                pipe["dataframe_name"] = df_name
+                dfs[df_name] = fn(df_each, pipe)
             return dfs
     else:
         return fn(df, pipe)
@@ -515,7 +518,7 @@ def sampling(df, args):
         grp_dists = pd.concat([grp_all, grp_sample], axis=1)
         print(grp_dists)
 
-    _save_output_dataframe(df_sample, args)
+    _save_dataframe(df_sample, args)
 
     return df
 
@@ -678,16 +681,21 @@ def predict(df, args):
         if verbose:
             log.warning("No columns specified")
         return df
+    columns_to_keep = args["columns_to_keep"]
+
     model = args.get("model", None)
     if model is None:
         if verbose:
             log.warning("No model specified")
         return df
+
     if isinstance(apply_to, list):
         apply_to = apply_to[0]
+
     if verbose:
         log.info(f"Predicting: {args}")
         log.info("instantiating model")
+
     model = eKonf.instantiate(model)
 
     key = apply_to
@@ -705,7 +713,7 @@ def predict(df, args):
         if verbose:
             log.info(" >> elapsed time to predict: {}".format(elapsed()))
 
-    _save_output_dataframe(df, args)
+    _save_dataframe(df, args)
 
     return df
 
@@ -1199,17 +1207,25 @@ def split_dataframe(df, args):
     return np.array_split(df, num_splits)
 
 
-def concat_dataframes(dfs, args):
+def concat_dataframes(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
-    if isinstance(dfs, list):
+    add_datafame_name = args.get("add_datafame_name", False)
+    if isinstance(df, dict):
         if verbose:
-            log.info(f"Concatenating {len(dfs)} dataframes")
-        return pd.concat(dfs)
+            log.info(f"Concatenating {len(df)} dataframes")
+        dfs = []
+        for df_name in df:
+            df_each = df[df_name]
+            if add_datafame_name:
+                df_each["dataframe_name"] = df_name
+            dfs.append(df_each)
+        df = pd.concat(dfs)
+        return df
     else:
         if verbose:
             log.info("Returning original dataframe")
-        return dfs
+        return df
 
 
 def merge_dataframe(df=None, args=None):
@@ -1293,7 +1309,7 @@ def _save_dataframe(df, args):
     corpus_name = args.get("corpus_name", "corpus")
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
-    dataframe_no = args.get("dataframe_no", None)
+    dataframe_name = args.get("dataframe_name", None)
     columns_to_keep = args.get("columns_to_keep", None)
 
     if df is None:
@@ -1315,8 +1331,11 @@ def _save_dataframe(df, args):
         if not filetype:
             filetype = "csv"
     filetype = "." + filetype.replace(".", "")
-    if dataframe_no is not None:
-        filename = f"{filename}-{dataframe_no:0>3d}{filetype}"
+    if dataframe_name is not None:
+        if dataframe_name.endswith(filetype):
+            filename = f"{filename}-{dataframe_name}"
+        else:
+            filename = f"{filename}-{dataframe_name}{filetype}"
     else:
         filename = f"{filename}{filetype}"
     filepath = f"{output_dir}/{filename}"
@@ -1331,6 +1350,7 @@ def _load_dataframe(df=None, args=None):
 
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
+    concatenate = args.get("concatenate", True)
     filepath = args.get("filepath", None)
     data_dir = args.get("data_dir", None)
     data_file = args.get("data_file", None)
@@ -1350,13 +1370,23 @@ def _load_dataframe(df=None, args=None):
             filepaths[0], verbose=verbose, dtype=dtype, parse_dates=parse_dates
         )
     else:
-        df = pd.concat(
-            [
-                load_dataframe(f, verbose=verbose, dtype=dtype, parse_dates=parse_dates)
+        if concatenate:
+            df = pd.concat(
+                [
+                    load_dataframe(
+                        f, verbose=verbose, dtype=dtype, parse_dates=parse_dates
+                    )
+                    for f in filepaths
+                ]
+            )
+            return df
+        else:
+            return {
+                os.path.basename(f): load_dataframe(
+                    f, verbose=verbose, dtype=dtype, parse_dates=parse_dates
+                )
                 for f in filepaths
-            ]
-        )
-        return df
+            }
 
 
 def summary_stats(df, args):
@@ -1405,16 +1435,6 @@ def save_as_json(df, args):
     return df
 
 
-def _save_output_dataframe(df, args):
-    output_dir = args.get("output_dir", ".")
-    output_file = args.get("output_file", None)
-    columns_to_keep = args.get("columns_to_keep", None)
-    verbose = args.get("verbose", False)
-    if output_file:
-        filepath = f"{output_dir}/{output_file}"
-        save_dataframe(df, filepath, verbose=verbose, columns_to_keep=columns_to_keep)
-
-
 def pipeline(**cfg):
     from ekorpkit.corpora import Corpus
     from ekorpkit.datasets import Dataset
@@ -1435,7 +1455,7 @@ def pipeline(**cfg):
         if isinstance(dataset, Corpus):
             df = dataset.data
         elif isinstance(dataset, Dataset):
-            df = list(dataset.splits.values())
+            df = dataset.splits
     elif data_dir and data_file:
         filepath = f"{data_dir}/{data_file}"
         df = load_dataframe(filepath, verbose=verbose)
@@ -1446,13 +1466,6 @@ def pipeline(**cfg):
 
     if len(process_pipeline) > 0:
         df = apply_pipeline(df, process_pipeline, args)
-        if df is not None:
-            if isinstance(df, list):
-                df = pd.concat(df)
-            if verbose:
-                print(df.tail())
-        else:
-            log.warning("No dataframe returned")
     else:
         log.warning("No pipeline specified")
 

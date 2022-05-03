@@ -8,7 +8,7 @@ from ekorpkit.io.file import load_dataframe, save_dataframe
 log = logging.getLogger(__name__)
 
 
-class SimpleTraner:
+class SimpleTrainer:
     def __init__(self, **args):
         args = eKonf.to_dict(args)
         os.makedirs(args["output_dir"], exist_ok=True)
@@ -59,7 +59,7 @@ class SimpleTraner:
             print(self.test_data.tail())
 
 
-class SimpleTrainerNER(SimpleTraner):
+class SimpleTrainerNER(SimpleTrainer):
     def __init__(self, **args):
         super().__init__(**args)
 
@@ -90,7 +90,7 @@ class SimpleTrainerNER(SimpleTraner):
         return result, model_outputs, predictions
 
 
-class SimpleTrainerMultiLabel(SimpleTraner):
+class SimpleTrainerMultiLabel(SimpleTrainer):
     def __init__(self, **args):
         super().__init__(**args)
 
@@ -117,7 +117,7 @@ class SimpleTrainerMultiLabel(SimpleTraner):
         return result, model_outputs, predictions
 
 
-class SimpleTrainerClassification(SimpleTraner):
+class SimpleTrainerClassification(SimpleTrainer):
     def __init__(self, **args):
         super().__init__(**args)
 

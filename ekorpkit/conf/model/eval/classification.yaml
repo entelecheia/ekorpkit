@@ -13,6 +13,8 @@ column_info:
 pipeline:
   data_dir: ${..data_dir}
   data_file: ${..data_file}
+  load_dataframe:
+    concatenate: true
 method:
   average: weighted
 output_dir: ${oc.select:..output_dir, .}
