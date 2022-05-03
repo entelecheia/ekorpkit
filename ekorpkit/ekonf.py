@@ -392,13 +392,18 @@ class eKonf:
 
 
 def call(cfg: Any, obj: object):
-    if isinstance(cfg, list):
-        for _run in cfg:
-            if isinstance(_run, str):
-                getattr(obj, _run)()
-            elif isinstance(_run, dict):
-                _run = eKonf.to_dict(_run)
-                getattr(obj, _run["name"])(**_run["args"])
+    cfg = eKonf.to_dict(cfg)
+    if "_call_" in cfg:
+        _call_list_ = cfg["_call_"]
+        if isinstance(_call_list_, list):
+            for _run in _call_list_:
+                log.info(f"Calling {_run}")
+                if isinstance(_run, str):
+                    getattr(obj, _run)()
+                elif isinstance(_run, dict):
+                    getattr(obj, _run["name"])(**_run["args"])
+    else:
+        log.info("No call function defined")
 
 
 def pprint(cfg: Any, **kwargs):

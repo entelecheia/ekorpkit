@@ -32,7 +32,7 @@ class Datasets:
         self.data_dir = args["data_dir"]
         self._data_files = self.args.get("data_files", None)
         self.filetype = self.args.get("filetype", "csv")
-        self._autorun_list = self.args.get("autorun", None)
+        self._call = self.args.get("call", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
         self.info_args = self.args.get("info", None)
@@ -69,7 +69,7 @@ class Datasets:
                     self.splits = {split: None for split in dataset.data_files}
             log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
-        eKonf.call(self._autorun_list, self)
+        eKonf.call(self._call, self)
 
     def __str__(self):
         classname = self.__class__.__name__

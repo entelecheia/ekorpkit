@@ -90,10 +90,12 @@ def cached_gdown(
 
         # If we're using the path!c/d/file.txt syntax, handle it here.
         fname = None
+        extraction_path = path
         exclamation_index = path.find("!")
         if extract_archive and exclamation_index >= 0:
             extraction_path = path[:exclamation_index]
             fname = path[exclamation_index + 1 :]
+        
 
         cache_path = cache_dir / f".{id}" / extraction_path
         cache_path.parent.mkdir(parents=True, exist_ok=True)
