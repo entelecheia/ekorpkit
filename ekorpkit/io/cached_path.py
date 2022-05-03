@@ -64,7 +64,8 @@ def cached_gdown(
     :type url: str
           ex) gd://id:path
     :type verbose: bool
-    :type postprocess: callable
+    :type extract_archive: bool
+    :type force_extract: bool
     :type cache_dir: str
     :returns: str
     """

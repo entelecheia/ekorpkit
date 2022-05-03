@@ -2,4 +2,4 @@
 defaults:
   - default
 
-_key_: corpus.builtin
+_config_: corpus.builtin

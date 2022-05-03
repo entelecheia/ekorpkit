@@ -9,10 +9,7 @@ log = logging.getLogger(__name__)
 
 
 def cmd(**args):
-    cfg = eKonf.to_config(args)
-    if cfg._key_:
-        cfg = eKonf.select(cfg, cfg._key_)
-        eKonf.instantiate(cfg)
+    eKonf.run(args)
 
 
 def listup(**args):

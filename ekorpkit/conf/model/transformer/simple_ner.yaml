@@ -1,6 +1,6 @@
 _target_: ekorpkit.models.transformer.SimpleTrainerNER
 defaults:
-  - default
+  - _train
 
 model_class: ner
 reprocess_input_data: True

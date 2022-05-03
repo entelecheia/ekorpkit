@@ -1306,7 +1306,7 @@ def _save_dataframe(df, args):
     verbose = args.get("verbose", False)
     filepath = args.get("filepath", None)
     filetype = args.get("filetype", None)
-    corpus_name = args.get("corpus_name", "corpus")
+    name = args.get("name", "output")
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
     dataframe_name = args.get("dataframe_name", None)
@@ -1324,10 +1324,11 @@ def _save_dataframe(df, args):
     if output_file:
         fileinfo = os.path.splitext(output_file)
         filename = fileinfo[0]
-        if not filetype:
-            filetype = fileinfo[1] if len(fileinfo) > 1 else "csv"
+        filetype = (
+            fileinfo[1] if len(fileinfo) > 1 else ("csv" if not filetype else filetype)
+        )
     else:
-        filename = f"{corpus_name}"
+        filename = f"{name}"
         if not filetype:
             filetype = "csv"
     filetype = "." + filetype.replace(".", "")
@@ -1457,8 +1458,7 @@ def pipeline(**cfg):
         elif isinstance(dataset, Dataset):
             df = dataset.splits
     elif data_dir and data_file:
-        filepath = f"{data_dir}/{data_file}"
-        df = load_dataframe(filepath, verbose=verbose)
+        df = _load_dataframe(df, args)
 
     process_pipeline = args.get("_pipeline_", [])
     if process_pipeline is None:

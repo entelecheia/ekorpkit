@@ -1,5 +1,5 @@
 # @package _global_
-_key_:
+_config_:
 _target_:
 defaults:
   - _self_
