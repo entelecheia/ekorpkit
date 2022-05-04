@@ -1365,6 +1365,8 @@ def _load_dataframe(df=None, args=None):
     else:
         filepaths = get_filepaths(data_file, data_dir)
     if verbose:
+        print(f"Loading {len(filepaths)} dataframes from {filepaths}")
+    else:
         log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
     if len(filepaths) == 1:
         return load_dataframe(

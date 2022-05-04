@@ -7,6 +7,9 @@ _target_: ekorpkit.models.eval.eval_classification
 data:
 data_dir:
 data_file:
+pipeline:
+  data_dir: ${..data_dir}
+  data_file: ${..data_file}
 to_eval:
   actual: labels
   predicted: pred_labels
