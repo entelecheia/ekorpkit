@@ -1,38 +1,55 @@
 import logging
 import os
 import sklearn
+from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
-from ekorpkit.io.file import load_dataframe, save_dataframe
+from ekorpkit.io.file import save_dataframe
 
 
 log = logging.getLogger(__name__)
 
 
 class SimpleTrainer:
+    __metaclass__ = ABCMeta
+
     def __init__(self, **args):
         args = eKonf.to_dict(args)
-        os.makedirs(args["output_dir"], exist_ok=True)
-        os.makedirs(args["cache_dir"], exist_ok=True)
-        os.makedirs(args["pred_output_dir"], exist_ok=True)
-        os.makedirs(args["result_dir"], exist_ok=True)
         self.args = args
+        self.name = args["name"]
+        self.verbose = args.get("verbose", True)
+        self._model_cfg = args["config"]
+        self._model_eval = args.get("model", {}).get("eval")
         self._dataset = args.get("dataset", None)
-        self.model_cfg = args["config"]
         self._to_predict = args["to_predict"]
         self._to_train = args["to_train"]
-        self.verbose = args.get("verbose", True)
-        self._call = self.args.get("call")
+        self._call_ = self.args.get("_call_")
+        self._pred_output_dir = args["pred_output_dir"]
+        self._pred_output_file = args["pred_output_file"]
 
         self.input_key = self._to_predict["input"]
         self.predicted_key = self._to_predict["predicted"]
         self.labels_key = self._to_train["labels"]
 
+        os.makedirs(args["output_dir"], exist_ok=True)
+        os.makedirs(args["cache_dir"], exist_ok=True)
+        os.makedirs(args["pred_output_dir"], exist_ok=True)
+        os.makedirs(args["result_dir"], exist_ok=True)
+
         self.model = None
         self.splits = {}
-        self.pred_data = {}
-        self.to_predict = {}
+        self.train_data = None
+        self.eval_data = None
+        self.test_data = None
 
-        eKonf.call(self._call, self)
+        eKonf.call(self._call_, self)
+
+    @abstractmethod
+    def train(self):
+        raise NotImplementedError("Must override train")
+
+    @abstractmethod
+    def predict(self, to_predict: list):
+        raise NotImplementedError("Must override predict")
 
     def load_datasets(self):
         if self._dataset is None:
@@ -43,19 +60,22 @@ class SimpleTrainer:
 
         self.train_data = self.splits["train"]
         if self.verbose:
+            print("Train data:")
             print(self.train_data.info())
             print(self.train_data.tail())
         if "dev" in self.splits:
             self.eval_data = self.splits["dev"]
-            self.model_cfg["evaluate_during_training"] = True
+            self._model_cfg["evaluate_during_training"] = True
             if self.verbose:
+                print("Eval data:")
                 print(self.eval_data.info())
                 print(self.eval_data.tail())
         else:
             self.eval_data = None
-            self.model_cfg["evaluate_during_training"] = False
+            self._model_cfg["evaluate_during_training"] = False
         self.test_data = self.splits["test"]
         if self.verbose:
+            print("Test data:")
             print(self.test_data.info())
             print(self.test_data.tail())
 
@@ -68,6 +88,20 @@ class SimpleTrainer:
     def assign_predictions(self, df, preds):
         df[self.predicted_key] = preds
         return df
+
+    def eval(self):
+        if not self.splits:
+            self.load_datasets()
+
+        self.to_predict = self.convert_to_predict(self.test_data)
+        preds = self.predict(self.to_predict)
+        self.pred_data = self.assign_predictions(self.test_data, preds)
+        pred_filepath = os.path.join(self._pred_output_dir, self._pred_output_file)
+        save_dataframe(self.pred_data, pred_filepath)
+        if self.verbose:
+            print(self.pred_data.head())
+        if self._model_eval:
+            eKonf.instantiate(self._model_eval, data=self.pred_data)
 
 
 class SimpleTrainerNER(SimpleTrainer):
@@ -139,10 +173,10 @@ class SimpleTrainerClassification(SimpleTrainer):
         if not self.splits:
             self.load_datasets()
 
-        self.model_cfg["labels_list"] = (
+        self._model_cfg["labels_list"] = (
             self.train_data[self.labels_key].unique().tolist()
         )
-        args["num_labels"] = len(self.model_cfg["labels_list"])
+        args["num_labels"] = len(self._model_cfg["labels_list"])
 
         # Create a NERModel
         model = ClassificationModel(
@@ -150,7 +184,7 @@ class SimpleTrainerClassification(SimpleTrainer):
             args["model_uri"],
             num_labels=args["num_labels"],
             cuda_device=args["cuda_device"],
-            args=self.model_cfg,
+            args=self._model_cfg,
         )
 
         # Train the model
@@ -165,19 +199,20 @@ class SimpleTrainerClassification(SimpleTrainer):
         if self.verbose:
             print(f"Evaluation result: {result}")
             print(f"Wrong predictions: {wrong_predictions[:5]}")
-            print(f"Model outputs: {model_outputs[:5]}")
+            # print(f"Model outputs: {model_outputs[:5]}")
             print(f"num_outputs: {len(model_outputs)}")
             print(f"num_wrong_predictions: {len(wrong_predictions)}")
 
-    def load_model(self, model_dir=None, pred_args=None):
+    def load_model(self, model_dir=None):
         from simpletransformers.classification import ClassificationModel
 
         if model_dir is None:
-            model_dir = self.args.best_model_dir
+            model_dir = self.args["best_model_dir"]
 
         self.model = ClassificationModel(
-            self.args.model_type, model_dir, args=self.model_cfg
+            self.args["model_type"], model_dir, args=self._model_cfg
         )
+        log.info(f"Loaded model from {model_dir}")
 
     def predict(self, to_predict: list):
         if self.model is None:

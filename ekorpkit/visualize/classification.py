@@ -31,14 +31,10 @@ def plot_confusion_matrix(
                                 Default is True.
         cmap:                   Colormap of the values displayed from matplotlib.pyplot.cm. Default is 'Blues'
     """
-    cfg = eKonf.compose(
-        config_group="visualize/plot=confusion_matrix", return_as_dict=True
-    )
-
-    confusion_matrix = confusion_matrix or cfg["confusion_matrix"]
-    savefig = savefig or cfg["savefig"]
-    plot = plot or cfg["plot"]
-    figure = figure or cfg["figure"]
+    # confusion_matrix = confusion_matrix or cfg["confusion_matrix"]
+    # savefig = savefig or cfg["savefig"]
+    # plot = plot or cfg["plot"]
+    # figure = figure or cfg["figure"]
 
     display_labels = confusion_matrix.get("display_labels") or "auto"
     matrix_labels = confusion_matrix.get("matrix_labels")

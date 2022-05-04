@@ -1,6 +1,7 @@
 defaults:
   - _train
   - config: classification
+  - /model/eval: classification
 
 _target_: ekorpkit.models.transformer.SimpleTrainerClassification
 model_class: classification
@@ -9,8 +10,17 @@ num_labels:
 use_cuda: true
 cuda_device: -1
 to_train:
-  labels: labels
+  labels: ${..model.eval.to_eval.actual}
   text: text
 to_predict:
   input: text
-  predicted: pred_labels
+  predicted: ${..model.eval.to_eval.predicted}
+model:
+  output_dir: ${..pred_output_dir}
+  labels: ${..labels}
+  eval:
+    labels: ${..labels}
+    to_eval:
+      actual: labels
+      predicted: pred_labels
+      labels: ${..labels}

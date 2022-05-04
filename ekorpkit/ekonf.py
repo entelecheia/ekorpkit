@@ -397,8 +397,13 @@ class eKonf:
 
 def _call(cfg: Any, obj: object):
     cfg = eKonf.to_dict(cfg)
-    if _Keys.CALL in cfg:
-        _call_list_ = cfg[_Keys.CALL]
+    if cfg:
+        if isinstance(cfg, dict) and _Keys.CALL in cfg:
+            _call_list_ = cfg[_Keys.CALL]
+        else:
+            _call_list_ = cfg
+        if isinstance(_call_list_, str):
+            _call_list_ = [_call_list_]
         if isinstance(_call_list_, list):
             for _run in _call_list_:
                 log.info(f"Calling {_run}")
