@@ -89,7 +89,7 @@ def save_dataframe(
 
     log.info(f"Saving dataframe as {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
-        if "csv" in filetype:
+        if "csv" in filetype or "tsv" in filetype:
             df.to_csv(filepath, index=index)
         elif "parquet" in filetype:
             df.to_parquet(filepath, compression="gzip", engine="pyarrow")
@@ -108,6 +108,8 @@ def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwa
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype:
             df = pd.read_csv(filepath, index_col=index_col, **kwargs)
+        elif "tsv" in filetype:
+            df = pd.read_csv(filepath, index_col=index_col, sep="\t", **kwargs)
         elif "parquet" in filetype:
             df = pd.read_parquet(filepath, engine="pyarrow")
         else:

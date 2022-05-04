@@ -26,9 +26,7 @@ class SimpleTrainer:
         self._pred_output_dir = args["pred_output_dir"]
         self._pred_output_file = args["pred_output_file"]
 
-        self.input_key = self._to_predict["input"]
-        self.predicted_key = self._to_predict["predicted"]
-        self.labels_key = self._to_train["labels"]
+        self.labels_key = self._to_train.get("labels")
 
         os.makedirs(args["output_dir"], exist_ok=True)
         os.makedirs(args["cache_dir"], exist_ok=True)
@@ -36,6 +34,7 @@ class SimpleTrainer:
         os.makedirs(args["result_dir"], exist_ok=True)
 
         self.model = None
+        self.dataset = None
         self.splits = {}
         self.train_data = None
         self.eval_data = None
@@ -55,16 +54,16 @@ class SimpleTrainer:
         if self._dataset is None:
             log.warning("No dataset config found")
             return
-        dataset = eKonf.instantiate(self._dataset)
-        self.splits = dataset.splits
+        self.dataset = eKonf.instantiate(self._dataset)
+        self.splits = self.dataset.splits
 
-        self.train_data = self.splits["train"]
+        self.train_data = self.splits[self.dataset.SPLITS.TRAIN]
         if self.verbose:
             print("Train data:")
             print(self.train_data.info())
             print(self.train_data.tail())
         if "dev" in self.splits:
-            self.eval_data = self.splits["dev"]
+            self.eval_data = self.splits[self.dataset.SPLITS.DEV]
             self._model_cfg["evaluate_during_training"] = True
             if self.verbose:
                 print("Eval data:")
@@ -73,20 +72,22 @@ class SimpleTrainer:
         else:
             self.eval_data = None
             self._model_cfg["evaluate_during_training"] = False
-        self.test_data = self.splits["test"]
+        self.test_data = self.splits[self.dataset.SPLITS.TEST]
         if self.verbose:
             print("Test data:")
             print(self.test_data.info())
             print(self.test_data.tail())
 
     def convert_to_predict(self, df):
-        to_predict = df[self.input_key].tolist()
+        input_key = self._to_predict["input"]
+        to_predict = df[input_key].tolist()
         if self.verbose:
             print(to_predict[:5])
         return to_predict
 
     def assign_predictions(self, df, preds):
-        df[self.predicted_key] = preds
+        predicted_key = self._to_predict["predicted"]
+        df[predicted_key] = preds
         return df
 
     def eval(self):
@@ -104,7 +105,7 @@ class SimpleTrainer:
             eKonf.instantiate(self._model_eval, data=self.pred_data)
 
 
-class SimpleTrainerNER(SimpleTrainer):
+class SimpleNER(SimpleTrainer):
     def __init__(self, **args):
         super().__init__(**args)
 
@@ -135,7 +136,7 @@ class SimpleTrainerNER(SimpleTrainer):
         return result, model_outputs, predictions
 
 
-class SimpleTrainerMultiLabel(SimpleTrainer):
+class SimpleMultiLabel(SimpleTrainer):
     def __init__(self, **args):
         super().__init__(**args)
 
@@ -162,7 +163,7 @@ class SimpleTrainerMultiLabel(SimpleTrainer):
         return result, model_outputs, predictions
 
 
-class SimpleTrainerClassification(SimpleTrainer):
+class SimpleClassification(SimpleTrainer):
     def __init__(self, **args):
         super().__init__(**args)
 

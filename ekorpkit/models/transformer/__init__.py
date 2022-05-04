@@ -1,6 +1,6 @@
 from .simple import (
-    SimpleTrainerNER,
-    SimpleTrainerMultiLabel,
-    SimpleTrainerClassification,
+    SimpleNER,
+    SimpleMultiLabel,
+    SimpleClassification,
 )
-from .simple_t5 import SimpleTrainerT5
+from .simple_t5 import SimpleT5

@@ -1,6 +1,8 @@
 import logging
+from enum import Enum
 from pathlib import Path
 from pprint import pprint
+from re import S
 from ekorpkit import eKonf
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit.io.file import load_dataframe
@@ -9,7 +11,19 @@ from ekorpkit.io.file import load_dataframe
 log = logging.getLogger(__name__)
 
 
+class _SPLITS(str, Enum):
+    """Split keys in configs used by Dataset."""
+
+    TRAIN = "train"
+    DEV = "dev"
+    TEST = "test"
+
+
 class Dataset:
+    """Dataset class."""
+
+    SPLITS = _SPLITS
+
     def __init__(self, **args):
         self.args = eKonf.to_dict(args)
         self.name = self.args["name"]
@@ -38,9 +52,9 @@ class Dataset:
         self.data_files = self.args.get("data_files", None)
         if self.data_files is None:
             self.data_files = {
-                "train": f"{self.name}-train.{self.filetype}",
-                "dev": f"{self.name}-dev.{self.filetype}",
-                "test": f"{self.name}-test.{self.filetype}",
+                _SPLITS.TRAIN: f"{self.name}-train.{self.filetype}",
+                _SPLITS.DEV: f"{self.name}-dev.{self.filetype}",
+                _SPLITS.TEST: f"{self.name}-test.{self.filetype}",
             }
 
         self.description = self.args.get("description", "")

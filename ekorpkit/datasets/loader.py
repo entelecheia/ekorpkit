@@ -4,13 +4,15 @@ import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.file import save_dataframe
-from .dataset import Dataset
+from .dataset import Dataset, _SPLITS
 
 
 log = logging.getLogger(__name__)
 
 
-class Datasets:
+class Datasets:    
+    SPLITS = _SPLITS
+
     def __init__(self, **args):
         args = eKonf.to_dict(args)
         self.args = args

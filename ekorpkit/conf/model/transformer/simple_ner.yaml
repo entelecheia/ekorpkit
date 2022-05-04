@@ -1,4 +1,4 @@
-_target_: ekorpkit.models.transformer.SimpleTrainerNER
+_target_: ekorpkit.models.transformer.SimpleNER
 defaults:
   - _train
 

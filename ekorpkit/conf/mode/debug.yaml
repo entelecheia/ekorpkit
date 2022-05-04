@@ -6,3 +6,6 @@ debug_mode: true
 print_resolved_config: true
 verbose: true
 ignore_warnings: false
+env:
+  os:
+    HYDRA_FULL_ERROR: 1
