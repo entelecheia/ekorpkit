@@ -318,7 +318,7 @@ class NLTKTokenizer(Tokenizer):
         NLTK.download("punkt", quiet=True)
         NLTK.download("averaged_perceptron_tagger", quiet=True)
         NLTK.download('wordnet', quiet=True)
-        NLTK.download('omw', quiet=True)
+        NLTK.download('omw-1.4', quiet=True)
 
         nltk = nltk or {}
         self.verbose = kwargs.get("verbose", False)
