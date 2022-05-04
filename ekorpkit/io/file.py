@@ -17,8 +17,9 @@ def get_filepaths(
     filepaths = []
     for file in filename_patterns:
         file = os.path.join(base_dir, file) if base_dir else file
-        if Path(file).is_file():
-            filepaths.append(file)
+        if os.path.exists(file):
+            if Path(file).is_file():
+                filepaths.append(file)
         else:
             filepaths += glob(file, recursive=recursive)
     filepaths = [fp for fp in filepaths if Path(fp).is_file()]
