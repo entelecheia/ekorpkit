@@ -1,4 +1,4 @@
-name: ${oc.select:..name, ${..model_name}-${..model_class}}
+name: ${oc.select:..name, ${.model_name}-${.model_class}}
 model_class:
 model_type: ${.pretrained.model_type}
 model_name: ${.pretrained.model_name}
@@ -13,3 +13,4 @@ wandb_project: ${project}-${.name}
 wandb_kwargs:
   group: ${..model_name}
   dir: ${..output_dir}
+verbose: ${oc.select:..verbose, false}
