@@ -49,7 +49,7 @@ def test_eval_sentiments():
     eval_cfg.to_eval.actual = "labels"
     eval_cfg.to_eval.predicted = "polarity_label"
     eval_cfg.data_dir = "./data/tmp/predict"
-    eval_cfg.data_file = "financial_phrasebank.parquet"
+    eval_cfg.data_file = "financial_phrasebank*.parquet"
     eval_cfg.output_dir = "./data/tmp/eval"
     eKonf.instantiate(eval_cfg)
 
