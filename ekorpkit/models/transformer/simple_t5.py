@@ -100,7 +100,7 @@ class SimpleT5(SimpleTrainer):
             print(to_predict[:5])
         return to_predict
 
-    def assign_predictions(self, df, preds):
+    def append_predictions(self, df, preds):
         predicted_key = self._to_predict["predicted"]
         if self._model_cfg["num_return_sequences"] > 1:
             preds = [pred[0] for pred in preds]

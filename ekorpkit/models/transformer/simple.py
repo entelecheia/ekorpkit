@@ -85,7 +85,7 @@ class SimpleTrainer:
             print(to_predict[:5])
         return to_predict
 
-    def assign_predictions(self, df, preds):
+    def append_predictions(self, df, preds):
         predicted_key = self._to_predict["predicted"]
         df[predicted_key] = preds
         return df
@@ -96,7 +96,7 @@ class SimpleTrainer:
 
         self.to_predict = self.convert_to_predict(self.test_data)
         preds = self.predict(self.to_predict)
-        self.pred_data = self.assign_predictions(self.test_data, preds)
+        self.pred_data = self.append_predictions(self.test_data, preds)
         pred_filepath = os.path.join(self._pred_output_dir, self._pred_output_file)
         save_dataframe(self.pred_data, pred_filepath)
         if self.verbose:
