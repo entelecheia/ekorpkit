@@ -46,8 +46,8 @@ def test_predict_sentiments():
 
 def test_eval_sentiments():
     eval_cfg = eKonf.compose(config_group="model/eval=classification")
-    eval_cfg.column_info.actual = "labels"
-    eval_cfg.column_info.predicted = "polarity_label"
+    eval_cfg.to_eval.actual = "labels"
+    eval_cfg.to_eval.predicted = "polarity_label"
     eval_cfg.data_dir = "./data/tmp/predict"
     eval_cfg.data_file = "financial_phrasebank.parquet"
     eval_cfg.output_dir = "./data/tmp/eval"
