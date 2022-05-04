@@ -5,4 +5,7 @@ filepath:
 filetype:
 data_dir: ${oc.select:..data_dir, ''}
 data_file: ${oc.select:..data_file, ''}
+concatenate: true
+dtype:
+parse_dates:
 verbose: ${oc.select:..verbose, true}

@@ -1,24 +1,7 @@
 # @package _global_
-_target_:
 defaults:
-  - _self_
-  - about: default
-  - cmd: default
-  - dir: default
-  - env: default
-  - mode: default
-  - corpus: _loader
-  - dataset: _loader
-  - task: _default
-  - model: null
-  - project: null
-  - tokenizer: null
+  - config
   - preprocessor/normalizer: default
   - preprocessor/segmenter: default
   - preprocessor/tokenizer: default
 
-  - override hydra/help: help
-  - override hydra/job_logging: custom
-
-app_name: ${about.app.name}
-project: ${app_name}

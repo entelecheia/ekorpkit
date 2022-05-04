@@ -1,5 +1,0 @@
-defaults:
-  - _default
-  
-_target_: ekorpkit.pipelines.pipe.process_dataframe
-_pipeline_:

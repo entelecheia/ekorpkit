@@ -66,7 +66,7 @@ class Stopwords:
         import nltk
         from nltk.corpus import stopwords
 
-        nltk.download("stopwords")
+        nltk.download("stopwords", quiet=True)
         if language in stopwords.fileids():
             if self.verbose:
                 log.info(f"Loading stopwords for {language} from NLTK")

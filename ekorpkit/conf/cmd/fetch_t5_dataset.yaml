@@ -2,4 +2,4 @@
 defaults:
   - default
 
-_key_: dataset.t5
+_config_: dataset.t5

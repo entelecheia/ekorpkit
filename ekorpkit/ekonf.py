@@ -27,7 +27,7 @@ def __home_path__():
     return pathlib.Path.home().as_posix()
 
 
-def path(
+def _path(
     url_or_filename,
     extract_archive: bool = False,
     force_extract: bool = False,
@@ -43,7 +43,7 @@ def path(
     )
 
 
-def compose(
+def _compose(
     overrides: List[str] = [],
     config_group: str = None,
     *,
@@ -79,7 +79,7 @@ def compose(
     if key and value:
         with hydra.initialize_config_module(config_module="ekorpkit.conf"):
             cfg = hydra.compose(config_name=config_name, overrides=overrides)
-            cfg = select(
+            cfg = _select(
                 cfg,
                 key=key,
                 default=None,
@@ -99,7 +99,7 @@ def compose(
     with hydra.initialize_config_module(config_module="ekorpkit.conf"):
         cfg = hydra.compose(config_name=config_name, overrides=overrides)
         if key:
-            cfg = select(
+            cfg = _select(
                 cfg,
                 key=key,
                 default=None,
@@ -109,11 +109,13 @@ def compose(
         if verbose:
             print(cfg)
         if return_as_dict and isinstance(cfg, DictConfig):
-            return to_dict(cfg)
+            return _to_dict(cfg)
         return cfg
 
 
-config = compose()
+_env_initialized = False
+
+_config = _compose()
 
 DictKeyType = Union[str, int, Enum, float, bool]
 
@@ -122,7 +124,7 @@ OmegaConf.register_new_resolver("__home_path__", __home_path__)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
-OmegaConf.register_new_resolver("cached_path", path)
+OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
 )
@@ -139,7 +141,11 @@ class _Keys(str, Enum):
     CONVERT = "_convert_"
     RECURSIVE = "_recursive_"
     ARGS = "_args_"
-    PARTIAL = "__partial__"
+    PARTIAL = "_partial_"
+    CONFIG = "_config_"
+    CONFIG_GROUP = "_config_group_"
+    PIPELINE = "_pipeline_"
+    CALL = "_call_"
 
 
 class eKonf:
@@ -148,7 +154,8 @@ class eKonf:
     __version__ = _version.get_versions()["version"]
     __ekorpkit_path__ = __ekorpkit_path__()
     __home_path__ = __home_path__()
-    config = compose()
+    config = _config
+    Keys = _Keys
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
@@ -164,7 +171,7 @@ class eKonf:
         config_name="ekonf",
         verbose: bool = False,
     ):
-        return compose(
+        return _compose(
             overrides,
             config_group=config_group,
             return_as_dict=return_as_dict,
@@ -183,7 +190,7 @@ class eKonf:
         throw_on_resolution_failure: bool = True,
         throw_on_missing: bool = False,
     ):
-        return select(
+        return _select(
             cfg,
             key,
             default=default,
@@ -195,19 +202,19 @@ class eKonf:
     def to_dict(
         cfg: Any,
     ):
-        return to_dict(cfg)
+        return _to_dict(cfg)
 
     @staticmethod
     def to_config(
         cfg: Any,
     ):
-        return to_config(cfg)
+        return _to_config(cfg)
 
     @staticmethod
     def to_yaml(cfg: Any, *, resolve: bool = False, sort_keys: bool = False) -> str:
         if resolve:
-            cfg = to_dict(cfg)
-        return to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
+            cfg = _to_dict(cfg)
+        return _to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
 
     @staticmethod
     def to_container(
@@ -218,7 +225,7 @@ class eKonf:
         enum_to_str: bool = False,
         structured_config_mode: SCMode = SCMode.DICT,
     ):
-        return to_container(
+        return _to_container(
             cfg,
             resolve,
             throw_on_missing,
@@ -228,17 +235,17 @@ class eKonf:
 
     @staticmethod
     def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
-        return instantiate(config, *args, **kwargs)
+        return _instantiate(config, *args, **kwargs)
 
     @staticmethod
     def is_config(
         cfg: Any,
     ):
-        return is_config(cfg)
+        return _is_config(cfg)
 
     @staticmethod
     def is_instantiatable(cfg: Any):
-        return is_instantiatable(cfg)
+        return _is_instantiatable(cfg)
 
     @staticmethod
     def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
@@ -270,15 +277,19 @@ class eKonf:
 
     @staticmethod
     def pprint(cfg: Any, **kwargs):
-        pprint(cfg, **kwargs)
+        _print(cfg, **kwargs)
 
     @staticmethod
     def print(cfg: Any, **kwargs):
-        pprint(cfg, **kwargs)
+        _print(cfg, **kwargs)
 
     @staticmethod
     def call(cfg: Any, obj: object):
-        call(cfg, obj)
+        _call(cfg, obj)
+
+    @staticmethod
+    def run(config: Any, **kwargs: Any) -> Any:
+        _run(config, **kwargs)
 
     @staticmethod
     def _init_env_(cfg, verbose=False):
@@ -306,13 +317,8 @@ class eKonf:
         * ``http`` and ``https``,
         * ``s3`` for objects on `AWS S3`_,
         * ``gs`` for objects on `Google Cloud Storage (GCS)`_, and
+        * ``gd`` for objects on `Google Drive`_, and
         * ``hf`` for objects or repositories on `HuggingFace Hub`_.
-
-        You can also extend ``cached_path()`` to handle more schemes with :func:`add_scheme_client()`.
-
-        .. _AWS S3: https://aws.amazon.com/s3/
-        .. _Google Cloud Storage (GCS): https://cloud.google.com/storage
-        .. _HuggingFace Hub: https://huggingface.co/
 
         Examples
         --------
@@ -381,7 +387,7 @@ class eKonf:
             the resource.
 
         """
-        return path(
+        return _path(
             url_or_filename,
             extract_archive=extract_archive,
             force_extract=force_extract,
@@ -389,26 +395,36 @@ class eKonf:
         )
 
 
-def call(cfg: Any, obj: object):
-    if isinstance(cfg, list):
-        for _run in cfg:
-            if isinstance(_run, str):
-                getattr(obj, _run)()
-            elif isinstance(_run, dict):
-                _run = eKonf.to_dict(_run)
-                getattr(obj, _run["name"])(**_run["args"])
+def _call(cfg: Any, obj: object):
+    cfg = eKonf.to_dict(cfg)
+    if cfg:
+        if isinstance(cfg, dict) and _Keys.CALL in cfg:
+            _call_list_ = cfg[_Keys.CALL]
+        else:
+            _call_list_ = cfg
+        if isinstance(_call_list_, str):
+            _call_list_ = [_call_list_]
+        if isinstance(_call_list_, list):
+            for _run in _call_list_:
+                log.info(f"Calling {_run}")
+                if isinstance(_run, str):
+                    getattr(obj, _run)()
+                elif isinstance(_run, dict):
+                    getattr(obj, _run["name"])(**_run["args"])
+    else:
+        log.info("No call function defined")
 
 
-def pprint(cfg: Any, **kwargs):
+def _print(cfg: Any, **kwargs):
     import pprint
 
-    if is_config(cfg):
-        pprint.pprint(to_dict(cfg), **kwargs)
+    if _is_config(cfg):
+        pprint.pprint(_to_dict(cfg), **kwargs)
     else:
         print(cfg)
 
 
-def select(
+def _select(
     cfg: Any,
     key: str,
     *,
@@ -426,11 +442,11 @@ def select(
     )
 
 
-def to_dict(
+def _to_dict(
     cfg: Any,
 ):
     if isinstance(cfg, dict):
-        cfg = to_config(cfg)
+        cfg = _to_config(cfg)
     if isinstance(cfg, (DictConfig, ListConfig)):
         return OmegaConf.to_container(
             cfg,
@@ -441,33 +457,33 @@ def to_dict(
     return cfg
 
 
-def is_config(
+def _is_config(
     cfg: Any,
 ):
     return isinstance(cfg, (DictConfig, dict))
 
 
-def is_instantiatable(cfg: Any):
-    return is_config(cfg) and "_target_" in cfg
+def _is_instantiatable(cfg: Any):
+    return _is_config(cfg) and _Keys.TARGET in cfg
 
 
-def to_config(
+def _to_config(
     cfg: Any,
 ):
     return OmegaConf.create(cfg)
 
 
-def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
+def _load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
     return OmegaConf.load(file_)
 
 
-def save(
+def _save(
     config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
 ) -> None:
     eKonf.save(config, f, resolve=resolve)
 
 
-def merge(
+def _merge(
     *configs: Union[
         DictConfig,
         ListConfig,
@@ -480,11 +496,11 @@ def merge(
     return eKonf.merge(*configs)
 
 
-def to_yaml(cfg: Any, *, resolve: bool = False, sort_keys: bool = False) -> str:
+def _to_yaml(cfg: Any, *, resolve: bool = False, sort_keys: bool = False) -> str:
     return OmegaConf.to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
 
 
-def to_container(
+def _to_container(
     cfg: Any,
     *,
     resolve: bool = False,
@@ -501,7 +517,20 @@ def to_container(
     )
 
 
-def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
+def _run(config: Any, **kwargs: Any) -> Any:
+    config = _merge(config, kwargs)
+    _config_ = config.get(_Keys.CONFIG)
+    if _config_ is None:
+        log.warning("No _config_ specified in config")
+        return None
+    if isinstance(_config_, str):
+        _config_ = [_config_]
+    for _cfg_ in _config_:
+        cfg = _select(config, _cfg_)
+        _instantiate(cfg)
+
+
+def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     """
     :param config: An config object describing what to call and what params to use.
                    In addition to the parameters, the config must contain:
@@ -530,7 +559,9 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     :return: if _target_ is a class name: the instantiated object
              if _target_ is a callable: the return value of the call
     """
-    if config.get("_target_") is None:
+    if not _env_initialized:
+        _init_env_()
+    if config.get(_Keys.TARGET) is None:
         log.warning("No target specified in config")
         return None
     _recursive_ = config.get(_Keys.RECURSIVE, False)
@@ -539,7 +570,9 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     return hydra.utils.instantiate(config, *args, **kwargs)
 
 
-def _init_env_(cfg, verbose=False):
+def _init_env_(cfg=None, verbose=False):
+    if cfg is None:
+        cfg = _config
     env = cfg.env
     backend = env.distributed_framework.backend
     for env_name, env_value in env.get("os", {}).items():
@@ -576,6 +609,8 @@ def _init_env_(cfg, verbose=False):
         )
         if verbose:
             log.info(batcher.batcher_instance)
+
+    _env_initialized_ = True
 
 
 def _stop_env_(cfg, verbose=False):

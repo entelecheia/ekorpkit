@@ -4,13 +4,15 @@ import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.file import save_dataframe
-from .dataset import Dataset
+from .dataset import Dataset, _SPLITS
 
 
 log = logging.getLogger(__name__)
 
 
-class Datasets:
+class Datasets:    
+    SPLITS = _SPLITS
+
     def __init__(self, **args):
         args = eKonf.to_dict(args)
         self.args = args
@@ -32,7 +34,7 @@ class Datasets:
         self.data_dir = args["data_dir"]
         self._data_files = self.args.get("data_files", None)
         self.filetype = self.args.get("filetype", "csv")
-        self._autorun_list = self.args.get("autorun", None)
+        self._call_ = self.args.get("_call_", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
         self.info_args = self.args.get("info", None)
@@ -69,7 +71,7 @@ class Datasets:
                     self.splits = {split: None for split in dataset.data_files}
             log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
-        eKonf.call(self._autorun_list, self)
+        eKonf.call(self._call_, self)
 
     def __str__(self):
         classname = self.__class__.__name__
@@ -122,7 +124,7 @@ class Datasets:
             for name in self.datasets:
                 df = self.datasets[name][split]
                 if self.DATA:
-                    df = df[self.DATA]
+                    df = df[self.DATA].copy()
                 if append_dataset_name:
                     df[self._dataset_key] = name
                 dfs.append(df)

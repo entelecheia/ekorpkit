@@ -1,9 +1,7 @@
 defaults:
   - datasets
+  - /_call_: datasets
 
 _target_: ekorpkit.datasets.loader.Datasets
-name: 
+name:
 data_dir: ${dir.dataset}/simple
-autorun:
-  - load
-  - concatenate

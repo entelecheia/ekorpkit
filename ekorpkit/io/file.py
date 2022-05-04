@@ -17,8 +17,9 @@ def get_filepaths(
     filepaths = []
     for file in filename_patterns:
         file = os.path.join(base_dir, file) if base_dir else file
-        if Path(file).is_file():
-            filepaths.append(file)
+        if os.path.exists(file):
+            if Path(file).is_file():
+                filepaths.append(file)
         else:
             filepaths += glob(file, recursive=recursive)
     filepaths = [fp for fp in filepaths if Path(fp).is_file()]
@@ -79,7 +80,7 @@ def save_dataframe(
         return df
     if columns_to_keep is not None:
         df = df[columns_to_keep]
-    if verbose:
+    if verbose > 1:
         print(df.tail())
 
     output_dir = os.path.dirname(filepath)
@@ -89,7 +90,7 @@ def save_dataframe(
 
     log.info(f"Saving dataframe as {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
-        if "csv" in filetype:
+        if "csv" in filetype or "tsv" in filetype:
             df.to_csv(filepath, index=index)
         elif "parquet" in filetype:
             df.to_parquet(filepath, compression="gzip", engine="pyarrow")
@@ -97,6 +98,8 @@ def save_dataframe(
             raise ValueError("filetype must be .csv or .parquet")
         if verbose:
             log.info(" >> elapsed time to save data: {}".format(elapsed()))
+    if verbose:
+        print(f" >> saved dataframe to {filepath}")
 
 
 def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwargs):
@@ -106,6 +109,8 @@ def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwa
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype:
             df = pd.read_csv(filepath, index_col=index_col, **kwargs)
+        elif "tsv" in filetype:
+            df = pd.read_csv(filepath, index_col=index_col, sep="\t", **kwargs)
         elif "parquet" in filetype:
             df = pd.read_parquet(filepath, engine="pyarrow")
         else:

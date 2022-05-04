@@ -1,4 +1,6 @@
-name:
-data_dir:
-num_workers: ${oc.select:num_workers,1}
+name: task
+data_dir: ${oc.select:..data_dir, ${dir.project}/data}
+output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
+output_file: ${oc.select:..output_file, null}
+num_workers: ${oc.select:..num_workers,1}
 verbose: ${oc.select:..verbose, true}

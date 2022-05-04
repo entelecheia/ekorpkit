@@ -24,15 +24,12 @@ def cached_path(
     if url_or_filename:
         try:
             if url_or_filename.startswith("gd://"):
-                if extract_archive:
-                    postprocess = extractall
-                else:
-                    postprocess = None
 
                 _path = cached_gdown(
                     url_or_filename,
                     verbose=verbose,
-                    postprocess=postprocess,
+                    extract_archive=extract_archive,
+                    force_extract=force_extract,
                     cache_dir=cache_dir,
                 )
             else:
@@ -60,12 +57,15 @@ def cached_path(
             return None
 
 
-def cached_gdown(url, verbose=False, postprocess=None, cache_dir=None):
+def cached_gdown(
+    url, verbose=False, extract_archive=None, force_extract=False, cache_dir=None
+):
     """
     :type url: str
           ex) gd://id:path
     :type verbose: bool
-    :type postprocess: callable
+    :type extract_archive: bool
+    :type force_extract: bool
     :type cache_dir: str
     :returns: str
     """
@@ -82,26 +82,48 @@ def cached_gdown(url, verbose=False, postprocess=None, cache_dir=None):
     gd_prefix = "gd://"
     if url.startswith(gd_prefix):
         url = url[len(gd_prefix) :]
-        _path = url.split(":")
-        if len(_path) == 2:
-            id, path = _path
+        _url = url.split(":")
+        if len(_url) == 2:
+            id, path = _url
         else:
-            id = _path[0]
+            id = _url[0]
             path = id
-        cache_path = cache_dir / path
 
-        return gdown.cached_download(
+        # If we're using the path!c/d/file.txt syntax, handle it here.
+        fname = None
+        extraction_path = path
+        exclamation_index = path.find("!")
+        if extract_archive and exclamation_index >= 0:
+            extraction_path = path[:exclamation_index]
+            fname = path[exclamation_index + 1 :]
+        
+
+        cache_path = cache_dir / f".{id}" / extraction_path
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+
+        cache_path = gdown.cached_download(
             id=id,
             path=cache_path.as_posix(),
             quiet=not verbose,
-            postprocess=postprocess,
         )
+
+        if extract_archive:
+            extraction_path, files = extractall(cache_path, force_extract=force_extract)
+
+            if fname and files:
+                for f in files:
+                    if f.endswith(fname):
+                        return f
+            else:
+                return extraction_path
+        return cache_path
+
     else:
         log.warning(f"Unknown url: {url}")
         return None
 
 
-def extractall(path, to=None):
+def extractall(path, to=None, force_extract=False):
     """Extract archive file.
 
     Parameters
@@ -130,7 +152,7 @@ def extractall(path, to=None):
         log.warning(
             "Could not extract '%s' as no appropriate " "extractor is found" % path
         )
-        return path
+        return path, None
 
     def namelist(f):
         if isinstance(f, ZipFile):
@@ -144,7 +166,25 @@ def extractall(path, to=None):
             files.append(fname)
         return files
 
+    extraction_name = pathlib.Path(path).stem
+    extraction_path = f"{to}/{extraction_name}"
+    if extraction_path is not None:
+        # If the extracted directory already exists (and is non-empty), then no
+        # need to extract again unless `force_extract=True`.
+        if (
+            os.path.isdir(extraction_path)
+            and os.listdir(extraction_path)
+            and not force_extract
+        ):
+            files = [
+                os.path.join(dirpath, filename)
+                for dirpath, _, filenames in os.walk(extraction_path)
+                for filename in filenames
+            ]
+
+            return extraction_path, files
+
     with opener(path, mode) as f:
         f.extractall(path=to)
 
-    return filelist(f)
+    return extraction_path, filelist(f)

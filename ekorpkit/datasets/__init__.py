@@ -1,2 +1,2 @@
-from .sharding import ShardingDataset
 from .loader import Datasets
+from .dataset import Dataset

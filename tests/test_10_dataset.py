@@ -29,11 +29,11 @@ def test_build_datasets():
 
 
 def test_datafame_pipeline():
-    cfg = eKonf.compose(config_group="pipeline=dataframe")
+    cfg = eKonf.compose(config_group="pipeline=pipeline")
     cfg.verbose = True
     cfg.data_dir = "./data/tmp/financial_phrasebank"
     cfg.data_file = "financial_phrasebank-train.csv"
-    cfg._pipeline_ = ["load_dataframe", "summary_stats"]
+    cfg._pipeline_ = ["summary_stats"]
     cfg.summary_stats.output_file = "stats.yaml"
     eKonf.instantiate(cfg)
 

@@ -1,3 +1,3 @@
-output_dir: 
-output_file:
+output_dir: ${oc.select:..output_dir, ${dir.output}/visualize}
+output_file: ${oc.select:..output_file, null}
 verbose: ${oc.select:..verbose, true}

@@ -83,7 +83,7 @@ def web_download(
         and (os.stat(local_path).st_size == remote_size)
     ):
         if verbose:
-            print(f"\[ekorpkit\] `{filename}` is already downloaded at {local_path}")
+            print(f"[{filename}] is already downloaded at {local_path}")
         return None
     filename = os.path.basename(local_path)
     with tqdm(
@@ -100,7 +100,7 @@ def web_download_unzip(
     data_path = zip_path[:-4]
     if (not force_download) and os.path.exists(data_path):
         if verbose:
-            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
+            print(f"[{filename}] is already extracted at {data_path}")
         return None
     data_root = os.path.dirname(zip_path)
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
@@ -119,7 +119,7 @@ def web_download_un7z(
     data_path = zip_path[:-3]
     if (not force_download) and os.path.exists(data_path):
         if verbose:
-            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
+            print(f"[{filename}] is already extracted at {data_path}")
         return None
     # data_root = os.path.dirname(zip_path)
     with py7zr.SevenZipFile(zip_path, mode="r") as z:
@@ -136,7 +136,7 @@ def web_download_untar(
     data_path = tar_path[:-4]
     if (not force_download) and os.path.exists(data_path):
         if verbose:
-            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
+            print(f"[{filename}] is already extracted at {data_path}")
         return None
     data_root = os.path.dirname(tar_path)
     with tarfile.open(tar_path) as tar:
@@ -153,7 +153,7 @@ def web_download_ungzip(
     data_path = gzip_path[:-3]
     if (not force_download) and os.path.exists(data_path):
         if verbose:
-            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
+            print(f"[{filename}] is already extracted at {data_path}")
         return None
     with gzip.open(gzip_path, "rb") as fi:
         with open(data_path, "wb") as fo:
@@ -171,7 +171,7 @@ def gdrive_download_un7z(
     data_path = zip_path[:-3]
     if (not force_download) and os.path.exists(data_path):
         if verbose:
-            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
+            print(f"[{filename}] is already extracted at {data_path}")
         return None
     # data_root = os.path.dirname(zip_path)
     with py7zr.SevenZipFile(zip_path, mode="r") as z:
@@ -188,7 +188,7 @@ def gdrive_download_untar(
     data_path = local_path[: local_path.find(".tar")]
     if (not force_download) and os.path.exists(data_path):
         if verbose:
-            print(f"\[ekorpkit\] `{filename}` is already extracted at {data_path}")
+            print(f"[{filename}] is already extracted at {data_path}")
         return None
     data_root = os.path.dirname(local_path)
     with tarfile.open(local_path) as tar:
@@ -212,7 +212,7 @@ def gdrive_download(
         filename = os.path.basename(local_path)
     if (not force_download) and os.path.exists(local_path):
         if verbose:
-            print(f"[ekorpkit] `{filename}` is already downloaded at {local_path}")
+            print(f"[ekorpkit] [{filename}] is already downloaded at {local_path}")
         return None
 
     if os.path.dirname(local_path):
@@ -227,7 +227,6 @@ def gdrive_download(
     )
     if verbose:
         print(f"download {filename}")
-
 
 
 def _reporthook(t):

@@ -221,8 +221,10 @@ class Corpus:
         self._loaded = True
 
     def load_metadata(self):
-        if self.meta_files is None:
+        if not self.meta_files or len(self.meta_files) == 0:
+            log.info("No metadata files found")
             return
+
         dfs = []
         _id_cols = self._keys[self._id_key]
         for split, data_file in self.meta_files.items():

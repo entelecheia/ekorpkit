@@ -2,8 +2,7 @@
 defaults:
   - override /mode: debug
 
-app_name: mynlp
-project: nlp-project
+project: sample-nlp
 dir:
   data: /workspace/data/
   project: /workspace/data/${project}
