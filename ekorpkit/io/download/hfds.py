@@ -16,6 +16,8 @@ class HFDS:
         self.subsets = self.args.get("subsets", None)
         self.splits = self.args.get("splits", None)
         self.verbose = self.args.get("verbose", True)
+        self.download_mode = self.args.get("download_mode")
+        self.ignore_verifications = self.args.get("ignore_verifications", True)
 
         self.output_dir = self.args.output_dir
         os.makedirs(self.output_dir, exist_ok=True)
@@ -49,7 +51,13 @@ class HFDS:
         dfs = []
         for subset in subsets:
             for split in splits:
-                ds = load_dataset(dataset_name, subset, split=split)
+                ds = load_dataset(
+                    dataset_name,
+                    subset,
+                    split=split,
+                    download_mode=self.download_mode,
+                    ignore_verifications=self.ignore_verifications,
+                )
                 print(ds)
                 df = ds.to_pandas()
                 df["subset"] = subset

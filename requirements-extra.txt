@@ -38,6 +38,7 @@ tensorflow				: transformers, model
 # tf-nightly 				: transformers, model
 google-api-python-client	: transformers, model
 # yellowbrick             : model, visualize
+google-cloud-storage>=2.0.0 : transformers, model, dataset
 
 modin					: pandas
 ray						: pandas
