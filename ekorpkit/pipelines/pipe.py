@@ -683,6 +683,7 @@ def predict(df, args):
         return df
     columns_to_keep = args["columns_to_keep"]
 
+    to_predict = args.get("to_predict", None)
     model = args.get("model", None)
     if model is None:
         if verbose:
@@ -696,22 +697,33 @@ def predict(df, args):
         log.info(f"Predicting: {args}")
         log.info("instantiating model")
 
+    _target_ = model[eKonf.Keys.TARGET]
     model = eKonf.instantiate(model)
+    if "sentiment.analyser" in _target_:
 
-    key = apply_to
-    with elapsed_timer(format_time=True) as elapsed:
-        predictions = apply(
-            model.predict,
-            df[key],
-            description=f"Predicting [{key}]",
-            verbose=verbose,
-            use_batcher=use_batcher,
-            num_workers=num_workers,
-        )
-        pred_df = pd.DataFrame(predictions.tolist(), index=predictions.index)
-        df = df.join(pred_df)
-        if verbose:
-            log.info(" >> elapsed time to predict: {}".format(elapsed()))
+        key = apply_to
+        with elapsed_timer(format_time=True) as elapsed:
+            predictions = apply(
+                model.predict,
+                df[key],
+                description=f"Predicting [{key}]",
+                verbose=verbose,
+                use_batcher=use_batcher,
+                num_workers=num_workers,
+            )
+            pred_df = pd.DataFrame(predictions.tolist(), index=predictions.index)
+            if columns_to_keep:
+                columns_to_keep += pred_df.columns.tolist()
+                args["columns_to_keep"] = columns_to_keep
+            df = df.join(pred_df)
+            if verbose:
+                log.info(" >> elapsed time to predict: {}".format(elapsed()))
+
+    else:
+        df = model.predict(df, to_predict)
+        if columns_to_keep:
+            columns_to_keep.append(model._to_predict["predicted"])
+            args["columns_to_keep"] = columns_to_keep
 
     _save_dataframe(df, args)
 
@@ -1359,6 +1371,7 @@ def _load_dataframe(df=None, args=None):
     if isinstance(dtype, list):
         dtype = {k: "str" for k in dtype}
     parse_dates = args.get("parse_dates", False)
+    columns_to_keep = args.get("columns_to_keep", None)
 
     if filepath:
         filepaths = get_filepaths(filepath)
@@ -1369,9 +1382,13 @@ def _load_dataframe(df=None, args=None):
     else:
         log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
     if len(filepaths) == 1:
-        return load_dataframe(
+        df = load_dataframe(
             filepaths[0], verbose=verbose, dtype=dtype, parse_dates=parse_dates
         )
+        if columns_to_keep:
+            columns_to_keep = [c for c in columns_to_keep if c in df.columns]
+            df = df[columns_to_keep]
+        return df
     else:
         if concatenate:
             df = pd.concat(
@@ -1382,14 +1399,23 @@ def _load_dataframe(df=None, args=None):
                     for f in filepaths
                 ]
             )
+            if columns_to_keep:
+                columns_to_keep = [c for c in columns_to_keep if c in df.columns]
+                df = df[columns_to_keep]
             return df
         else:
-            return {
-                os.path.basename(f): load_dataframe(
+            df_dict = {}
+
+            for f in filepaths:
+                df = load_dataframe(
                     f, verbose=verbose, dtype=dtype, parse_dates=parse_dates
                 )
-                for f in filepaths
-            }
+                if columns_to_keep:
+                    columns_to_keep = [c for c in columns_to_keep if c in df.columns]
+                    df = df[columns_to_keep]
+                df_name = os.path.basename(f)
+                df_dict[df_name] = df
+            return df_dict
 
 
 def summary_stats(df, args):
@@ -1459,6 +1485,8 @@ def pipeline(**cfg):
             df = dataset.data
         elif isinstance(dataset, Dataset):
             df = dataset.splits
+        elif isinstance(dataset, pd.DataFrame):
+            df = dataset
     elif data_dir and data_file:
         df = _load_dataframe(df, args)
 

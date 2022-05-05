@@ -1,4 +1,6 @@
+_call_:
 name: ${oc.select:..name, ${.model_name}-${.model_class}}
+dataset: ${dataset}
 model_class:
 model_type: ${.pretrained.model_type}
 model_name: ${.pretrained.model_name}

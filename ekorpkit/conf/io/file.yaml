@@ -1,7 +1,3 @@
-# @package _global_
-defaults:
-  - default
-  
 uri:
 extract_archive: true
 force_extract: false

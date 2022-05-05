@@ -1,14 +1,14 @@
 defaults:
-  - _train
+  - _default
   - config: t5
   - /model/eval: classification
-  
+
 _target_: ekorpkit.models.transformer.SimpleT5
 model_class: classification
 cuda_device: 0
 labels: ${oc.select:dataset.labels, null}
 to_train:
-  prefix: 
+  prefix:
   input_text: text
   target_text: labels
   task_prefix: classification

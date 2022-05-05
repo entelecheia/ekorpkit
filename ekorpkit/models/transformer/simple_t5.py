@@ -78,7 +78,7 @@ class SimpleT5(SimpleTrainer):
         self.model = T5Model(self.args["model_type"], model_dir, args=self._model_cfg)
         log.info(f"Loaded model from {model_dir}")
 
-    def predict(self, to_predict: list):
+    def _predict(self, to_predict: list):
         if self.model is None:
             self.load_model()
 

@@ -9,3 +9,8 @@ output_file: ${oc.select:..output_file, null}
 num_workers: ${oc.select:..num_workers,1}
 use_batcher: ${oc.select:..use_batcher, true}
 verbose: ${oc.select:..verbose, true}
+to_predict:
+  prefix:
+  input: ${oc.select:..apply_to, text}
+  predicted: pred_labels
+  task_prefix: ${oc.select:..model.model_class, null}

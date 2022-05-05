@@ -561,9 +561,9 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     """
     if not _env_initialized:
         _init_env_()
-    if config.get(_Keys.TARGET) is None:
-        log.warning("No target specified in config")
-        return None
+    if not _is_instantiatable(config):
+        log.warning(f"Config {config} is not instantiatable, returning config")
+        return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
         kwargs[_Keys.RECURSIVE] = _recursive_

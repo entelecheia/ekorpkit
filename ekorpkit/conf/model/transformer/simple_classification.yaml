@@ -1,5 +1,5 @@
 defaults:
-  - _train
+  - _default
   - config: classification
   - /model/eval: classification
 

@@ -1,7 +1,7 @@
-_target_: ekorpkit.models.transformer.SimpleNER
 defaults:
-  - _train
+  - _default
 
+_target_: ekorpkit.models.transformer.SimpleNER
 model_class: ner
 reprocess_input_data: True
 overwrite_output_dir: True

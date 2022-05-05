@@ -1,7 +1,7 @@
 defaults:
-  - _train
+  - _default
   - config: t5
-  
+
 _target_: ekorpkit.models.transformer.SimpleT5
 model_class: mixed
 cuda_device: 0

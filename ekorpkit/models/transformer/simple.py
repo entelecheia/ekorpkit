@@ -47,7 +47,7 @@ class SimpleTrainer:
         raise NotImplementedError("Must override train")
 
     @abstractmethod
-    def predict(self, to_predict: list):
+    def _predict(self, to_predict: list):
         raise NotImplementedError("Must override predict")
 
     def load_datasets(self):
@@ -90,12 +90,24 @@ class SimpleTrainer:
         df[predicted_key] = preds
         return df
 
+    def predict(self, df, _to_predict={}):
+        if to_predict:
+            self._to_predict = _to_predict
+        to_predict = self.convert_to_predict(df)
+        preds = self._predict(to_predict)
+        df = self.append_predictions(df, preds)
+        return df
+
     def eval(self):
         if not self.splits:
             self.load_datasets()
 
-        self.to_predict = self.convert_to_predict(self.test_data)
-        preds = self.predict(self.to_predict)
+        if self.test_data is None:
+            log.warning("No test data found")
+            return
+
+        to_predict = self.convert_to_predict(self.test_data)
+        preds = self._predict(to_predict)
         self.pred_data = self.append_predictions(self.test_data, preds)
         pred_filepath = os.path.join(self._pred_output_dir, self._pred_output_file)
         save_dataframe(self.pred_data, pred_filepath)
@@ -215,7 +227,7 @@ class SimpleClassification(SimpleTrainer):
         )
         log.info(f"Loaded model from {model_dir}")
 
-    def predict(self, to_predict: list):
+    def _predict(self, to_predict: list):
         if self.model is None:
             self.load_model()
 
