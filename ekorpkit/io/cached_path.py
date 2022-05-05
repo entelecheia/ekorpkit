@@ -182,9 +182,9 @@ def extractall(path, to=None, force_extract=False):
                 for filename in filenames
             ]
 
-            return extraction_path, files
+            return to, files
 
     with opener(path, mode) as f:
         f.extractall(path=to)
 
-    return extraction_path, filelist(f)
+    return to, filelist(f)
