@@ -5,4 +5,4 @@ data_dir: ${oc.select:..data_dir, ''}
 data_souces: ${oc.select:..data_sources, ''}
 num_workers: ${oc.select:task.num_workers,100}
 ignore_verifications: true
-download_mode: force_redownload
+download_mode:
