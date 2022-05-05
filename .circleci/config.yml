@@ -26,8 +26,8 @@ jobs:
           name: Run tests
           command: pytest
       - codecov/upload:
-          file: {{ coverage_report_filepath }}
-          
+          file: .coverage
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
