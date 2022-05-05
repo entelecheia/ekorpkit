@@ -7,6 +7,7 @@ version: 2.1
 orbs:
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
   python: circleci/python@1.5.0
+  codecov: codecov/codecov@3.1.1
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -25,9 +26,13 @@ jobs:
           name: Run tests
           command: pytest
 
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   test:
     jobs:
       - build-and-test
+  upload-to-codecov:
+    jobs:
+      - codecov/upload
