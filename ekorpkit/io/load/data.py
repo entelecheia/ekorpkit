@@ -146,16 +146,27 @@ def load_hfds(split_name, **loader_cfg):
     dataset_name = loader_cfg["name"]
     split = loader_cfg["data_souces"][split_name]
     subsets = loader_cfg["subset"]
+    download_mode = loader_cfg.get("download_mode", "force_redownload")
+    ignore_verifications = loader_cfg.get("ignore_verifications", True)
+
     if isinstance(subsets, str):
         subsets = [subsets]
     elif not isinstance(subsets, list):
         subsets = [None]
+
     log.info(
         f"Loading [{split_name}] documents from huggingface datasets [{dataset_name}]"
     )
+
     dfs = []
     for subset in subsets:
-        ds = load_dataset(dataset_name, subset, split=split)
+        ds = load_dataset(
+            dataset_name,
+            subset,
+            split=split,
+            download_mode=download_mode,
+            ignore_verifications=ignore_verifications,
+        )
         print(ds)
         df = ds.to_pandas()
         df["subset"] = subset
