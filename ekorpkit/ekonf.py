@@ -1,14 +1,12 @@
 import logging
 import os
-import functools
 import random
 import hydra
 import pathlib
+import dotenv
 import ekorpkit.utils.batch.batcher as batcher
-from pprint import pprint
 from enum import Enum
 from hydra.core.config_store import ConfigStore
-from hydra.utils import get_method
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
 from ekorpkit.io.cached_path import cached_path
@@ -113,9 +111,33 @@ def _compose(
         return cfg
 
 
-_env_initialized = False
+def _to_dict(
+    cfg: Any,
+):
+    if isinstance(cfg, dict):
+        cfg = _to_config(cfg)
+    if isinstance(cfg, (DictConfig, ListConfig)):
+        return OmegaConf.to_container(
+            cfg,
+            resolve=True,
+            throw_on_missing=False,
+            structured_config_mode=SCMode.DICT,
+        )
+    return cfg
 
-_config = _compose()
+
+def _to_config(
+    cfg: Any,
+):
+    return OmegaConf.create(cfg)
+
+def dotenv_values(dotenv_path=None, **kwargs):
+    config = dotenv.dotenv_values(dotenv_path=dotenv_path, **kwargs)
+    return dict(config)
+    
+_env_initialized_ = False
+
+_config = _compose().copy()
 
 DictKeyType = Union[str, int, Enum, float, bool]
 
@@ -124,14 +146,12 @@ OmegaConf.register_new_resolver("__home_path__", __home_path__)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
+OmegaConf.register_new_resolver("get_original_cwd", hydra.utils.get_original_cwd)
 OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
 )
-
-
-def partial(_partial_, *args, **kwargs):
-    return functools.partial(get_method(_partial_), *args, **kwargs)
+OmegaConf.register_new_resolver("dotenv_values", dotenv_values)
 
 
 class _Keys(str, Enum):
@@ -146,6 +166,240 @@ class _Keys(str, Enum):
     CONFIG_GROUP = "_config_group_"
     PIPELINE = "_pipeline_"
     CALL = "_call_"
+
+
+def _call(cfg: Any, obj: object):
+    cfg = eKonf.to_dict(cfg)
+    if cfg:
+        if isinstance(cfg, dict) and _Keys.CALL in cfg:
+            _call_list_ = cfg[_Keys.CALL]
+        else:
+            _call_list_ = cfg
+        if isinstance(_call_list_, str):
+            _call_list_ = [_call_list_]
+        if isinstance(_call_list_, list):
+            for _run in _call_list_:
+                log.info(f"Calling {_run}")
+                if isinstance(_run, str):
+                    getattr(obj, _run)()
+                elif isinstance(_run, dict):
+                    getattr(obj, _run["name"])(**_run["args"])
+    else:
+        log.info("No call function defined")
+
+
+def _print(cfg: Any, **kwargs):
+    import pprint
+
+    if _is_config(cfg):
+        pprint.pprint(_to_dict(cfg), **kwargs)
+    else:
+        print(cfg)
+
+
+def _select(
+    cfg: Any,
+    key: str,
+    *,
+    default: Any = None,
+    throw_on_resolution_failure: bool = True,
+    throw_on_missing: bool = False,
+):
+    key = key.replace("/", ".")
+    return OmegaConf.select(
+        cfg,
+        key=key,
+        default=default,
+        throw_on_resolution_failure=throw_on_resolution_failure,
+        throw_on_missing=throw_on_missing,
+    )
+
+
+def _is_config(
+    cfg: Any,
+):
+    return isinstance(cfg, (DictConfig, dict))
+
+
+def _is_instantiatable(cfg: Any):
+    return _is_config(cfg) and _Keys.TARGET in cfg
+
+
+def _load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
+    return OmegaConf.load(file_)
+
+
+def _save(
+    config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
+) -> None:
+    OmegaConf.save(config, f, resolve=resolve)
+
+
+def _merge(
+    *configs: Union[
+        DictConfig,
+        ListConfig,
+        Dict[DictKeyType, Any],
+        List[Any],
+        Tuple[Any, ...],
+        Any,
+    ],
+) -> Union[ListConfig, DictConfig]:
+    """
+    Merge a list of previously created configs into a single one
+    :param configs: Input configs
+    :return: the merged config object.
+    """
+    return OmegaConf.merge(*configs)
+
+
+def _to_yaml(cfg: Any, *, resolve: bool = False, sort_keys: bool = False) -> str:
+    return OmegaConf.to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
+
+
+def _to_container(
+    cfg: Any,
+    *,
+    resolve: bool = False,
+    throw_on_missing: bool = False,
+    enum_to_str: bool = False,
+    structured_config_mode: SCMode = SCMode.DICT,
+):
+    return OmegaConf.to_container(
+        cfg,
+        resolve=resolve,
+        throw_on_missing=throw_on_missing,
+        enum_to_str=enum_to_str,
+        structured_config_mode=structured_config_mode,
+    )
+
+
+def _run(config: Any, **kwargs: Any) -> Any:
+    config = _merge(config, kwargs)
+    _config_ = config.get(_Keys.CONFIG)
+    if _config_ is None:
+        log.warning("No _config_ specified in config")
+        return None
+    if isinstance(_config_, str):
+        _config_ = [_config_]
+    for _cfg_ in _config_:
+        cfg = _select(config, _cfg_)
+        _instantiate(cfg)
+
+
+def _partial(config: Any, *args: Any, **kwargs: Any) -> Any:
+    kwargs[_Keys.PARTIAL] = True
+    return _instantiate(config, *args, **kwargs)
+
+
+def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
+    """
+    :param config: An config object describing what to call and what params to use.
+                   In addition to the parameters, the config must contain:
+                   _target_ : target class or callable name (str)
+                   And may contain:
+                   _args_: List-like of positional arguments to pass to the target
+                   _recursive_: Construct nested objects as well (bool).
+                                False by default.
+                                may be overridden via a _recursive_ key in
+                                the kwargs
+                   _convert_: Conversion strategy
+                        none    : Passed objects are DictConfig and ListConfig, default
+                        partial : Passed objects are converted to dict and list, with
+                                  the exception of Structured Configs (and their fields).
+                        all     : Passed objects are dicts, lists and primitives without
+                                  a trace of OmegaConf containers
+                   _partial_: If True, return functools.partial wrapped method or object
+                              False by default. Configure per target.
+                   _args_: List-like of positional arguments
+    :param args: Optional positional parameters pass-through
+    :param kwargs: Optional named parameters to override
+                   parameters in the config object. Parameters not present
+                   in the config objects are being passed as is to the target.
+                   IMPORTANT: dataclasses instances in kwargs are interpreted as config
+                              and cannot be used as passthrough
+    :return: if _target_ is a class name: the instantiated object
+             if _target_ is a callable: the return value of the call
+    """
+    if not _env_initialized_:
+        _init_env_()
+    if not _is_instantiatable(config):
+        log.warning(f"Config {config} is not instantiatable, returning config")
+        return config
+    _recursive_ = config.get(_Keys.RECURSIVE, False)
+    if _Keys.RECURSIVE not in kwargs:
+        kwargs[_Keys.RECURSIVE] = _recursive_
+    return hydra.utils.instantiate(config, *args, **kwargs)
+
+
+def _init_env_(cfg=None, verbose=False):
+    global _env_initialized_
+
+    original_cwd = hydra.utils.get_original_cwd()
+    dotenv_path = pathlib.Path(original_cwd, ".env")
+    dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+
+    if cfg is None:
+        cfg = _config
+    env = cfg.env
+
+    backend = env.distributed_framework.backend
+    for env_name, env_value in env.get("os", {}).items():
+        if env_value:
+            if verbose:
+                log.info(f"setting environment variable {env_name} to {env_value}")
+            os.environ[env_name] = str(env_value)
+
+    if env.distributed_framework.initialize:
+        backend_handle = None
+        if backend == "ray":
+            import ray
+
+            ray_cfg = env.get("ray", None)
+            ray_cfg = eKonf.to_container(ray_cfg, resolve=True)
+            if verbose:
+                log.info(f"initializing ray with {ray_cfg}")
+            ray.init(**ray_cfg)
+            backend_handle = ray
+
+        elif backend == "dask":
+            from dask.distributed import Client
+
+            dask_cfg = env.get("dask", None)
+            dask_cfg = eKonf.to_container(dask_cfg, resolve=True)
+            if verbose:
+                log.info(f"initializing dask client with {dask_cfg}")
+            client = Client(**dask_cfg)
+            if verbose:
+                log.info(client)
+
+        batcher.batcher_instance = batcher.Batcher(
+            backend_handle=backend_handle, **env.batcher
+        )
+        if verbose:
+            log.info(batcher.batcher_instance)
+    _env_initialized_ = True
+
+
+def _stop_env_(cfg, verbose=False):
+    env = cfg.env
+    backend = env.distributed_framework.backend
+
+    if env.distributed_framework.initialize:
+        if backend == "ray":
+            import ray
+
+            if ray.is_initialized():
+                ray.shutdown()
+                if verbose:
+                    log.info("shutting down ray")
+
+        # elif modin_engine == 'dask':
+        #     from dask.distributed import Client
+
+        #     if Client.initialized():
+        #         client.close()
+        #         log.info(f'shutting down dask client')
 
 
 class eKonf:
@@ -234,6 +488,10 @@ class eKonf:
         )
 
     @staticmethod
+    def partial(config: Any, *args: Any, **kwargs: Any) -> Any:
+        return _partial(config, *args, **kwargs)
+
+    @staticmethod
     def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
         return _instantiate(config, *args, **kwargs)
 
@@ -249,7 +507,7 @@ class eKonf:
 
     @staticmethod
     def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
-        return OmegaConf.load(file_)
+        return _load(file_)
 
     @staticmethod
     def merge(
@@ -267,13 +525,13 @@ class eKonf:
         :param configs: Input configs
         :return: the merged config object.
         """
-        return OmegaConf.merge(*configs)
+        return _merge(*configs)
 
     @staticmethod
     def save(
         config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
     ) -> None:
-        OmegaConf.save(config, f, resolve=resolve)
+        _save(config, f, resolve)
 
     @staticmethod
     def pprint(cfg: Any, **kwargs):
@@ -393,242 +651,3 @@ class eKonf:
             force_extract=force_extract,
             cache_dir=cache_dir,
         )
-
-
-def _call(cfg: Any, obj: object):
-    cfg = eKonf.to_dict(cfg)
-    if cfg:
-        if isinstance(cfg, dict) and _Keys.CALL in cfg:
-            _call_list_ = cfg[_Keys.CALL]
-        else:
-            _call_list_ = cfg
-        if isinstance(_call_list_, str):
-            _call_list_ = [_call_list_]
-        if isinstance(_call_list_, list):
-            for _run in _call_list_:
-                log.info(f"Calling {_run}")
-                if isinstance(_run, str):
-                    getattr(obj, _run)()
-                elif isinstance(_run, dict):
-                    getattr(obj, _run["name"])(**_run["args"])
-    else:
-        log.info("No call function defined")
-
-
-def _print(cfg: Any, **kwargs):
-    import pprint
-
-    if _is_config(cfg):
-        pprint.pprint(_to_dict(cfg), **kwargs)
-    else:
-        print(cfg)
-
-
-def _select(
-    cfg: Any,
-    key: str,
-    *,
-    default: Any = None,
-    throw_on_resolution_failure: bool = True,
-    throw_on_missing: bool = False,
-):
-    key = key.replace("/", ".")
-    return OmegaConf.select(
-        cfg,
-        key=key,
-        default=default,
-        throw_on_resolution_failure=throw_on_resolution_failure,
-        throw_on_missing=throw_on_missing,
-    )
-
-
-def _to_dict(
-    cfg: Any,
-):
-    if isinstance(cfg, dict):
-        cfg = _to_config(cfg)
-    if isinstance(cfg, (DictConfig, ListConfig)):
-        return OmegaConf.to_container(
-            cfg,
-            resolve=True,
-            throw_on_missing=False,
-            structured_config_mode=SCMode.DICT,
-        )
-    return cfg
-
-
-def _is_config(
-    cfg: Any,
-):
-    return isinstance(cfg, (DictConfig, dict))
-
-
-def _is_instantiatable(cfg: Any):
-    return _is_config(cfg) and _Keys.TARGET in cfg
-
-
-def _to_config(
-    cfg: Any,
-):
-    return OmegaConf.create(cfg)
-
-
-def _load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
-    return OmegaConf.load(file_)
-
-
-def _save(
-    config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
-) -> None:
-    eKonf.save(config, f, resolve=resolve)
-
-
-def _merge(
-    *configs: Union[
-        DictConfig,
-        ListConfig,
-        Dict[DictKeyType, Any],
-        List[Any],
-        Tuple[Any, ...],
-        Any,
-    ],
-) -> Union[ListConfig, DictConfig]:
-    return eKonf.merge(*configs)
-
-
-def _to_yaml(cfg: Any, *, resolve: bool = False, sort_keys: bool = False) -> str:
-    return OmegaConf.to_yaml(cfg, resolve=resolve, sort_keys=sort_keys)
-
-
-def _to_container(
-    cfg: Any,
-    *,
-    resolve: bool = False,
-    throw_on_missing: bool = False,
-    enum_to_str: bool = False,
-    structured_config_mode: SCMode = SCMode.DICT,
-):
-    return OmegaConf.to_container(
-        cfg,
-        resolve=resolve,
-        throw_on_missing=throw_on_missing,
-        enum_to_str=enum_to_str,
-        structured_config_mode=structured_config_mode,
-    )
-
-
-def _run(config: Any, **kwargs: Any) -> Any:
-    config = _merge(config, kwargs)
-    _config_ = config.get(_Keys.CONFIG)
-    if _config_ is None:
-        log.warning("No _config_ specified in config")
-        return None
-    if isinstance(_config_, str):
-        _config_ = [_config_]
-    for _cfg_ in _config_:
-        cfg = _select(config, _cfg_)
-        _instantiate(cfg)
-
-
-def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
-    """
-    :param config: An config object describing what to call and what params to use.
-                   In addition to the parameters, the config must contain:
-                   _target_ : target class or callable name (str)
-                   And may contain:
-                   _args_: List-like of positional arguments to pass to the target
-                   _recursive_: Construct nested objects as well (bool).
-                                False by default.
-                                may be overridden via a _recursive_ key in
-                                the kwargs
-                   _convert_: Conversion strategy
-                        none    : Passed objects are DictConfig and ListConfig, default
-                        partial : Passed objects are converted to dict and list, with
-                                  the exception of Structured Configs (and their fields).
-                        all     : Passed objects are dicts, lists and primitives without
-                                  a trace of OmegaConf containers
-                   _partial_: If True, return functools.partial wrapped method or object
-                              False by default. Configure per target.
-                   _args_: List-like of positional arguments
-    :param args: Optional positional parameters pass-through
-    :param kwargs: Optional named parameters to override
-                   parameters in the config object. Parameters not present
-                   in the config objects are being passed as is to the target.
-                   IMPORTANT: dataclasses instances in kwargs are interpreted as config
-                              and cannot be used as passthrough
-    :return: if _target_ is a class name: the instantiated object
-             if _target_ is a callable: the return value of the call
-    """
-    if not _env_initialized:
-        _init_env_()
-    if not _is_instantiatable(config):
-        log.warning(f"Config {config} is not instantiatable, returning config")
-        return config
-    _recursive_ = config.get(_Keys.RECURSIVE, False)
-    if _Keys.RECURSIVE not in kwargs:
-        kwargs[_Keys.RECURSIVE] = _recursive_
-    return hydra.utils.instantiate(config, *args, **kwargs)
-
-
-def _init_env_(cfg=None, verbose=False):
-    if cfg is None:
-        cfg = _config
-    env = cfg.env
-    backend = env.distributed_framework.backend
-    for env_name, env_value in env.get("os", {}).items():
-        if env_value:
-            if verbose:
-                log.info(f"setting environment variable {env_name} to {env_value}")
-            os.environ[env_name] = str(env_value)
-
-    if env.distributed_framework.initialize:
-        backend_handle = None
-        if backend == "ray":
-            import ray
-
-            ray_cfg = env.get("ray", None)
-            ray_cfg = eKonf.to_container(ray_cfg, resolve=True)
-            if verbose:
-                log.info(f"initializing ray with {ray_cfg}")
-            ray.init(**ray_cfg)
-            backend_handle = ray
-
-        elif backend == "dask":
-            from dask.distributed import Client
-
-            dask_cfg = env.get("dask", None)
-            dask_cfg = eKonf.to_container(dask_cfg, resolve=True)
-            if verbose:
-                log.info(f"initializing dask client with {dask_cfg}")
-            client = Client(**dask_cfg)
-            if verbose:
-                log.info(client)
-
-        batcher.batcher_instance = batcher.Batcher(
-            backend_handle=backend_handle, **env.batcher
-        )
-        if verbose:
-            log.info(batcher.batcher_instance)
-
-    _env_initialized_ = True
-
-
-def _stop_env_(cfg, verbose=False):
-    env = cfg.env
-    backend = env.distributed_framework.backend
-
-    if env.distributed_framework.initialize:
-        if backend == "ray":
-            import ray
-
-            if ray.is_initialized():
-                ray.shutdown()
-                if verbose:
-                    log.info("shutting down ray")
-
-        # elif modin_engine == 'dask':
-        #     from dask.distributed import Client
-
-        #     if Client.initialized():
-        #         client.close()
-        #         log.info(f'shutting down dask client')

@@ -4,6 +4,7 @@ openpyxl
 pandas
 hydra-core>=1.1.2
 hydra-colorlog
+python-dotenv
 gdown
 chardet
 rehash

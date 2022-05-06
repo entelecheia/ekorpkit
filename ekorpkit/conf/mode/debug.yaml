@@ -3,7 +3,7 @@ defaults:
   - default
 
 debug_mode: true
-print_resolved_config: true
+print_config: true
 verbose: true
 ignore_warnings: false
 env:
