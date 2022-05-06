@@ -1,5 +1,5 @@
 defaults:
-  - /method: pivot
+  - /partial: pivot
 
 index:
 columns:

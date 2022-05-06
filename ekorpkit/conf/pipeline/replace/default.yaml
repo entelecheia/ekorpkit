@@ -1,5 +1,5 @@
 defaults:
-  - /method: general_function
+  - /partial: general_function
 
 apply_to: ${oc.select:..apply_to, ''}
 function: replace
@@ -8,6 +8,6 @@ parameters:
   value:
   limit:
   regex: false
-  method:
+  partial:
 verbose: ${oc.select:..verbose, true}
 

@@ -1,5 +1,5 @@
 defaults:
-  - /method: summary_stats
+  - /partial: summary_stats
   - /info/stats: default
 
 apply_to: ${oc.select:..apply_to, text}

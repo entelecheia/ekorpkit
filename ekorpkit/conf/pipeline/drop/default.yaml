@@ -1,5 +1,5 @@
 defaults:
-  - /method: drop
+  - /partial: drop
 
 labels:
 axix: 1

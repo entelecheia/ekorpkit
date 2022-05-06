@@ -7,7 +7,7 @@ os:
   CACHED_PATH_CACHE_ROOT: ${dir.cache}/cached_path
 dotenv_path: ${dir.runtime}/.env
 dotenv: ${dotenv_values:${.dotenv_path}}
-distributed_framework: 
+distributed_framework:
   backend: joblib
   initialize: true
   num_workers: ${oc.select:num_workers,50}

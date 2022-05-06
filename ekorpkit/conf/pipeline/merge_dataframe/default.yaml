@@ -1,5 +1,5 @@
 defaults:
-  - /method: merge_dataframe
+  - /partial: merge_dataframe
 
 filepath:
 filetype:

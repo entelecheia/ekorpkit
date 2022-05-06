@@ -168,7 +168,7 @@ def summary_stats(
     rename_columns = args.get("rename_columns", None)
     convert_to_humanbytes = args.get("convert_to_humanbytes", None)
     num_workers = args.get("num_workers", None)
-    method = args.get("method", None)
+    partial = args.get("partial", None)
 
     df = df.copy(deep=True)
     num_workers = num_workers if num_workers else 1
@@ -187,7 +187,7 @@ def summary_stats(
         df[text_key] = df[text_key].astype(str)
 
     for col, func in num_columns.items():
-        len_func = eKonf.instantiate(method[func])
+        len_func = eKonf.partial(partial[func])
         df[col] = apply(len_func, df[text_key], description=f"apply {func} to {col}")
 
     agg_funcs = {k: list(v) for k, v in agg_funcs.items()}

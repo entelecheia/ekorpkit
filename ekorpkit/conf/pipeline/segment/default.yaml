@@ -1,5 +1,5 @@
 defaults:
-  - /method: segment
+  - /partial: segment
   # - /preprocessor/segmenter: default
 
 apply_to: ${oc.select:..apply_to, text}

@@ -59,7 +59,7 @@ def apply(
 
 
 def apply_pipe(df, pipe):
-    fn = eKonf.instantiate(pipe["method"])
+    fn = eKonf.partial(pipe["partial"])
     log.info(f"Applying pipe: {fn}")
     if isinstance(df, dict):
         if "concat_dataframes" in str(fn):
@@ -982,7 +982,7 @@ def filter_length(df, args, **kwargs):
         if verbose:
             log.warning("No length specified")
         return df
-    len_func = args["method"].get("len_bytes", None)
+    len_func = args["partial"].get("len_bytes", None)
     len_func = eKonf.instantiate(len_func)
     _check_max_len = partial(check_max_len, max_len=max_length, len_func=len_func)
     _check_min_len = partial(check_min_len, min_len=min_length, len_func=len_func)

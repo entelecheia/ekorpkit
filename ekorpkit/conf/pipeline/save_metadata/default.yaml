@@ -1,5 +1,5 @@
 defaults:
-  - /method: save_metadata
+  - /partial: save_metadata
 
 filepath:
 filetype:

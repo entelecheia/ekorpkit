@@ -1,5 +1,5 @@
 defaults:
-  - /method: filter_query
+  - /partial: filter_query
 
 query: 
 verbose: ${oc.select:..verbose, true}

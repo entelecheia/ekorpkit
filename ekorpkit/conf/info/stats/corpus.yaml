@@ -1,9 +1,9 @@
 defaults:
   - default
-  - /method/len_wospc: default
-  - /method/len_words: default
-  - /method/len_segments: default
-  - /method/len_sents: default
+  - /partial/len_wospc: default
+  - /partial/len_words: default
+  - /partial/len_segments: default
+  - /partial/len_sents: default
 
 num_columns:
   num_bytes_wospc: len_wospc

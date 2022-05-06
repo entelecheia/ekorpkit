@@ -1,5 +1,5 @@
 defaults:
-  - /method: stdout_samples
+  - /partial: stdout_samples
 
 apply_to: ${oc.select:..apply_to, text}
 num_samples: 5

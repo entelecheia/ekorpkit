@@ -1,5 +1,5 @@
 defaults:
-  - /method: plot
+  - /partial: plot
 
 output_dir: 
 output_file:

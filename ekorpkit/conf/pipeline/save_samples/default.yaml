@@ -1,5 +1,5 @@
 defaults:
-  - /method: save_samples
+  - /partial: save_samples
 
 apply_to: ${oc.select:..apply_to, text}
 num_samples_to_save: 2

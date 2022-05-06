@@ -1,6 +1,6 @@
 defaults:
   - /preprocessor/tokenizer: mecab
-  - /method: tokenize
+  - /partial: tokenize
 
 apply_to: ${oc.select:..apply_to, text}
 verbose: ${oc.select:..verbose, true}

@@ -1,5 +1,5 @@
 defaults:
-  - /method: top_values
+  - /partial: top_values
 
 groupby: 
 value_var:
