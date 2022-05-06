@@ -1,4 +1,5 @@
 defaults:
+  - _default
   - /preprocessor/tokenizer: nltk
   - lexicon: hiv4
 

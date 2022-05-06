@@ -19,6 +19,7 @@ def test_about():
 def test_mecab_cfg():
     config_group = "preprocessor/tokenizer=mecab"
     cfg = eKonf.compose(config_group=config_group)
+    cfg.verbose = True
     mecab = eKonf.instantiate(cfg)
     text = "IMF가 推定한 우리나라의 GDP갭률은 今年에도 소폭의 마이너스(−)를 持續하고 있다."
     tokens = mecab.tokenize(text)
@@ -40,6 +41,7 @@ def test_nltk():
 
     config_group = "preprocessor/tokenizer=nltk"
     cfg = eKonf.compose(config_group=config_group)
+    cfg.verbose = True
     nltk = eKonf.instantiate(cfg)
 
     text = "I shall reemphasize some of those thoughts today in the context of legislative proposals that are now before the current Congress."
@@ -96,7 +98,8 @@ def test_normalizer():
 
 def test_dummy_corpus():
     cfg = eKonf.compose(config_group="fetch/fetcher=_dummy")
-    cfg["name"] = "fomc_minutes"
+    cfg.verbose = True
+    cfg.name = "fomc_minutes"
     eKonf.instantiate(cfg)
     output_file = cfg["output_file"]
     assert os.path.exists(output_file)
@@ -106,18 +109,21 @@ def test_dummy_corpus():
 
 def test_build_corpora():
     cfg = eKonf.compose(config_group="corpus/builtin=_dummy_fomc_minutes")
-    cfg["data_dir"] = "./data/tmp/fomc_minutes"
+    cfg.verbose = True
+    cfg.data_dir = "./data/tmp/fomc_minutes"
     db = eKonf.instantiate(cfg)
     db.build()
 
     cfg = eKonf.compose(config_group="corpus/builtin=_dummy_bok_minutes")
-    cfg["data_dir"] = "./data/tmp/bok_minutes"
+    cfg.verbose = True
+    cfg.data_dir = "./data/tmp/bok_minutes"
     db = eKonf.instantiate(cfg)
     db.build()
 
     cfg = eKonf.compose(config_group="corpus=corpora")
-    cfg["name"] = ["bok_minutes", "fomc_minutes"]
-    cfg["data_dir"] = "./data/tmp"
+    cfg.verbose = True
+    cfg.name = ["bok_minutes", "fomc_minutes"]
+    cfg.data_dir = "./data/tmp"
     crps = eKonf.instantiate(cfg)
     # crps.concat_corpora()
 
@@ -126,11 +132,13 @@ def test_build_corpora():
 
 def test_corpus_task():
     corpus_cfg = eKonf.compose(config_group="corpus=corpus")
+    corpus_cfg.verbose = True
     corpus_cfg.name = "bok_minutes"
     corpus_cfg.automerge = True
     corpus_cfg.data_dir = "./data/tmp"
 
     cfg = eKonf.compose(config_group="task=corpus")
+    cfg.verbose = True
     cfg.corpus = corpus_cfg
     cfg.pipeline._pipeline_ = ["filter_query", "save_dataframe"]
     cfg.pipeline.filter_query.query = "filename in ['BOK_20181130_20181218']"
@@ -142,11 +150,13 @@ def test_corpus_task():
 
 def test_corpora_task():
     corpus_cfg = eKonf.compose(config_group="corpus=corpora")
+    corpus_cfg.verbose = True
     corpus_cfg.name = ["bok_minutes", "fomc_minutes"]
     corpus_cfg.automerge = True
     corpus_cfg.data_dir = "./data/tmp"
 
     cfg = eKonf.compose(config_group="task=corpora")
+    cfg.verbose = True
     cfg.corpus = corpus_cfg
     cfg.pipeline._pipeline_ = ["filter_query", "save_dataframe"]
     cfg.pipeline.filter_query.query = "id == 0"

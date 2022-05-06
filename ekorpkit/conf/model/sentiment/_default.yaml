@@ -1,0 +1,2 @@
+name:
+verbose: ${oc.select:..verbose, true}

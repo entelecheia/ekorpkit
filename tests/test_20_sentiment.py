@@ -5,6 +5,7 @@ from ekorpkit import eKonf
 def test_setiment_lexicon():
     config_group = "model/sentiment/lexicon=mpko_lex"
     cfg = eKonf.compose(config_group=config_group)
+    cfg.verbose = True
     cfg.ignore_pos = True
     cfg.analyze.ngram_distiance_tolerance = 1
     lexicon = eKonf.instantiate(cfg)
@@ -15,6 +16,7 @@ def test_setiment_lexicon():
 
     config_group = "model/sentiment/lexicon=lm"
     cfg = eKonf.compose(config_group=config_group)
+    cfg.verbose = True
     lexicon = eKonf.instantiate(cfg)
 
     tokens = ["Bad", "Fraud", "Good", "Sound", "uncertain", "beat", "wrong"]
@@ -25,14 +27,17 @@ def test_setiment_lexicon():
 def test_predict_sentiments():
     config_group = "model/sentiment=lm"
     model_cfg = eKonf.compose(config_group=config_group)
+    model_cfg.verbose = True
     model_cfg.preprocessor.tokenizer.nltk.lemmatize = True
 
     ds_cfg = eKonf.compose(config_group="dataset=dataset")
+    ds_cfg.verbose = True
     ds_cfg.name = "financial_phrasebank"
     ds_cfg.data_dir = "${cached_path:'https://github.com/entelecheia/ekorpkit-config/raw/main/data/financial_phrasebank.zip',true,false}"
     ds_cfg.use_name_as_subdir = True
 
     cfg = eKonf.compose(config_group="pipeline=pipeline")
+    cfg.verbose = True
     cfg.output_dir = "./data/tmp/predict"
     cfg.dataset = ds_cfg
     cfg._pipeline_ = ["subset", "predict"]
@@ -47,6 +52,7 @@ def test_predict_sentiments():
 
 def test_eval_sentiments():
     eval_cfg = eKonf.compose(config_group="model/eval=classification")
+    eval_cfg.verbose = True
     eval_cfg.to_eval.actual = "labels"
     eval_cfg.to_eval.predicted = "polarity_label"
     eval_cfg.data_dir = "./data/tmp/predict"

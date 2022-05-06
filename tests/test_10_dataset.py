@@ -15,7 +15,8 @@ def test_build_financial_phrasebank():
 def test_build_datasets():
 
     cfg = eKonf.compose(config_group="dataset/simple=sst2")
-    cfg["data_dir"] = "./data/tmp/sst2"
+    cfg.verbose = True
+    cfg.data_dir = "./data/tmp/sst2"
     cfg.fetch.data_dir = cfg.data_dir
     cfg.fetch.overwrite = True
     cfg.fetch.calculate_stats = True
@@ -23,8 +24,9 @@ def test_build_datasets():
     db.build()
 
     cfg = eKonf.compose(config_group="dataset=datasets")
-    cfg["name"] = ["sst2"]
-    cfg["data_dir"] = "./data/tmp"
+    cfg.verbose = True
+    cfg.name = ["sst2"]
+    cfg.data_dir = "./data/tmp"
     ds = eKonf.instantiate(cfg)
     ds.persist()
 
