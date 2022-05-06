@@ -1,5 +1,5 @@
 defaults:
-  - /partial: chunk
+  - /function: chunk
   - /preprocessor/segmenter: chunk
 
 keep_segment: false

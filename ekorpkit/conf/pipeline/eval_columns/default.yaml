@@ -1,5 +1,5 @@
 defaults:
-  - /partial: eval_columns
+  - /function: eval_columns
 
 expressions:
 engine:

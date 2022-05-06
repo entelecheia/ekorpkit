@@ -1,5 +1,5 @@
 defaults:
-  - /partial: save_dataframe
+  - /function: save_dataframe
 
 name: ${oc.select:..name, pipeline}
 columns_to_keep:

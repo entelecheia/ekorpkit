@@ -1,9 +1,9 @@
 defaults:
   - default
-  - /partial/len_wospc: default
-  - /partial/len_words: default
-  - /partial/len_segments: default
-  - /partial/len_sents: default
+  - /function/len_wospc: default
+  - /function/len_words: default
+  - /function/len_segments: default
+  - /function/len_sents: default
 
 num_columns:
   num_bytes_wospc: len_wospc

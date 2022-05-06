@@ -1,5 +1,5 @@
 defaults:
-  - /partial: normalize
+  - /function: normalize
   - /preprocessor/normalizer: default
 
 apply_to: ${oc.select:..apply_to, text}

@@ -1,5 +1,5 @@
 defaults:
-  - /partial/len_bytes: default
+  - /function/len_bytes: default
 
 _target_: ekorpkit.pipelines.stat.summary_stats
 _partial_: true

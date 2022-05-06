@@ -1,5 +1,5 @@
 defaults:
-  - /partial: remove_startswith
+  - /function: remove_startswith
 
 apply_to: ${oc.select:..apply_to, text}
 startswith:

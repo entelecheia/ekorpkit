@@ -1,5 +1,5 @@
 defaults:
-  - /partial: drop_duplicates
+  - /function: drop_duplicates
 
 apply_to: ${oc.select:..apply_to, text}
 verbose: ${oc.select:..verbose, true}

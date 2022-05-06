@@ -1,5 +1,5 @@
 defaults:
-  - /partial: general_function
+  - /function: general_function
 
 apply_to: ${oc.select:..apply_to, ''}
 function: replace

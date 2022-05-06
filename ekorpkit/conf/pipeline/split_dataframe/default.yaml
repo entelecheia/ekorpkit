@@ -1,5 +1,5 @@
 defaults:
-  - /partial: split_dataframe
+  - /function: split_dataframe
 
 num_splits:
 verbose: ${oc.select:..verbose, true}
