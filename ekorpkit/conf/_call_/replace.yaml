@@ -1,0 +1,2 @@
+name: replace
+args: ${oc.select:..parameters,null}

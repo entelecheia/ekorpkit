@@ -1,13 +1,12 @@
 defaults:
   - /function: general_function
+  - /_call_: replace
 
 apply_to: ${oc.select:..apply_to, ''}
-function: replace
 parameters:
   to_replace:
   value:
   limit:
   regex: false
-  partial:
+  method:
 verbose: ${oc.select:..verbose, true}
-

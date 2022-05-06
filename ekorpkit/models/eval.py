@@ -10,7 +10,7 @@ def eval_classification(data=None, **args):
     args = eKonf.to_config(args)
     to_eval = args.to_eval
     pipe = args.pipeline.load_dataframe
-    eval_metrics = args.partial
+    eval_metrics = args.function
     if data is None:
         data = apply_pipe(data, pipe)
     eval_metrics = eKonf.partial(eval_metrics)

@@ -181,13 +181,17 @@ def _call(cfg: Any, obj: object):
     cfg = eKonf.to_dict(cfg)
     if cfg:
         if isinstance(cfg, dict) and _Keys.CALL in cfg:
-            _call_list_ = cfg[_Keys.CALL]
+            _call_ = cfg[_Keys.CALL]
         else:
-            _call_list_ = cfg
-        if isinstance(_call_list_, str):
-            _call_list_ = [_call_list_]
-        if isinstance(_call_list_, list):
-            for _run in _call_list_:
+            _call_ = cfg
+        if isinstance(_call_, str):
+            log.info(f"Calling {_call_}")
+            return getattr(obj, _call_)()
+        elif isinstance(_call_, dict):
+            log.info(f"Calling {_call_}")
+            return getattr(obj, _call_["name"])(**_call_["args"])
+        elif isinstance(_call_, list):
+            for _run in _call_:
                 log.info(f"Calling {_run}")
                 if isinstance(_run, str):
                     getattr(obj, _run)()
@@ -344,7 +348,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
 def _init_env_(cfg=None, verbose=False):
     global _env_initialized_
 
-    original_cwd = hydra.utils.get_original_cwd()
+    original_cwd = getcwd()
     dotenv_path = pathlib.Path(original_cwd, ".env")
     dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
 
