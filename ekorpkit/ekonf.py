@@ -131,10 +131,19 @@ def _to_config(
 ):
     return OmegaConf.create(cfg)
 
+
 def dotenv_values(dotenv_path=None, **kwargs):
     config = dotenv.dotenv_values(dotenv_path=dotenv_path, **kwargs)
     return dict(config)
-    
+
+
+def getcwd():
+    try:
+        return hydra.utils.get_original_cwd()
+    except:
+        return os.getcwd()
+
+
 _env_initialized_ = False
 
 _config = _compose().copy()
@@ -146,7 +155,7 @@ OmegaConf.register_new_resolver("__home_path__", __home_path__)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
-OmegaConf.register_new_resolver("get_original_cwd", hydra.utils.get_original_cwd)
+OmegaConf.register_new_resolver("get_original_cwd", getcwd)
 OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
