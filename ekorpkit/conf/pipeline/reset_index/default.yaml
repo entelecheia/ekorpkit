@@ -1,5 +1,5 @@
 defaults:
-  - /method: reset_index
+  - /function: reset_index
 
 index_column_name: id
 drop_index: false

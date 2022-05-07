@@ -1,7 +1,7 @@
 # @package _global_
 debug_mode: false
 print_config: false
-print_resolved_config: false
+print_resolved_config: true
 num_workers: 1
 verbose: false
 ignore_warnings: true

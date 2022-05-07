@@ -1,8 +1,8 @@
 defaults:
-  - /method: general_function
+  - /function: general_function
+  - /_call_: replace
 
 apply_to: ${oc.select:..apply_to, ''}
-function: replace
 parameters:
   to_replace:
   value:
@@ -10,4 +10,3 @@ parameters:
   regex: false
   method:
 verbose: ${oc.select:..verbose, true}
-

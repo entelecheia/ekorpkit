@@ -2,4 +2,4 @@
 defaults:
   - default
 
-_config_: corpus.builtin
+_config_: dataset.simple

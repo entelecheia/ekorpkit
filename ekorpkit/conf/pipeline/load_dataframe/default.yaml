@@ -1,5 +1,5 @@
 defaults:
-  - /method: load_dataframe
+  - /function: load_dataframe
 
 filepath:
 filetype:

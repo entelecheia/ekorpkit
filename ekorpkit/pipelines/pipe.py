@@ -59,7 +59,7 @@ def apply(
 
 
 def apply_pipe(df, pipe):
-    fn = eKonf.instantiate(pipe["method"])
+    fn = eKonf.partial(pipe["function"])
     log.info(f"Applying pipe: {fn}")
     if isinstance(df, dict):
         if "concat_dataframes" in str(fn):
@@ -887,21 +887,22 @@ def general_function(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", None)
-    _function = args.get("function", None)
-    _params = args.get("parameters", None)
+    _call_ = args.get("_call_", None)
     if verbose:
-        log.info(f"{_function} with [{_params}]")
+        log.info(f"Running dataframe function: {args}")
 
     with elapsed_timer(format_time=True) as elapsed:
         if apply_to is None:
-            df = getattr(df, _function)(**_params)
+            df = getattr(df, _call_["name"])(**_call_["args"])
+            # df = eKonf.call(_call_, df)
         else:
             if isinstance(apply_to, str):
                 apply_to = [apply_to]
             for key in apply_to:
                 if verbose:
                     log.info(f"processing column: {key}")
-                df[key] = getattr(df[key], _function)(**_params)
+                df[key] = getattr(df[key], _call_["name"])(**_call_["args"])
+                # df[key] = eKonf.call(_call_, df[key])
 
         if verbose:
             log.info(" >> elapsed time to replace: {}".format(elapsed()))
@@ -982,7 +983,7 @@ def filter_length(df, args, **kwargs):
         if verbose:
             log.warning("No length specified")
         return df
-    len_func = args["method"].get("len_bytes", None)
+    len_func = args["function"].get("len_bytes", None)
     len_func = eKonf.instantiate(len_func)
     _check_max_len = partial(check_max_len, max_len=max_length, len_func=len_func)
     _check_min_len = partial(check_min_len, min_len=min_length, len_func=len_func)

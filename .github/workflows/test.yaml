@@ -4,9 +4,14 @@ on:
   # Triggers the workflow on push or pull request events but only for the main branch
   # push:
   #   branches: [main]
-  # pull_request:
-  #   branches: [ main ]
-
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+    branches:    
+      - 'release/**'
+      - main
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -29,16 +34,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - name: Install-windows
-        if: runner.os == 'Windows'
+      - name: install dependencies
         run: |
           pip install -e ".[all]"
-          pip install -r requirements-test.txt
-
-      - name: Install-others
-        if: runner.os != 'Windows'
-        run: |
-          pip install -e .\[all\]
           pip install -r requirements-test.txt
 
       - name: Run tests
@@ -46,3 +44,5 @@ jobs:
 
       - name: "Upload coverage to codecov"
         uses: codecov/codecov-action@v1
+        with:
+          files: test_results/coverage/coverage.xml

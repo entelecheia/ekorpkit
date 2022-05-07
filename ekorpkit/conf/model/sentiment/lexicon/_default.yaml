@@ -14,3 +14,4 @@ analyze:
   features:
   ngram_distiance_tolerance: 0
   ngram_delim: ${..ngram_delim}
+verbose: ${oc.select:..verbose, true}

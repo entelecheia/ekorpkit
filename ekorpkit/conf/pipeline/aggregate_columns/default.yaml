@@ -1,5 +1,5 @@
 defaults:
-  - /method: aggregate_columns
+  - /function: aggregate_columns
 
 onto: text
 groupby:

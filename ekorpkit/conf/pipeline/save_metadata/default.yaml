@@ -1,5 +1,5 @@
 defaults:
-  - /method: save_metadata
+  - /function: save_metadata
 
 filepath:
 filetype:

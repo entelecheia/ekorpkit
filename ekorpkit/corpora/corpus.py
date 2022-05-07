@@ -44,7 +44,7 @@ class Corpus:
 
         if self.verbose:
             log.info(f"Intantiating a corpus {self.name} with a config:")
-            pprint(eKonf.to_dict(self.args))
+            eKonf.pprint(self.args)
 
         self.filetype = self.args.get("filetype", "csv")
         self.data_files = self.args.get("data_files", None)

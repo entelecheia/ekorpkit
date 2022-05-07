@@ -1,5 +1,5 @@
 defaults:
-  - /method: predict
+  - /function: predict
 
 name: predict
 model:

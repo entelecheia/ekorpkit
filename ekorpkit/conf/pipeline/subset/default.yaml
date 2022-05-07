@@ -1,5 +1,5 @@
 defaults:
-  - /method: subset
+  - /function: subset
 
 head_n:
 tail_n:

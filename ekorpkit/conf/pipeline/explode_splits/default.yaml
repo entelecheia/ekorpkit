@@ -1,5 +1,5 @@
 defaults:
-  - /method: explode_splits
+  - /function: explode_splits
 
 apply_to: text
 id_key: id

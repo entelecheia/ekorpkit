@@ -1,5 +1,5 @@
 defaults:
-  - /method: melt
+  - /function: melt
 
 id_vars:
 value_vars:

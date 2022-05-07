@@ -10,6 +10,6 @@ model: ${.data}/models
 output: ${.project}/outputs
 project: ${.workspace}/projects/${project}
 resource: ${.ekorpkit}/resources
-runtime: ${oc.select:hydra:runtime.cwd, .}
+runtime: ${get_original_cwd:}
 tmp: ${.workspace}/.tmp
-workspace: ${.home}/.ekorpkit
+workspace: ${oc.env:EKORPKIT_WORKSPACE_ROOT,${.home}/.ekorpkit}
