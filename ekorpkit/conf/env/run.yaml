@@ -1,0 +1,2 @@
+dotenv_path: ${dir.runtime}/.env
+dotenv: ${dotenv_values:${.dotenv_path}}

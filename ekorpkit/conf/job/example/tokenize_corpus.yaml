@@ -1,0 +1,45 @@
+# @package _global_
+defaults:
+  - /preprocessor/tokenizer: mecab_econ
+  - /pipeline: pipeline
+  # - override /corpus: corpus
+  - override /cmd: pipeline
+
+corpus:
+  name: bok_minutes
+pipeline:
+  name: example_job
+  data_dir: ${dir.project}/${.name}
+  corpus: ${corpus}
+
+  _pipeline_:
+    tokenize: tokenize
+    save_dataframe: save_dataframe
+    extract_tokens: extract_tokens
+    eval_columns: eval_columns
+    chunk: chunk
+    explode_splits: explode_splits
+    save_dataframe2: save_dataframe
+
+  tokenize:
+    preprocessor: ${preprocessor}
+  extract_tokens:
+    nouns_only: true
+  save_dataframe:
+    task_dir: corpus
+    output_file: ${corpus.name}_tokenized.parquet
+  save_dataframe2:
+    task_dir: corpus
+    output_file: ${corpus.name}_nouns.parquet
+  chunk:
+    chunk_size: 350
+  explode_splits:
+    id_key:
+      - id
+    split_key: chunk_id
+    separator: '\n\n'
+  eval_columns:
+    engine: python
+    expressions:
+      text: "text.str.lower()"
+

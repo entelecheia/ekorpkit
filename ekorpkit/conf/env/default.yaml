@@ -1,3 +1,6 @@
+defaults:
+  - run
+
 os:
   MODIN_ENGINE: ray
   MODIN_CPUS: ${oc.select:..distributed_framework.num_workers,50}
@@ -5,8 +8,6 @@ os:
   # MALLOC_TRIM_THRESHOLD_: 65536
   WANDB_API_KEY: ${oc.env:WANDB_API_KEY,null}
   CACHED_PATH_CACHE_ROOT: ${dir.cache}/cached_path
-dotenv_path: ${dir.runtime}/.env
-dotenv: ${dotenv_values:${.dotenv_path}}
 distributed_framework:
   backend: joblib
   initialize: true

@@ -1,7 +1,0 @@
-defaults:
-  - corpus_pipeline: default
-
-name: corpora_subtask
-verbose: ${oc.select:..verbose, true}
-apply_to: 
-  - text

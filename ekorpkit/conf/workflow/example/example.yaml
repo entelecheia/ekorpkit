@@ -1,0 +1,10 @@
+# @package _global_
+workflow:
+  example:
+    jobs:
+      - build_corpus
+      - tokenize_corpus
+
+ekorpkit:
+  num_workers: 10
+  project: esgml

@@ -1,21 +1,19 @@
 # @package _global_
 defaults:
   - _self_
-  - about: default
+  - about: run
   - cmd: default
-  - corpus: _loader
-  - dataset: _loader
   - dir: default
-  - env: default
-  - mode: default
-  - model: default
-  - project: default
-  - task: _default
+  - env: run
+  - mode: run
+  - run: null
+  - workflow: null
 
   - override hydra/help: help
   - override hydra/hydra_logging: colorlog
   - override hydra/job_logging: colorlog
 
+ekorpkit:
 hydra:
   searchpath:
     - ${oc.env:EKORPKIT_CONFIG_DIR,./config}

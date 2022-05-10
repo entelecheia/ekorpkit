@@ -91,7 +91,7 @@ class SimpleTrainer:
         return df
 
     def predict(self, df, _to_predict={}):
-        if to_predict:
+        if _to_predict:
             self._to_predict = _to_predict
         to_predict = self.convert_to_predict(df)
         preds = self._predict(to_predict)

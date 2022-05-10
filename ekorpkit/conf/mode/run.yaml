@@ -1,0 +1,5 @@
+# @package _global_
+defaults:
+  - default
+
+project: ${.app_name}

@@ -66,6 +66,6 @@ setup(
     python_requires=">=3.7",
     include_package_data=True,
     entry_points={
-        "console_scripts": ["ekorpkit=ekorpkit.cli:hydra_main"],
+        "console_scripts": ["ekorpkit=ekorpkit.cli:hydra_main", "ekorpkit-run=ekorpkit.run:main"],
     },
 )
