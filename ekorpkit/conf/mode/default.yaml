@@ -1,4 +1,5 @@
 # @package _global_
+app_name: ${about.app.name}
 debug_mode: false
 print_config: false
 print_resolved_config: true

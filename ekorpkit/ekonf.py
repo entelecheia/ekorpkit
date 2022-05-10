@@ -25,6 +25,17 @@ def __home_path__():
     return pathlib.Path.home().as_posix()
 
 
+def __version__():
+    return _version.get_versions()["version"]
+
+
+def check_path(path: str, alt_path: str = None):
+    if os.path.exists(path):
+        return path
+    elif alt_path:
+        return alt_path
+
+
 def _path(
     url_or_filename,
     extract_archive: bool = False,
@@ -152,10 +163,12 @@ DictKeyType = Union[str, int, Enum, float, bool]
 
 OmegaConf.register_new_resolver("__ekorpkit_path__", __ekorpkit_path__)
 OmegaConf.register_new_resolver("__home_path__", __home_path__)
+OmegaConf.register_new_resolver("__version__", __version__)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
+OmegaConf.register_new_resolver("check_path", check_path)
 OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
@@ -345,12 +358,16 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     return hydra.utils.instantiate(config, *args, **kwargs)
 
 
-def _init_env_(cfg=None, verbose=False):
-    global _env_initialized_
-
+def _load_dotenv(verbose=False):
     original_cwd = getcwd()
     dotenv_path = pathlib.Path(original_cwd, ".env")
     dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+
+
+def _init_env_(cfg=None, verbose=False):
+    global _env_initialized_
+
+    _load_dotenv(verbose=verbose)
 
     if cfg is None:
         cfg = _config
@@ -418,7 +435,7 @@ def _stop_env_(cfg, verbose=False):
 class eKonf:
     """ekorpkit config primary class"""
 
-    __version__ = _version.get_versions()["version"]
+    __version__ = __version__()
     __ekorpkit_path__ = __ekorpkit_path__()
     __home_path__ = __home_path__()
     config = _config
@@ -561,6 +578,10 @@ class eKonf:
     @staticmethod
     def run(config: Any, **kwargs: Any) -> Any:
         _run(config, **kwargs)
+
+    @staticmethod
+    def _load_dotenv(verbose: bool = False):
+        _load_dotenv(verbose)
 
     @staticmethod
     def _init_env_(cfg, verbose=False):

@@ -1,0 +1,6 @@
+defaults:
+  - default
+
+name: ekorpkit-run
+description: ${.name} provides a flexible interface to control workflows of ekorpkit jobs.
+version: ${__version__:}

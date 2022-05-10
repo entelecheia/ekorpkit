@@ -25,11 +25,12 @@ def listup(**args):
 def about(**args):
     from . import __version__
 
+    name = args.get("name")
     print()
     for k, v in args.items():
         print(f"{k:11} : {v}")
-    print(f"{'version':11} : {__version__}")
-    print("\nExecute `ekorpkit --help` to see what eKorpkit provides")
+    # print(f"{'version':11} : {__version__}")
+    print(f"\nExecute `{name} --help` to see what eKorpkit provides")
 
 
 @hydra.main(config_path="conf", config_name="config")

@@ -100,7 +100,7 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
     if verbose:
         log.info(f"Applying pipeline: {pipes}")
     for pipe, pipe_arg_name in pipes.items():
-        args = pipeline_args.get(pipe_arg_name, {})
+        args = pipeline_args.get(pipe_arg_name, {}).copy()
         if pipe != pipe_arg_name:
             args_override = pipeline_args.get(pipe, {})
             args.update(args_override)
@@ -1466,8 +1466,8 @@ def save_as_json(df, args):
 
 
 def pipeline(**cfg):
-    from ekorpkit.corpora import Corpus
-    from ekorpkit.datasets import Dataset
+    from ekorpkit.corpora import Corpus, Corpora
+    from ekorpkit.datasets import Dataset, Datasets
 
     args = eKonf.to_dict(cfg)
     corpus = args.get("corpus")
@@ -1482,14 +1482,20 @@ def pipeline(**cfg):
     df = None
     if dataset:
         dataset = eKonf.instantiate(dataset)
-        if isinstance(dataset, Corpus):
+        if isinstance(dataset, (Corpus)):
             df = dataset.data
-        elif isinstance(dataset, Dataset):
+        elif isinstance(dataset, (Corpora)):
+            dataset.concat_corpora()
+            df = dataset.data
+        elif isinstance(dataset, (Dataset, Datasets)):
             df = dataset.splits
         elif isinstance(dataset, pd.DataFrame):
             df = dataset
     elif data_dir and data_file:
         df = _load_dataframe(df, args)
+
+    if df is None:
+        raise ValueError("No dataframe to process")
 
     process_pipeline = args.get("_pipeline_", [])
     if process_pipeline is None:
