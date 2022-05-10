@@ -29,6 +29,13 @@ def __version__():
     return _version.get_versions()["version"]
 
 
+def check_path(path: str, alt_path: str = None):
+    if os.path.exists(path):
+        return path
+    elif alt_path:
+        return alt_path
+
+
 def _path(
     url_or_filename,
     extract_archive: bool = False,
@@ -161,6 +168,7 @@ OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
+OmegaConf.register_new_resolver("check_path", check_path)
 OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
@@ -349,10 +357,12 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
         kwargs[_Keys.RECURSIVE] = _recursive_
     return hydra.utils.instantiate(config, *args, **kwargs)
 
+
 def _load_dotenv(verbose=False):
     original_cwd = getcwd()
     dotenv_path = pathlib.Path(original_cwd, ".env")
     dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+
 
 def _init_env_(cfg=None, verbose=False):
     global _env_initialized_

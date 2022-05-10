@@ -2,6 +2,7 @@ import os
 import pytest
 from ekorpkit import eKonf
 
+
 @pytest.mark.skip(reason="data source not available")
 def test_build_financial_phrasebank():
     cfg = eKonf.compose(config_group="dataset/simple=financial_phrasebank")
@@ -11,6 +12,7 @@ def test_build_financial_phrasebank():
     cfg.fetch.calculate_stats = True
     db = eKonf.instantiate(cfg)
     db.build()
+
 
 def test_build_datasets():
 

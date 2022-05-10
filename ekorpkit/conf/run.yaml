@@ -16,4 +16,4 @@ defaults:
 ekorpkit:
 hydra:
   searchpath:
-    - ${oc.env:EKORPKIT_CONFIG_DIR,./config}
+    - ${oc.env:EKORPKIT_CONFIG_DIR,${check_path:./config,pkg://ekorpkit/conf}}
