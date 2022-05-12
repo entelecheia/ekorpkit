@@ -1,4 +1,4 @@
 defaults:
-  - _default
+  - default
   
 _pipeline_:

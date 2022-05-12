@@ -10,3 +10,10 @@ data_dir: ${dir.dataset}/simple/${.name}
 filetype: .csv
 verbose: ${oc.select:..verbose, true}
 autoload: true
+
+normalize:
+  preprocessor:
+    normalizer: ${oc.select:dataset.simple.preprocessor.normalizer,null}
+segment:
+  preprocessor:
+    segmenter: ${oc.select:dataset.simple.preprocessor.segmenter,null}

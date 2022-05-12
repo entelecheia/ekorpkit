@@ -8,7 +8,7 @@ from ekorpkit import eKonf
 log = logging.getLogger(__name__)
 
 
-def run_ekorpkit(**args):
+def run_job(**args):
     command = args.get("ekorpkit") or {}
     command = [f"{k}={v}" for k, v in command.items()]
     log.info(f"Running ekorpkit with args: {command}")

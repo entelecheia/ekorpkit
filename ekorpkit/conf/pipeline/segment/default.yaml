@@ -1,6 +1,5 @@
 defaults:
   - /function: segment
-  # - /preprocessor/segmenter: default
 
 apply_to: ${oc.select:..apply_to, text}
 verbose: ${oc.select:..verbose, true}

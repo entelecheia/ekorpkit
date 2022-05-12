@@ -10,7 +10,6 @@ defaults:
   - mode: default
   - model: default
   - project: default
-  - task: _default
 
   - override hydra/help: help
   - override hydra/hydra_logging: colorlog

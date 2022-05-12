@@ -1,6 +1,0 @@
-defaults:
-  - _default
-  - topic: topic_subtask
-
-name: topic_task
-output_dir: ${dir.output}/${project}/topic

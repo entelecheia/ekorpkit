@@ -40,3 +40,8 @@ pipeline:
     - segment
     # - filter_length
     - drop_duplicates
+  normalize:
+    normalizer: formal_en
+  segment:
+    segmenter: pysbd
+  

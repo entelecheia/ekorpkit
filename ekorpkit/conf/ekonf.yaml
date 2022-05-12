@@ -10,7 +10,6 @@ defaults:
   - mode: default
   - model: default
   - project: default
-  - task: _default
   - preprocessor/normalizer: default
   - preprocessor/segmenter: default
   - preprocessor/tokenizer: default

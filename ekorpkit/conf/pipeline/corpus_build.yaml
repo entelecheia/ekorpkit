@@ -1,6 +1,6 @@
 defaults:
-  - _default
-  
+  - default
+
 _transform_:
   - reset_index
   - save_metadata
@@ -9,4 +9,4 @@ _preprocess_:
   - filter_length
   - drop_duplicates
 apply_to: ${oc.select:..column_info.keys.text, text}
-data_dir: 
+data_dir:
