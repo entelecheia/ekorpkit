@@ -39,7 +39,16 @@ def treemap(
     fig.write_image(fig_filepath, scale=scale)
 
 
-def lineplot(df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **kwargs):
+def lineplot(
+    df,
+    columns=None,
+    savefig={},
+    lineplot={},
+    plot={},
+    figure={},
+    verbose=False,
+    **kwargs,
+):
 
     set_style(**plot)
     figsize = plot.get("figsize", None)
@@ -51,8 +60,7 @@ def lineplot(df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **
 
     plt.figure(figsize=figsize, tight_layout=True)
     ax = plt.gca()
-    linewidth = plot.get("linewidth", None)
-    sns.lineplot(data=data[ycols], linewidth=linewidth)
+    sns.lineplot(data=data[ycols], **lineplot)
     set_figure(ax, **figure)
     fname = savefig.get("fname", None)
 
@@ -70,20 +78,24 @@ def stackplot(
         if verbose:
             print("No data to plot")
         return
+    data = df
+
     set_style(**plot)
     figsize = plot.get("figsize", None)
     if figsize is not None and isinstance(figsize, str):
         figsize = eval(figsize)
     ycols = columns.yvalue
     xcol = columns.xvalue
-    data = df
+    if isinstance(xcol, list):
+        xcol = xcol[0]
+    x = data[xcol] if xcol in data.columns else data.index
 
     plt.figure(figsize=figsize, tight_layout=True)
     ax = plt.gca()
     labels = figure.get("legend", {}).get("labels", None)
     if labels is None:
         labels = ycols
-    plt.stackplot(data[xcol], data[ycols].T, labels=labels)
+    plt.stackplot(x, data[ycols].T, labels=labels)
     set_figure(ax, **figure)
 
     fname = savefig.get("fname", None)

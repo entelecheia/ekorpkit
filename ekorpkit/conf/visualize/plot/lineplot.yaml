@@ -3,5 +3,5 @@ defaults:
 
 _target_: ekorpkit.visualize.plot.lineplot
 output_file: ${oc.select:..output_file, lineplot.png}
-plot:
+lineplot:
   linewidth: 2.5

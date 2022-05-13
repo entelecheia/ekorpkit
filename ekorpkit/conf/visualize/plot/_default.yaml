@@ -9,7 +9,7 @@ plot:
   style: fivethirtyeight
   rcParams:
     axes.unicode_minus: False
-    axes.labelsize: 14
+    axes.labelsize: 12
     text.color: dimgrey
     font.family: NanumGothic
     # savefig.edgecolor: black
@@ -41,8 +41,8 @@ figure:
   # yticks:
   #   ticks:
   #   labels:
-  # xtickmajorformatterfunc: 'ticker.FormatStrFormatter("%d")'
-  # ytickmajorformatterfunc: 'ticker.PercentFormatter(1.0)'
+  xtickmajorformatterfunc:
+  ytickmajorformatterfunc:
   # xticklabels:
   # yticklabels:
   # xticklabelsize:
