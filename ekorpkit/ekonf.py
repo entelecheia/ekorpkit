@@ -81,7 +81,7 @@ def _compose(
             key, value = _task
         else:
             key = _task[0]
-            value = None
+            value = "default"
     else:
         key = None
         value = None

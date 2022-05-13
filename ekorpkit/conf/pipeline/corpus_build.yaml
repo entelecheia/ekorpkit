@@ -1,5 +1,5 @@
 defaults:
-  - default
+  - _default
 
 _transform_:
   - reset_index

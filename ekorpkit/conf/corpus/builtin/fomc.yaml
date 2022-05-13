@@ -18,12 +18,16 @@ column_info:
   keys:
     id: id
     text: text
+  timestamp: 
+    key: date
+    format: 
+    params:
   data:
     id: int
     text: str
   meta:
     id: int
-    # content_type: str
+    content_type: str
     date: str
     speaker: str
     title: str

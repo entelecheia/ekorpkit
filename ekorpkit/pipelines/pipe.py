@@ -1465,7 +1465,7 @@ def save_as_json(df, args):
     return df
 
 
-def pipeline(**cfg):
+def pipeline(data=None, **cfg):
     from ekorpkit.corpora import Corpus, Corpora
     from ekorpkit.datasets import Dataset, Datasets
 
@@ -1477,20 +1477,22 @@ def pipeline(**cfg):
     verbose = args.get("verbose", False)
 
     if corpus and dataset is None:
-        dataset = corpus
+        data = corpus
+    elif dataset:
+        data = data
 
     df = None
-    if dataset:
-        dataset = eKonf.instantiate(dataset)
-        if isinstance(dataset, (Corpus)):
-            df = dataset.data
-        elif isinstance(dataset, (Corpora)):
-            dataset.concat_corpora()
-            df = dataset.data
-        elif isinstance(dataset, (Dataset, Datasets)):
-            df = dataset.splits
-        elif isinstance(dataset, pd.DataFrame):
-            df = dataset
+    if data is not None:
+        data = eKonf.instantiate(data)
+        if isinstance(data, (Corpus)):
+            df = data.data
+        elif isinstance(data, (Corpora)):
+            data.concat_corpora()
+            df = data.data
+        elif isinstance(data, (Dataset, Datasets)):
+            df = data.splits
+        elif isinstance(data, pd.DataFrame):
+            df = data
     elif data_dir and data_file:
         df = _load_dataframe(df, args)
 
@@ -1503,7 +1505,8 @@ def pipeline(**cfg):
 
     if len(process_pipeline) > 0:
         df = apply_pipeline(df, process_pipeline, args)
-    else:
+        return df
+
+    if verbose:
         log.warning("No pipeline specified")
 
-    return df

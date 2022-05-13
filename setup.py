@@ -14,7 +14,7 @@ def get_about():
         os.path.join(basedir, "ekorpkit", "conf", "about", "app", "default.yaml")
     ) as f:
         for line in f:
-            k, v = line.split(":")
+            k, v = line.split(": ")
             about[k.strip()] = v.strip()
     return about
 
