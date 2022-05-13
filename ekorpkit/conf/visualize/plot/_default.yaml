@@ -18,6 +18,7 @@ plot:
 columns:
   xvalue:
   yvalue:
+spans:
 figure:
   xlabel:
     xlabel:
@@ -29,10 +30,12 @@ figure:
     title:
     title_fontsize: 12
     labels:
-  # xlim:
+    loc:
+  grid:
+  xlim:
   #   left:
   #   right:
-  # ylim:
+  ylim:
   #   bottom:
   #   top:
   # xticks:

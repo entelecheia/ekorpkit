@@ -46,6 +46,7 @@ def lineplot(
     lineplot={},
     plot={},
     figure={},
+    spans={},
     verbose=False,
     **kwargs,
 ):
@@ -61,6 +62,10 @@ def lineplot(
     plt.figure(figsize=figsize, tight_layout=True)
     ax = plt.gca()
     sns.lineplot(data=data[ycols], **lineplot)
+
+    if spans:
+        addspans(ax, **spans)
+
     set_figure(ax, **figure)
     fname = savefig.get("fname", None)
 
@@ -69,6 +74,16 @@ def lineplot(
         plt.savefig(**savefig)
         if verbose:
             print(f"Saved figure to {fname}")
+
+
+def addspans(ax=None, **spans):
+    if ax is None:
+        ax = plt.gca()
+    if isinstance(spans, dict):
+        spans = [spans]
+    for span, annot in spans:
+        ax.axvspan(**span)
+        ax.annotate(**annot)
 
 
 def stackplot(
