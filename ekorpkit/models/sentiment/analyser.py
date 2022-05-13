@@ -95,6 +95,7 @@ class LMSA(BaseSentimentAnalyser):
             )
             score["positive"] = lxfeat_agg["pos"] / (len(tokens) + self.EPSILON)
             score["negative"] = lxfeat_agg["neg"] / (len(tokens) + self.EPSILON)
+            score["num_tokens"] = len(tokens)
             score[feature] = polarity
             score["subjectivity"] = subjectivity
         elif isinstance(lxfeat_names, str):

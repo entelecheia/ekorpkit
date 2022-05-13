@@ -11,6 +11,7 @@ from ekorpkit.utils import print_status
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
 from ekorpkit import eKonf
+from ekorpkit.ekonf import apply_pipe
 from tqdm.auto import tqdm
 
 
@@ -58,26 +59,6 @@ def apply(
     return series.progress_apply(func)
 
 
-def apply_pipe(df, pipe):
-    fn = eKonf.partial(pipe["function"])
-    log.info(f"Applying pipe: {fn}")
-    if isinstance(df, dict):
-        if "concat_dataframes" in str(fn):
-            return fn(df, pipe)
-        else:
-            dfs = {}
-            for df_no, df_name in enumerate(df):
-                df_each = df[df_name]
-                log.info(
-                    f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
-                )
-                pipe["dataframe_name"] = df_name
-                dfs[df_name] = fn(df_each, pipe)
-            return dfs
-    else:
-        return fn(df, pipe)
-    # df = df.pipe(fn, pipe)
-    # return df
 
 
 def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):

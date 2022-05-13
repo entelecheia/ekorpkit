@@ -76,3 +76,5 @@ pathos                    : dataset, parser, edgar
 # guesslang 				: dataset, parser
 
 numba                   : numba
+
+fredapi					: fred, fomc

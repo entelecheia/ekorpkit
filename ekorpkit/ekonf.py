@@ -82,6 +82,7 @@ def _compose(
         else:
             key = _task[0]
             value = "default"
+        config_group = f"{key}={value}"
     else:
         key = None
         value = None
@@ -432,6 +433,26 @@ def _stop_env_(cfg, verbose=False):
         #         log.info(f'shutting down dask client')
 
 
+def apply_pipe(df, pipe):
+    fn = eKonf.partial(pipe["function"])
+    log.info(f"Applying pipe: {fn}")
+    if isinstance(df, dict):
+        if "concat_dataframes" in str(fn):
+            return fn(df, pipe)
+        else:
+            dfs = {}
+            for df_no, df_name in enumerate(df):
+                df_each = df[df_name]
+                log.info(
+                    f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
+                )
+                pipe["dataframe_name"] = df_name
+                dfs[df_name] = fn(df_each, pipe)
+            return dfs
+    else:
+        return fn(df, pipe)
+
+
 class eKonf:
     """ekorpkit config primary class"""
 
@@ -685,3 +706,7 @@ class eKonf:
             force_extract=force_extract,
             cache_dir=cache_dir,
         )
+
+    @staticmethod
+    def pipe(cfg, data=None):
+        return apply_pipe(data, cfg)
