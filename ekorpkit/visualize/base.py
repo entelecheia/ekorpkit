@@ -38,7 +38,10 @@ def set_figure(
         else:
             ax.set_title(**title)
     if legend is not None:
-        ax.legend(**legend)
+        if isinstance(legend, (str, list)):
+            ax.legend(legend)
+        elif legend.get("labels") is not None:
+            ax.legend(**legend)
     if grid is not None:
         if isinstance(grid, bool):
             ax.grid(grid)

@@ -1,0 +1,2 @@
+fname: ${..output_dir}/${..output_file}
+dpi: 300
