@@ -59,8 +59,6 @@ def apply(
     return series.progress_apply(func)
 
 
-
-
 def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
     pipeline = eKonf.to_dict(pipeline)
     pipeline_args = eKonf.to_dict(pipeline_args)
@@ -1486,8 +1484,7 @@ def pipeline(data=None, **cfg):
 
     if len(process_pipeline) > 0:
         df = apply_pipeline(df, process_pipeline, args)
-        return df
-
-    if verbose:
+    elif verbose:
         log.warning("No pipeline specified")
 
+    return df

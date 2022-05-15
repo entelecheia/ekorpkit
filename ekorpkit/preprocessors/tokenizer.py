@@ -460,7 +460,7 @@ class MecabTokenizer(Tokenizer):
         super().__init__(**kwargs)
         self.mecab = mecab
         try:
-            from ..tokenizers.mecab import MeCab
+            from ..models.tokenizer.mecab import MeCab
 
             if self.mecab is None:
                 _tokenizer = MeCab()
@@ -474,7 +474,7 @@ class MecabTokenizer(Tokenizer):
             )
 
     def parse(self, text):
-        from ..tokenizers.mecab import MeCab
+        from ..models.tokenizer.mecab import MeCab
 
         if self.mecab is None:
             self._tokenizer = MeCab()
