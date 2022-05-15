@@ -36,7 +36,7 @@ def test_predict_sentiments():
     ds_cfg.data_dir = "${cached_path:'https://github.com/entelecheia/ekorpkit-config/raw/main/data/financial_phrasebank.zip',true,false}"
     ds_cfg.use_name_as_subdir = True
 
-    cfg = eKonf.compose(config_group="pipeline=pipeline")
+    cfg = eKonf.compose(config_group="pipeline")
     cfg.verbose = True
     cfg.output_dir = "./data/tmp/predict"
     cfg.dataset = ds_cfg

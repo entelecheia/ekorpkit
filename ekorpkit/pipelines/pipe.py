@@ -1460,7 +1460,7 @@ def pipeline(data=None, **cfg):
     if corpus and dataset is None:
         data = corpus
     elif dataset:
-        data = data
+        data = dataset
 
     df = None
     if data is not None:

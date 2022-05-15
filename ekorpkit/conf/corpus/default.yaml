@@ -1,3 +1,4 @@
+_target_: ekorpkit.corpora.corpus.Corpus
 name: ${oc.select:.builtin.name, null} 
 data_dir: ${oc.select:.builtin.data_dir, ${dir.corpus}}
 metadata_dir:

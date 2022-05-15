@@ -131,19 +131,19 @@ def test_build_corpora():
 
 
 def test_corpus_task():
-    corpus_cfg = eKonf.compose(config_group="corpus=corpus")
+    corpus_cfg = eKonf.compose(config_group="corpus")
     corpus_cfg.verbose = True
     corpus_cfg.name = "bok_minutes"
     corpus_cfg.automerge = True
     corpus_cfg.data_dir = "./data/tmp"
 
-    cfg = eKonf.compose(config_group="task=corpus")
+    cfg = eKonf.compose(config_group="pipeline")
     cfg.verbose = True
     cfg.corpus = corpus_cfg
-    cfg.pipeline._pipeline_ = ["filter_query", "save_dataframe"]
-    cfg.pipeline.filter_query.query = "filename in ['BOK_20181130_20181218']"
-    cfg.pipeline.save_dataframe.output_dir = "./data/tmp"
-    cfg.pipeline.save_dataframe.output_file = "corpus_filtered.parquet"
+    cfg._pipeline_ = ["filter_query", "save_dataframe"]
+    cfg.filter_query.query = "filename in ['BOK_20181130_20181218']"
+    cfg.save_dataframe.output_dir = "./data/tmp"
+    cfg.save_dataframe.output_file = "corpus_filtered.parquet"
     eKonf.instantiate(cfg)
 
     assert os.path.exists("./data/tmp/corpus_filtered.parquet")
@@ -155,13 +155,13 @@ def test_corpora_task():
     corpus_cfg.automerge = True
     corpus_cfg.data_dir = "./data/tmp"
 
-    cfg = eKonf.compose(config_group="task=corpora")
+    cfg = eKonf.compose(config_group="pipeline")
     cfg.verbose = True
     cfg.corpus = corpus_cfg
-    cfg.pipeline._pipeline_ = ["filter_query", "save_dataframe"]
-    cfg.pipeline.filter_query.query = "id == 0"
-    cfg.pipeline.save_dataframe.output_dir = "./data/tmp"
-    cfg.pipeline.save_dataframe.output_file = "corpora_filtered.parquet"
+    cfg._pipeline_ = ["filter_query", "save_dataframe"]
+    cfg.filter_query.query = "id == 0"
+    cfg.save_dataframe.output_dir = "./data/tmp"
+    cfg.save_dataframe.output_file = "corpora_filtered.parquet"
     eKonf.instantiate(cfg)
 
     assert os.path.exists("./data/tmp/corpora_filtered.parquet")
