@@ -1,7 +1,7 @@
 defaults:
   - _build
   - /preprocessor/normalizer: formal_en
-  - override /fetch/loader: hfds
+  - override /io/loader: hfds
 
 name: c4_realnewslike
 fullname: C4 RealNewsLike Corpus
@@ -23,7 +23,7 @@ column_info:
     id: int
     date: str
     url: str
-fetch:
+io:
   data_sources:
     train: train
     test: validation

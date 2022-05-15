@@ -1,7 +1,7 @@
 defaults:
-  - /fetch: simple
-  - /info: dataset_build
-  - /pipeline: dataset_build
+  - /io: _build_simple
+  - /info: _build_dataset
+  - /pipeline: _build_dataset
 
 _target_: ekorpkit.io.fetch.build.DatasetBuilder
 name:

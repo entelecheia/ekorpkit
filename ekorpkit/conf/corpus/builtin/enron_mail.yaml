@@ -1,8 +1,8 @@
 defaults:
   - _build
-  - /fetch/fetcher: _web
+  - /io/fetcher: _web
   - /preprocessor/normalizer: formal_en
-  - override /fetch/loader/parser: email
+  - override /io/loader/parser: email
 
 name: enron_mail
 fullname: Enron Email Corpus
@@ -26,7 +26,7 @@ column_info:
     subject: str
     text: str
 
-fetch:
+io:
   data_sources: 
     train: '*.tar.gz'
   fetcher:

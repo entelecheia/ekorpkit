@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss
-  - override /fetch/loader/parser: plaintext
+  - override /io/loader/parser: plaintext
 
 name: bigkinds
 fullname: Korean News Dataset from Big Kinds
@@ -26,7 +26,7 @@ column_info:
     # code: str
     # date: str
 
-fetch:
+io:
   data_sources:
     train: '*.zip'
   loader:

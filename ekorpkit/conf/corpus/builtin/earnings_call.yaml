@@ -1,8 +1,8 @@
 defaults:
   - _build
-  - /fetch/fetcher: earnings_call 
+  - /io/fetcher: earnings_call 
   - /preprocessor/normalizer: formal_en
-  - override /fetch/loader: csv
+  - override /io/loader: csv
 
 name: earnings_call
 fullname: Seeking Alpha Earnings Transcripts
@@ -26,7 +26,7 @@ column_info:
     filename: str
     nos: str
 
-fetch:
+io:
   data_dir:  ${dir.dataset}/source/${.name}
   data_sources: 
     train: ${..fetcher.output_file}

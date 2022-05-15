@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - override /fetch/loader: hfds
+  - override /io/loader: hfds
 
 name: nsmc
 domain: general
@@ -15,7 +15,7 @@ column_info:
     labels: str
     text: str
 
-fetch:
+io:
   data_sources: 
     train: train
     test: test

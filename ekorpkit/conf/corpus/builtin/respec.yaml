@@ -1,10 +1,10 @@
 defaults:
   - _build
-  - /fetch/fetcher: respec
+  - /io/fetcher: respec
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - /fetch/loader/decompressor: gzip
-  - override /fetch/loader/parser: redif
+  - /io/loader/decompressor: gzip
+  - override /io/loader/parser: redif
 
 name: respec
 fullname: RePEc (Research Papers in Economics)
@@ -28,7 +28,7 @@ column_info:
     title: str
     handle: str
 
-fetch:
+io:
   # data_dir: ${dir.dataset}/source/${.name}
   data_sources:
     train: '**/*'

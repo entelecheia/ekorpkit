@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd_merge_segment
-  - override /fetch/loader: the_pile
+  - override /io/loader: the_pile
 
 name: youtube_subtitles
 lang: en
@@ -22,7 +22,7 @@ column_info:
     text: str
 
 
-fetch:
+io:
   data_dir: ${dir.archive}/datasets/source/the_pile
   data_sources: 
     train: train

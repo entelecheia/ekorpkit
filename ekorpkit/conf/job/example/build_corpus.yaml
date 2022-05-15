@@ -5,5 +5,5 @@ defaults:
 
 corpus:
   builtin:
-    fetch:
+    io:
       data_dir: ${cached_path:'https://github.com/entelecheia/ekorpkit-config/raw/main/data/bok_minutes_raw.zip',true,false}/bok_minutes_raw

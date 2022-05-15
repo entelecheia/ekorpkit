@@ -1,10 +1,10 @@
 defaults:
   - _build
-  - /fetch/fetcher: _gdrive_untar
+  - /io/fetcher: _gdrive_untar
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - /fetch/loader/decompressor: gzip
-  - override /fetch/loader/parser: jsonlines
+  - /io/loader/decompressor: gzip
+  - override /io/loader/parser: jsonlines
 
 name: bigpatent
 fullname: 'BigPatent - U.S. Patent Documents'
@@ -34,7 +34,7 @@ column_info:
     id: int
     publication_number: str
 
-fetch:
+io:
   data_sources:
     train: bigPatentData/train.tar.gz
     test: bigPatentData/test.tar.gz

@@ -29,7 +29,7 @@ column_info:
     journal: str
     keywords: str
 
-fetch:
+io:
   data_dir: ${dir.archive}/datasets/source/aida
   data_sources: 
     train: aida_papers.zip

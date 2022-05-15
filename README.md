@@ -30,19 +30,6 @@ The eKorpkit Corpus is a large, diverse, bilingual (ko/en) language modelling da
 
 ![ekorpkit corpus](https://github.com/entelecheia/ekorpkit/blob/main/docs/figs/ekorpkit_corpus.png?raw=true)
 
-## References
-
-- [Hydra](https://hydra.cc)
-- [Hugging Face](https://huggingface.co)
-- [Simple Transformers](https://simpletransformers.ai)
-- [Korpora](https://github.com/ko-nlp/Korpora)
-- [The Pile](https://github.com/EleutherAI/the-pile)
-- [soynlp](https://github.com/lovit/soynlp)
-- [pynori](https://github.com/gritmind/python-nori)
-- [kss](https://github.com/hyunwoongko/kss)
-- [fugashi](https://github.com/polm/fugashi)
-- [hanja](https://github.com/suminb/hanja)
-
 ## Citation
 
 ```tex

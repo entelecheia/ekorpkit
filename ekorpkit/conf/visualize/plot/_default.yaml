@@ -11,3 +11,4 @@ axvspans:
   - ${oc.select:..axvspan, null}
 annotations:
   - ${oc.select:..annotation, null}
+figure2:

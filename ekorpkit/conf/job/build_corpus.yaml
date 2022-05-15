@@ -14,7 +14,7 @@ ekorpkit:
   cmd: ${..cmd}
   project: ${oc.env:EKORPKIT_PROJECT,default}
   +corpus/builtin: ${..name}
-  corpus.builtin.fetch.calculate_stats: ${..calculate_stats}
-  corpus.builtin.fetch.preprocess_text: ${..preprocess_text}
-  corpus.builtin.fetch.overwrite: ${..overwrite}
-  corpus.builtin.fetch.force_download: ${..force_download}
+  corpus.builtin.io.calculate_stats: ${..calculate_stats}
+  corpus.builtin.io.preprocess_text: ${..preprocess_text}
+  corpus.builtin.io.overwrite: ${..overwrite}
+  corpus.builtin.io.force_download: ${..force_download}

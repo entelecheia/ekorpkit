@@ -1,5 +1,5 @@
 defaults:
-  - corpus_build
+  - _build_corpus
   - table: corpus_info
   - override /cmd@_global_: info
 

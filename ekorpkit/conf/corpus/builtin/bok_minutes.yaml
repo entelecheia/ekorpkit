@@ -1,8 +1,8 @@
 defaults:
   - _build
-  - /fetch/fetcher: bok
+  - /io/fetcher: bok
   - /preprocessor/normalizer: formal_ko
-  - override /fetch/loader: csv
+  - override /io/loader: csv
 
 name: bok_minutes
 fullname: BOK MPB Minutes
@@ -27,7 +27,7 @@ column_info:
     filename: str
 
 
-fetch:
+io:
   data_sources: 
     train: ${..fetcher.output_file}
 

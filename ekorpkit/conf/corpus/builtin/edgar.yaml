@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/fetcher: edgar
+  - /io/fetcher: edgar
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd_merge_article
 
@@ -39,7 +39,7 @@ column_info:
     complete_text_filing_link: str
     filename: str
 
-fetch:
+io:
   data_sources:
     train: '*.zip'
   loader:

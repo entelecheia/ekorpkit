@@ -1,8 +1,8 @@
 defaults:
   - _build
-  - /fetch/fetcher: kcc
+  - /io/fetcher: kcc
   - /preprocessor/normalizer: formal_ko
-  - override /fetch/loader/parser: plaintext_split
+  - override /io/loader/parser: plaintext_split
 
 name: kcc
 lang: ko
@@ -22,7 +22,7 @@ column_info:
     id: int
     text: str
 
-fetch:
+io:
   data_dir: ${dir.dataset}/source/${..name}
   data_sources:
     train: '*.tar.gz'

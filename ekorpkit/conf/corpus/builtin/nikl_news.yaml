@@ -30,7 +30,7 @@ column_info:
     original_topic: str
     category: str
 
-fetch:    
+io:    
   data_dir: ${dir.archive}/datasets/source/nikl
   data_sources: 
     train: 

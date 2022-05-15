@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss
-  - override /fetch/loader/parser: json_to_list
+  - override /io/loader/parser: json_to_list
 
 name: aihub_law_case
 fullname: AiHub Law Knowledge Base
@@ -28,7 +28,7 @@ column_info:
     precedent: str
     jugement_note: str
 
-fetch:
+io:
   data_dir:  ${dir.archive}/datasets/source/aihub/법령지식
   data_sources:
     train: 법령지식_관련판례(Json).zip

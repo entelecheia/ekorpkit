@@ -26,7 +26,7 @@ column_info:
     difficulty: str
     english: str
 
-fetch:
+io:
   data_dir:  ${dir.archive}/datasets/source/aihub/전문분야 한영 말뭉치
   data_sources: 
     train: Training/ko2en_training_json.zip

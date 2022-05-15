@@ -2,7 +2,7 @@ defaults:
   - _scifive_finetune
 
 name: NCBI-disease
-fetch:
+io:
   loader:
     data:
       constants:

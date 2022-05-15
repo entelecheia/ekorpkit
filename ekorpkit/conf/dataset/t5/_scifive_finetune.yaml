@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/fetcher: _gcs
+  - /io/fetcher: _gcs
 
 domain: biomed
 task: ner
@@ -15,7 +15,7 @@ column_info:
     input_text: str
     target_text: str
 
-fetch:
+io:
   data_sources: 
     train: train.tsv
     dev: dev.tsv

@@ -31,7 +31,7 @@ column_info:
     issued_by: str
     author: str
 
-fetch:
+io:
   data_dir:  ${dir.archive}/datasets/source/aihub/논문자료 요약
   data_sources: 
     train: Training/training_논문.zip

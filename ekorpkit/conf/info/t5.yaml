@@ -1,5 +1,5 @@
 defaults:
-  - t5_build
+  - _build_t5
   - table: t5_info
   - override /cmd@_global_: info
 

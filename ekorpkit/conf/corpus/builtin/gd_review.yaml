@@ -1,9 +1,9 @@
 defaults:
   - _build
-  - /fetch/fetcher: glassdoor
+  - /io/fetcher: glassdoor
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - override /fetch/loader/parser: jsonlines
+  - override /io/loader/parser: jsonlines
 
 name: gd_review
 fullname: Glassdoor Employee Reviews
@@ -28,7 +28,7 @@ column_info:
     title: str
     link: str
 
-fetch:
+io:
   data_sources:
     train: ${..fetcher.output_file}
   loader:

@@ -1,9 +1,9 @@
 defaults:
   - _build
-  - /fetch/fetcher: fomc
+  - /io/fetcher: fomc
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - override /fetch/loader: csv
+  - override /io/loader: csv
 
 name: fomc
 fullname: Federal Open Market Committee (FOMC) Corpus
@@ -32,7 +32,7 @@ column_info:
     speaker: str
     title: str
 
-fetch:
+io:
   data_sources:
     train: '*.csv'
 

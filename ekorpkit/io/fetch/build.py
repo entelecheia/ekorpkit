@@ -40,20 +40,20 @@ class DatasetBuilder:
         self.verbose = self.args.get("verbose", False)
         self.autoload = self.args.get("autoload", False)
 
-        self.fetch_args = args.get("fetch", None)
-        self.fetch_dir = self.fetch_args.get("data_dir", None)
-        self.fetch_sources = self.fetch_args.get("data_sources", None)
+        self.io_args = args.get("io", None)
+        self.fetch_dir = self.io_args.get("data_dir", None)
+        self.fetch_sources = self.io_args.get("data_sources", None)
         if isinstance(self.fetch_sources, str):
             self.fetch_sources = [self.fetch_sources]
         if isinstance(self.fetch_sources, list):
             self.fetch_sources = {"train": self.fetch_sources}
-        self.num_workers = self.fetch_args.get("num_workers", None)
-        self.overwrite = self.fetch_args.get("overwrite", False)
-        self.calculate_stats = self.fetch_args.get("calculate_stats", False)
-        self.preprocess_text = self.fetch_args.get("preprocess_text", False)
+        self.num_workers = self.io_args.get("num_workers", None)
+        self.overwrite = self.io_args.get("overwrite", False)
+        self.calculate_stats = self.io_args.get("calculate_stats", False)
+        self.preprocess_text = self.io_args.get("preprocess_text", False)
 
-        self.fetcher = self.fetch_args.get("fetcher", None)
-        self.loader = self.fetch_args.get("loader", None)
+        self.fetcher = self.io_args.get("fetcher", None)
+        self.loader = self.io_args.get("loader", None)
 
         self.info_args = self.args.get("info", None)
         self.summary_info = None

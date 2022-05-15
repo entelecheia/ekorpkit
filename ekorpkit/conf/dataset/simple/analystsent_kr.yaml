@@ -1,7 +1,7 @@
 defaults:
   - _build
   - /preprocessor/normalizer: formal_ko
-  - /fetch/fetcher: dataframe
+  - /io/fetcher: dataframe
 
 name: analystsent_kr
 domain: econ
@@ -17,7 +17,7 @@ column_info:
     labels: str
     text: str
 
-fetch:
+io:
   data_sources:
     train: train.csv
     test: test.csv

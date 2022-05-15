@@ -1,7 +1,7 @@
 defaults:
-  - /fetch: t5
-  - /info: t5_build
-  - /pipeline: dataset_build
+  - /io: t5
+  - /info: _build_t5
+  - /pipeline: _build_dataset
 
 _target_: ekorpkit.io.fetch.build.DatasetBuilder
 name:

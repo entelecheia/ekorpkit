@@ -30,7 +30,7 @@ column_info:
     style: str
     english: str
 
-fetch:
+io:
   data_dir: ${dir.archive}/datasets/source/aihub/한국어-영어 번역 말뭉치(기술과학)
   data_sources: 
     train: Training/학습데이터.zip
