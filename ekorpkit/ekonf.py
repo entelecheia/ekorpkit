@@ -477,7 +477,10 @@ def _dependencies(key, path=None):
         # add tag `exhaustive` at the end
         extra_deps["exhaustive"] = set(vv for v in extra_deps.values() for vv in v)
 
-    return extra_deps[key]
+    if key == "keys":
+        return set(extra_deps.keys())
+    else:
+        return extra_deps[key]
 
 
 class eKonf:

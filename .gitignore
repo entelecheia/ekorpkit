@@ -53,6 +53,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
+codecov*
 .test_results/
 test_results/
 htmlcov/
