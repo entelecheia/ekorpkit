@@ -12,6 +12,7 @@ def test_build_financial_phrasebank():
     cfg.io.calculate_stats = True
     db = eKonf.instantiate(cfg)
     db.build()
+    assert True
 
 
 def test_build_datasets():

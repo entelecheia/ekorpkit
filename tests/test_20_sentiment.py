@@ -94,3 +94,5 @@ def test_eval_fomc_sentiments():
     cfg.figure.legend = None
     cfg.output_dir = "./data/tmp/visualize"
     eKonf.instantiate(cfg, data=fomc_sentiments)
+
+    assert os.path.exists(cfg.output_dir)

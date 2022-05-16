@@ -453,6 +453,33 @@ def apply_pipe(df, pipe):
         return fn(df, pipe)
 
 
+def _dependencies(key, path=None):
+    import re
+    from collections import defaultdict
+
+    if path is None:
+        path = os.path.join(
+            os.path.dirname(__file__), "resources", "requirements-extra.txt"
+        )
+
+    with open(path) as fp:
+        extra_deps = defaultdict(set)
+        for k in fp:
+            if k.strip() and not k.startswith("#"):
+                tags = set()
+                if ":" in k:
+                    k, v = k.split(":")
+                    tags.update(vv.strip() for vv in v.split(","))
+                tags.add(re.split("[<=>]", k.strip())[0])
+                for t in tags:
+                    extra_deps[t].add(k.strip())
+
+        # add tag `exhaustive` at the end
+        extra_deps["exhaustive"] = set(vv for v in extra_deps.values() for vv in v)
+
+    return extra_deps[key]
+
+
 class eKonf:
     """ekorpkit config primary class"""
 
@@ -710,3 +737,7 @@ class eKonf:
     @staticmethod
     def pipe(cfg, data=None):
         return apply_pipe(data, cfg)
+
+    @staticmethod
+    def dependencies(key, path=None):
+        return _dependencies(key, path)

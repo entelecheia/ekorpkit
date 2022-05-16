@@ -26,7 +26,7 @@ def requirements():
         return f.read().splitlines()
 
 
-def get_extra_requires(path, add_all=True):
+def get_extra_requires(path, add_exhaustive=True):
     import re
     from collections import defaultdict
 
@@ -42,8 +42,8 @@ def get_extra_requires(path, add_all=True):
                 for t in tags:
                     extra_deps[t].add(k.strip())
 
-        # add tag `all` at the end
-        if add_all:
+        # add tag `exhaustive` at the end
+        if add_exhaustive:
             extra_deps["exhaustive"] = set(vv for v in extra_deps.values() for vv in v)
 
     return extra_deps

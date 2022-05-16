@@ -17,3 +17,5 @@ def test_fred():
     cfg.plot.figsize = (15, 8)
     cfg.figure.title = "Fed Rate"
     eKonf.instantiate(cfg, data=fred.data)
+
+    assert True
