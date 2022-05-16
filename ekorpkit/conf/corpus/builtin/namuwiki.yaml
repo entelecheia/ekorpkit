@@ -1,9 +1,9 @@
 defaults:
   - _build
-  - /fetch/fetcher: namuwiki
+  - /io/fetcher: namuwiki
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss
-  - override /fetch/loader: csv
+  - override /io/loader: csv
 
 name: namuwiki
 fullname: NamuWiki Corpus
@@ -25,7 +25,7 @@ column_info:
     id: int
     title: str
 
-fetch:
+io:
   data_sources:
     train: ${..fetcher.output_file}
 

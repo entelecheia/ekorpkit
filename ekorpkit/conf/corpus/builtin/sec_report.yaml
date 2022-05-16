@@ -1,9 +1,9 @@
 defaults:
   - _build
-  - /fetch/fetcher: sec_report
+  - /io/fetcher: sec_report
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss
-  - override /fetch/loader: csv
+  - override /io/loader: csv
 
 name: sec_report
 fullname: Korean Financial Analyst Report Corpus
@@ -58,7 +58,7 @@ column_info:
     WORK_DT: str
     TRD_DT: str
 
-fetch:
+io:
   data_sources:
     train: ${..fetcher.output_file}
 

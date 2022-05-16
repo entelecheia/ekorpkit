@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/fetcher: dataframe
+  - /io/fetcher: dataframe
 
 name: esg_topics
 domain: econ
@@ -18,7 +18,7 @@ column_info:
     example_id: str
     count: int
 
-fetch:
+io:
   data_sources: 
     train: train.csv
     test: test.csv

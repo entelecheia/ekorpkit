@@ -7,11 +7,12 @@ from ekorpkit import eKonf
 def test_build_financial_phrasebank():
     cfg = eKonf.compose(config_group="dataset/simple=financial_phrasebank")
     cfg["data_dir"] = "./data/tmp/financial_phrasebank"
-    cfg.fetch.data_dir = cfg.data_dir
-    cfg.fetch.overwrite = True
-    cfg.fetch.calculate_stats = True
+    cfg.io.data_dir = cfg.data_dir
+    cfg.io.overwrite = True
+    cfg.io.calculate_stats = True
     db = eKonf.instantiate(cfg)
     db.build()
+    assert True
 
 
 def test_build_datasets():
@@ -19,9 +20,9 @@ def test_build_datasets():
     cfg = eKonf.compose(config_group="dataset/simple=sst2")
     cfg.verbose = True
     cfg.data_dir = "./data/tmp/sst2"
-    cfg.fetch.data_dir = cfg.data_dir
-    cfg.fetch.overwrite = True
-    cfg.fetch.calculate_stats = True
+    cfg.io.data_dir = cfg.data_dir
+    cfg.io.overwrite = True
+    cfg.io.calculate_stats = True
     db = eKonf.instantiate(cfg)
     db.build()
 
@@ -36,7 +37,7 @@ def test_build_datasets():
 
 
 def test_datafame_pipeline():
-    cfg = eKonf.compose(config_group="pipeline=pipeline")
+    cfg = eKonf.compose(config_group="pipeline")
     cfg.verbose = True
     cfg.data_dir = "./data/tmp/sst2"
     cfg.data_file = "sst2-train.csv"

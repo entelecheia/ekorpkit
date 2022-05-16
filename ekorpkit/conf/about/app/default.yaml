@@ -2,3 +2,4 @@ _target_: ekorpkit.cli.about
 name: ekorpkit
 author: entelecheia
 description: eKorpkit provides a flexible interface for corpus management and analysis pipelines such as extraction, transformation, tokenization, training, and visualization.
+version: ${__version__:}

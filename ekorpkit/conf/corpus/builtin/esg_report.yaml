@@ -1,9 +1,9 @@
 defaults:
   - _build
-  - /fetch/fetcher: esg_report
+  - /io/fetcher: esg_report
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss
-  - override /fetch/loader: csv
+  - override /io/loader: csv
 
 name: esg_report 
 fullname: Korean ESG Reports
@@ -26,7 +26,7 @@ column_info:
     doc_id: str
     filename: str
 
-fetch:
+io:
   data_sources:
     train: ${..fetcher.output_file}
 

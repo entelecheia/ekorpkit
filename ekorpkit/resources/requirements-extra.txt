@@ -1,0 +1,80 @@
+# FORMAT
+# Put your extra requirements here in the following format
+#
+# package[version_required]	: tag1, tag2, ...
+# ex) pip install -e .\[modin\]
+
+fugashi					: all, tokenize, fugashi
+mecab-python3           : all, tokenize, mecab
+mecab-ko-dic			: all, tokenize, mecab
+pysbd					: all, tokenize, dataset, tokenize-en
+pynori					: all, tokenize, pynori
+soynlp					: all, tokenize, soynlp
+nltk					: all, tokenize, nltk, tokenize-en
+sacremoses				: all, tokenize
+emoji					: all, tokenize, dataset
+# sentencepiece			: tokenize
+
+tomotopy			  	: all, topic
+wordcloud				: all, topic, visualize
+pyLDAvis				: all, topic
+
+pyhwp					: parser, hwp, bok
+wikiextractor			: parser, wiki
+namu-wiki-extractor		: parser, wiki
+pdfplumber				: parser, fomc
+mail-parser				: parser, mail
+pubmed_parser			: parser, pubmed
+jsonpath-ng				: all, parser, dataset
+beautifulsoup4			: all, parser, dataset
+html-to-json			: all, parser, html
+fasttext-langdetect		: parser, langdetect
+cssutils                : all, parser, edgar
+
+simpletransformers		: all, transformers, model
+datasets				: all, transformers, dataset, model
+# torch					: transformers
+tensorflow				: all, transformers, model
+# tf-nightly 				: transformers, model
+google-api-python-client	: all, transformers, model
+# yellowbrick             : model, visualize
+google-cloud-storage>=2.0.0 : all, transformers, model, dataset
+
+modin					: pandas
+ray						: pandas
+# dask					: pandas
+# swifter					: pandas
+
+# sysrsync				: fetch
+wget					: all, fetch, dataset
+py7zr					: all, fetch, dataset
+zstandard				: all, fetch, dataset
+# cached-path             : fetch, dataset
+
+pymongo					: database
+
+# py-markdown-table		: doc
+# pytablewriter			: doc
+plotly					: all, doc, visualize
+kaleido					: all, doc, visualize
+rich					: all, doc, visualize
+matplotlib				: all, doc, visualize
+seaborn                 : all, doc, visualize
+
+tensorflow-datasets		: dataset
+# tensorflow-io			: dataset
+lsh 					: all, dataset
+orjson 					: all, dataset, parser
+datasketch 				: all, dataset
+pysimdjson				: all, dataset, parser
+p_tqdm					: all, dataset, parser
+joblib					: all, dataset, parser
+ftfy					: all, dataset, parser, tokenize
+jsonlines				: all, dataset, parser
+loky					: all, dataset, parser
+pathos                  : all, dataset, parser, edgar
+guesslang 				: guesslang
+
+numba                   : numba
+
+fredapi					: all, fred, fomc

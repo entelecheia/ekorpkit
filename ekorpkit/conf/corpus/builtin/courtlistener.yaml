@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_en_parantheses
   - /preprocessor/segmenter: pysbd_merge_article_filter_len
-  - override /fetch/loader: the_pile
+  - override /io/loader: the_pile
 
 name: courtlistener
 fullname: CourtListener
@@ -21,7 +21,7 @@ column_info:
     id: int
     text: str
 
-fetch:
+io:
   data_dir:  ${dir.archive}/datasets/source/the_pile
   data_sources: 
     train: train

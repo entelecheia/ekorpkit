@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss_merge_article
-  - override /fetch/loader/parser: html_to_json
+  - override /io/loader/parser: html_to_json
 
 name: kaist
 lang: ko
@@ -30,7 +30,7 @@ column_info:
     publisher: str
     kdc: str
 
-fetch:
+io:
   data_sources:
     train: SWRC.zip
   loader:

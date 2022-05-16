@@ -1,13 +1,13 @@
 defaults:
   - _build
   - /preprocessor/normalizer: formal_ko
-  - /fetch/fetcher: dataframe
+  - /io/fetcher: dataframe
 
 name: analystsent_kr
 domain: econ
 task: classification
 lang: ko
-column_info: 
+column_info:
   keys:
     id: id
     text: text
@@ -17,8 +17,8 @@ column_info:
     labels: str
     text: str
 
-fetch:
-  data_sources: 
+io:
+  data_sources:
     train: train.csv
     test: test.csv
     dev: dev.csv
@@ -56,8 +56,8 @@ fetch:
 
 pipeline:
   _transform_:
-  _preprocess_:  
+  _preprocess_:
     - normalize
   normalize:
     preprocessor:
-      normalizer: ${dataset.simple.preprocessor.normalizer}        
+      normalizer: ${dataset.simple.preprocessor.normalizer}

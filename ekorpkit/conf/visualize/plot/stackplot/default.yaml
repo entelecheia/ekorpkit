@@ -1,0 +1,7 @@
+function: stackplot
+dataform: transpose
+y:
+secondary_y: false
+args:
+  colors:
+  baseline: zero

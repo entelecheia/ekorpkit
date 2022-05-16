@@ -3,14 +3,13 @@ defaults:
   - _self_
   - about: default
   - cmd: default
-  - corpus: _loader
-  - dataset: _loader
+  - corpus: default
+  - dataset: default
   - dir: default
   - env: default
   - mode: default
   - model: default
   - project: default
-  - task: _default
   - preprocessor/normalizer: default
   - preprocessor/segmenter: default
   - preprocessor/tokenizer: default

@@ -14,7 +14,7 @@ def get_about():
         os.path.join(basedir, "ekorpkit", "conf", "about", "app", "default.yaml")
     ) as f:
         for line in f:
-            k, v = line.split(":")
+            k, v = line.split(": ")
             about[k.strip()] = v.strip()
     return about
 
@@ -26,7 +26,7 @@ def requirements():
         return f.read().splitlines()
 
 
-def get_extra_requires(path, add_all=True):
+def get_extra_requires(path, add_exhaustive=True):
     import re
     from collections import defaultdict
 
@@ -42,9 +42,9 @@ def get_extra_requires(path, add_all=True):
                 for t in tags:
                     extra_deps[t].add(k.strip())
 
-        # add tag `all` at the end
-        if add_all:
-            extra_deps["all"] = set(vv for v in extra_deps.values() for vv in v)
+        # add tag `exhaustive` at the end
+        if add_exhaustive:
+            extra_deps["exhaustive"] = set(vv for v in extra_deps.values() for vv in v)
 
     return extra_deps
 
@@ -60,7 +60,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements(),
-    extras_require=get_extra_requires("requirements-extra.txt"),
+    extras_require=get_extra_requires("ekorpkit/resources/requirements-extra.txt"),
     keywords=[],
     packages=find_packages(),
     python_requires=">=3.7",

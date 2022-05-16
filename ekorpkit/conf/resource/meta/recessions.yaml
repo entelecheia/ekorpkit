@@ -1,0 +1,35 @@
+dotcom:
+  name: Dot-com Bubble
+  description: Dot-com bubble
+  source: https://en.wikipedia.org/wiki/Dot-com_bubble
+  from: 2000-03
+  to: 2002-10
+  format: '%Y-%m'
+fincrisis:
+  name: Financial Crisis
+  description: Financial crisis of 2007-2008
+  source: https://en.wikipedia.org/wiki/Financial_crisis_of_2007-2008
+  from: 2007-04
+  to: 2009-03
+  format: '%Y-%m'
+eurodebt:
+  name: Euro Debt Crisis
+  description: European debt crisis
+  source: https://en.wikipedia.org/wiki/European_debt_crisis
+  from: 2010-09
+  to: 2012-09
+  format: '%Y-%m'
+chinese:
+  name: Chinese Crisis
+  description: 2015-16 Chinese stock market turbulence
+  source: https://en.wikipedia.org/wiki/2015-2016_Chinese_stock_market_turbulence
+  from: 2015-01
+  to: 2016-06
+  format: '%Y-%m'
+covid19:
+  name: COVID-19
+  description: COVID-19 Pandemic
+  source: https://en.wikipedia.org/wiki/COVID-19_pandemic
+  from: 2020-02
+  to: 2022-02
+  format: '%Y-%m'

@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: kss_merge_article
-  - override /fetch/loader: hfds
+  - override /io/loader: hfds
 
 name: mc4_ko
 fullname: Korean C4 Corpus
@@ -25,7 +25,7 @@ column_info:
     date: str
     url: str
 
-fetch:
+io:
   data_sources:
     train: train
     test: validation

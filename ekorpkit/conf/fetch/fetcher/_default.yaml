@@ -1,8 +1,0 @@
-name: ${oc.select:..name, ''}
-output_dir: ${oc.select:..data_dir, /tmp/${.name}}
-output_file: 
-autoload: true
-force_download: ${oc.select:..force_download, false}
-num_workers: ${oc.select:task.num_workers, 1}
-compress: false
-verbose: ${oc.select:..verbose, true}

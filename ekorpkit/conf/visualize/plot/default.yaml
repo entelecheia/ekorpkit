@@ -1,0 +1,6 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.visualize.plot.plot
+output_file: ${oc.select:..output_file, plot.png}
+plots:

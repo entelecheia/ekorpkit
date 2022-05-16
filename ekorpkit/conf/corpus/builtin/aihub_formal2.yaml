@@ -27,7 +27,7 @@ column_info:
     date: str
     filename: str
 
-fetch:
+io:
   data_dir:  ${dir.archive}/datasets/source/aihub/전문분야 말뭉치
   data_sources:
     train: 

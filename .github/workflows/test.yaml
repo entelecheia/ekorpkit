@@ -40,7 +40,7 @@ jobs:
           pip install -r requirements-test.txt
 
       - name: Run tests
-        run: pytest tests
+        run: pytest -m "not local and not gpu"
 
       - name: "Upload coverage to codecov"
         uses: codecov/codecov-action@v1

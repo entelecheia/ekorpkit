@@ -11,6 +11,7 @@ from ekorpkit.utils import print_status
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
 from ekorpkit import eKonf
+from ekorpkit.ekonf import apply_pipe
 from tqdm.auto import tqdm
 
 
@@ -56,28 +57,6 @@ def apply(
         log.warning("Warning: batcher not initialized")
     tqdm.pandas(desc=description)
     return series.progress_apply(func)
-
-
-def apply_pipe(df, pipe):
-    fn = eKonf.partial(pipe["function"])
-    log.info(f"Applying pipe: {fn}")
-    if isinstance(df, dict):
-        if "concat_dataframes" in str(fn):
-            return fn(df, pipe)
-        else:
-            dfs = {}
-            for df_no, df_name in enumerate(df):
-                df_each = df[df_name]
-                log.info(
-                    f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
-                )
-                pipe["dataframe_name"] = df_name
-                dfs[df_name] = fn(df_each, pipe)
-            return dfs
-    else:
-        return fn(df, pipe)
-    # df = df.pipe(fn, pipe)
-    # return df
 
 
 def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
@@ -1465,7 +1444,7 @@ def save_as_json(df, args):
     return df
 
 
-def pipeline(**cfg):
+def pipeline(data=None, **cfg):
     from ekorpkit.corpora import Corpus, Corpora
     from ekorpkit.datasets import Dataset, Datasets
 
@@ -1477,20 +1456,22 @@ def pipeline(**cfg):
     verbose = args.get("verbose", False)
 
     if corpus and dataset is None:
-        dataset = corpus
+        data = corpus
+    elif dataset:
+        data = dataset
 
     df = None
-    if dataset:
-        dataset = eKonf.instantiate(dataset)
-        if isinstance(dataset, (Corpus)):
-            df = dataset.data
-        elif isinstance(dataset, (Corpora)):
-            dataset.concat_corpora()
-            df = dataset.data
-        elif isinstance(dataset, (Dataset, Datasets)):
-            df = dataset.splits
-        elif isinstance(dataset, pd.DataFrame):
-            df = dataset
+    if data is not None:
+        data = eKonf.instantiate(data)
+        if isinstance(data, (Corpus)):
+            df = data.data
+        elif isinstance(data, (Corpora)):
+            data.concat_corpora()
+            df = data.data
+        elif isinstance(data, (Dataset, Datasets)):
+            df = data.splits
+        elif isinstance(data, pd.DataFrame):
+            df = data
     elif data_dir and data_file:
         df = _load_dataframe(df, args)
 
@@ -1503,7 +1484,7 @@ def pipeline(**cfg):
 
     if len(process_pipeline) > 0:
         df = apply_pipeline(df, process_pipeline, args)
-    else:
+    elif verbose:
         log.warning("No pipeline specified")
 
     return df

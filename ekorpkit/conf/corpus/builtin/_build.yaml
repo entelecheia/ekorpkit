@@ -1,7 +1,7 @@
 defaults:
-  - /fetch: corpus
-  - /info: corpus_build
-  - /pipeline: corpus_build
+  - /io: _build_corpus
+  - /info: _build_corpus
+  - /pipeline: _build_corpus
 
 _target_: ekorpkit.io.fetch.build.DatasetBuilder
 name:
@@ -12,3 +12,10 @@ segment_separator: \n\n
 sentence_separator: \n
 verbose: ${oc.select:..verbose, true}
 autoload: true
+
+normalize:
+  preprocessor:
+    normalizer: ${oc.select:corpus.builtin.preprocessor.normalizer,null}
+segment:
+  preprocessor:
+    segmenter: ${oc.select:corpus.builtin.preprocessor.segmenter,null}

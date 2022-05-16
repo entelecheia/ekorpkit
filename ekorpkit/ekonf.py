@@ -81,7 +81,8 @@ def _compose(
             key, value = _task
         else:
             key = _task[0]
-            value = None
+            value = "default"
+        config_group = f"{key}={value}"
     else:
         key = None
         value = None
@@ -432,6 +433,56 @@ def _stop_env_(cfg, verbose=False):
         #         log.info(f'shutting down dask client')
 
 
+def apply_pipe(df, pipe):
+    fn = eKonf.partial(pipe["function"])
+    log.info(f"Applying pipe: {fn}")
+    if isinstance(df, dict):
+        if "concat_dataframes" in str(fn):
+            return fn(df, pipe)
+        else:
+            dfs = {}
+            for df_no, df_name in enumerate(df):
+                df_each = df[df_name]
+                log.info(
+                    f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
+                )
+                pipe["dataframe_name"] = df_name
+                dfs[df_name] = fn(df_each, pipe)
+            return dfs
+    else:
+        return fn(df, pipe)
+
+
+def _dependencies(key, path=None):
+    import re
+    from collections import defaultdict
+
+    if path is None:
+        path = os.path.join(
+            os.path.dirname(__file__), "resources", "requirements-extra.txt"
+        )
+
+    with open(path) as fp:
+        extra_deps = defaultdict(set)
+        for k in fp:
+            if k.strip() and not k.startswith("#"):
+                tags = set()
+                if ":" in k:
+                    k, v = k.split(":")
+                    tags.update(vv.strip() for vv in v.split(","))
+                tags.add(re.split("[<=>]", k.strip())[0])
+                for t in tags:
+                    extra_deps[t].add(k.strip())
+
+        # add tag `exhaustive` at the end
+        extra_deps["exhaustive"] = set(vv for v in extra_deps.values() for vv in v)
+
+    if key == "keys":
+        return set(extra_deps.keys())
+    else:
+        return extra_deps[key]
+
+
 class eKonf:
     """ekorpkit config primary class"""
 
@@ -685,3 +736,11 @@ class eKonf:
             force_extract=force_extract,
             cache_dir=cache_dir,
         )
+
+    @staticmethod
+    def pipe(cfg, data=None):
+        return apply_pipe(data, cfg)
+
+    @staticmethod
+    def dependencies(key, path=None):
+        return _dependencies(key, path)

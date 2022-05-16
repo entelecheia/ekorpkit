@@ -2,8 +2,8 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - /fetch/fetcher: nih_exporter
-  - override /fetch/loader: csv
+  - /io/fetcher: nih_exporter
+  - override /io/loader: csv
 
 name: nih_exporter
 fullname: NIH ExPORTER Corpus
@@ -25,7 +25,7 @@ column_info:
     id: int
     appl_id: str
 
-fetch:
+io:
   data_sources:
     train: 
       - exporter/*.zip

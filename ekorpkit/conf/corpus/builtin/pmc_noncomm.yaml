@@ -5,6 +5,6 @@ name: pmc_noncomm
 fullname: PubMed Central Open Access Corpus - Non-Commercial Use
 description: PMC OA Subset - Non-Commercial Use Only
 
-fetch:
+io:
   fetcher:
     subset: oa_noncomm

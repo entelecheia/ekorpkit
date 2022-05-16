@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - override /fetch/loader/parser: reuters
+  - override /io/loader/parser: reuters
 
 name: reuters_financial
 fullname: Reuters Financial News Corpus
@@ -28,7 +28,7 @@ column_info:
     date: str
     url: str
 
-fetch:
+io:
   data_sources:    
     train: '*.tar.bz2'
   loader:

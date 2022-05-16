@@ -1,10 +1,10 @@
 defaults:
   - _build
-  - /fetch/fetcher: pubmed
+  - /io/fetcher: pubmed
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - /fetch/loader/decompressor: gzip
-  - override /fetch/loader/parser: pubmed
+  - /io/loader/decompressor: gzip
+  - override /io/loader/parser: pubmed
 
 name: pubmed
 fullname: PubMed Abstracts Corpus
@@ -28,7 +28,7 @@ column_info:
     pubdate: str
     title: str
 
-fetch:
+io:
   data_sources:
     train: baseline/*.xml.gz
   fetcher:

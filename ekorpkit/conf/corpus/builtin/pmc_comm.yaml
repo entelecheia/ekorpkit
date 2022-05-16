@@ -1,9 +1,9 @@
 defaults:
   - _build
-  - /fetch/fetcher: pubmed
+  - /io/fetcher: pubmed
   - /preprocessor/normalizer: formal_en_parantheses
   - /preprocessor/segmenter: pysbd_merge_article
-  - override /fetch/loader/parser: pmc
+  - override /io/loader/parser: pmc
 
 name: pmc_comm
 fullname: PubMed Central Open Access Corpus - Commercial Use
@@ -26,7 +26,7 @@ column_info:
     section: str
     filename: str
 
-fetch:
+io:
   data_sources:
     train: ${..fetcher.subset}/*.tar.gz
   fetcher:

@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: kss_merge_article
-  - override /fetch/loader: hfds
+  - override /io/loader: hfds
 
 name: oscar_ko
 fullname: OSCAR - Open Super-large Crawled ALMAnaCH coRpus
@@ -21,7 +21,7 @@ column_info:
     id: int
     text: str
 
-fetch:
+io:
   data_sources:
     train: train
   loader:

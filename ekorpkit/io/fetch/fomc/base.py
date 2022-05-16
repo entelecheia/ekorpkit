@@ -85,25 +85,25 @@ class FomcBase(metaclass=ABCMeta):
 
     def _speaker_from_date(self, article_date):
         if (
-            self.chair.FromDate[0] < article_date
-            and article_date < self.chair.ToDate[0]
+            self.chair.from_date[0] < article_date
+            and article_date < self.chair.to_date[0]
         ):
-            speaker = self.chair.FirstName[0] + " " + self.chair.Surname[0]
+            speaker = self.chair.first_name[0] + " " + self.chair.surname[0]
         elif (
-            self.chair.FromDate[1] < article_date
-            and article_date < self.chair.ToDate[1]
+            self.chair.from_date[1] < article_date
+            and article_date < self.chair.to_date[1]
         ):
-            speaker = self.chair.FirstName[1] + " " + self.chair.Surname[1]
+            speaker = self.chair.first_name[1] + " " + self.chair.surname[1]
         elif (
-            self.chair.FromDate[2] < article_date
-            and article_date < self.chair.ToDate[2]
+            self.chair.from_date[2] < article_date
+            and article_date < self.chair.to_date[2]
         ):
-            speaker = self.chair.FirstName[2] + " " + self.chair.Surname[2]
+            speaker = self.chair.first_name[2] + " " + self.chair.surname[2]
         elif (
-            self.chair.FromDate[3] < article_date
-            and article_date < self.chair.ToDate[3]
+            self.chair.from_date[3] < article_date
+            and article_date < self.chair.to_date[3]
         ):
-            speaker = self.chair.FirstName[3] + " " + self.chair.Surname[3]
+            speaker = self.chair.first_name[3] + " " + self.chair.surname[3]
         else:
             speaker = "other"
         return speaker

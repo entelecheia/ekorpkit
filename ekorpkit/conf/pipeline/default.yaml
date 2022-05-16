@@ -3,5 +3,6 @@ defaults:
   
 _target_: ekorpkit.pipelines.pipe.pipeline
 _pipeline_:
+data:
 corpus:
 dataset:

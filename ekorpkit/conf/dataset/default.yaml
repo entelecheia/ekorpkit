@@ -1,3 +1,4 @@
+_target_: ekorpkit.datasets.dataset.Dataset
 name: ${oc.select:.builtin.name, null} 
 data_dir: ${dir.dataset}/dataset
 filetype: ${oc.select:.builtin.filetype, csv}

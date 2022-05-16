@@ -1,5 +1,0 @@
-defaults:
-  - corpus
-
-_target_: ekorpkit.tasks.task.corpora_tasks
-name: corpora_task

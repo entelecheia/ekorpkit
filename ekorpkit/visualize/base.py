@@ -1,5 +1,6 @@
 import platform
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from matplotlib import font_manager, rc
 from pathlib import Path
 
@@ -10,6 +11,7 @@ def set_figure(
     ylabel=None,
     title=None,
     legend=None,
+    grid=None,
     xlim=None,
     ylim=None,
     xticks=None,
@@ -36,7 +38,15 @@ def set_figure(
         else:
             ax.set_title(**title)
     if legend is not None:
-        ax.legend(**legend)
+        if isinstance(legend, (str, list)):
+            ax.legend(legend)
+        elif legend.get("labels") is not None:
+            ax.legend(**legend)
+    if grid is not None:
+        if isinstance(grid, bool):
+            ax.grid(grid)
+        elif isinstance(grid, dict):
+            ax.grid(**grid)
     if xticks is not None:
         if isinstance(xticks, str):
             ax.set_xticks(eval(xticks))

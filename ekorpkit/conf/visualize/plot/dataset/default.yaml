@@ -1,0 +1,5 @@
+# if x is not defined, index is used as x
+x:
+y:
+# options for form: long, wide, indiviual
+form: wide

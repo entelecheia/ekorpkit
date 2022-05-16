@@ -1,6 +1,6 @@
 defaults:
   - _build
-  - /fetch/fetcher: hfds
+  - /io/fetcher: hfds
 
 name: financial_phrasebank
 domain: econ
@@ -15,7 +15,7 @@ column_info:
     labels: str
     text: str
 
-fetch:
+io:
   data_sources: 
     train: train.csv
     test: test.csv

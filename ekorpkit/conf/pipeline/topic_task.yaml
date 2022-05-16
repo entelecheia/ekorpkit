@@ -1,5 +1,0 @@
-defaults:
-  - _default
-  
-_pipeline_:
-apply_to: ${oc.select:..column_info.keys.text, text}

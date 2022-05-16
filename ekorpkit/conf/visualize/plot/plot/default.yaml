@@ -1,0 +1,10 @@
+figsize: (10, 5)
+style: fivethirtyeight
+rcParams:
+  axes.unicode_minus: False
+  axes.labelsize: 12
+  text.color: dimgrey
+  font.family: NanumGothic
+  # savefig.edgecolor: black
+fontpath:
+language:

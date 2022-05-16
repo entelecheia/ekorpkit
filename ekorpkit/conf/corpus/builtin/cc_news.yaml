@@ -1,7 +1,7 @@
 defaults:
   - _build
   - /preprocessor/normalizer: formal_en
-  - override /fetch/loader: hfds
+  - override /io/loader: hfds
 
 name: cc_news
 available: false
@@ -29,7 +29,7 @@ column_info:
     title: str
     url: str
 
-fetch:
+io:
   data_sources:
     train: train
   loader:

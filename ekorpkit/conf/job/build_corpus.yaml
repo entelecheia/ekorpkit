@@ -1,0 +1,20 @@
+# @package _global_
+defaults:
+  - _job_
+
+name:
+cmd: fetch_builtin_corpus
+num_workers: 10
+calculate_stats: true
+preprocess_text: true
+overwrite: true
+force_download: false
+ekorpkit:
+  num_workers: ${..num_workers}
+  cmd: ${..cmd}
+  project: ${oc.env:EKORPKIT_PROJECT,default}
+  +corpus/builtin: ${..name}
+  corpus.builtin.io.calculate_stats: ${..calculate_stats}
+  corpus.builtin.io.preprocess_text: ${..preprocess_text}
+  corpus.builtin.io.overwrite: ${..overwrite}
+  corpus.builtin.io.force_download: ${..force_download}

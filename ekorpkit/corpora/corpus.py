@@ -82,9 +82,9 @@ class Corpus:
             else:
                 self._keys[k] = list(self._keys[k])
         self._merge_meta_on = self._keys.get(self._merge_meta_on_key)
-        if self._merge_meta_on is None:
-            self._merge_meta_on = self._id_key
         self._id_keys = self._keys[self._id_key]
+        if self._merge_meta_on is None:
+            self._merge_meta_on = self._id_keys
         self._id_separator = "_"
         self._data_keys = self.column_info.get("data", None)
         self._meta_kyes = self.column_info.get("meta", None)
@@ -97,7 +97,7 @@ class Corpus:
         if self.autoload:
             self.load()
             self.load_metadata()
-            self.laod_timestamp()
+            self.load_timestamp()
             if self.automerge:
                 self.merge_metadata()
 
@@ -150,7 +150,7 @@ class Corpus:
 
     # def __repr__(self):
     # 	return f"Dataset({{\n    features: {list(self.features.keys())},\n    num_rows: {self.num_rows}\n}})"
-    def laod_timestamp(self):
+    def load_timestamp(self):
         if self._timestamp is None:
             return
         _timestamp_col = self._timestamp.get("key", None)
