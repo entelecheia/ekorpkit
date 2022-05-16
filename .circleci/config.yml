@@ -24,7 +24,7 @@ jobs:
             pip install -r requirements-test.txt
       - run:
           name: Run tests
-          command: bash tests/test_for_circleci.sh
+          command: pytest -m "not local and not gpu"
       - store_test_results:
           path: test_results
       - codecov/upload:
