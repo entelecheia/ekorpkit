@@ -92,4 +92,5 @@ def test_eval_fomc_sentiments():
     cfg.plot.figsize = (15, 8)
     cfg.figure.title = "The number of words in the FOMC statements"
     cfg.figure.legend = None
+    cfg.output_dir = "./data/tmp/visualize"
     eKonf.instantiate(cfg, data=fomc_sentiments)
