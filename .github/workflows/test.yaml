@@ -40,7 +40,7 @@ jobs:
           pip install -r requirements-test.txt
 
       - name: Run tests
-        run: pytest tests
+        run: bash tests/test_for_github_ci.sh
 
       - name: "Upload coverage to codecov"
         uses: codecov/codecov-action@v1
