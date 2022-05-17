@@ -6,7 +6,7 @@ os:
   MODIN_CPUS: ${oc.select:..distributed_framework.num_workers,50}
   # MODIN_OUT_OF_CORE: 'true'
   # MALLOC_TRIM_THRESHOLD_: 65536
-  WANDB_API_KEY: ${oc.env:WANDB_API_KEY,null}
+  # WANDB_API_KEY: ${oc.env:WANDB_API_KEY,null}
   CACHED_PATH_CACHE_ROOT: ${dir.cache}/cached_path
 distributed_framework:
   backend: joblib
