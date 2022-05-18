@@ -3,8 +3,12 @@ import threading
 import os
 import pandas as pd
 import codecs
-from abc import ABCMeta, abstractmethod
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
+from abc import abstractmethod
 from ekorpkit import eKonf
+from ekorpkit.io.file import save_dataframe, load_dataframe
 
 
 def download_data(fomc, from_year):
@@ -20,7 +24,6 @@ def download_data(fomc, from_year):
 
 
 def build_fomc(**args):
-    from hydra.utils import instantiate
 
     args = eKonf.to_config(args)
     from_year = args.from_year
@@ -29,30 +32,34 @@ def build_fomc(**args):
         return
 
     for content in args.contents:
-        fomc = instantiate(content, **args.fomc, _recursive_=False)
+        fomc = eKonf.instantiate(content, **args.fomc)
         download_data(fomc, from_year)
 
 
-class FomcBase(metaclass=ABCMeta):
+class FOMC:
     """
     A base class for extracting documents from the FOMC website
     """
 
     def __init__(self, content_type, **args):
-        args = eKonf.to_config(args)
-        print(content_type)
+        args = eKonf.to_dict(args)
+        self.verbose = args["verbose"]
+        if self.verbose:
+            print(content_type)
         # Set arguments to internal variables
         self.content_type = content_type
-        self.verbose = args.verbose
-        self.num_workers = args.num_workers
-        self.output_dir = args.output_dir
-        self.output_raw_dir = args.output_dir + "/raw"
+        self.num_workers = args["num_workers"]
+        self.output_dir = args["output_dir"]
+        self.output_raw_dir = os.path.join(self.output_dir, "raw")
         os.makedirs(self.output_raw_dir, exist_ok=True)
-        self.output_file = content_type + (".csv.bz2" if args.compress else ".csv")
-        self.output_filepath = self.output_dir + "/" + self.output_file
+        self.output_file = content_type + ".parquet"
+        self.output_filepath = os.path.join(self.output_dir, self.output_file)
+        self.calendar_filepath = os.path.join(self.output_dir, "fomc_calendar.parquet")
 
-        self.segment_separator = codecs.decode(args.segment_separator, "unicode_escape")
-        self.force_download = args.force_download
+        self.segment_separator = codecs.decode(
+            args["segment_separator"], "unicode_escape"
+        )
+        self.force_download = args["force_download"]
 
         # Initialization
         self.df = None
@@ -63,11 +70,14 @@ class FomcBase(metaclass=ABCMeta):
         self.titles = None
 
         # FOMC website URLs
-        self.base_url = args.base_url
-        self.calendar_url = args.calendar_url
+        self.base_url = args["base_url"]
+        self.calendar_url = args["calendar_url"]
 
         # FOMC Chairperson's list
-        self.chair = pd.DataFrame(data=args.chair.data, columns=args.chair.columns)
+        self.chair = pd.DataFrame(args["chair"])
+        self.chair["from_date"] = pd.to_datetime(self.chair.from_date)
+        self.chair["to_date"] = pd.to_datetime(self.chair.to_date)
+        self.canlendar = None
 
         # skip list
         self.skip_text_list = [
@@ -84,29 +94,20 @@ class FomcBase(metaclass=ABCMeta):
         return date
 
     def _speaker_from_date(self, article_date):
-        if (
-            self.chair.from_date[0] < article_date
-            and article_date < self.chair.to_date[0]
-        ):
-            speaker = self.chair.first_name[0] + " " + self.chair.surname[0]
-        elif (
-            self.chair.from_date[1] < article_date
-            and article_date < self.chair.to_date[1]
-        ):
-            speaker = self.chair.first_name[1] + " " + self.chair.surname[1]
-        elif (
-            self.chair.from_date[2] < article_date
-            and article_date < self.chair.to_date[2]
-        ):
-            speaker = self.chair.first_name[2] + " " + self.chair.surname[2]
-        elif (
-            self.chair.from_date[3] < article_date
-            and article_date < self.chair.to_date[3]
-        ):
-            speaker = self.chair.first_name[3] + " " + self.chair.surname[3]
+        """
+        Returns the speaker of the article based on the date of the article
+        """
+        if isinstance(article_date, str):
+            article_date = datetime.strptime(article_date, "%Y-%m-%d")
+
+        speaker = self.chair.query(
+            "from_date < @article_date & to_date > @article_date"
+        )
+        if speaker.empty:
+            return "other"
         else:
-            speaker = "other"
-        return speaker
+            speaker = speaker.iloc[0]
+            return speaker.first_name + " " + speaker.surname
 
     @abstractmethod
     def _get_links(self, from_year):
@@ -187,4 +188,132 @@ class FomcBase(metaclass=ABCMeta):
         if self.verbose:
             print("Writing to ", self.output_filepath)
         os.makedirs(self.output_dir, exist_ok=True)
-        self.df.to_csv(self.output_filepath, index=False)
+        save_dataframe(self.df, self.output_filepath)
+
+    def load_calendar(self, from_year=None, force_download=False):
+        """
+        get the calendar from the FOMC website
+        """
+        if os.path.exists(self.calendar_filepath) and not force_download:
+            if self.verbose:
+                print("Loading calendar from cache...")
+            self.calendar = load_dataframe(self.calendar_filepath)
+            return self.calendar
+
+        if self.verbose:
+            print("Getting calendar...")
+
+        if from_year:
+            from_year = int(from_year)
+
+            if (from_year < 1936) or (from_year > 2017):
+                print("Please specify the first argument between 1936 and 2015")
+                return
+        else:
+            from_year = 1936
+            print(
+                "From year is set as 1936. Please specify the year as the first argument if required."
+            )
+
+        fomc_dates = []
+        # Retrieve FOMC Meeting date from current page - recent five years
+        r = requests.get(self.calendar_url)
+        soup = BeautifulSoup(r.text, "html.parser")
+        panel_divs = soup.find_all("div", {"class": "panel panel-default"})
+
+        for panel_div in panel_divs:
+            m_year = panel_div.find("h4").get_text()[:4]
+            m_months = panel_div.find_all("div", {"class": "fomc-meeting__month"})
+            m_dates = panel_div.find_all("div", {"class": "fomc-meeting__date"})
+            if self.verbose:
+                print("YEAR: {} - {} meetings found.".format(m_year, len(m_dates)))
+
+            for (m_month, m_date) in zip(m_months, m_dates):
+                month_name = m_month.get_text().strip()
+                date_text = m_date.get_text().strip()
+                is_forecast = False
+                is_unscheduled = False
+                is_month_short = False
+
+                if "cancelled" in date_text:
+                    continue
+                elif "notation vote" in date_text:
+                    date_text = date_text.replace("(notation vote)", "").strip()
+                elif "unscheduled" in date_text:
+                    date_text = date_text.replace("(unscheduled)", "").strip()
+                    is_unscheduled = True
+
+                if "*" in date_text:
+                    date_text = date_text.replace("*", "").strip()
+                    is_forecast = True
+
+                if "/" in month_name:
+                    month_name = re.findall(r".+/(.+)$", month_name)[0]
+                    is_month_short = True
+
+                if "-" in date_text:
+                    date_text = re.findall(r".+-(.+)$", date_text)[0]
+
+                meeting_date_str = m_year + "-" + month_name + "-" + date_text
+                if is_month_short:
+                    meeting_date = datetime.strptime(meeting_date_str, "%Y-%b-%d")
+                else:
+                    meeting_date = datetime.strptime(meeting_date_str, "%Y-%B-%d")
+
+                fomc_dates.append(
+                    {
+                        "date": meeting_date,
+                        "unscheduled": is_unscheduled,
+                        "forecast": is_forecast,
+                        "confcall": False,
+                    }
+                )
+        min_recent_year = min(fomc_dates, key=lambda x: x["date"]).get("date").year
+        # Retrieve FOMC Meeting date older than 2015
+        for year in range(from_year, min_recent_year):
+            hist_url = self.base_url + f"/monetarypolicy/fomchistorical{year}.htm"
+            r = requests.get(hist_url)
+            soup = BeautifulSoup(r.text, "html.parser")
+            if year >= 2011:
+                panel_headings = soup.find_all("h5", {"class": "panel-heading"})
+            else:
+                panel_headings = soup.find_all("div", {"class": "panel-heading"})
+            if self.verbose:
+                print("YEAR: {} - {} meetings found.".format(year, len(panel_headings)))
+            for panel_heading in panel_headings:
+                date_text = panel_heading.get_text().strip()
+                # print("Date: ", date_text)
+                regex = r"(January|February|March|April|May|June|July|August|September|October|November|December).*\s(\d*-)*(\d+)\s+(Meeting|Conference Calls?|\(unscheduled\))\s-\s(\d+)"
+                date_text_ext = re.findall(regex, date_text)[0]
+                meeting_date_str = (
+                    date_text_ext[4] + "-" + date_text_ext[0] + "-" + date_text_ext[2]
+                )
+                # print("   Extracted:", meeting_date_str)
+                if meeting_date_str == "1992-June-1":
+                    meeting_date_str = "1992-July-1"
+                elif meeting_date_str == "1995-January-1":
+                    meeting_date_str = "1995-February-1"
+                elif meeting_date_str == "1998-June-1":
+                    meeting_date_str = "1998-July-1"
+                elif meeting_date_str == "2012-July-1":
+                    meeting_date_str = "2012-August-1"
+                elif meeting_date_str == "2013-April-1":
+                    meeting_date_str = "2013-May-1"
+
+                meeting_date = datetime.strptime(meeting_date_str, "%Y-%B-%d")
+                is_confcall = "Conference Call" in date_text_ext[3]
+                is_unscheduled = "unscheduled" in date_text_ext[3]
+                fomc_dates.append(
+                    {
+                        "date": meeting_date,
+                        "unscheduled": is_unscheduled,
+                        "forecast": False,
+                        "confcall": is_confcall,
+                    }
+                )
+
+        df = pd.DataFrame(fomc_dates).sort_values(by=["date"])
+        df.reset_index(drop=True, inplace=True)
+        save_dataframe(df, self.calendar_filepath)
+        self.calendar = df
+        return df

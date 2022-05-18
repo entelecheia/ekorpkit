@@ -2,7 +2,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from ekorpkit import eKonf
-from ekorpkit.io.download.web import web_download, web_download_unzip
+from ekorpkit.io.fetch.web import web_download, web_download_unzip
 
 
 class EDGAR:

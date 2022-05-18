@@ -36,6 +36,15 @@ def check_path(path: str, alt_path: str = None):
         return alt_path
 
 
+def _today(_format="%Y-%m-%d"):
+    from datetime import datetime
+
+    if _format is None:
+        return datetime.today()
+    else:
+        return datetime.today().strftime(_format)
+
+
 def _path(
     url_or_filename,
     extract_archive: bool = False,
@@ -165,6 +174,7 @@ DictKeyType = Union[str, int, Enum, float, bool]
 OmegaConf.register_new_resolver("__ekorpkit_path__", __ekorpkit_path__)
 OmegaConf.register_new_resolver("__home_path__", __home_path__)
 OmegaConf.register_new_resolver("__version__", __version__)
+OmegaConf.register_new_resolver("today", _today)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)

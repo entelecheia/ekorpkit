@@ -7,10 +7,10 @@ from datetime import datetime
 import pdfplumber
 
 # Import parent class
-from .base import FomcBase
+from .base import FOMC
 
 
-class MeetingScript(FomcBase):
+class MeetingScript(FOMC):
     """
     A convenient class for extracting meeting scripts from the FOMC website.
     FOMC publishes the meeting scripts after 5 years, so this cannot be used for the prediction of the monetary policy in real-time.

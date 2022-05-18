@@ -1,0 +1,8 @@
+defaults:
+  - _default
+  - scatter: default
+
+_target_: ekorpkit.visualize.plot.plot
+output_file: ${oc.select:..output_file, lineplot.png}
+plots:
+  - ${..scatter}

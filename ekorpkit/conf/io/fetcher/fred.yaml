@@ -1,7 +1,7 @@
 defaults:
   - _default
 
-_target_: ekorpkit.io.download.fred.Fred
+_target_: ekorpkit.io.fetch.fred.Fred
 api_key: ${oc.env:FRED_API_KEY,null}
 name: 
 function: get_series

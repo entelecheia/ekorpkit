@@ -7,10 +7,10 @@ from datetime import datetime
 import pdfplumber
 
 # Import parent class
-from .base import FomcBase
+from .base import FOMC
 
 
-class PresConfScript(FomcBase):
+class PresConfScript(FOMC):
     """
     A convenient class for extracting press conference scripts from the FOMC website.
     It is only available from April 2011.

@@ -34,7 +34,7 @@ column_info:
 
 io:
   data_sources:
-    train: '*.csv'
+    train: '*.parquet'
 
 pipeline:        
   _transform_:

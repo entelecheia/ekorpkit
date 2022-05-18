@@ -4,7 +4,7 @@ import io
 import os
 import pandas as pd
 from ekorpkit import eKonf
-from ekorpkit.io.download.web import web_download
+from ekorpkit.io.fetch.web import web_download
 from tqdm.auto import tqdm
 
 try:

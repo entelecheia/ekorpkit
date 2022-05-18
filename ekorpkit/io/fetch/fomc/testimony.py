@@ -6,10 +6,10 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 # Import parent class
-from .base import FomcBase
+from .base import FOMC
 
 
-class Testimony(FomcBase):
+class Testimony(FOMC):
     """
     A convenient class for extracting testimony from the FOMC website.
     Among testimonies, there are semi annual monetary policy report to the Congress by chairperson.

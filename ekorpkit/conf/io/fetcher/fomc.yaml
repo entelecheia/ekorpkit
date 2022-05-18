@@ -2,7 +2,7 @@ defaults:
   - _default
 
 _target_: ekorpkit.io.fetch.fomc.build_fomc
-compress: false
+name: ${oc.select:..name, fomc}
 from_year: 1990
 contents:
   - content_type: fomc_statement
@@ -19,22 +19,39 @@ contents:
     _target_: ekorpkit.io.fetch.fomc.MeetingScript
   - content_type: fomc_press_conf
     _target_: ekorpkit.io.fetch.fomc.PresConfScript
+base:
+  _target_: ekorpkit.io.fetch.fomc.FOMC
+  content_type: fomc_base
 fomc:
   base_url: https://www.federalreserve.gov
   calendar_url: ${.base_url}/monetarypolicy/fomccalendars.htm
   segment_separator: '\n\n'
-  verbose: true
+  verbose: ${oc.select:..verbose, false}
   force_download: false
   num_workers: ${..num_workers}
   output_dir: ${..output_dir}
-  compress: ${..compress}
   chair:
-    columns: [surname, first_name, from_date, to_date]
-    data:
-      - [Greenspan, Alan, 1987-08-11, 2006-01-31]
-      - [Bernanke, Ben, 2006-02-01, 2014-01-31]
-      - [Yellen, Janet, 2014-02-03, 2018-02-03]
-      - [Powell, Jerome, 2018-02-05, 2022-02-05]
+    - surname: Volcker
+      first_name: Paul
+      from_date: "1979-08-06"
+      to_date: "1987-08-10"
+    - surname: Greenspan
+      first_name: Alan
+      from_date: "1987-08-11"
+      to_date: "2006-01-31"
+    - surname: Bernanke
+      first_name: Ben
+      from_date: "2006-02-01"
+      to_date: "2014-01-31"
+    - surname: Yellen
+      first_name: Janet
+      from_date: "2014-02-03"
+      to_date: "2018-02-03"
+    - surname: Powell
+      first_name: Jerome
+      from_date: "2018-02-05"
+      to_date: ${today:%Y-%m-%d}
+
 recessions:
   dotcom:
     name: Dot-com Bubble

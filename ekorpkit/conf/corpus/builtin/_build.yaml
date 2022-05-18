@@ -3,7 +3,7 @@ defaults:
   - /info: _build_corpus
   - /pipeline: _build_corpus
 
-_target_: ekorpkit.io.fetch.build.DatasetBuilder
+_target_: ekorpkit.corpora.build.DatasetBuilder
 name:
 data_dir: ${dir.corpus}/${.name}
 # data_dir: ${dir.archive}/datasets/lmdata/${.name}
