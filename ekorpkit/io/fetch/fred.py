@@ -1,3 +1,4 @@
+from fileinput import filename
 import logging
 import logging
 import os
@@ -18,12 +19,19 @@ class Fred:
         self.api_key = self.args.get("api_key")
         self.verbose = self.args.get("verbose", True)
         self.series_id = self.args.get("series_id")
+        if isinstance(self.series_id, str):
+            self.series_id = [self.series_id]
+        elif not isinstance(self.series_id, list):
+            self.series_id = []
+        self.series_name = self.args.get("series_name")
+        self.value_column = self.args.get("value_column", "value")
         self.observation_start = self.args.get("observation_start")
         self.observation_end = self.args.get("observation_end")
+        self.eval_columns = self.args.get("pipeline").get("eval_columns")
 
         self.output_dir = self.args["output_dir"]
         os.makedirs(self.output_dir, exist_ok=True)
-        self.output_file = os.path.join(self.output_dir, self.args["output_file"])
+        self.output_file = self.args["output_file"]
         self.force_download = self.args["force_download"]
 
         self.fred = Fred(api_key=self.api_key)
@@ -54,34 +62,78 @@ class Fred:
         data : Series
             a Series where each index is the observation date and the value is the data for the Fred series
         """
+        return self.fred.get_series(
+            series_id,
+            observation_start=observation_start,
+            observation_end=observation_end,
+            **kwargs,
+        )
 
-    def load(self):
-        if not os.path.exists(self.output_file) or self.force_download:
-            self.data = self.load_fred()
+    def load(
+        self,
+        series_id=None,
+        series_name=None,
+        observation_start=None,
+        observation_end=None,
+        filename=None,
+    ):
+        if isinstance(series_id, str):
+            series_id = [series_id]
+        elif not isinstance(series_id, list):
+            series_id = []
+
+        if series_name is None:
+            if not series_id and self.series_name:
+                series_name = self.series_name
+            else:
+                series_name = "_".join(series_id)
+        if filename is None:
+            if not series_id and self.output_file:
+                filename = self.output_file
+            else:
+                filename = f"{series_name}.parquet"
+        if not series_id:
+            series_id = self.series_id
+
+        if observation_start is None:
+            observation_start = self.observation_start
+        if observation_end is None:
+            observation_end = self.observation_end
+
+        filepath = os.path.join(self.output_dir, filename)
+        if not os.path.exists(filepath) or self.force_download:
+            self.data = self._load_fred(
+                series_id, series_name, observation_start, observation_end
+            )
+            save_dataframe(self.data, filepath)
         else:
-            log.info(f"{self.output_file} already exists.")
-            self.data = load_dataframe(self.output_file)
-        return self.data
+            log.info(f"{filepath} already exists.")
+            self.data = load_dataframe(filepath)
+        return self.data.copy()
 
-    def load_fred(self):
-        series_name = self.name
-        series_ids = self.series_id
-        if isinstance(series_ids, str):
-            series_ids = [series_ids]
-        elif not isinstance(series_ids, list):
-            series_ids = [None]
+    def _load_fred(
+        self,
+        series_ids=None,
+        series_name=None,
+        observation_start=None,
+        observation_end=None,
+    ):
 
-        _series = []
+        _dfs = []
         for series_id in series_ids:
             series = self.fred.get_series(
                 series_id=series_id,
-                observation_start=self.observation_start,
-                observation_end=self.observation_end,
+                observation_start=observation_start,
+                observation_end=observation_end,
             )
-            _series.append(series)
+            df = pd.DataFrame(series, columns=[self.value_column])
+            df = eKonf.pipe(self.eval_columns, df)
+            if len(series_ids) > 1:
+                df["series_id"] = series_id
+            df.rename(columns={self.value_column: series_name}, inplace=True)
+            _dfs.append(df)
 
-        series = pd.concat(_series, axis=0)
-        df = pd.DataFrame(series, columns=[series_name])
+        df = pd.concat(_dfs)
         save_dataframe(df, self.output_file)
         if self.verbose:
             print(df.tail())

@@ -1,12 +1,17 @@
 defaults:
   - _default
+  - /pipeline/eval_columns: default
 
 _target_: ekorpkit.io.fetch.fred.Fred
 api_key: ${oc.env:FRED_API_KEY,null}
-name: 
+name:
 function: get_series
 series_id:
+series_name: ${.name}
 observation_start:
 observation_end:
-concat: false
-merge: false
+value_column: value
+pipeline:
+  eval_columns:
+    expressions:
+      diff: value.diff()
