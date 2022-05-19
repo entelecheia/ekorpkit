@@ -2,14 +2,15 @@ defaults:
   - _default
   - /pipeline/eval_columns: default
 
-_target_: ekorpkit.io.fetch.fred.Fred
-api_key: ${oc.env:FRED_API_KEY,null}
-name: fred
-function: get_series
+_target_: ekorpkit.io.fetch.nasdaq.NasdaqDataLink
+api_key: ${oc.env:NASDAQ_API_KEY,null}
+name: naqdaq
+function: get
 series_id:
 series_name:
 start_date:
 end_date:
+kwargs:
 value_column: value
 pipeline:
   eval_columns:

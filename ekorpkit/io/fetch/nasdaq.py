@@ -9,9 +9,9 @@ from ekorpkit.io.file import save_dataframe, load_dataframe
 log = logging.getLogger(__name__)
 
 
-class Fred:
+class NasdaqDataLink:
     def __init__(self, **args):
-        from fredapi import Fred
+        import nasdaqdatalink
 
         self.args = eKonf.to_dict(args)
         self.autoload = self.args.get("autoload", True)
@@ -27,6 +27,7 @@ class Fred:
         self.value_column = self.args.get("value_column", "value")
         self.start_date = self.args.get("start_date")
         self.end_date = self.args.get("end_date")
+        self.kwargs = self.args.get("kwargs") or {}
         self.eval_columns = self.args.get("pipeline").get("eval_columns")
 
         self.output_dir = self.args["output_dir"]
@@ -34,37 +35,35 @@ class Fred:
         self.output_file = self.args["output_file"]
         self.force_download = self.args["force_download"]
 
-        self.fred = Fred(api_key=self.api_key)
+        nasdaqdatalink.ApiConfig.api_key = self.api_key
         self.data = None
 
         if self.autoload:
             self.load()
 
-    def get_series(self, series_id, start_date=None, end_date=None, **kwargs):
+    def get(self, series_id, start_date=None, end_date=None, **kwargs):
+        """Return dataframe of requested dataset from Nasdaq Data Link.
+        :param series_id: str or list, depending on single dataset usage or multiset usage
+                Dataset codes are available on the Nasdaq Data Link website
+        :param str api_key: Downloads are limited to 50 unless api_key is specified
+        :param str start_date, end_date: Optional datefilers, otherwise entire
+            dataset is returned
+        :param str collapse: Options are daily, weekly, monthly, quarterly, annual
+        :param str transform: options are diff, rdiff, cumul, and normalize
+        :param int rows: Number of rows which will be returned
+        :param str order: options are asc, desc. Default: `asc`
+        :param str returns: specify what format you wish your dataset returned as,
+            either `numpy` for a numpy ndarray or `pandas`. Default: `pandas`
+        :returns: :class:`pandas.DataFrame` or :class:`numpy.ndarray`
+        Note that Pandas expects timeseries data to be sorted ascending for most
+        timeseries functionality to work.
+        Any other `kwargs` passed to `get` are sent as field/value params to Nasdaq Data Link
+        with no interference.
         """
-        Get data for a Fred series id. This fetches the latest known data, and is equivalent to get_series_latest_release()
+        import nasdaqdatalink
 
-        Parameters
-        ----------
-        series_id : str
-            Fred series id such as 'CPIAUCSL'
-        start_date : datetime or datetime-like str such as '7/1/2014', optional
-            earliest observation date
-        end_date : datetime or datetime-like str such as '7/1/2014', optional
-            latest observation date
-        kwargs : additional parameters
-            Any additional parameters supported by FRED. You can see https://api.stlouisfed.org/docs/fred/series_observations.html for the full list
-
-        Returns
-        -------
-        data : Series
-            a Series where each index is the observation date and the value is the data for the Fred series
-        """
-        return self.fred.get_series(
-            series_id,
-            observation_start=start_date,
-            observation_end=end_date,
-            **kwargs,
+        return nasdaqdatalink.get(
+            dataset=series_id, start_date=start_date, end_date=end_date, **kwargs
         )
 
     def load(
@@ -74,56 +73,68 @@ class Fred:
         start_date=None,
         end_date=None,
         filename=None,
+        **kwargs,
     ):
         if isinstance(series_id, str):
             series_id = [series_id]
         elif not isinstance(series_id, list):
             series_id = []
 
+        if not series_id:
+            series_id = self.series_id
         if series_name is None:
-            if not series_id and self.series_name:
+            if self.series_name:
                 series_name = self.series_name
             else:
                 series_name = "_".join(series_id)
+
         if filename is None:
             filename = f"{series_name}.parquet"
-        if not series_id:
-            series_id = self.series_id
 
         if start_date is None:
             start_date = self.start_date
         if end_date is None:
             end_date = self.end_date
+        if not kwargs:
+            kwargs = self.kwargs
 
         filepath = os.path.join(self.output_dir, filename)
         if not os.path.exists(filepath) or self.force_download:
-            self.data = self._load_fred(series_id, series_name, start_date, end_date)
+            self.data = self._load_naqdaq(
+                series_id, series_name, start_date, end_date, **kwargs
+            )
             save_dataframe(self.data, filepath, verbose=self.verbose)
         else:
             log.info(f"{filepath} already exists.")
             self.data = load_dataframe(filepath, verbose=self.verbose)
         return self.data.copy()
 
-    def _load_fred(
+    def _load_naqdaq(
         self,
         series_ids=None,
         series_name=None,
         start_date=None,
         end_date=None,
+        **kwargs,
     ):
 
         _dfs = []
         for series_id in series_ids:
-            series = self.fred.get_series(
+            df = self.get(
                 series_id=series_id,
                 start_date=start_date,
                 end_date=end_date,
+                **kwargs,
             )
-            df = pd.DataFrame(series, columns=[self.value_column])
+            if len(df.columns) == 1:
+                if series_name is None:
+                    series_name = df.columns[0]
+                df.columns = [self.value_column]
             df = eKonf.pipe(self.eval_columns, df)
             if len(series_ids) > 1:
                 df["series_id"] = series_id
-            df.rename(columns={self.value_column: series_name}, inplace=True)
+            if series_name:
+                df.rename(columns={self.value_column: series_name}, inplace=True)
             _dfs.append(df)
 
         df = pd.concat(_dfs)

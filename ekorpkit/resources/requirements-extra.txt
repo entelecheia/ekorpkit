@@ -78,3 +78,4 @@ guesslang 				: guesslang
 numba                   : numba
 
 fredapi					: all, fred, fomc
+nasdaq-data-link          : all, nasdaq, fomc
