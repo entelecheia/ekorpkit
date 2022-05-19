@@ -79,6 +79,25 @@ class FOMC:
         self.chair["to_date"] = pd.to_datetime(self.chair.to_date)
         self.canlendar = None
 
+        self.recessions = pd.DataFrame(args["recessions"])
+        _format = self.recessions.format[0]
+        self.recessions.drop(columns="format", inplace=True)
+        self.recessions["from_date"] = pd.to_datetime(
+            self.recessions.from_date, format=_format
+        )
+        self.recessions["to_date"] = pd.to_datetime(
+            self.recessions.to_date, format=_format
+        )
+        self.unconventionals = pd.DataFrame(args["unconventionals"])
+        _format = self.unconventionals.format[0]
+        self.unconventionals.drop(columns="format", inplace=True)
+        self.unconventionals["date"] = pd.to_datetime(
+            self.unconventionals.date, format=_format
+        )
+        self.unconventionals["chair"] = self.unconventionals.date.map(
+            self._speaker_from_date
+        )
+
         # skip list
         self.skip_text_list = [
             "Return to top",
@@ -313,7 +332,99 @@ class FOMC:
                 )
 
         df = pd.DataFrame(fomc_dates).sort_values(by=["date"])
-        df.reset_index(drop=True, inplace=True)
+
+        df["chair"] = df.date.map(self._speaker_from_date)
+
+        # # Use date as index
+        df.set_index("date", inplace=True)
+
         save_dataframe(df, self.calendar_filepath)
         self.calendar = df
-        return df
+        return df.copy()
+
+    def add_decisions_to_calendar(self, fedrates, series_id="DFEDTAR"):
+        """
+        The target range was changed a couple of days after the announcement in the past,
+         while it is immediately put in effect on the day recently.
+        Use the target rate three days after the meeting as target announced,
+         compare it with previous day's rate to check if rate has been changed.
+          -1: Rate lower
+           0: No change
+          +1: Rate hike
+        """
+        import numpy as np
+        from tqdm import tqdm
+
+        rate_list = []
+        decision_list = []
+        rate_change_list = []
+        fedrates = fedrates.copy()[fedrates.index >= self.calendar.index.min()]
+        fomc_calendar = self.calendar.copy()
+        for i in tqdm(range(len(fomc_calendar))):
+            not_found = True
+            for j in range(len(fedrates)):
+                if fomc_calendar.index[i] == fedrates.index[j]:
+                    not_found = False
+                    rate_list.append(float(fedrates[series_id].iloc[j + 3]))
+                    rate_change_list.append(
+                        float(fedrates[series_id].iloc[j + 3])
+                        - float(fedrates[series_id].iloc[j - 1])
+                    )
+                    if (
+                        fedrates[series_id].iloc[j - 1]
+                        == fedrates[series_id].iloc[j + 3]
+                    ):
+                        decision_list.append(0)
+                    elif (
+                        fedrates[series_id].iloc[j - 1]
+                        < fedrates[series_id].iloc[j + 3]
+                    ):
+                        decision_list.append(1)
+                    elif (
+                        fedrates[series_id].iloc[j - 1]
+                        > fedrates[series_id].iloc[j + 3]
+                    ):
+                        decision_list.append(-1)
+                    break
+            if not_found:
+                rate_list.append(np.nan)
+                decision_list.append(np.nan)
+                rate_change_list.append(np.nan)
+
+        fomc_calendar["rate"] = rate_list
+        fomc_calendar["rate_change"] = rate_change_list
+        fomc_calendar["rate_decision"] = decision_list
+        fomc_calendar["rate_decision"] = fomc_calendar["rate_decision"].astype("Int8")
+        fomc_calendar = fomc_calendar[fomc_calendar["rate"].notnull()]
+
+        save_dataframe(fomc_calendar, self.calendar_filepath)
+        self.calendar = fomc_calendar
+        return fomc_calendar.copy()
+
+    def add_unconventionals_to_calendar(self):
+        """
+        Add the unconventionals to the calendar.
+          -2: Unconventional easing
+          -1: Rate lower
+           0: No change
+          +1: Rate hike
+          +2: Unconventional tightening
+        """
+
+        fomc_calendar = self.calendar.copy()
+        unconventionals = self.unconventionals.copy().set_index("date")
+        columns = ["unscheduled", "chair", "rate", "rate_decision", "rate_change"]
+
+        for ix in unconventionals.index:
+            fomc_calendar.loc[ix, columns] = unconventionals.loc[ix, columns]
+
+        columns = ["forecast", "confcall"]
+        fomc_calendar[columns] = fomc_calendar[columns].fillna(False)
+        fomc_calendar.sort_index(ascending=True, inplace=True)
+        fomc_calendar["rate_changed"] = fomc_calendar["rate_decision"].apply(
+            lambda x: 0 if x == 0 else 1
+        )
+
+        save_dataframe(fomc_calendar, self.calendar_filepath)
+        self.calendar = fomc_calendar
+        return fomc_calendar.copy()
