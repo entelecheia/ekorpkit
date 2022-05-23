@@ -12,7 +12,7 @@ data_files:
   dev: linnaeus-dev.csv
   test: linnaeus-test.csv
 column_info:
-  keys:
+  columns:
     id: id
     text: input_text
   data:

@@ -13,7 +13,7 @@ lang: ko
 category: formal
 domain: mixed
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

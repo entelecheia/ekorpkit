@@ -31,7 +31,7 @@ meta_files:
   train: meta-aihub_patent2-train.parquet
   test: meta-aihub_patent2-test.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

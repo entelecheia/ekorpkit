@@ -24,7 +24,7 @@ meta_files:
   train: meta-aihub_koen_ssci-train.parquet
   test: meta-aihub_koen_ssci-test.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

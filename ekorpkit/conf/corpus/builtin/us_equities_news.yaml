@@ -14,7 +14,7 @@ license: 'This dataset was collected from investing.com website which allows dat
 homepage: https://www.kaggle.com/gennadiyr/us-equities-news-data
 version: 1.0.0
 column_info:
-  keys:
+  columns:
     id: id
     text: text
     split: 

@@ -14,7 +14,7 @@ lang: ko
 category: formal
 domain: news
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

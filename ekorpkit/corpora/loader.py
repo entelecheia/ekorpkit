@@ -33,29 +33,13 @@ class Corpora:
         automerge = self.args.get("automerge", False)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
         self.verbose = args.get("verbose", False)
-        self.column_info = eKonf.to_dict(self.args.get("column_info", {}))
+
+        self._column_info = self.args.get("column_info", {})
+        self._column = eKonf.instantiate(self._column_info)
 
         self._data = None
         self._metadata = None
         self._loaded = False
-
-        self._corpus_key = "corpus"
-        self._text_key = "text"
-        self._id_key = "id"
-        self._id_separator = "_"
-
-        self._keys = self.column_info.get("keys", None)
-        if self._keys is not None:
-            for k in [self._id_key, self._text_key]:
-                if isinstance(self._keys[k], str):
-                    self._keys[k] = [self._keys[k]]
-                else:
-                    self._keys[k] = list(self._keys[k])
-            self._id_keys = self._keys[self._id_key]
-        else:
-            self._id_keys = [self._id_key]
-        self._data_keys = self.column_info.get("data", None)
-        self._meta_kyes = self.column_info.get("meta", None)
 
         with elapsed_timer(format_time=True) as elapsed:
             for name in self.corpora:
@@ -91,22 +75,24 @@ class Corpora:
         return self.corpora[name]
 
     @property
+    def COLUMN(self):
+        return self._column
+
+    @property
     def ID(self):
-        return self._id_key
+        return self.COLUMN.ID
 
     @property
     def IDs(self):
-        return self._id_keys
+        return self.COLUMN.IDs
 
     @property
     def TEXT(self):
-        return self._text_key
+        return self.COLUMN.TEXT
 
     @property
     def DATA(self):
-        if self._data_keys is None:
-            return None
-        return list(self._data_keys.keys())
+        return self.COLUMN.DATA
 
     @property
     def data(self):
@@ -128,23 +114,19 @@ class Corpora:
         if not self._loaded:
             self.load()
 
-        dfs = []
-        df_metas = []
-        if append_corpus_name:
-            if self._corpus_key not in self._id_keys:
-                self._id_keys.append(self._corpus_key)
+        dfs, df_metas = [], []
 
         for name in self.corpora:
             df = self.corpora[name]._data
             if df is None:
                 self.load()
             if append_corpus_name:
-                df[self._corpus_key] = name
+                df = self.COLUMN.append_corpus(df, name)
             dfs.append(df)
             df_meta = self.corpora[name]._metadata
             if df_meta is not None:
                 if append_corpus_name:
-                    df_meta[self._corpus_key] = name
+                    df_meta = self.COLUMN.append_corpus(df_meta, name)
                 df_metas.append(df_meta)
         self._data = pd.concat(dfs, ignore_index=True)
         if len(df_metas) > 0:

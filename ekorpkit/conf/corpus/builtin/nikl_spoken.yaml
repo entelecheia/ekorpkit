@@ -12,7 +12,7 @@ version: 1.0.0
 lang: ko
 category: spoken
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

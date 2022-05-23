@@ -17,7 +17,7 @@ data_files:
   dev: BC5CDR-disease-dev.csv
   test: BC5CDR-disease-test.csv
 column_info:
-  keys:
+  columns:
     id: id
     text: input_text
   data:

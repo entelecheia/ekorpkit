@@ -84,7 +84,7 @@ class Fred:
             if not series_id and self.series_name:
                 series_name = self.series_name
             else:
-                series_name = "_".join(series_id)
+                series_name = "_".join(self.series_id)
         if filename is None:
             filename = f"{series_name}.parquet"
         if not series_id:
@@ -94,6 +94,8 @@ class Fred:
             start_date = self.start_date
         if end_date is None:
             end_date = self.end_date
+        if self.verbose:
+            print(f"Loading {series_name}{series_id} from {start_date} to {end_date}")
 
         filepath = os.path.join(self.output_dir, filename)
         if not os.path.exists(filepath) or self.force_download:
@@ -124,6 +126,8 @@ class Fred:
             if len(series_ids) > 1:
                 df["series_id"] = series_id
             df.rename(columns={self.value_column: series_name}, inplace=True)
+            if self.verbose:
+                print(df.head())
             _dfs.append(df)
 
         df = pd.concat(_dfs)

@@ -32,7 +32,7 @@ data_files:
 meta_files:
   train: meta-us_equities_news-train.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
     split: null

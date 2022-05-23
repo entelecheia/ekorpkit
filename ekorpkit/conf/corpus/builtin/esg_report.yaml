@@ -14,7 +14,7 @@ description: ESG Reports Corpus
 license: All Rights Reserved. 
 version: 1.0.0
 column_info:
-  keys:
+  columns:
     id: id
     text: text
     split: 

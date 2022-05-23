@@ -28,7 +28,7 @@ data_files:
 meta_files:
   train: meta-fomc-train.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

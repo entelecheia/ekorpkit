@@ -15,7 +15,7 @@ license: All Rights Reserved.
 homepage: https://www.fnguide.com
 version: 1.0.0
 column_info:
-  keys:
+  columns:
     id: id
     text: text
     timestamp: rdate

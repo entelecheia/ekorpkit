@@ -1,8 +1,6 @@
 defaults:
   - _default
+  - /data: default
   
 _target_: ekorpkit.pipelines.pipe.pipeline
 _pipeline_:
-data:
-corpus:
-dataset:

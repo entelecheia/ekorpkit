@@ -3,10 +3,3 @@ defaults:
 
 _target_: ekorpkit.corpora.loader.Corpora
 data_dir: ${dir.corpus}
-column_info:
-  keys:
-    id: id
-    text: text
-  data:
-    id: int
-    text: str

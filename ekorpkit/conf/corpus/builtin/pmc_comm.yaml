@@ -15,7 +15,7 @@ lang: en
 category: academic
 domain: bio
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

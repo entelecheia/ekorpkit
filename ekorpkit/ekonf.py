@@ -272,6 +272,17 @@ def _save(
     OmegaConf.save(config, f, resolve=resolve)
 
 
+def _update(_dict, _overrides):
+    import collections.abc
+
+    for k, v in _overrides.items():
+        if isinstance(v, collections.abc.Mapping):
+            _dict[k] = _update((_dict.get(k) or {}), v)
+        else:
+            _dict[k] = v
+    return _dict
+
+
 def _merge(
     *configs: Union[
         DictConfig,
@@ -456,11 +467,63 @@ def apply_pipe(df, pipe):
                 log.info(
                     f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
                 )
-                pipe["dataframe_name"] = df_name
+                pipe["_name_"] = df_name
                 dfs[df_name] = fn(df_each, pipe)
             return dfs
     else:
         return fn(df, pipe)
+
+
+def _load_data(data=None, **kwargs):
+    import pandas as pd
+    from ekorpkit.corpora import Corpus, Corpora
+    from ekorpkit.datasets import Dataset, Datasets
+    from ekorpkit.io.file import load_dataframe
+
+    df = None
+    if isinstance(data, pd.DataFrame):
+        df = data
+    elif eKonf.is_config(data):
+        corpus = data.get("corpus") or {}
+        dataset = data.get("dataset") or {}
+        data_dir = data.get("data_dir")
+        data_file = data.get("data_file")
+        _concat = data.get("concat") or {}
+        concat_dataframes = _concat.get("concat_dataframes", False)
+        add_key_as_name = _concat.get("add_key_as_name", False)
+        _concat_args = _concat.get("args") or {}
+        name_column = _concat.get("name_column") or "_name_"
+
+        if corpus.get("name") and dataset.get("name") is None:
+            args = corpus
+        elif dataset.get("name"):
+            args = dataset
+        else:
+            args = {}
+
+        if eKonf.is_instantiatable(args):
+            _data = eKonf.instantiate(args)
+            if isinstance(_data, (Corpus)):
+                df = _data.data
+            elif isinstance(_data, (Corpora)):
+                _data.concat_corpora()
+                df = _data.data
+            elif isinstance(_data, (Dataset, Datasets)):
+                df = _data.splits
+        elif data_dir and data_file:
+            filepath = os.path.join(data_dir, data_file)
+            df = load_dataframe(filepath)
+
+        if concat_dataframes and isinstance(df, dict):
+            dfs = []
+            for df_name in df:
+                df_each = df[df_name]
+                if add_key_as_name:
+                    df_each[name_column] = df_name
+                dfs.append(df_each)
+            df = pd.concat(dfs, **_concat_args)
+
+    return df
 
 
 def _dependencies(key, path=None):
@@ -599,6 +662,10 @@ class eKonf:
     @staticmethod
     def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
         return _load(file_)
+
+    @staticmethod
+    def update(_dict, _overrides):
+        return _update(_dict, _overrides)
 
     @staticmethod
     def merge(
@@ -750,6 +817,10 @@ class eKonf:
     @staticmethod
     def pipe(cfg, data=None):
         return apply_pipe(data, cfg)
+
+    @staticmethod
+    def load_data(data, **kwargs):
+        return _load_data(data, **kwargs)
 
     @staticmethod
     def dependencies(key, path=None):

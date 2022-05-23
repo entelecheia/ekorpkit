@@ -34,7 +34,7 @@ meta_files:
   test: null
   valid: null
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

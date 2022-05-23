@@ -30,7 +30,7 @@ data_files:
 meta_files:
   train: meta-kaist-train.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

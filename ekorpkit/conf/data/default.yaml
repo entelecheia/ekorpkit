@@ -1,0 +1,12 @@
+defaults:
+  - /column_info: default
+
+corpus: ${oc.select:corpus,null}
+dataset: ${oc.select:dataset,null}
+data_dir: ${oc.select:..data_dir, null}
+data_file: ${oc.select:..data_file, null}
+concat:
+  concat_dataframes: false
+  add_key_as_name: false
+  name_column: _name_
+  args:

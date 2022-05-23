@@ -34,7 +34,7 @@ meta_files:
   train: meta-mc4_ko-train.parquet
   test: meta-mc4_ko-test.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

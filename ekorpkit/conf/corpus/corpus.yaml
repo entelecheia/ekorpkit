@@ -2,3 +2,7 @@ defaults:
   - default
 
 _target_: ekorpkit.corpora.corpus.Corpus
+column_info:
+  columns: ${oc.select:..builtin.column_info.columns:, ${.keys}}
+  data: ${oc.select:..builtin.column_info.data, null}
+  meta: ${oc.select:..builtin.column_info.meta, null}

@@ -1199,25 +1199,27 @@ def split_dataframe(df, args):
     return np.array_split(df, num_splits)
 
 
-def concat_dataframes(df, args):
+def concat_dataframes(dataframes, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
-    add_datafame_name = args.get("add_datafame_name", False)
-    if isinstance(df, dict):
+    add_key_as_name = args.get("add_key_as_name", False)
+    _concat_args = args.get("concat") or {}
+    name_column = args.get("name_column") or "_name_"
+    if isinstance(dataframes, dict):
         if verbose:
-            log.info(f"Concatenating {len(df)} dataframes")
+            log.info(f"Concatenating {len(dataframes)} dataframes")
         dfs = []
-        for df_name in df:
-            df_each = df[df_name]
-            if add_datafame_name:
-                df_each["dataframe_name"] = df_name
+        for df_name in dataframes:
+            df_each = dataframes[df_name]
+            if add_key_as_name:
+                df_each[name_column] = df_name
             dfs.append(df_each)
-        df = pd.concat(dfs)
-        return df
+        dataframes = pd.concat(dfs, **_concat_args)
+        return dataframes
     else:
         if verbose:
             log.info("Returning original dataframe")
-        return df
+        return dataframes
 
 
 def merge_dataframe(df=None, args=None):
@@ -1301,7 +1303,7 @@ def _save_dataframe(df, args):
     name = args.get("name", "output")
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
-    dataframe_name = args.get("dataframe_name", None)
+    dataframe_name = args.get("_name_", None)
     columns_to_keep = args.get("columns_to_keep", None)
 
     if df is None:
@@ -1445,35 +1447,10 @@ def save_as_json(df, args):
 
 
 def pipeline(data=None, **cfg):
-    from ekorpkit.corpora import Corpus, Corpora
-    from ekorpkit.datasets import Dataset, Datasets
-
     args = eKonf.to_dict(cfg)
-    corpus = args.get("corpus")
-    dataset = args.get("dataset")
-    data_dir = args.get("data_dir")
-    data_file = args.get("data_file")
     verbose = args.get("verbose", False)
 
-    if corpus and dataset is None:
-        data = corpus
-    elif dataset:
-        data = dataset
-
-    df = None
-    if data is not None:
-        data = eKonf.instantiate(data)
-        if isinstance(data, (Corpus)):
-            df = data.data
-        elif isinstance(data, (Corpora)):
-            data.concat_corpora()
-            df = data.data
-        elif isinstance(data, (Dataset, Datasets)):
-            df = data.splits
-        elif isinstance(data, pd.DataFrame):
-            df = data
-    elif data_dir and data_file:
-        df = _load_dataframe(df, args)
+    df = eKonf.load_data(data)
 
     if df is None:
         raise ValueError("No dataframe to process")

@@ -8,7 +8,7 @@ domain: econ
 task: classification
 lang: ko
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

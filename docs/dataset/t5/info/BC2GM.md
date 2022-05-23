@@ -17,7 +17,7 @@ data_files:
   dev: BC2GM-dev.csv
   test: BC2GM-test.csv
 column_info:
-  keys:
+  columns:
     id: id
     text: input_text
   data:

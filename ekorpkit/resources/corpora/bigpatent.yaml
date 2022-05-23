@@ -32,7 +32,7 @@ meta_files:
   test: meta-bigpatent-test.parquet
   val: meta-bigpatent-val.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

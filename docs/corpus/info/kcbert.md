@@ -27,7 +27,7 @@ data_files:
   train: kcbert-train.parquet
 meta_files: {}
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

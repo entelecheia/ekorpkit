@@ -1,5 +1,8 @@
+defaults:
+  - /column_info: default
+
 _target_: ekorpkit.corpora.corpus.Corpus
-name: ${oc.select:.builtin.name, null} 
+name: ${oc.select:.builtin.name, null}
 data_dir: ${oc.select:.builtin.data_dir, ${dir.corpus}}
 metadata_dir:
 filetype: ${oc.select:.builtin.filetype, null}
@@ -8,12 +11,4 @@ automerge: false
 verbose: ${oc.select:..verbose, true}
 segment_separator: ${oc.select:.builtin.segment_separator, '\n\n'}
 sentence_separator: ${oc.select:.builtin.sentence_separator, '\n'}
-column_info:
-  keys: ${oc.select:..builtin.column_info.keys, null}
-  data: ${oc.select:..builtin.column_info.data, null}
-  meta: ${oc.select:..builtin.column_info.meta, null}
-  timestamp: 
-    key:
-    format: 
-    params:
 use_name_as_subdir: true

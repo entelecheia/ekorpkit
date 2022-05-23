@@ -6,6 +6,6 @@ name:
 data_dir: ${dir.dataset}/dataset
 autoload: true
 column_info:
-  keys:
+  columns:
     id: id
   data:

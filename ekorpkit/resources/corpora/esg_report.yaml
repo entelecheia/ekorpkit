@@ -21,7 +21,7 @@ data_files:
 meta_files:
   train: meta-esg_report-train.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
     split: null

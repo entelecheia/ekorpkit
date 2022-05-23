@@ -24,7 +24,7 @@ category: formal
 domain: patent
 version: 1.0.0
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

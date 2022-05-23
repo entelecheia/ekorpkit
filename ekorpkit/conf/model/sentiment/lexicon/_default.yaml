@@ -3,8 +3,9 @@ name:
 fullname:
 source: 
 lang: 
-ngram_delim: 
+ngram_delim:
 ngram_max_n:
+postag_delim: /
 lexicon_path: ${dir.resource}/lexicons
 lexicon_features:
 word_key: 
