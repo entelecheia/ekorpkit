@@ -867,20 +867,20 @@ def general_function(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", None)
-    method = args.get("method", None)
+    method = args.get(eKonf.Keys.METHOD, None)
     if verbose:
         log.info(f"Running dataframe function: {args}")
 
     with elapsed_timer(format_time=True) as elapsed:
         if apply_to is None:
-            df = getattr(df, method["name"])(**method["parms"])
+            df = getattr(df, method[eKonf.Keys.NAME])(**method[eKonf.Keys.PARMS])
         else:
             if isinstance(apply_to, str):
                 apply_to = [apply_to]
             for key in apply_to:
                 if verbose:
                     log.info(f"processing column: {key}")
-                df[key] = getattr(df[key], method["name"])(**method["parms"])
+                df[key] = getattr(df[key], method[eKonf.Keys.NAME])(**method[eKonf.Keys.PARMS])
 
         if verbose:
             log.info(" >> elapsed time to replace: {}".format(elapsed()))
@@ -1203,7 +1203,7 @@ def concat_dataframes(dataframes, args):
     verbose = args.get("verbose", False)
     add_key_as_name = args.get("add_key_as_name", False)
     _concat_args = args.get("concat") or {}
-    name_column = args.get("name_column") or "_name_"
+    name_column = args.get("name_column") or eKonf.Keys.NAME
     if isinstance(dataframes, dict):
         if verbose:
             log.info(f"Concatenating {len(dataframes)} dataframes")
@@ -1286,13 +1286,6 @@ def save_dataframe(df, args):
 
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
-    filepath = args.get("filepath", None)
-    filetype = args.get("filetype", None)
-    name = args.get("name", "output")
-    output_dir = args.get("output_dir", ".")
-    output_file = args.get("output_file", None)
-    dataframe_name = args.get("_name_", None)
-    columns = args.get("columns", None)
 
     if df is None:
         log.warning("Dataframe is None")
@@ -1300,30 +1293,7 @@ def save_dataframe(df, args):
     if verbose:
         log.info(f"Saving dataframe: {args}")
 
-    if filepath:
-        output_dir = os.path.dirname(filepath)
-        output_file = os.path.basename(filepath)
-    if output_file:
-        fileinfo = os.path.splitext(output_file)
-        filename = fileinfo[0]
-        filetype = (
-            fileinfo[1] if len(fileinfo) > 1 else ("csv" if not filetype else filetype)
-        )
-    else:
-        filename = f"{name}"
-        if not filetype:
-            filetype = "csv"
-    filetype = "." + filetype.replace(".", "")
-    if dataframe_name is not None:
-        if dataframe_name.endswith(filetype):
-            filename = f"{filename}-{dataframe_name}"
-        else:
-            filename = f"{filename}-{dataframe_name}{filetype}"
-    else:
-        filename = f"{filename}{filetype}"
-    filepath = f"{output_dir}/{filename}"
-
-    _save_dataframe(df, filepath, filetype, verbose, columns=columns)
+    _save_dataframe(df, **args)
     return df
 
 

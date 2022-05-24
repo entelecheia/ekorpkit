@@ -1,7 +1,7 @@
 defaults:
   - /pipeline/load_dataframe: default
   - /visualize/plot: confusion_matrix
-  - /function: evaluate_classification_performance
+  - /_func_: evaluate_classification_performance
 
 _target_: ekorpkit.models.eval.eval_classification
 data:

@@ -1,5 +1,5 @@
 defaults:
-  - /function/len_bytes: default
+  - /_func_/len_bytes: default
 
 _target_: ekorpkit.info.stat.summary_stats
 _partial_: true

@@ -202,8 +202,9 @@ class _Keys(str, Enum):
     CALL = "_call_"
     EXEC = "_exec_"
     PARMS = "_parms_"
-    METHOD = "method"
-    FUNCTION = "function"
+    METHOD = "_method_"
+    FUNCTION = "_func_"
+    NAME = "_name_"
 
 
 def _methods(cfg: Any, obj: object):
@@ -226,7 +227,7 @@ def _methods(cfg: Any, obj: object):
         else:
             _call_ = True
         if _call_:
-            return getattr(obj, _method["name"])(**_method["parms"])
+            return getattr(obj, _method[_Keys.NAME])(**_method[_Keys.PARMS])
         else:
             log.info(f"Skipping call to {_method}")
     elif isinstance(_method, list):
@@ -240,12 +241,12 @@ def _methods(cfg: Any, obj: object):
                 else:
                     _call_ = True
                 if _call_:
-                    getattr(obj, _each_method["name"])(**_each_method["parms"])
+                    getattr(obj, _each_method[_Keys.NAME])(**_each_method[_Keys.PARMS])
                 else:
                     log.info(f"Skipping call to {_each_method}")
 
 
-def _function(cfg: Any, name, return_function=False, **parms):
+def _function(cfg: Any, _name_, return_function=False, **parms):
     cfg = eKonf.to_dict(cfg)
     if not isinstance(cfg, dict):
         log.info("No function defined to execute")
@@ -256,9 +257,9 @@ def _function(cfg: Any, name, return_function=False, **parms):
         return None
 
     _functions = cfg[_Keys.FUNCTION]
-    fn = _partial(_functions[name])
-    if name in cfg:
-        _parms = cfg[name]
+    fn = _partial(_functions[_name_])
+    if _name_ in cfg:
+        _parms = cfg[_name_]
         _parms = {**_parms, **parms}
     else:
         _parms = parms
@@ -274,7 +275,7 @@ def _function(cfg: Any, name, return_function=False, **parms):
             log.info(f"Executing function {fn} with parms {_parms}")
             return fn(**_parms)
         else:
-            log.info(f"Function {name} not callable")
+            log.info(f"Function {_name_} not callable")
             return None
     else:
         log.info(f"Skipping execute of {fn}")
@@ -514,7 +515,8 @@ def _stop_env_(cfg, verbose=False):
 
 
 def apply_pipe(df, pipe):
-    fn = eKonf.partial(pipe["function"])
+    _func_ = pipe.pop(_Keys.FUNCTION)
+    fn = eKonf.partial(_func_)
     log.info(f"Applying pipe: {fn}")
     if isinstance(df, dict):
         if "concat_dataframes" in str(fn):
@@ -526,7 +528,7 @@ def apply_pipe(df, pipe):
                 log.info(
                     f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
                 )
-                pipe["_name_"] = df_name
+                pipe[_Keys.NAME] = df_name
                 dfs[df_name] = fn(df_each, pipe)
             return dfs
     else:
@@ -719,8 +721,8 @@ class eKonf:
         _methods(cfg, obj)
 
     @staticmethod
-    def function(cfg: Any, name, return_function=False, **parms):
-        return _function(cfg, name, return_function, **parms)
+    def function(cfg: Any, _name_, return_function=False, **parms):
+        return _function(cfg, _name_, return_function, **parms)
 
     @staticmethod
     def run(config: Any, **kwargs: Any) -> Any:

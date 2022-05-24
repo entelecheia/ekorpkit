@@ -1,5 +1,5 @@
 defaults:
-  - /function: eval_columns
+  - /_func_: eval_columns
 
 expressions:
 engine: python

@@ -1,5 +1,5 @@
 defaults:
-  - /function: predict
+  - /_func_: predict
 
 name: predict
 model:

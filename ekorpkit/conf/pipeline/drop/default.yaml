@@ -1,5 +1,5 @@
 defaults:
-  - /function: drop
+  - /_func_: drop
 
 labels:
 axix: 1

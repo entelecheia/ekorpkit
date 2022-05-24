@@ -1,3 +1,3 @@
 defaults:
   - _default
-  - /method: train_and_eval
+  - /_method_: train_and_eval

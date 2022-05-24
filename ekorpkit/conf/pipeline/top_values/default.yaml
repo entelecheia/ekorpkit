@@ -1,5 +1,5 @@
 defaults:
-  - /function: top_values
+  - /_func_: top_values
 
 groupby: 
 value_var:

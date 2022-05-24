@@ -1,7 +1,7 @@
 defaults:
-  - /function: filter_length
-  - /function/len_bytes: default
-  - /function/len_words: default
+  - /_func_: filter_length
+  - /_func_/len_bytes: default
+  - /_func_/len_words: default
 
 apply_to: ${oc.select:..apply_to, text}
 min_length: 3

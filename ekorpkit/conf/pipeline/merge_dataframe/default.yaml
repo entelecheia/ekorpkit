@@ -1,5 +1,5 @@
 defaults:
-  - /function: merge_dataframe
+  - /_func_: merge_dataframe
 
 filepath:
 filetype:

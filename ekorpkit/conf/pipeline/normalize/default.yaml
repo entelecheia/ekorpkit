@@ -1,5 +1,5 @@
 defaults:
-  - /function: normalize
+  - /_func_: normalize
 
 apply_to: ${oc.select:..apply_to, text}
 verbose: ${oc.select:..verbose, true}

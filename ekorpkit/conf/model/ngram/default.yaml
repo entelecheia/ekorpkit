@@ -2,7 +2,7 @@ defaults:
   - score_function: mutual_information
   - /data: concat
 
-_target_: ekorpkit.models.ngram.ngram.Ngrams
+_target_: ekorpkit.models.ngram.base.Ngrams
 name: ${oc.select:corpus.name,''}_ngram_${oc.select:.score_function.name,''}_model
 tokenize:
 ngram:

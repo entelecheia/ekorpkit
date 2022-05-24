@@ -1,5 +1,5 @@
 defaults:
-  - /function: save_dataframe
+  - /_func_: save_dataframe
 
 name: ${oc.select:..name, pipeline}
 columns:

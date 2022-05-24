@@ -20,10 +20,10 @@ def topic_tasks(**cfg):
 
         for subtask in _subtasks_:
             subtask_cfg = subtasks[subtask]
-            if "_target_" in subtask_cfg:
+            if eKonf.Keys.TARGET in subtask_cfg:
                 log.info(f"Instantiate {subtask} ...")
                 eKonf.instantiate(subtask_cfg, model=model)
-            elif "_name_" in subtask_cfg:
+            elif eKonf.Keys.NAME in subtask_cfg:
                 log.info(f"Running model.{subtask} ...")
                 getattr(model, subtask)(**subtask_cfg)
             else:

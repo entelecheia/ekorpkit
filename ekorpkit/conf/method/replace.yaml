@@ -1,2 +1,0 @@
-name: replace
-parms: ${oc.select:..parameters,null}

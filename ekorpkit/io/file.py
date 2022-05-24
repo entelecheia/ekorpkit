@@ -4,7 +4,7 @@ import pandas as pd
 from glob import glob
 from pathlib import Path
 from ekorpkit.utils.func import elapsed_timer
-
+from ekorpkit import eKonf
 
 log = logging.getLogger(__name__)
 
@@ -68,11 +68,15 @@ def get_files_from_archive(archive_path, filetype=None):
 
 def save_dataframe(
     df,
-    filepath,
+    filepath=None,
     filetype=None,
     verbose=False,
     index=False,
     columns=None,
+    name=None,
+    _name_=None,
+    output_dir=None,
+    output_file=None,
     **kwargs,
 ):
     if df is None:
@@ -83,10 +87,31 @@ def save_dataframe(
     if verbose > 1:
         print(df.tail())
 
-    output_dir = os.path.dirname(filepath)
+    if filepath:
+        output_dir = os.path.dirname(filepath)
+        output_file = os.path.basename(filepath)
+    if output_file:
+        fileinfo = os.path.splitext(output_file)
+        filename = fileinfo[0]
+        filetype = (
+            fileinfo[1]
+            if len(fileinfo) > 1
+            else ("parquet" if not filetype else filetype)
+        )
+    else:
+        filename = f"{name}"
+        if not filetype:
+            filetype = "parquet"
+    filetype = "." + filetype.replace(".", "")
+    if _name_ is not None:
+        if _name_.endswith(filetype):
+            filename = f"{filename}-{_name_}"
+        else:
+            filename = f"{filename}-{_name_}{filetype}"
+    else:
+        filename = f"{filename}{filetype}"
+    filepath = f"{output_dir}/{filename}"
     os.makedirs(os.path.abspath(output_dir), exist_ok=True)
-    if filetype is None:
-        filetype = os.path.splitext(filepath)[1]
 
     log.info(f"Saving dataframe as {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
@@ -105,7 +130,7 @@ def save_dataframe(
 def concat_dataframes(
     data,
     add_key_as_name=False,
-    name_column="_name_",
+    name_column=eKonf.Keys.NAME,
     concat={},
     columns=None,
     verbose=False,

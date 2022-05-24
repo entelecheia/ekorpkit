@@ -1,6 +1,6 @@
 defaults:
   - datasets
-  - /method: load_and_concatenate
+  - /_method_: load_and_concatenate
 
 _target_: ekorpkit.datasets.loader.Datasets
 name:
