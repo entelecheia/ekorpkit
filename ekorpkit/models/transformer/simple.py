@@ -22,7 +22,7 @@ class SimpleTrainer:
         self._dataset = args.get("dataset", None)
         self._to_predict = args["to_predict"]
         self._to_train = args["to_train"]
-        self._call_ = self.args.get("_call_")
+        self._method = self.args.get("method")
         self._pred_output_dir = args["pred_output_dir"]
         self._pred_output_file = args["pred_output_file"]
 
@@ -40,7 +40,7 @@ class SimpleTrainer:
         self.eval_data = None
         self.test_data = None
 
-        eKonf.call(self._call_, self)
+        eKonf.methods(self._method, self)
 
     @abstractmethod
     def train(self):

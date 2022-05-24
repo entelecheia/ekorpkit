@@ -54,12 +54,6 @@ class Corpus:
             }
 
         self._collapse_ids = self.args.get("collapse_ids", False)
-        self.segment_separator = self.args.get("segment_separator", "\n\n")
-        self.sentence_separator = self.args.get("sentence_separator", "\n")
-        self.segment_separator = codecs.decode(self.segment_separator, "unicode_escape")
-        self.sentence_separator = codecs.decode(
-            self.sentence_separator, "unicode_escape"
-        )
         self.description = self.args.get("description", DESCRIPTION)
         self.license = self.args.get("license", LICENSE)
         self.split_info = self.args.get("splits", None)

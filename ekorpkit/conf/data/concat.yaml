@@ -1,8 +1,5 @@
 defaults:
   - default
 
-concat:
-  concat_dataframes: true
-  add_key_as_name: true
-  name_column: _name_
-  args:
+concat_dataframes:
+  _exec_: true

@@ -72,14 +72,14 @@ def save_dataframe(
     filetype=None,
     verbose=False,
     index=False,
-    columns_to_keep=None,
+    columns=None,
     **kwargs,
 ):
     if df is None:
         log.warning("Dataframe is None")
         return df
-    if columns_to_keep is not None:
-        df = df[columns_to_keep]
+    if isinstance(columns, list):
+        df = df[columns]
     if verbose > 1:
         print(df.tail())
 
@@ -99,10 +99,45 @@ def save_dataframe(
         if verbose:
             log.info(" >> elapsed time to save data: {}".format(elapsed()))
     if verbose:
-        print(f" >> saved dataframe to {filepath}")
+        log.info(f" >> saved dataframe to {filepath}")
 
 
-def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwargs):
+def concat_dataframes(
+    data,
+    add_key_as_name=False,
+    name_column="_name_",
+    concat={},
+    columns=None,
+    verbose=False,
+    **kwargs,
+):
+    if isinstance(data, dict):
+        log.info(f"Concatenating {len(data)} dataframes")
+        dfs = []
+        for df_name in data:
+            df_each = data[df_name]
+            if isinstance(columns, list):
+                columns = [c for c in columns if c in df_each.columns]
+                df_each = df_each[columns]
+            if add_key_as_name:
+                df_each[name_column] = df_name
+            dfs.append(df_each)
+        data = pd.concat(dfs, **concat)
+        return data
+    else:
+        if verbose:
+            log.info("Returning the original dataframe")
+        return data
+
+
+def load_dataframe(
+    filepath,
+    filetype=None,
+    verbose=False,
+    index_col=None,
+    columns=None,
+    **kwargs,
+):
     log.info("Loading data from {}".format(filepath))
     if filetype is None:
         filetype = os.path.splitext(filepath)[1]
@@ -115,6 +150,9 @@ def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwa
             df = pd.read_parquet(filepath, engine="pyarrow")
         else:
             raise ValueError("filetype must be .csv or .parquet")
+        if isinstance(columns, list):
+            columns = [c for c in columns if c in df.columns]
+            df = df[columns]
         if verbose:
             log.info(" >> elapsed time to load data: {}".format(elapsed()))
     return df

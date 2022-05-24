@@ -32,12 +32,12 @@ class Datasets:
 
         self.verbose = args.get("verbose", False)
         self.data_dir = args["data_dir"]
-        self._data_files = self.args.get("data_files", None)
+        self.data_files = self.args.get("data_files", None)
         self.filetype = self.args.get("filetype", "csv")
-        self._call_ = self.args.get("_call_", None)
+        self._method = self.args.get("method", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
-        self.info_args = self.args.get("info", None)
+        self._info_args = self.args.get("info", None)
 
         self._column_info = self.args.get("column_info", {})
         self._column = eKonf.instantiate(self._column_info)
@@ -52,18 +52,18 @@ class Datasets:
                 args["data_dir"] = self.data_dir
                 args["use_name_as_subdir"] = use_name_as_subdir
                 args["verbose"] = self.verbose
-                if self._data_files is not None:
-                    if name in self._data_files:
-                        args["data_files"] = self._data_files[name]
-                    elif "train" in self._data_files:
-                        args["data_files"] = self._data_files
+                if self.data_files is not None:
+                    if name in self.data_files:
+                        args["data_files"] = self.data_files[name]
+                    elif "train" in self.data_files:
+                        args["data_files"] = self.data_files
                 dataset = Dataset(**args)
                 self.datasets[name] = dataset
                 if self.splits is None:
                     self.splits = {split: None for split in dataset.data_files}
             log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
-        eKonf.call(self._call_, self)
+        eKonf.methods(self._method, self)
 
     def __str__(self):
         classname = self.__class__.__name__
@@ -141,11 +141,11 @@ class Datasets:
         os.makedirs(data_dir, exist_ok=True)
 
         summary_info = None
-        if self.info_args:
-            self.info_args["data_dir"] = data_dir
-            self.info_args["name"] = self.name
-            self.info_args["info_file"] = None
-            summary_info = eKonf.instantiate(self.info_args)
+        if self._info_args:
+            self._info_args["data_dir"] = data_dir
+            self._info_args["name"] = self.name
+            self._info_args["info_file"] = None
+            summary_info = eKonf.instantiate(self._info_args)
         if summary_info:
             summary_info.load(self.info)
 

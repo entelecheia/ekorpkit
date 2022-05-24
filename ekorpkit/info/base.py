@@ -70,7 +70,7 @@ class ColumnInfo:
         if self.DATETIME_PARM is None:
             return data
 
-        _columns = _ensure_list(self.DATETIME_PARM.get("key"))
+        _columns = eKonf.ensure_list(self.DATETIME_PARM.get("key"))
         _format = self.DATETIME_PARM.get("format", None)
         _params = self.DATETIME_PARM.get("params") or {}
         if _columns is None:
@@ -219,7 +219,7 @@ class ColumnInfo:
 
     @property
     def MERGE_META_ON(self):
-        return _ensure_list(self.COLUMNs[self._merge_meta_on_key]) or self.IDs
+        return eKonf.ensure_list(self.COLUMNs[self._merge_meta_on_key]) or self.IDs
 
     @MERGE_META_ON.setter
     def MERGE_META_ON(self, value):
@@ -227,7 +227,7 @@ class ColumnInfo:
 
     @property
     def IDs(self):
-        return _ensure_list(self.COLUMNs[self._id_key])
+        return eKonf.ensure_list(self.COLUMNs[self._id_key])
 
     @IDs.setter
     def IDs(self, value):
@@ -243,7 +243,7 @@ class ColumnInfo:
 
     @property
     def TEXTs(self):
-        return _ensure_list(self.COLUMNs[self._text_key])
+        return eKonf.ensure_list(self.COLUMNs[self._text_key])
 
     @TEXTs.setter
     def TEXTs(self, value):
@@ -347,10 +347,8 @@ class ColumnInfo:
             self.INFO.get("segment_separator", "\n\n"), "unicode_escape"
         )
 
-
-def _ensure_list(value):
-    if not value:
-        return []
-    elif isinstance(value, str):
-        return [value]
-    return list(value)
+    @property
+    def SENTENCE_SEP(self):
+        return codecs.decode(
+            self.INFO.get("sentence_separator", "\n"), "unicode_escape"
+        )

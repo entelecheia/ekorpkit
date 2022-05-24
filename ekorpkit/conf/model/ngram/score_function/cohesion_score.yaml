@@ -1,0 +1,6 @@
+_partial_: true
+_target_: ekorpkit.models.ngram.base.cohesion_score
+name: cohesion_score
+min_count: ${oc.select:..min_ngram_count,10}
+expansion_method: max
+delimiter: ${oc.select:..delimiter,_}

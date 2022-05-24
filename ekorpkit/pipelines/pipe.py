@@ -866,22 +866,20 @@ def general_function(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", None)
-    _call_ = args.get("_call_", None)
+    method = args.get("method", None)
     if verbose:
         log.info(f"Running dataframe function: {args}")
 
     with elapsed_timer(format_time=True) as elapsed:
         if apply_to is None:
-            df = getattr(df, _call_["name"])(**_call_["args"])
-            # df = eKonf.call(_call_, df)
+            df = getattr(df, method["name"])(**method["parms"])
         else:
             if isinstance(apply_to, str):
                 apply_to = [apply_to]
             for key in apply_to:
                 if verbose:
                     log.info(f"processing column: {key}")
-                df[key] = getattr(df[key], _call_["name"])(**_call_["args"])
-                # df[key] = eKonf.call(_call_, df[key])
+                df[key] = getattr(df[key], method["name"])(**method["parms"])
 
         if verbose:
             log.info(" >> elapsed time to replace: {}".format(elapsed()))
@@ -1218,7 +1216,7 @@ def concat_dataframes(dataframes, args):
         return dataframes
     else:
         if verbose:
-            log.info("Returning original dataframe")
+            log.info("Returning the original dataframe")
         return dataframes
 
 
@@ -1335,7 +1333,7 @@ def _save_dataframe(df, args):
         filename = f"{filename}{filetype}"
     filepath = f"{output_dir}/{filename}"
 
-    save_dataframe(df, filepath, filetype, verbose, columns_to_keep=columns_to_keep)
+    save_dataframe(df, filepath, filetype, verbose, columns=columns_to_keep)
     return df
 
 
@@ -1450,8 +1448,10 @@ def pipeline(data=None, **cfg):
     args = eKonf.to_dict(cfg)
     verbose = args.get("verbose", False)
 
-    df = eKonf.load_data(data)
+    if eKonf.is_instantiatable(data):
+        data = eKonf.instantiate(data)
 
+    df = data.data
     if df is None:
         raise ValueError("No dataframe to process")
 

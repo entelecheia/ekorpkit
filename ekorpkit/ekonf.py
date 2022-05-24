@@ -198,38 +198,97 @@ class _Keys(str, Enum):
     CONFIG = "_config_"
     CONFIG_GROUP = "_config_group_"
     PIPELINE = "_pipeline_"
+    TASK = "_task_"
     CALL = "_call_"
+    EXEC = "_exec_"
+    PARMS = "_parms_"
+    METHOD = "method"
+    FUNCTION = "function"
 
 
-def _call(cfg: Any, obj: object):
+def _methods(cfg: Any, obj: object):
     cfg = eKonf.to_dict(cfg)
-    if cfg:
-        if isinstance(cfg, dict) and _Keys.CALL in cfg:
-            _call_ = cfg[_Keys.CALL]
-        else:
-            _call_ = cfg
-        if isinstance(_call_, str):
-            log.info(f"Calling {_call_}")
-            return getattr(obj, _call_)()
-        elif isinstance(_call_, dict):
-            log.info(f"Calling {_call_}")
-            return getattr(obj, _call_["name"])(**_call_["args"])
-        elif isinstance(_call_, list):
-            for _run in _call_:
-                log.info(f"Calling {_run}")
-                if isinstance(_run, str):
-                    getattr(obj, _run)()
-                elif isinstance(_run, dict):
-                    getattr(obj, _run["name"])(**_run["args"])
+    if not cfg:
+        log.info("No method defined to call")
+        return
+
+    if isinstance(cfg, dict) and _Keys.METHOD in cfg:
+        _method = cfg[_Keys.METHOD]
     else:
-        log.info("No call function defined")
+        _method = cfg
+    if isinstance(_method, str):
+        log.info(f"Calling {_method}")
+        return getattr(obj, _method)()
+    elif isinstance(_method, dict):
+        log.info(f"Calling {_method}")
+        if _Keys.CALL in _method:
+            _call_ = _method.pop(_Keys.CALL)
+        else:
+            _call_ = True
+        if _call_:
+            return getattr(obj, _method["name"])(**_method["parms"])
+        else:
+            log.info(f"Skipping call to {_method}")
+    elif isinstance(_method, list):
+        for _each_method in _method:
+            log.info(f"Calling {_each_method}")
+            if isinstance(_each_method, str):
+                getattr(obj, _each_method)()
+            elif isinstance(_each_method, dict):
+                if _Keys.CALL in _each_method:
+                    _call_ = _each_method.pop(_Keys.CALL)
+                else:
+                    _call_ = True
+                if _call_:
+                    getattr(obj, _each_method["name"])(**_each_method["parms"])
+                else:
+                    log.info(f"Skipping call to {_each_method}")
 
 
-def _print(cfg: Any, **kwargs):
+def _function(cfg: Any, name, return_function=False, **parms):
+    cfg = eKonf.to_dict(cfg)
+    if not isinstance(cfg, dict):
+        log.info("No function defined to execute")
+        return None
+
+    if _Keys.FUNCTION not in cfg:
+        log.info("No function defined to execute")
+        return None
+
+    _functions = cfg[_Keys.FUNCTION]
+    fn = _partial(_functions[name])
+    if name in cfg:
+        _parms = cfg[name]
+        _parms = {**_parms, **parms}
+    else:
+        _parms = parms
+    if _Keys.EXEC in _parms:
+        _exec_ = _parms.pop(_Keys.EXEC)
+    else:
+        _exec_ = True
+    if _exec_:
+        if callable(fn):
+            if return_function:
+                log.info(f"Returning function {fn}")
+                return fn
+            log.info(f"Executing function {fn} with parms {_parms}")
+            return fn(**_parms)
+        else:
+            log.info(f"Function {name} not callable")
+            return None
+    else:
+        log.info(f"Skipping execute of {fn}")
+        return None
+
+
+def _print(cfg: Any, resolve: bool = True, **kwargs):
     import pprint
 
     if _is_config(cfg):
-        pprint.pprint(_to_dict(cfg), **kwargs)
+        if resolve:
+            pprint.pprint(_to_dict(cfg), **kwargs)
+        else:
+            pprint.pprint(cfg, **kwargs)
     else:
         print(cfg)
 
@@ -372,7 +431,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     if not _env_initialized_:
         _init_env_()
     if not _is_instantiatable(config):
-        log.warning(f"Config {config} is not instantiatable, returning config")
+        log.warning(f"Config is not instantiatable, returning config")
         return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
@@ -556,6 +615,14 @@ def _dependencies(key, path=None):
         return extra_deps[key]
 
 
+def _ensure_list(value):
+    if not value:
+        return []
+    elif isinstance(value, str):
+        return [value]
+    return list(value)
+
+
 class eKonf:
     """ekorpkit config primary class"""
 
@@ -692,16 +759,20 @@ class eKonf:
         _save(config, f, resolve)
 
     @staticmethod
-    def pprint(cfg: Any, **kwargs):
-        _print(cfg, **kwargs)
+    def pprint(cfg: Any, resolve: bool = True, **kwargs):
+        _print(cfg, resolve=resolve, **kwargs)
 
     @staticmethod
-    def print(cfg: Any, **kwargs):
-        _print(cfg, **kwargs)
+    def print(cfg: Any, resolve: bool = True, **kwargs):
+        _print(cfg, resolve=resolve, **kwargs)
 
     @staticmethod
-    def call(cfg: Any, obj: object):
-        _call(cfg, obj)
+    def methods(cfg: Any, obj: object):
+        _methods(cfg, obj)
+
+    @staticmethod
+    def function(cfg: Any, name, return_function=False, **parms):
+        return _function(cfg, name, return_function, **parms)
 
     @staticmethod
     def run(config: Any, **kwargs: Any) -> Any:
@@ -819,9 +890,9 @@ class eKonf:
         return apply_pipe(data, cfg)
 
     @staticmethod
-    def load_data(data, **kwargs):
-        return _load_data(data, **kwargs)
-
-    @staticmethod
     def dependencies(key, path=None):
         return _dependencies(key, path)
+
+    @staticmethod
+    def ensure_list(value):
+        return _ensure_list(value)
