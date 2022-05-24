@@ -6,10 +6,10 @@ import pandas as pd
 import ekorpkit.utils.batch.batcher as batcher
 from collections import OrderedDict
 from functools import partial, reduce
-from ekorpkit.io.file import get_filepaths, load_dataframe, save_dataframe
 from ekorpkit.utils import print_status
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
+from ekorpkit.io.file import save_dataframe as _save_dataframe
 from ekorpkit import eKonf
 from ekorpkit.ekonf import apply_pipe
 from tqdm.auto import tqdm
@@ -356,13 +356,13 @@ def split_sampling(df, args):
     dev_file = args.get("dev_file", None)
     if train_file and train is not None:
         filepath = f"{output_dir}/{train_file}"
-        save_dataframe(train, filepath, verbose=verbose)
+        _save_dataframe(train, filepath, verbose=verbose)
     if test_file and test is not None:
         filepath = f"{output_dir}/{test_file}"
-        save_dataframe(test, filepath, verbose=verbose)
+        _save_dataframe(test, filepath, verbose=verbose)
     if dev_file and dev is not None:
         filepath = f"{output_dir}/{dev_file}"
-        save_dataframe(dev, filepath, verbose=verbose)
+        _save_dataframe(dev, filepath, verbose=verbose)
 
     return df
 
@@ -376,7 +376,7 @@ def top_values(df, args):
     value_name = args.get("value_name", None)
     value_separator = args.get("value_separator", ", ")
     top_n = args.get("top_n", 5)
-    columns_to_keep = args.get("columns_to_keep", None)
+    columns = args.get("columns", None)
     use_batcher = args.get("use_batcher", True)
     minibatch_size = args.get("minibatch_size", None)
 
@@ -410,8 +410,8 @@ def top_values(df, args):
     top_n_grp = top_n_grp[groupby + [value_name]]
     df.drop(columns=value_name, inplace=True)
     df = pd.merge(df, top_n_grp, on=groupby, how="left")
-    if columns_to_keep:
-        df = df[columns_to_keep]
+    if columns:
+        df = df[columns:]
     if verbose:
         print(df.head())
 
@@ -460,7 +460,7 @@ def sampling(df, args):
     groupby = args.get("groupby", None)
     sample_size_per_group = args.get("sample_size_per_group", None)
     value_var = args.get("value_var", None)
-    columns_to_keep = args.get("columns_to_keep", None)
+    columns = args.get("columns", None)
 
     if verbose:
         log.info(f"Split sampling: {args}")
@@ -484,8 +484,8 @@ def sampling(df, args):
                 )
             )
     df_sample.reset_index(drop=True, inplace=True)
-    if columns_to_keep:
-        df_sample = df_sample[columns_to_keep]
+    if columns:
+        df_sample = df_sample[columns:]
     if verbose:
         log.info(f"Total rows: {len(df)}")
         log.info(f"Sample: {len(df_sample)}")
@@ -497,7 +497,7 @@ def sampling(df, args):
         grp_dists = pd.concat([grp_all, grp_sample], axis=1)
         print(grp_dists)
 
-    _save_dataframe(df_sample, args)
+    save_dataframe(df_sample, args)
 
     return df
 
@@ -660,7 +660,7 @@ def predict(df, args):
         if verbose:
             log.warning("No columns specified")
         return df
-    columns_to_keep = args["columns_to_keep"]
+    columns = args["columns"]
 
     to_predict = args.get("to_predict", None)
     model = args.get("model", None)
@@ -691,20 +691,20 @@ def predict(df, args):
                 num_workers=num_workers,
             )
             pred_df = pd.DataFrame(predictions.tolist(), index=predictions.index)
-            if columns_to_keep:
-                columns_to_keep += pred_df.columns.tolist()
-                args["columns_to_keep"] = columns_to_keep
+            if columns:
+                columns += pred_df.columns.tolist()
+                args["columns"] = columns
             df = df.join(pred_df)
             if verbose:
                 log.info(" >> elapsed time to predict: {}".format(elapsed()))
 
     else:
         df = model.predict(df, to_predict)
-        if columns_to_keep:
-            columns_to_keep.append(model._to_predict["predicted"])
-            args["columns_to_keep"] = columns_to_keep
+        if columns:
+            columns.append(model._to_predict["predicted"])
+            args["columns"] = columns
 
-    _save_dataframe(df, args)
+    save_dataframe(df, args)
 
     return df
 
@@ -785,7 +785,7 @@ def extract_tokens(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     use_batcher = args.get("use_batcher", True)
-    nouns_ony = args.get("nouns_ony", True)
+    nouns_only = args.get("nouns_only", True)
     filter_stopwords_only = args.get("filter_stopwords_only", False)
     minibatch_size = args.get("minibatch_size", None)
     apply_to = args.get("apply_to", "text")
@@ -806,10 +806,11 @@ def extract_tokens(df, args):
     tokenizer = eKonf.instantiate(tokenizer)
     if filter_stopwords_only:
         extract_func = tokenizer.filter_article_stopwords
-    elif nouns_ony:
+    elif nouns_only:
         extract_func = tokenizer.extract_nouns
     else:
         extract_func = tokenizer.extract_tokens
+    log.info(f"extract_func: {extract_func}")
 
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
@@ -1225,9 +1226,6 @@ def merge_dataframe(df=None, args=None):
         raise ValueError("args must be specified")
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
-    filepath = args.get("filepath", None)
-    data_dir = args.get("data_dir", None)
-    data_file = args.get("data_file", None)
     how = args.get("how", "inner")
     merge_on = args.get("merge_on", None)
     left_on = args.get("left_on", None)
@@ -1241,16 +1239,7 @@ def merge_dataframe(df=None, args=None):
     if isinstance(right_on, str):
         right_on = [right_on]
 
-    if filepath:
-        filepaths = get_filepaths(filepath)
-    else:
-        filepaths = get_filepaths(data_file, data_dir)
-    if verbose:
-        log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
-    if len(filepaths) == 1:
-        df_to_merge = load_dataframe(filepaths[0], verbose=verbose)
-    else:
-        df_to_merge = pd.concat([load_dataframe(f, verbose=verbose) for f in filepaths])
+    df_to_merge = load_dataframe(None, args)
     if merge_on:
         df = df.merge(df_to_merge, how=how, on=merge_on)
     else:
@@ -1278,7 +1267,7 @@ def save_metadata(df, args):
         if "split" in meta_columns and "split" not in df.columns:
             df["split"] = split_name
         df_meta = df[meta_columns]
-        save_dataframe(df_meta, filepath, filetype, verbose)
+        _save_dataframe(df_meta, filepath, filetype, verbose)
 
     data_info = column_info.get("data", None)
     if isinstance(data_info, dict):
@@ -1293,7 +1282,8 @@ def save_metadata(df, args):
     return df
 
 
-def _save_dataframe(df, args):
+def save_dataframe(df, args):
+
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     filepath = args.get("filepath", None)
@@ -1302,7 +1292,7 @@ def _save_dataframe(df, args):
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
     dataframe_name = args.get("_name_", None)
-    columns_to_keep = args.get("columns_to_keep", None)
+    columns = args.get("columns", None)
 
     if df is None:
         log.warning("Dataframe is None")
@@ -1333,11 +1323,13 @@ def _save_dataframe(df, args):
         filename = f"{filename}{filetype}"
     filepath = f"{output_dir}/{filename}"
 
-    save_dataframe(df, filepath, filetype, verbose, columns=columns_to_keep)
+    _save_dataframe(df, filepath, filetype, verbose, columns=columns)
     return df
 
 
-def _load_dataframe(df=None, args=None):
+def load_dataframe(df=None, args=None):
+    from ekorpkit.io.file import get_filepaths, load_dataframe as _load_dataframe
+
     if args is None:
         raise ValueError("args must be specified")
 
@@ -1351,7 +1343,7 @@ def _load_dataframe(df=None, args=None):
     if isinstance(dtype, list):
         dtype = {k: "str" for k in dtype}
     parse_dates = args.get("parse_dates", False)
-    columns_to_keep = args.get("columns_to_keep", None)
+    columns = args.get("columns", None)
 
     if filepath:
         filepaths = get_filepaths(filepath)
@@ -1362,37 +1354,40 @@ def _load_dataframe(df=None, args=None):
     else:
         log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
     if len(filepaths) == 1:
-        df = load_dataframe(
-            filepaths[0], verbose=verbose, dtype=dtype, parse_dates=parse_dates
+        df = _load_dataframe(
+            filepaths[0],
+            verbose=verbose,
+            dtype=dtype,
+            parse_dates=parse_dates,
+            columns=columns,
         )
-        if columns_to_keep:
-            columns_to_keep = [c for c in columns_to_keep if c in df.columns]
-            df = df[columns_to_keep]
         return df
     else:
         if concatenate:
             df = pd.concat(
                 [
-                    load_dataframe(
-                        f, verbose=verbose, dtype=dtype, parse_dates=parse_dates
+                    _load_dataframe(
+                        f,
+                        verbose=verbose,
+                        dtype=dtype,
+                        parse_dates=parse_dates,
+                        columns=columns,
                     )
                     for f in filepaths
                 ]
             )
-            if columns_to_keep:
-                columns_to_keep = [c for c in columns_to_keep if c in df.columns]
-                df = df[columns_to_keep]
             return df
         else:
             df_dict = {}
 
             for f in filepaths:
-                df = load_dataframe(
-                    f, verbose=verbose, dtype=dtype, parse_dates=parse_dates
+                df = _load_dataframe(
+                    f,
+                    verbose=verbose,
+                    dtype=dtype,
+                    parse_dates=parse_dates,
+                    columns=columns,
                 )
-                if columns_to_keep:
-                    columns_to_keep = [c for c in columns_to_keep if c in df.columns]
-                    df = df[columns_to_keep]
                 df_name = os.path.basename(f)
                 df_dict[df_name] = df
             return df_dict

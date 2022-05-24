@@ -5,7 +5,7 @@ sample_size_per_group: 10
 random_state: 123
 groupby: 
 value_var:
-columns_to_keep:
+columns:
 output_dir: 
 output_file:
 verbose: ${oc.select:..verbose, true}

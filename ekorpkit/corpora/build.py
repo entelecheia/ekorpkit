@@ -121,10 +121,10 @@ class DatasetBuilder:
             if pipe not in self.process_pipeline:
                 self.process_pipeline.append(pipe)
             self.pipeline_args[pipe]["filepath"] = str(output_file)
-            columns_to_keep = self.column_info.get("data")
-            if columns_to_keep:
-                columns_to_keep = list(columns_to_keep.keys())
-            self.pipeline_args[pipe]["columns_to_keep"] = columns_to_keep
+            columns = self.column_info.get("data")
+            if columns:
+                columns = list(columns.keys())
+            self.pipeline_args[pipe]["columns"] = columns
 
         df = None
         if not output_file.exists() or self.overwrite:

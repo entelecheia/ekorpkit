@@ -2,8 +2,7 @@ import os
 import logging
 import pandas as pd
 from collections import namedtuple
-
-from sqlalchemy import true
+from tqdm import tqdm
 from .base import get_process_memory, prune_vocab, NEG_INF
 from ekorpkit.io.file import save_dataframe, load_dataframe
 from ekorpkit import eKonf
@@ -94,8 +93,8 @@ class Ngrams:
 
     def _load_data(self):
         """Load data"""
-        if self._corpus is None:
-            log.warning("No corpus config found")
+        if self._data is None:
+            log.warning("No data config found")
             return
         data = eKonf.instantiate(self._data)
         docs = data.data[data.COLUMN.TEXT]
@@ -115,7 +114,7 @@ class Ngrams:
 
         self.ngrams = {}
         sentence_no, total_words = -1, 0
-        for sentence_no, sentence in enumerate(self.sentences):
+        for sentence_no, sentence in tqdm(enumerate(self.sentences)):
             words = self.tokenize(sentence)
             total_words += len(words)
 

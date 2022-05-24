@@ -2,6 +2,7 @@ import os
 import math
 import logging
 from collections import defaultdict, namedtuple
+from tqdm import tqdm
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def cohesion_score(
         return (cf + cb) / 2
 
     candidates = {}
-    for ngram, freq in ngrams.items():
+    for ngram, freq in tqdm(ngrams.items()):
         n = len(ngram)
         if n <= 1 or freq < min_count:
             continue
@@ -92,7 +93,7 @@ def branching_entropy(
 
     def get_entropy_table(parse, sorted_by_length):
         be = {}
-        for n, ngram_list in sorted_by_length.items():
+        for n, ngram_list in tqdm(sorted_by_length.items()):
             extensions = defaultdict(lambda: [])
             for ngram in ngram_list:
                 extensions[parse(ngram)].append(ngram)
@@ -149,7 +150,7 @@ def mutual_information(
     # max_n = max([len(ngram) for ngram in ngrams.keys()])
     candidates = {}
 
-    for ngram, ab in ngrams.items():
+    for ngram, ab in tqdm(ngrams.items()):
         if (len(ngram) == 1) or (ab <= delta):
             continue
         score_candidates = {}
@@ -174,7 +175,7 @@ def mutual_information(
         candidates[ngram] = MutualInformation(
             delimiter.join(ngram), len(ngram), ab, score
         )
-    return ngrams
+    return candidates
 
 
 def get_available_memory():

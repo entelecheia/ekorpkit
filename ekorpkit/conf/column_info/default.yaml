@@ -22,3 +22,4 @@ datetime:
   format:
   params:
 segment_separator: ${oc.select:..segment_separator, '\n\n'}
+sentence_separator: ${oc.select:..sentence_separator, '\n'}
