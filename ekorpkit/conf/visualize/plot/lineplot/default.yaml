@@ -1,7 +1,9 @@
-function: lineplot
+_func_: lineplot
+axno: 0
 y:
 secondary_y: false
-args:
+secondary_to: 0
+_parms_:
   linewidth: 2
   hue:
   size:

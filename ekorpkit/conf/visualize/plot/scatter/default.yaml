@@ -1,7 +1,9 @@
-function: scatter
+_func_: scatter
+axno: 0
 y:
 secondary_y: false
-args:
+secondary_to: 0
+_parms_:
   hue:
   # vector or key in data
   # Grouping variable that will produce points with different colors. Can be either categorical or numeric, although color mapping will behave differently in latter case.

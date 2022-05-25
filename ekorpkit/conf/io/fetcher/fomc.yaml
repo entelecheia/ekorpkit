@@ -181,3 +181,64 @@ fomc:
       rate_decision: 2
       rate_change: 0.5
       format: "%Y-%m-%d"
+
+  econ_series:
+    # GDP is announced quarterly, the end of following month (preliminary)
+    - id: GDPC1
+      name: GDP
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=4) / value.shift(4) * 100"
+    - id: GDPPOT
+      name: GDPPOT
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=4) / value.shift(4) * 100"
+    # PCE is announced monthly, at the end of following month
+    - id: PCEPILFE
+      name: PCE
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+    # CPI is announced monthly, around 10th of the following month
+    - id: CPIAUCSL
+      name: CPI
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+    # Employment statistics is announced monthly, around 3rd of the following month
+    - id: UNRATE
+      name: UNEMP
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+    # Employment statistics is announced monthly, around 3rd of the following month
+    - id: PAYEMS
+      name: EMP
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+    # ISM PMI is areannounced monthly, around 1st of the following month
+    - id: ISM/MAN_PMI
+      name: PMI
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+    # ISM NMI is areannounced monthly, around 1st of the following month
+    - id: ISM/NONMAN_NMI
+      name: NMI
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+    # Retail Sales is announced monthly, around 15th of the following month
+    - id: RRSFS
+      name: RSALES
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+    # New Home Sales is announced monthly, around a week before the end of the following month
+    - id: HSN1F
+      name: HSALES
+      expressions:
+        - "value_diff_prev = value.diff() / value.shift(1) * 100"
+        - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"

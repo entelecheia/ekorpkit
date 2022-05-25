@@ -214,24 +214,24 @@ def _methods(cfg: Any, obj: object):
         return
 
     if isinstance(cfg, dict) and _Keys.METHOD in cfg:
-        _method = cfg[_Keys.METHOD]
+        _method_ = cfg[_Keys.METHOD]
     else:
-        _method = cfg
-    if isinstance(_method, str):
-        log.info(f"Calling {_method}")
-        return getattr(obj, _method)()
-    elif isinstance(_method, dict):
-        log.info(f"Calling {_method}")
-        if _Keys.CALL in _method:
-            _call_ = _method.pop(_Keys.CALL)
+        _method_ = cfg
+    if isinstance(_method_, str):
+        log.info(f"Calling {_method_}")
+        return getattr(obj, _method_)()
+    elif isinstance(_method_, dict):
+        log.info(f"Calling {_method_}")
+        if _Keys.CALL in _method_:
+            _call_ = _method_.pop(_Keys.CALL)
         else:
             _call_ = True
         if _call_:
-            return getattr(obj, _method[_Keys.NAME])(**_method[_Keys.PARMS])
+            return getattr(obj, _method_[_Keys.NAME])(**_method_[_Keys.PARMS])
         else:
-            log.info(f"Skipping call to {_method}")
-    elif isinstance(_method, list):
-        for _each_method in _method:
+            log.info(f"Skipping call to {_method_}")
+    elif isinstance(_method_, list):
+        for _each_method in _method_:
             log.info(f"Calling {_each_method}")
             if isinstance(_each_method, str):
                 getattr(obj, _each_method)()
@@ -256,8 +256,8 @@ def _function(cfg: Any, _name_, return_function=False, **parms):
         log.info("No function defined to execute")
         return None
 
-    _functions = cfg[_Keys.FUNCTION]
-    fn = _partial(_functions[_name_])
+    _functions_ = cfg[_Keys.FUNCTION]
+    fn = _partial(_functions_[_name_])
     if _name_ in cfg:
         _parms = cfg[_name_]
         _parms = {**_parms, **parms}
@@ -515,7 +515,7 @@ def _stop_env_(cfg, verbose=False):
 
 
 def apply_pipe(df, pipe):
-    _func_ = pipe.pop(_Keys.FUNCTION)
+    _func_ = pipe.get(_Keys.FUNCTION)
     fn = eKonf.partial(_func_)
     log.info(f"Applying pipe: {fn}")
     if isinstance(df, dict):

@@ -110,7 +110,7 @@ def save_dataframe(
             filename = f"{filename}-{_name_}{filetype}"
     else:
         filename = f"{filename}{filetype}"
-    filepath = f"{output_dir}/{filename}"
+    filepath = os.path.join(output_dir, filename)
     os.makedirs(os.path.abspath(output_dir), exist_ok=True)
 
     log.info(f"Saving dataframe as {filepath}")

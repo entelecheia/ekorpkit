@@ -1,14 +1,12 @@
 defaults:
-  - dataset: default
+  - series: default
   - plot: default
+  - subplots: default
   - figure: default
   - savefig: default
 
 output_dir: ${oc.select:..output_dir, ./figs}
 output_file: ${oc.select:..output_file, plot1.png}
 verbose: ${oc.select:verbose, true}
-axvspans:
-  - ${oc.select:..axvspan, null}
-annotations:
-  - ${oc.select:..annotation, null}
-figure2:
+figures:
+  - ${..figure}

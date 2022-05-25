@@ -9,7 +9,7 @@ from functools import partial, reduce
 from ekorpkit.utils import print_status
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
-from ekorpkit.io.file import save_dataframe as _save_dataframe
+from ekorpkit.io.file import save_dataframe as save_dataframe_
 from ekorpkit import eKonf
 from ekorpkit.ekonf import apply_pipe
 from tqdm.auto import tqdm
@@ -355,14 +355,17 @@ def split_sampling(df, args):
     test_file = args.get("test_file", None)
     dev_file = args.get("dev_file", None)
     if train_file and train is not None:
-        filepath = f"{output_dir}/{train_file}"
-        _save_dataframe(train, filepath, verbose=verbose)
+        save_dataframe_(
+            train, output_dir=output_dir, output_file=train_file, verbose=verbose
+        )
     if test_file and test is not None:
-        filepath = f"{output_dir}/{test_file}"
-        _save_dataframe(test, filepath, verbose=verbose)
+        save_dataframe_(
+            test, output_dir=output_dir, output_file=test_file, verbose=verbose
+        )
     if dev_file and dev is not None:
-        filepath = f"{output_dir}/{dev_file}"
-        _save_dataframe(dev, filepath, verbose=verbose)
+        save_dataframe_(
+            dev, output_dir=output_dir, output_file=dev_file, verbose=verbose
+        )
 
     return df
 
@@ -880,7 +883,9 @@ def general_function(df, args):
             for key in apply_to:
                 if verbose:
                     log.info(f"processing column: {key}")
-                df[key] = getattr(df[key], method[eKonf.Keys.NAME])(**method[eKonf.Keys.PARMS])
+                df[key] = getattr(df[key], method[eKonf.Keys.NAME])(
+                    **method[eKonf.Keys.PARMS]
+                )
 
         if verbose:
             log.info(" >> elapsed time to replace: {}".format(elapsed()))
@@ -961,7 +966,7 @@ def filter_length(df, args, **kwargs):
         if verbose:
             log.warning("No length specified")
         return df
-    len_func = args["function"].get("len_bytes", None)
+    len_func = args[eKonf.Keys.FUNCTION].get("len_bytes", None)
     len_func = eKonf.instantiate(len_func)
     _check_max_len = partial(check_max_len, max_len=max_length, len_func=len_func)
     _check_min_len = partial(check_min_len, min_len=min_length, len_func=len_func)
@@ -1199,26 +1204,11 @@ def split_dataframe(df, args):
 
 
 def concat_dataframes(dataframes, args):
+    from ekorpkit.io.file import concat_dataframes as concat_dataframes_
+
     args = eKonf.to_dict(args)
-    verbose = args.get("verbose", False)
-    add_key_as_name = args.get("add_key_as_name", False)
-    _concat_args = args.get("concat") or {}
-    name_column = args.get("name_column") or eKonf.Keys.NAME
-    if isinstance(dataframes, dict):
-        if verbose:
-            log.info(f"Concatenating {len(dataframes)} dataframes")
-        dfs = []
-        for df_name in dataframes:
-            df_each = dataframes[df_name]
-            if add_key_as_name:
-                df_each[name_column] = df_name
-            dfs.append(df_each)
-        dataframes = pd.concat(dfs, **_concat_args)
-        return dataframes
-    else:
-        if verbose:
-            log.info("Returning the original dataframe")
-        return dataframes
+
+    return concat_dataframes_(data=dataframes, **args)
 
 
 def merge_dataframe(df=None, args=None):
@@ -1267,7 +1257,7 @@ def save_metadata(df, args):
         if "split" in meta_columns and "split" not in df.columns:
             df["split"] = split_name
         df_meta = df[meta_columns]
-        _save_dataframe(df_meta, filepath, filetype, verbose)
+        save_dataframe_(df_meta, filepath, filetype, verbose)
 
     data_info = column_info.get("data", None)
     if isinstance(data_info, dict):
@@ -1283,7 +1273,6 @@ def save_metadata(df, args):
 
 
 def save_dataframe(df, args):
-
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
 
@@ -1293,7 +1282,7 @@ def save_dataframe(df, args):
     if verbose:
         log.info(f"Saving dataframe: {args}")
 
-    _save_dataframe(df, **args)
+    save_dataframe_(df, **args)
     return df
 
 

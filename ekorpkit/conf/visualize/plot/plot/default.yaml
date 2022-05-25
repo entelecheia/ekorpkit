@@ -1,10 +1,12 @@
 figsize: (10, 5)
+fontsize: 12
 style: fivethirtyeight
 rcParams:
   axes.unicode_minus: False
-  axes.labelsize: 12
+  axes.labelsize: ${..fontsize}
   text.color: dimgrey
   font.family: NanumGothic
+  font.size: ${..fontsize}
   # savefig.edgecolor: black
 fontpath:
 language:

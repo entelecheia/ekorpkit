@@ -79,6 +79,7 @@ class FOMC:
         self.chair["to_date"] = pd.to_datetime(self.chair.to_date)
         self.canlendar = None
 
+        self.econ_series = args["econ_series"]
         self.recessions = pd.DataFrame(args["recessions"])
         _format = self.recessions.format[0]
         self.recessions.drop(columns="format", inplace=True)

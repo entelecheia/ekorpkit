@@ -256,7 +256,7 @@ class Ngrams:
 
         return phrase, score
 
-    def export_ngrams(self):
+    def export_ngrams(self, threshold=None):
         """Extract all found ngrams.
         Returns
         ------
@@ -264,12 +264,11 @@ class Ngrams:
             Mapping between phrases and their scores.
         """
         result, source_vocab = {}, self.candidates
-        for token in source_vocab:
-            unigrams = token.split(self._ngram.delimiter)
-            if len(unigrams) < 2:
+        for ngram in source_vocab:
+            if len(ngram) < 2:
                 continue  # no phrases here
             ngram, score = self.score_candidate(
-                unigrams[0], unigrams[-1], unigrams[1:-1]
+                ngram[0], ngram[-1], ngram[1:-1]
             )
             if score is not None:
                 result[ngram] = score
