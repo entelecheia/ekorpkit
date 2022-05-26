@@ -42,10 +42,9 @@ def apply(
             batcher_instance.minibatch_size = min(
                 int(len(series) / batcher_instance.procs) + 1, minibatch_size
             )
-            if verbose:
-                log.info(
-                    f"Using batcher with minibatch size: {batcher_instance.minibatch_size}"
-                )
+            log.info(
+                f"Using batcher with minibatch size: {batcher_instance.minibatch_size}"
+            )
             results = decorator_apply(func, batcher_instance, description=description)(
                 series
             )
@@ -53,7 +52,7 @@ def apply(
                 batcher_instance.minibatch_size = batcher_minibatch_size
             return results
 
-    if verbose and batcher_instance is None:
+    if batcher_instance is None:
         log.warning("Warning: batcher not initialized")
     tqdm.pandas(desc=description)
     return series.progress_apply(func)
@@ -72,12 +71,12 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
         pipes[pipeline] = pipeline
     else:
         pipes = pipeline
+
     if pipes is None or len(pipes) == 0:
-        if verbose:
-            log.warning("No pipeline specified")
+        log.warning("No pipeline specified")
         return df
-    if verbose:
-        log.info(f"Applying pipeline: {pipes}")
+
+    log.info(f"Applying pipeline: {pipes}")
     for pipe, pipe_arg_name in pipes.items():
         args = pipeline_args.get(pipe_arg_name, {}).copy()
         if pipe != pipe_arg_name:

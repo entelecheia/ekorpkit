@@ -37,10 +37,10 @@ def plot(data, verbose=False, **kwargs):
     if isinstance(ycols, str):
         ycols = [ycols]
 
+    sencondary_axes = {}
     if subplots["nrows"] > 1 or subplots["ncols"] > 1:
         fig, axes = plt.subplots(**subplots, figsize=figsize)
         ax = None
-        sencondary_axes = {}
         axes = axes.flatten()
     else:
         plt.figure(figsize=figsize, tight_layout=True)
@@ -154,10 +154,14 @@ def add_decorations(ax=None, **kwargs):
             ax.axvspan(**span)
     for annot in annotations:
         if isinstance(annot, dict):
-            if annot.get("xy") is not None and isinstance(annot.get("xy"), str):
-                annot["xy"] = eval(annot["xy"])
-            if annot.get("xytext") is not None and isinstance(annot.get("xytext"), str):
-                annot["xytext"] = eval(annot["xytext"])
+            x = annot.pop("x")
+            y = annot.pop("y")
+            if x and y:
+                annot["xy"] = (x, y)
+            xtext = annot.pop("xtext")
+            ytext = annot.pop("ytext")
+            if xtext and ytext:
+                annot["xytext"] = (xtext, ytext)
             ax.annotate(**annot)
 
 

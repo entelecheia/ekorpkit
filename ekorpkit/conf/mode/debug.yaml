@@ -9,3 +9,8 @@ ignore_warnings: false
 env:
   os:
     HYDRA_FULL_ERROR: 1
+hydra:
+  verbose: true
+  job_logging:
+    root:
+      level: DEBUG

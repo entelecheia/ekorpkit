@@ -45,6 +45,23 @@ def _today(_format="%Y-%m-%d"):
         return datetime.today().strftime(_format)
 
 
+def _strptime(
+    _date_str: str,
+    _format: str = "%Y-%m-%d",
+):
+    from datetime import datetime
+
+    return datetime.strptime(_date_str, _format)
+
+
+def _to_dateparm(_date, _format="%Y-%m-%d"):
+    from datetime import datetime
+
+    _dtstr = datetime.strftime(_date, _format)
+    _dtstr = "${to_datetime:" + _dtstr + "," + _format + "}"
+    return _dtstr
+
+
 def _path(
     url_or_filename,
     extract_archive: bool = False,
@@ -175,6 +192,7 @@ OmegaConf.register_new_resolver("__ekorpkit_path__", __ekorpkit_path__)
 OmegaConf.register_new_resolver("__home_path__", __home_path__)
 OmegaConf.register_new_resolver("__version__", __version__)
 OmegaConf.register_new_resolver("today", _today)
+OmegaConf.register_new_resolver("to_datetime", _strptime)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
@@ -846,3 +864,7 @@ class eKonf:
     @staticmethod
     def ensure_list(value):
         return _ensure_list(value)
+
+    @staticmethod
+    def to_dateparm(_date, _format="%Y-%m-%d"):
+        return _to_dateparm(_date, _format)
