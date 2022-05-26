@@ -2,7 +2,7 @@ defaults:
   - _build
   - /io/fetcher: _dummy
   - /preprocessor/normalizer: formal_ko
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: bok_minutes
 fullname: BOK MPB Minutes

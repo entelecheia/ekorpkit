@@ -2,7 +2,7 @@ defaults:
   - _build
   - /io/fetcher: earnings_call 
   - /preprocessor/normalizer: formal_en
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: earnings_call
 fullname: Seeking Alpha Earnings Transcripts

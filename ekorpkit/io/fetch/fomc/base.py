@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import codecs
 import requests
+from tqdm import tqdm
 from bs4 import BeautifulSoup
 from datetime import datetime
 from abc import abstractmethod
@@ -429,3 +430,37 @@ class FOMC:
         save_dataframe(fomc_calendar, self.calendar_filepath)
         self.calendar = fomc_calendar
         return fomc_calendar.copy()
+
+    @staticmethod
+    def add_available_latest(target, source, name, columns, date_offset, window=1):
+        from dateutil.relativedelta import relativedelta
+
+        date_offset = relativedelta(**date_offset)
+        index_name = target.index.name
+        source_ma = source.rolling(window).mean()
+
+        results = []
+        for i, row_tgt in tqdm(target.iterrows(), total=target.shape[0]):
+            not_available = True
+            for j, row_src in source_ma.sort_index(ascending=False).iterrows():
+                if row_tgt.name > row_src.name + date_offset:
+                    data = row_src[columns].to_dict()
+                    data[name + "_date"] = row_src.name
+                    data[index_name] = row_tgt.name
+                    results.append(data)
+                    not_available = False
+                    break
+            if not_available:
+                data = {col: None for col in columns}
+                data[name + "_date"] = None
+                data[index_name] = row_tgt.name
+                results.append(data)
+        if target.shape[0] != len(results):
+            print(
+                "target has {} rows but returned {} rows from source!".format(
+                    target.shape[0], len(results)
+                )
+            )
+        results = pd.DataFrame(results)
+        results.set_index(index_name, inplace=True)
+        return target.merge(results, how="left", left_index=True, right_index=True)

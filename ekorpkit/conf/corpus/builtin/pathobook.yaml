@@ -3,7 +3,7 @@ defaults:
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
   - /io/fetcher: pathobook
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: pathobook
 lang: en

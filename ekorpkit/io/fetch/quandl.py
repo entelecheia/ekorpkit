@@ -122,6 +122,8 @@ class Quandl:
         end_date=None,
         filename=None,
         expressions=None,
+        index_name="date",
+        reset_index=False,
     ):
         if isinstance(series_id, str):
             series_id = [series_id]
@@ -146,7 +148,9 @@ class Quandl:
 
         filepath = os.path.join(self.output_dir, filename)
         if not os.path.exists(filepath) or self.force_download:
-            self.data = self._load_series(series_id, series_name, start_date, end_date)
+            self.data = self._load_series(
+                series_id, series_name, start_date, end_date, index_name, reset_index
+            )
             save_dataframe(self.data, filepath, verbose=self.verbose)
         else:
             log.info(f"{filepath} already exists.")
@@ -159,6 +163,8 @@ class Quandl:
         series_name=None,
         start_date=None,
         end_date=None,
+        index_name="date",
+        reset_index=False,
         **kwargs,
     ):
 
@@ -189,4 +195,8 @@ class Quandl:
             _dfs.append(df)
 
         df = pd.concat(_dfs)
+        df.index.name = index_name
+        if reset_index:
+            df.index.name = series_name + "_" if series_name else "" + df.index.name
+            df = df.reset_index()
         return df

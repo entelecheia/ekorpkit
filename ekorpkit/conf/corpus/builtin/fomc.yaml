@@ -3,7 +3,7 @@ defaults:
   - /io/fetcher: fomc
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: fomc
 fullname: Federal Open Market Committee (FOMC) Corpus

@@ -52,7 +52,8 @@ def plot(data, verbose=False, **kwargs):
             plots = [plots]
         for _plot_cfg_ in plots:
             _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNCTION))
-            y = _plot_cfg_.pop("y")
+            _x = _plot_cfg_.pop("x") or x
+            _y = _plot_cfg_.pop("y")
             secondary_y = _plot_cfg_.get("secondary_y", False)
             if secondary_y:
                 secondary_to = _plot_cfg_.get("secondary_to", 0)
@@ -66,7 +67,7 @@ def plot(data, verbose=False, **kwargs):
             else:
                 axno = _plot_cfg_.get("axno", 0)
                 ax = axes[axno]
-            _func_(ax, x, y, data, **_plot_cfg_)
+            _func_(ax, _x, _y, data, **_plot_cfg_)
     else:
         if isinstance(plots, list):
             _plot_cfg_ = plots[0]
@@ -75,17 +76,18 @@ def plot(data, verbose=False, **kwargs):
         _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNCTION))
         if len(ycols) == 1:
             ycols = ycols[0]
-        y = _plot_cfg_.pop("y")
+        _x = _plot_cfg_.pop("x") or xcol
+        _y = _plot_cfg_.pop("y") or ycols
         if _plot_cfg_.get("dataform"):
             dataform = _plot_cfg_.pop("dataform")
         if dataform == "wide":
-            if xcol and xcol in data.columns:
-                _data = data.set_index(xcol)[ycols]
+            if _x and _x in data.columns:
+                _data = data.set_index(_x)[_y]
             else:
-                _data = data[ycols]
+                _data = data[_y]
             _func_(ax, x=None, y=None, data=_data, **_plot_cfg_)
         else:
-            _func_(ax, x=xcol, y=ycols, data=data, **_plot_cfg_)
+            _func_(ax, x=_x, y=_y, data=data, **_plot_cfg_)
 
     if isinstance(figures, dict):
         figures = [figures]

@@ -2,7 +2,7 @@ defaults:
   - _build
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: us_equities_news
 fullname: US Historical Financial News Archive

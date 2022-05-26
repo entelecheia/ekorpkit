@@ -3,7 +3,7 @@ defaults:
   - /io/fetcher: sec_report
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: sec_report
 fullname: Korean Financial Analyst Report Corpus

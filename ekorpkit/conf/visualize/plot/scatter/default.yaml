@@ -1,5 +1,6 @@
 _func_: scatter
 axno: 0
+x:
 y:
 secondary_y: false
 secondary_to: 0

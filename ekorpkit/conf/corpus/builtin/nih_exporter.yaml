@@ -3,7 +3,7 @@ defaults:
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
   - /io/fetcher: nih_exporter
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: nih_exporter
 fullname: NIH ExPORTER Corpus

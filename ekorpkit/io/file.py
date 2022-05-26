@@ -156,16 +156,39 @@ def concat_dataframes(
 
 
 def load_dataframe(
-    filepath,
+    filepath=None,
     filetype=None,
     verbose=False,
     index_col=None,
     columns=None,
+    name=None,
+    data_dir=None,
+    data_file=None,
     **kwargs,
 ):
+    if filepath:
+        data_dir = os.path.dirname(filepath)
+        data_file = os.path.basename(filepath)
+    if data_file:
+        fileinfo = os.path.splitext(data_file)
+        filename = fileinfo[0]
+        filetype = (
+            fileinfo[1]
+            if len(fileinfo) > 1
+            else ("parquet" if not filetype else filetype)
+        )
+    else:
+        filename = f"{name}"
+        if not filetype:
+            filetype = "parquet"
+    filetype = "." + filetype.replace(".", "")
+    filename = f"{filename}{filetype}"
+    filepath = os.path.join(data_dir, filename)
+
+    if not os.path.exists(filepath):
+        log.warning(f"File {filepath} does not exist")
+        return None
     log.info("Loading data from {}".format(filepath))
-    if filetype is None:
-        filetype = os.path.splitext(filepath)[1]
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype:
             df = pd.read_csv(filepath, index_col=index_col, **kwargs)
