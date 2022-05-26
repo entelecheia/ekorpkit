@@ -357,46 +357,31 @@ class FOMC:
         import numpy as np
         from tqdm import tqdm
 
-        rate_list = []
-        decision_list = []
-        rate_change_list = []
-        fedrates = fedrates.copy()[fedrates.index >= self.calendar.index.min()]
+        # fedrates = fedrates.copy()[fedrates.index >= self.calendar.index.min()]
+        fedrates["rate"] = fedrates[series_id].shift(-3)
+        fedrates["prv_rate"] = fedrates[series_id].shift(1)
+        fedrates["rate_change"] = fedrates["rate"] - fedrates["prv_rate"]
+        fedrates["rate_decision"] = np.where(
+            fedrates["rate_change"] > 0, 1, np.where(fedrates["rate_change"] < 0, -1, 0)
+        )
+        index_name = "index"
+        columns = ["rate", "rate_change", "rate_decision"]
         fomc_calendar = self.calendar.copy()
-        for i in tqdm(range(len(fomc_calendar))):
-            not_found = True
-            for j in range(len(fedrates)):
-                if fomc_calendar.index[i] == fedrates.index[j]:
-                    not_found = False
-                    rate_list.append(float(fedrates[series_id].iloc[j + 3]))
-                    rate_change_list.append(
-                        float(fedrates[series_id].iloc[j + 3])
-                        - float(fedrates[series_id].iloc[j - 1])
-                    )
-                    if (
-                        fedrates[series_id].iloc[j - 1]
-                        == fedrates[series_id].iloc[j + 3]
-                    ):
-                        decision_list.append(0)
-                    elif (
-                        fedrates[series_id].iloc[j - 1]
-                        < fedrates[series_id].iloc[j + 3]
-                    ):
-                        decision_list.append(1)
-                    elif (
-                        fedrates[series_id].iloc[j - 1]
-                        > fedrates[series_id].iloc[j + 3]
-                    ):
-                        decision_list.append(-1)
-                    break
-            if not_found:
-                rate_list.append(np.nan)
-                decision_list.append(np.nan)
-                rate_change_list.append(np.nan)
+        results = []
+        for i, row in tqdm(fomc_calendar.iterrows(), total=fomc_calendar.shape[0]):
+            src_ix = fedrates[fedrates.index == row.name].index.min()
+            if not pd.isnull(src_ix):
+                data = fedrates.loc[src_ix, columns].to_dict()
+                data[index_name] = row.name
+                results.append(data)
+            else:
+                data = {col: None for col in columns}
+                data[index_name] = row.name
+                results.append(data)
 
-        fomc_calendar["rate"] = rate_list
-        fomc_calendar["rate_change"] = rate_change_list
-        fomc_calendar["rate_decision"] = decision_list
-        fomc_calendar["rate_decision"] = fomc_calendar["rate_decision"].astype("Int8")
+        results = pd.DataFrame(results)
+        results.set_index(index_name, inplace=True)
+        fomc_calendar[columns] = results[columns]
         fomc_calendar = fomc_calendar[fomc_calendar["rate"].notnull()]
 
         save_dataframe(fomc_calendar, self.calendar_filepath)
@@ -441,16 +426,13 @@ class FOMC:
 
         results = []
         for i, row_tgt in tqdm(target.iterrows(), total=target.shape[0]):
-            not_available = True
-            for j, row_src in source_ma.sort_index(ascending=False).iterrows():
-                if row_tgt.name > row_src.name + date_offset:
-                    data = row_src[columns].to_dict()
-                    data[name + "_date"] = row_src.name
-                    data[index_name] = row_tgt.name
-                    results.append(data)
-                    not_available = False
-                    break
-            if not_available:
+            src_ix = source_ma[source_ma.index < row_tgt.name - date_offset].index.max()
+            if not pd.isnull(src_ix):
+                data = source_ma.loc[src_ix, columns].to_dict()
+                data[name + "_date"] = source_ma.loc[src_ix].name
+                data[index_name] = row_tgt.name
+                results.append(data)
+            else:
                 data = {col: None for col in columns}
                 data[name + "_date"] = None
                 data[index_name] = row_tgt.name
@@ -464,3 +446,96 @@ class FOMC:
         results = pd.DataFrame(results)
         results.set_index(index_name, inplace=True)
         return target.merge(results, how="left", left_index=True, right_index=True)
+
+    # @staticmethod
+    # def add_available_latest(target, source, name, columns, date_offset, window=1):
+    #     from dateutil.relativedelta import relativedelta
+
+    #     date_offset = relativedelta(**date_offset)
+    #     index_name = target.index.name
+    #     source_ma = source.rolling(window).mean()
+
+    #     results = []
+    #     for i, row_tgt in tqdm(target.iterrows(), total=target.shape[0]):
+    #         not_available = True
+    #         for j, row_src in source_ma.sort_index(ascending=False).iterrows():
+    #             if row_tgt.name > row_src.name + date_offset:
+    #                 data = row_src[columns].to_dict()
+    #                 data[name + "_date"] = row_src.name
+    #                 data[index_name] = row_tgt.name
+    #                 results.append(data)
+    #                 not_available = False
+    #                 break
+    #         if not_available:
+    #             data = {col: None for col in columns}
+    #             data[name + "_date"] = None
+    #             data[index_name] = row_tgt.name
+    #             results.append(data)
+    #     if target.shape[0] != len(results):
+    #         print(
+    #             "target has {} rows but returned {} rows from source!".format(
+    #                 target.shape[0], len(results)
+    #             )
+    #         )
+    #     results = pd.DataFrame(results)
+    #     results.set_index(index_name, inplace=True)
+    #     return target.merge(results, how="left", left_index=True, right_index=True)
+
+    # def add_decisions_to_calendar(self, fedrates, series_id="DFEDTAR"):
+    #     """
+    #     The target range was changed a couple of days after the announcement in the past,
+    #      while it is immediately put in effect on the day recently.
+    #     Use the target rate three days after the meeting as target announced,
+    #      compare it with previous day's rate to check if rate has been changed.
+    #       -1: Rate lower
+    #        0: No change
+    #       +1: Rate hike
+    #     """
+    #     import numpy as np
+    #     from tqdm import tqdm
+
+    #     rate_list = []
+    #     decision_list = []
+    #     rate_change_list = []
+    #     fedrates = fedrates.copy()[fedrates.index >= self.calendar.index.min()]
+    #     fomc_calendar = self.calendar.copy()
+    #     for i in tqdm(range(len(fomc_calendar))):
+    #         not_found = True
+    #         for j in range(len(fedrates)):
+    #             if fomc_calendar.index[i] == fedrates.index[j]:
+    #                 not_found = False
+    #                 rate_list.append(float(fedrates[series_id].iloc[j + 3]))
+    #                 rate_change_list.append(
+    #                     float(fedrates[series_id].iloc[j + 3])
+    #                     - float(fedrates[series_id].iloc[j - 1])
+    #                 )
+    #                 if (
+    #                     fedrates[series_id].iloc[j - 1]
+    #                     == fedrates[series_id].iloc[j + 3]
+    #                 ):
+    #                     decision_list.append(0)
+    #                 elif (
+    #                     fedrates[series_id].iloc[j - 1]
+    #                     < fedrates[series_id].iloc[j + 3]
+    #                 ):
+    #                     decision_list.append(1)
+    #                 elif (
+    #                     fedrates[series_id].iloc[j - 1]
+    #                     > fedrates[series_id].iloc[j + 3]
+    #                 ):
+    #                     decision_list.append(-1)
+    #                 break
+    #         if not_found:
+    #             rate_list.append(np.nan)
+    #             decision_list.append(np.nan)
+    #             rate_change_list.append(np.nan)
+
+    #     fomc_calendar["rate"] = rate_list
+    #     fomc_calendar["rate_change"] = rate_change_list
+    #     fomc_calendar["rate_decision"] = decision_list
+    #     fomc_calendar["rate_decision"] = fomc_calendar["rate_decision"].astype("Int8")
+    #     fomc_calendar = fomc_calendar[fomc_calendar["rate"].notnull()]
+
+    #     save_dataframe(fomc_calendar, self.calendar_filepath)
+    #     self.calendar = fomc_calendar
+    #     return fomc_calendar.copy()
