@@ -1,2 +1,5 @@
 _target_: ekorpkit.io.parse.misc.parse_plaintext
 split: false
+meta_line:
+meta_key:
+progress_per: 1000

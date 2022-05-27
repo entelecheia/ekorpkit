@@ -95,10 +95,9 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
         except Exception as e:
             log.critical(f"Error reading {filename}", e)
             continue
-            # raise ValueError(f'Error reading {file}')
 
         if contents is None:
-            # print('contents is empty, skipping')
+            log.warning('contents is empty, skipping')
             continue
         if executor is not None:
             pbar.set_description(f"{filename}")

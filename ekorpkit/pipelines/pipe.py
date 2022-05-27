@@ -89,6 +89,23 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
     return reduce(apply_pipe, pipeline_targets, df)
 
 
+def split_column(df, args):
+    args = eKonf.to_dict(args)
+    verbose = args.get("verbose", False)
+    source = args.get("source")
+    target = args.get("target")
+    _split = args.get("split")
+    if source is None:
+        log.warning("No source specified")
+        return df
+    log.info(f"Split column: {args}")
+    df[target] = df[source].str.split(**_split)
+
+    if verbose:
+        print(df.tail())
+    return df
+
+
 def eval_columns(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
@@ -96,11 +113,9 @@ def eval_columns(df, args):
     engine = args.get("engine", None)
     eval_at = args.get("eval_at", "dataframe")
     if expressions is None:
-        if verbose:
-            log.warning("No expressions specified")
+        log.warning("No expressions specified")
         return df
-    if verbose:
-        log.info(f"Eval columns: {args}")
+    log.info(f"Eval columns: {args}")
     if eval_at == "dataframe":
         if isinstance(expressions, list):
             for expr in expressions:
@@ -108,6 +123,12 @@ def eval_columns(df, args):
         else:
             for col, expr in expressions.items():
                 df[col] = df.eval(expr, engine=engine)
+    elif eval_at == "python":
+        if isinstance(expressions, dict):
+            for col, expr in expressions.items():
+                df[col] = eval(expr)
+        else:
+            log.warning("Expressions must be a dict to eval at python")
     else:
         if isinstance(expressions, list):
             for expr in expressions:
@@ -126,11 +147,9 @@ def combine_columns(df, args):
     verbose = args.get("verbose", False)
     columns = args.get("columns", None)
     if columns is None:
-        if verbose:
-            log.warning("No columns specified")
+        log.warning("No columns specified")
         return df
-    if verbose:
-        log.info(f"Combining columns: {args}")
+    log.info(f"Combining columns: {args}")
     for col in columns:
         df[col].fillna("", inplace=True)
         df[col] = df[col].astype(str)
@@ -606,20 +625,16 @@ def normalize(df, args):
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
-        if verbose:
-            log.warning("No columns specified")
+        log.warning("No columns specified")
         return df
     normalizer = args.get("preprocessor", {}).get("normalizer", None)
     if normalizer is None:
-        if verbose:
-            log.warning("No normalizer specified")
+        log.warning("No normalizer specified")
         return df
     if isinstance(apply_to, str):
         apply_to = [apply_to]
-    if verbose:
-        log.info(f"Normalizing text: {args}")
-    if verbose:
-        log.info("instantiating normalizer")
+    log.info(f"Normalizing text: {args}")
+    log.info("instantiating normalizer")
     normalizer = eKonf.instantiate(normalizer)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
@@ -629,8 +644,7 @@ def normalize(df, args):
                 description=f"Normalizing column: {key}",
                 verbose=verbose,
             )
-            if verbose:
-                log.info(" >> elapsed time to normalize: {}".format(elapsed()))
+            log.info(" >> elapsed time to normalize: {}".format(elapsed()))
     return df
 
 

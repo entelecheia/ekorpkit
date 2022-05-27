@@ -14,9 +14,10 @@ sentence_separator: \n
 verbose: ${oc.select:..verbose, true}
 autoload: true
 
-normalize:
-  preprocessor:
-    normalizer: ${oc.select:corpus.builtin.preprocessor.normalizer,null}
-segment:
-  preprocessor:
-    segmenter: ${oc.select:corpus.builtin.preprocessor.segmenter,null}
+pipeline:
+  normalize:
+    preprocessor:
+      normalizer: ${oc.select:corpus.builtin.preprocessor.normalizer,null}
+  segment:
+    preprocessor:
+      segmenter: ${oc.select:corpus.builtin.preprocessor.segmenter,null}

@@ -1,3 +1,8 @@
+import logging
+
+log = logging.getLogger(__name__)
+
+
 def html_to_json(contents):
     import html_to_json
 
@@ -9,21 +14,35 @@ def html_to_json(contents):
     return [doc]
 
 
-def parse_plaintext(contents, split=False):
+def parse_plaintext(
+    contents, split=False, meta_line=None, meta_key="meta", progress_per=1000, **kwargs
+):
     if split:
         docs = []
         for i, line in enumerate(contents.split("\n")):
+            line = line.strip()
             doc = {"lineno": i, "text": line}
             if i < 2:
-                print(f"processing line {i}")
-                print(doc)
-            elif i % 10000 == 0:
-                print(f"processing line {i}")
+                log.info(f"processing line {i}")
+                log.info(doc)
+            elif progress_per and i % progress_per == 0:
+                log.info(f"processing line {i}")
             docs.append(doc)
         return docs
+    elif meta_line is not None:
+        text = []
+        meta = []
+        for i, line in enumerate(contents.split("\n")):
+            line = line.strip()
+            if i < meta_line:
+                meta.append(line)
+            else:
+                text.append(line)
+        doc = {meta_key: "\n".join(meta), "text": "\n".join(text)}
+        return [doc]
     else:
         doc = {"text": contents.strip()}
-    return [doc]
+        return [doc]
 
 
 def parse_reuters_contents(contents):

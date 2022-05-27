@@ -9,6 +9,7 @@ def cached_path(
     url_or_filename,
     extract_archive: bool = False,
     force_extract: bool = False,
+    return_dir: bool = False,
     cache_dir=None,
     verbose: bool = False,
 ):
@@ -47,8 +48,9 @@ def cached_path(
                     cache_dir=cache_dir,
                 ).as_posix()
 
-            if verbose:
-                log.info(f"cached path: {_path}")
+            log.info(f"cached path: {_path}")
+            if return_dir and pathlib.Path(_path).is_file():
+                _path = pathlib.Path(_path).parent
 
             return _path
 
@@ -96,7 +98,6 @@ def cached_gdown(
         if extract_archive and exclamation_index >= 0:
             extraction_path = path[:exclamation_index]
             fname = path[exclamation_index + 1 :]
-        
 
         cache_path = cache_dir / f".{id}" / extraction_path
         cache_path.parent.mkdir(parents=True, exist_ok=True)
