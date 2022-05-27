@@ -1,0 +1,12 @@
+postags:
+noun_postags:
+  - NNG
+  - NNP
+  - XSN
+  - SL
+  - XR
+  - NNB
+  - NR
+stop_postags:
+  - SP
+no_space_for_non_nouns: false

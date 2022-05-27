@@ -1,37 +1,11 @@
 defaults:
   - stopwords: default
+  - tokenize: default
+  - tokenize_article: default
+  - extract: default
 
 _target_: ekorpkit.preprocessors.tokenizer.Tokenizer
 normalize:
-tokenize:
-  lowercase: false
-  flatten: true
-  concat_surface_and_pos: true
-  include_whitespace_token: true
-  tokenize_each_word: false
-  punct_postags:
-    - SF
-    - SP
-    - SSO
-    - SSC
-    - SY
-  wordpieces_prefix: "##"
-  userdic_path: ${oc.select:..userdic_path, null}
-tokenize_article:
-  sentence_separator: '\n'
-extract:
-  postags:
-  noun_postags:
-    - NNG
-    - NNP
-    - XSN
-    - SL
-    - XR
-    - NNB
-    - NR
-  stop_postags:
-    - SP
-  no_space_for_non_nouns: false
 return_as_list: false
 stopwords_path: ${oc.select:..stopwords_path, null}
 tagset:

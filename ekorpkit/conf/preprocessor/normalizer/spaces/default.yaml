@@ -1,0 +1,5 @@
+strip: true
+fix_whitespaces: true
+collapse_whitespaces: true
+replace_tabs: true
+num_spaces_for_tab: 4

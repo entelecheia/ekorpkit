@@ -1,0 +1,7 @@
+fix_hyphens: true
+fix_ellipsis: true
+fix_slashes: true
+fix_tildes: true
+fix_emoticons: false
+single_quotes_only: false
+regular_parentheses_only: false

@@ -1,0 +1,6 @@
+filter: false
+detection_level: segment
+languages_to_keep:
+  - en
+  - ko
+min_language_probability: 0.8

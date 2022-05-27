@@ -1,0 +1,15 @@
+unescape_html: true
+remove_terminal_escapes: true
+fix_encoding: true
+restore_byte_a0: true
+replace_lossy_sequences: true
+decode_inconsistent_utf8: true
+fix_c1_controls: true
+fix_latin_ligatures: true
+fix_character_width: true
+uncurl_quotes: true
+fix_line_breaks: true
+fix_surrogates: true
+remove_control_chars: true
+normalization: NFKC
+max_decode_length: 1000000

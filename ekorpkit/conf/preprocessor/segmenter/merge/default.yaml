@@ -1,0 +1,4 @@
+merge_lines: false
+merge_level: segment
+empty_lines_threshold: 0.6
+broken_lines_threshold: 0.4
