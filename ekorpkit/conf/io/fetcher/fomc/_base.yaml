@@ -1,0 +1,11 @@
+defaults:
+  - /meta/chairpersons: fomc
+
+name: ${oc.select:.content_type, fomc}
+base_url: https://www.federalreserve.gov
+calendar_url: ${.base_url}/monetarypolicy/fomccalendars.htm
+segment_separator: '\n\n'
+verbose: ${oc.select:..verbose, false}
+force_download: false
+num_workers: ${oc.select:..num_workers, ${num_workers}}
+output_dir: ${oc.select:..output_dir, ${dir.tmp}/${.name}}

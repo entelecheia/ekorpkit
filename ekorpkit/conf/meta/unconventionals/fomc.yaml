@@ -1,0 +1,96 @@
+qe1:
+  name: QE1
+  date: ${to_datetime:2008-11-25}
+  description: QE1 announced
+  unscheduled: true
+  rate: 0.0
+  rate_decision: -2
+  rate_change: -0.5
+qe1+:
+  name: QE1+
+  date: ${to_datetime:2009-03-18}
+  description: QE1 expanded
+  unscheduled: false
+  rate: 0.25
+  rate_decision: -2
+  rate_change: -0.5
+qe2:
+  name: QE2
+  date: ${to_datetime:2010-11-03}
+  description: QE2 announced
+  unscheduled: false
+  rate: 0.25
+  rate_decision: -2
+  rate_change: -0.5
+ot:
+  name: OT
+  date: ${to_datetime:2011-09-21}
+  description: Operation Twist announced
+  unscheduled: false
+  rate: 0.25
+  rate_decision: -2
+  rate_change: -0.5
+ot+:
+  name: OT+
+  date: ${to_datetime:2012-06-20}
+  description: Operation Twist expanded
+  unscheduled: false
+  rate: 0.25
+  rate_decision: -2
+  rate_change: -0.5
+qe3:
+  name: QE3
+  date: ${to_datetime:2012-09-13}
+  description: QE3 announced
+  unscheduled: false
+  rate: 0.25
+  rate_decision: -2
+  rate_change: -0.5
+qe3+:
+  name: QE3+
+  date: ${to_datetime:2012-12-12}
+  description: QE3 expanded
+  unscheduled: false
+  rate: 0.25
+  rate_decision: -2
+  rate_change: -0.5
+tapering:
+  name: Tapering
+  date: ${to_datetime:2013-06-19}
+  description: Tapering announced
+  unscheduled: false
+  rate: 0.25
+  rate_decision: 2
+  rate_change: 1.0
+tapering+:
+  name: Tapering+
+  date: ${to_datetime:2013-12-18}
+  description: Tapering begins
+  unscheduled: false
+  rate: 0.25
+  rate_decision: 2
+  rate_change: 1.0
+qe3-:
+  name: QE3-
+  date: ${to_datetime:2014-10-29}
+  description: QE3 terminated
+  unscheduled: false
+  rate: 0.25
+  rate_decision: 2
+  rate_change: 0.5
+bsnorm:
+  name: BSNorm
+  date: ${to_datetime:2017-06-14}
+  description: Signaled Balance Sheet Normalization
+  unscheduled: false
+  rate: 1.25
+  rate_decision: 2
+  rate_change: 0.5
+bsnorm+:
+  name: BSNorm+
+  date: ${to_datetime:2017-09-20}
+  description: Stated Balance Sheet Normalization Begins in Oct
+  unscheduled: false
+  rate: 1.25
+  rate_decision: 2
+  rate_change: 0.5

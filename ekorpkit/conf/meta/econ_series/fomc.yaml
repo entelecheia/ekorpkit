@@ -1,0 +1,109 @@
+GDP:
+  # GDP is announced quarterly, the end of following month (preliminary)
+  id: GDPC1
+  name: GDP
+  title: Real GDP ($b)
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=4) / value.shift(4) * 100"
+  relativedelta:
+    months: 4
+    days: -2
+GDPPOT:
+  id: GDPPOT
+  name: GDPPOT
+  title: Potential GDP ($b)
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=4) / value.shift(4) * 100"
+  relativedelta:
+    months: 4
+    days: -2
+PCE:
+  # PCE is announced monthly, at the end of following month
+  id: PCEPILFE
+  name: PCE
+  title: PCE
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+  relativedelta:
+    months: 2
+    days: -1
+CPI:
+  # CPI is announced monthly, around 10th of the following month
+  id: CPIAUCSL
+  name: CPI
+  title: CPI
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+  relativedelta:
+    months: 1
+    days: 9
+UNEMP:
+  # Employment statistics is announced monthly, around 3rd of the following month
+  id: UNRATE
+  name: UNEMP
+  title: Unemployment Rate (%)
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+  relativedelta:
+    months: 1
+    days: 2
+EMP:
+  # Employment statistics is announced monthly, around 3rd of the following month
+  id: PAYEMS
+  name: EMP
+  title: Employment (persons)
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+  relativedelta:
+    months: 1
+    days: 2
+PMI:
+  # ISM PMI is areannounced monthly, around 1st of the following month
+  id: ISM/MAN_PMI
+  name: PMI
+  title: PMI
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+  relativedelta:
+    months: 1
+    days: 2
+NMI:
+  # ISM NMI is areannounced monthly, around 1st of the following month
+  id: ISM/NONMAN_NMI
+  name: NMI
+  title: NMI
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+  relativedelta:
+    months: 1
+    days: 2
+RSALES:
+  # Retail Sales is announced monthly, around 15th of the following month
+  id: RRSFS
+  name: RSALES
+  title: Retail Sales {$m}
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+  relativedelta:
+    months: 1
+    days: 2
+HSALES:
+  # New Home Sales is announced monthly, around a week before the end of the following month
+  id: HSN1F
+  name: HSALES
+  title: New Home Sales {$m}
+  expressions:
+    - "value_diff_prev = value.diff() / value.shift(1) * 100"
+    - "value_diff_year = value.diff(periods=12) / value.shift(12) * 100"
+  relativedelta:
+    months: 1
+    days: 2

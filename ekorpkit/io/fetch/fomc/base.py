@@ -1,3 +1,4 @@
+import logging
 import re
 import threading
 import os
@@ -12,29 +13,34 @@ from ekorpkit import eKonf
 from ekorpkit.io.file import save_dataframe, load_dataframe
 
 
-def download_data(fomc, from_year):
+log = logging.getLogger(__name__)
+
+
+def download_data(fomc, from_year, verbose=False):
     if not os.path.exists(fomc.output_filepath) or fomc.force_download:
-        print(f"Downloading {fomc.content_type}")
+        log.info(f"Downloading {fomc.content_type}")
         df = fomc.get_contents(from_year)
-        print("Shape of the downloaded data: ", df.shape)
-        print("The first 5 rows of the data: \n", df.head())
-        print("The last 5 rows of the data: \n", df.tail())
+        log.info("Shape of the downloaded data: ", df.shape)
+        if verbose:
+            print("The first 5 rows of the data: \n", df.head())
+            print("The last 5 rows of the data: \n", df.tail())
         fomc.save()
     else:
-        print(f"{fomc.content_type} already exists")
+        log.info(f"{fomc.content_type} already exists")
 
 
 def build_fomc(**args):
 
     args = eKonf.to_config(args)
     from_year = args.from_year
+    verbose = args.verbose
     if (from_year < 1980) or (from_year > 2020):
-        print("Please specify the second argument between 1980 and 2020")
+        log.warning("Please specify the second argument between 1980 and 2020")
         return
 
     for content in args.contents:
         fomc = eKonf.instantiate(content, **args.fomc)
-        download_data(fomc, from_year)
+        download_data(fomc, from_year, verbose)
 
 
 class FOMC:
@@ -45,8 +51,8 @@ class FOMC:
     def __init__(self, content_type, **args):
         args = eKonf.to_dict(args)
         self.verbose = args["verbose"]
-        if self.verbose:
-            print(content_type)
+        log.info(f"Initializing {content_type}")
+
         # Set arguments to internal variables
         self.content_type = content_type
         self.num_workers = args["num_workers"]
@@ -74,31 +80,24 @@ class FOMC:
         self.base_url = args["base_url"]
         self.calendar_url = args["calendar_url"]
 
+        _meta = args["meta"]
         # FOMC Chairperson's list
-        self.chair = pd.DataFrame(args["chair"])
-        self.chair["from_date"] = pd.to_datetime(self.chair.from_date)
-        self.chair["to_date"] = pd.to_datetime(self.chair.to_date)
+        self.chairpersons = _meta.get("chairpersons")
+        if isinstance(self.chairpersons, dict):
+            self.chairpersons = pd.DataFrame(self.chairpersons.values())
         self.canlendar = None
 
-        self.econ_series = args["econ_series"]
-        self.recessions = pd.DataFrame(args["recessions"])
-        _format = self.recessions.format[0]
-        self.recessions.drop(columns="format", inplace=True)
-        self.recessions["from_date"] = pd.to_datetime(
-            self.recessions.from_date, format=_format
-        )
-        self.recessions["to_date"] = pd.to_datetime(
-            self.recessions.to_date, format=_format
-        )
-        self.unconventionals = pd.DataFrame(args["unconventionals"])
-        _format = self.unconventionals.format[0]
-        self.unconventionals.drop(columns="format", inplace=True)
-        self.unconventionals["date"] = pd.to_datetime(
-            self.unconventionals.date, format=_format
-        )
-        self.unconventionals["chair"] = self.unconventionals.date.map(
-            self._speaker_from_date
-        )
+        self.econ_series = _meta.get("econ_series")
+        self.recessions = _meta.get("recessions")
+        if isinstance(self.recessions, dict):
+            self.recessions = pd.DataFrame(self.recessions.values())
+
+        self.unconventionals = _meta.get("unconventionals")
+        if isinstance(self.unconventionals, dict):
+            self.unconventionals = pd.DataFrame(self.unconventionals.values())
+            self.unconventionals["speaker"] = self.unconventionals.date.map(
+                self._speaker_from_date
+            )
 
         # skip list
         self.skip_text_list = [
@@ -121,14 +120,14 @@ class FOMC:
         if isinstance(article_date, str):
             article_date = datetime.strptime(article_date, "%Y-%m-%d")
 
-        speaker = self.chair.query(
+        speaker = self.chairpersons.query(
             "from_date < @article_date & to_date > @article_date"
         )
         if speaker.empty:
             return "other"
         else:
             speaker = speaker.iloc[0]
-            return speaker.first_name + " " + speaker.surname
+            return speaker.first_name + " " + speaker.last_name
 
     @abstractmethod
     def _get_links(self, from_year):
@@ -299,8 +298,7 @@ class FOMC:
                 panel_headings = soup.find_all("h5", {"class": "panel-heading"})
             else:
                 panel_headings = soup.find_all("div", {"class": "panel-heading"})
-            if self.verbose:
-                print("YEAR: {} - {} meetings found.".format(year, len(panel_headings)))
+            log.info("YEAR: {} - {} meetings found.".format(year, len(panel_headings)))
             for panel_heading in panel_headings:
                 date_text = panel_heading.get_text().strip()
                 # print("Date: ", date_text)
@@ -335,7 +333,7 @@ class FOMC:
 
         df = pd.DataFrame(fomc_dates).sort_values(by=["date"])
 
-        df["chair"] = df.date.map(self._speaker_from_date)
+        df["speaker"] = df.date.map(self._speaker_from_date)
 
         # # Use date as index
         df.set_index("date", inplace=True)
@@ -400,7 +398,7 @@ class FOMC:
 
         fomc_calendar = self.calendar.copy()
         unconventionals = self.unconventionals.copy().set_index("date")
-        columns = ["unscheduled", "chair", "rate", "rate_decision", "rate_change"]
+        columns = ["unscheduled", "speaker", "rate", "rate_decision", "rate_change"]
 
         for ix in unconventionals.index:
             fomc_calendar.loc[ix, columns] = unconventionals.loc[ix, columns]
@@ -446,96 +444,3 @@ class FOMC:
         results = pd.DataFrame(results)
         results.set_index(index_name, inplace=True)
         return target.merge(results, how="left", left_index=True, right_index=True)
-
-    # @staticmethod
-    # def add_available_latest(target, source, name, columns, date_offset, window=1):
-    #     from dateutil.relativedelta import relativedelta
-
-    #     date_offset = relativedelta(**date_offset)
-    #     index_name = target.index.name
-    #     source_ma = source.rolling(window).mean()
-
-    #     results = []
-    #     for i, row_tgt in tqdm(target.iterrows(), total=target.shape[0]):
-    #         not_available = True
-    #         for j, row_src in source_ma.sort_index(ascending=False).iterrows():
-    #             if row_tgt.name > row_src.name + date_offset:
-    #                 data = row_src[columns].to_dict()
-    #                 data[name + "_date"] = row_src.name
-    #                 data[index_name] = row_tgt.name
-    #                 results.append(data)
-    #                 not_available = False
-    #                 break
-    #         if not_available:
-    #             data = {col: None for col in columns}
-    #             data[name + "_date"] = None
-    #             data[index_name] = row_tgt.name
-    #             results.append(data)
-    #     if target.shape[0] != len(results):
-    #         print(
-    #             "target has {} rows but returned {} rows from source!".format(
-    #                 target.shape[0], len(results)
-    #             )
-    #         )
-    #     results = pd.DataFrame(results)
-    #     results.set_index(index_name, inplace=True)
-    #     return target.merge(results, how="left", left_index=True, right_index=True)
-
-    # def add_decisions_to_calendar(self, fedrates, series_id="DFEDTAR"):
-    #     """
-    #     The target range was changed a couple of days after the announcement in the past,
-    #      while it is immediately put in effect on the day recently.
-    #     Use the target rate three days after the meeting as target announced,
-    #      compare it with previous day's rate to check if rate has been changed.
-    #       -1: Rate lower
-    #        0: No change
-    #       +1: Rate hike
-    #     """
-    #     import numpy as np
-    #     from tqdm import tqdm
-
-    #     rate_list = []
-    #     decision_list = []
-    #     rate_change_list = []
-    #     fedrates = fedrates.copy()[fedrates.index >= self.calendar.index.min()]
-    #     fomc_calendar = self.calendar.copy()
-    #     for i in tqdm(range(len(fomc_calendar))):
-    #         not_found = True
-    #         for j in range(len(fedrates)):
-    #             if fomc_calendar.index[i] == fedrates.index[j]:
-    #                 not_found = False
-    #                 rate_list.append(float(fedrates[series_id].iloc[j + 3]))
-    #                 rate_change_list.append(
-    #                     float(fedrates[series_id].iloc[j + 3])
-    #                     - float(fedrates[series_id].iloc[j - 1])
-    #                 )
-    #                 if (
-    #                     fedrates[series_id].iloc[j - 1]
-    #                     == fedrates[series_id].iloc[j + 3]
-    #                 ):
-    #                     decision_list.append(0)
-    #                 elif (
-    #                     fedrates[series_id].iloc[j - 1]
-    #                     < fedrates[series_id].iloc[j + 3]
-    #                 ):
-    #                     decision_list.append(1)
-    #                 elif (
-    #                     fedrates[series_id].iloc[j - 1]
-    #                     > fedrates[series_id].iloc[j + 3]
-    #                 ):
-    #                     decision_list.append(-1)
-    #                 break
-    #         if not_found:
-    #             rate_list.append(np.nan)
-    #             decision_list.append(np.nan)
-    #             rate_change_list.append(np.nan)
-
-    #     fomc_calendar["rate"] = rate_list
-    #     fomc_calendar["rate_change"] = rate_change_list
-    #     fomc_calendar["rate_decision"] = decision_list
-    #     fomc_calendar["rate_decision"] = fomc_calendar["rate_decision"].astype("Int8")
-    #     fomc_calendar = fomc_calendar[fomc_calendar["rate"].notnull()]
-
-    #     save_dataframe(fomc_calendar, self.calendar_filepath)
-    #     self.calendar = fomc_calendar
-    #     return fomc_calendar.copy()

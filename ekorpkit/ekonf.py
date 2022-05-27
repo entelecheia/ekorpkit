@@ -40,9 +40,18 @@ def _today(_format="%Y-%m-%d"):
     from datetime import datetime
 
     if _format is None:
-        return datetime.today()
+        return datetime.today().date()
     else:
         return datetime.today().strftime(_format)
+
+
+def _now(_format="%Y-%m-%d %H:%M:%S"):
+    from datetime import datetime
+
+    if _format is None:
+        return datetime.now()
+    else:
+        return datetime.now().strftime(_format)
 
 
 def _strptime(
@@ -413,7 +422,14 @@ def _run(config: Any, **kwargs: Any) -> Any:
         _instantiate(cfg)
 
 
-def _partial(config: Any, *args: Any, **kwargs: Any) -> Any:
+def _partial(
+    config: Any = None, config_group: str = None, *args: Any, **kwargs: Any
+) -> Any:
+    if config is None and config_group is None:
+        log.warning("No config specified")
+        return None
+    elif config_group is not None:
+        config = _compose(config_group=config_group)
     kwargs[_Keys.PARTIAL] = True
     return _instantiate(config, *args, **kwargs)
 
@@ -677,8 +693,10 @@ class eKonf:
         )
 
     @staticmethod
-    def partial(config: Any, *args: Any, **kwargs: Any) -> Any:
-        return _partial(config, *args, **kwargs)
+    def partial(
+        config: Any = None, config_group: str = None, *args: Any, **kwargs: Any
+    ) -> Any:
+        return _partial(config=config, config_group=config_group, *args, **kwargs)
 
     @staticmethod
     def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
