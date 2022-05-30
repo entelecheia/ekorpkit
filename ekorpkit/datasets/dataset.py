@@ -66,7 +66,7 @@ class Dataset:
         self._column = eKonf.instantiate(self._column_info)
 
         self.pipeline_args = self.args.get("pipeline", {})
-        self.process_pipeline = self.pipeline_args.get("_pipeline_", [])
+        self.process_pipeline = self.pipeline_args.get(eKonf.Keys.PIPELINE, [])
         if self.process_pipeline is None:
             self.process_pipeline = []
 

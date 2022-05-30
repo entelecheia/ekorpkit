@@ -94,7 +94,7 @@ def split_column(df, args):
     verbose = args.get("verbose", False)
     source = args.get("source")
     target = args.get("target")
-    _split = args.get("split")
+    _split = args.get(eKonf.Keys.SPLIT)
     if source is None:
         log.warning("No source specified")
         return df
@@ -953,7 +953,7 @@ def filter_length(df, args, **kwargs):
         if verbose:
             log.warning("No length specified")
         return df
-    len_func = args[eKonf.Keys.FUNCTION].get("len_bytes", None)
+    len_func = args[eKonf.Keys.FUNC].get("len_bytes", None)
     len_func = eKonf.instantiate(len_func)
     _check_max_len = partial(check_max_len, max_len=max_length, len_func=len_func)
     _check_min_len = partial(check_min_len, min_len=min_length, len_func=len_func)
@@ -1151,7 +1151,7 @@ def save_as_text(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
-    corpus_name = args.get("corpus_name", "corpus")
+    corpus_name = args.get("corpus_name", eKonf.Keys.CORPUS)
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
     doc_separator = args.get("doc_separator", "\n\n")
@@ -1241,16 +1241,16 @@ def save_metadata(df, args):
     meta_columns = []
     if isinstance(meta_info, dict):
         meta_columns = list(meta_info.keys())
-        if "split" in meta_columns and "split" not in df.columns:
-            df["split"] = split_name
+        if eKonf.Keys.SPLIT in meta_columns and eKonf.Keys.SPLIT not in df.columns:
+            df[eKonf.Keys.SPLIT] = split_name
         df_meta = df[meta_columns]
         save_dataframe_(df_meta, filepath, filetype, verbose)
 
     data_info = column_info.get("data", None)
     if isinstance(data_info, dict):
         data_keys = list(data_info.keys())
-        # if "split" in data_columns and "split" not in df.columns:
-        #     df["split"] = split_name
+        # if eKonf.Keys.SPLIT in data_columns and eKonf.Keys.SPLIT not in df.columns:
+        #     df[eKonf.Keys.SPLIT] = split_name
         data_columns = [
             col for col in df.columns if col not in meta_columns or col in data_keys
         ]
@@ -1359,7 +1359,7 @@ def summary_stats(df, args):
 def save_as_json(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
-    corpus_name = args.get("corpus_name", "corpus")
+    corpus_name = args.get("corpus_name", eKonf.Keys.CORPUS)
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
     force_ascii = args.get("force_ascii", False)
@@ -1387,7 +1387,7 @@ def pipeline(data=None, **cfg):
     if df is None:
         raise ValueError("No dataframe to process")
 
-    process_pipeline = args.get("_pipeline_", [])
+    process_pipeline = args.get(eKonf.Keys.PIPELINE, [])
     if process_pipeline is None:
         process_pipeline = []
 

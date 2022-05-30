@@ -61,7 +61,7 @@ class HFDS:
                 print(ds)
                 df = ds.to_pandas()
                 df["subset"] = subset
-                df["split"] = split
+                df[eKonf.Keys.SPLIT] = split
                 dfs.append(df)
 
         df = pd.concat(dfs, ignore_index=True)

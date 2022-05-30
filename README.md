@@ -27,7 +27,7 @@ eKorpkit provides a flexible interface for NLP and ML research pipelines such as
 
 ## [Tutorials](https://entelecheia.github.io/ekorpkit-book)
 
-Tutorials for [ekorpkit](https://github.com/entelecheia/ekorpkit) package can be found at https://entelecheia.github.io/ekorpkit-config/
+Tutorials for [ekorpkit](https://github.com/entelecheia/ekorpkit) package can be found at https://entelecheia.github.io/ekorpkit-book/
 
 ## [Installation](https://entelecheia.github.io/ekorpkit-book/docs/basics/install.html)
 

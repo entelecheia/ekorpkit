@@ -1,7 +1,7 @@
 import os
 import logging
 import hydra
-from ekorpkit import eKonf
+from ekorpkit import eKonf, __hydra_version_base__
 from .tasks.info import make_table
 
 
@@ -15,7 +15,7 @@ def cmd(**args):
 def listup(**args):
     ekorpkit_dir = eKonf.__ekorpkit_path__
     corpus_info = {}
-    for name in args["corpus"]["preset"]["corpus"]:
+    for name in args[eKonf.Keys.CORPUS]["preset"][eKonf.Keys.CORPUS]:
         info_path = f"{ekorpkit_dir}/resources/corpora/{name}.yaml"
         info = eKonf.load(info_path)
         corpus_info[name] = info
@@ -33,7 +33,7 @@ def about(**args):
     print(f"\nExecute `{name} --help` to see what eKorpkit provides")
 
 
-@hydra.main(config_path="conf", config_name="config")
+@hydra.main(config_path="conf", config_name="config", version_base=__hydra_version_base__)
 def hydra_main(cfg) -> None:
     verbose = cfg.verbose
 

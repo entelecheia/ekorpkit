@@ -30,8 +30,8 @@ class Data:
             self._column = eKonf.instantiate(self._column_info)
 
     def _load(self, **args):
-        corpus = args.get("corpus") or {}
-        dataset = args.get("dataset") or {}
+        corpus = args.get(eKonf.Keys.CORPUS) or {}
+        dataset = args.get(eKonf.Keys.DATASET) or {}
         data_dir = args.get("data_dir")
         data_file = args.get("data_file")
 

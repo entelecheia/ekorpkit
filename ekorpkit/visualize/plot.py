@@ -57,7 +57,7 @@ def plot(data, verbose=False, **kwargs):
         if isinstance(plots, dict):
             plots = [plots]
         for _plot_cfg_ in plots:
-            _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNCTION))
+            _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNC))
             _x = _plot_cfg_.pop("x") or x
             _y = _plot_cfg_.pop("y")
             secondary_y = _plot_cfg_.get("secondary_y", False)
@@ -78,7 +78,7 @@ def plot(data, verbose=False, **kwargs):
             _plot_cfg_ = plots[0]
         else:
             _plot_cfg_ = plots
-        _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNCTION))
+        _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNC))
         if ycols and len(ycols) == 1:
             ycols = ycols[0]
         _x = _plot_cfg_.pop("x") or xcol

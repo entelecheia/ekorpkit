@@ -2,7 +2,7 @@ import subprocess
 import os
 import logging
 import hydra
-from ekorpkit import eKonf
+from ekorpkit import eKonf, __hydra_version_base__
 
 
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def run_workflow(**args):
             _run_cmd(job_arg)
 
 
-@hydra.main(config_path="conf", config_name="run")
+@hydra.main(config_path="conf", config_name="run", version_base=__hydra_version_base__)
 def main(cfg) -> None:
     verbose = cfg.verbose
 

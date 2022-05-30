@@ -22,7 +22,7 @@ ModelSummary = namedtuple(
     [
         "train_dt",
         "filename",
-        "corpus",
+        eKonf.Keys.CORPUS,
         "model_id",
         "model_type",
         "sample_ratio",

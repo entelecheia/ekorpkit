@@ -44,7 +44,7 @@ def corpora_tasks(**cfg):
         corpora.load()
         corpora.concat_corpora()
 
-        _pipeline_ = pipeline.get("_pipeline_", {})
+        _pipeline_ = pipeline.get(eKonf.Keys.PIPELINE, {})
         df = apply_pipeline(corpora._data, _pipeline_, pipeline)
         log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
@@ -71,7 +71,7 @@ def corpus_tasks(**cfg):
             if merge_metadata:
                 corpus.merge_metadata()
             update_args = {"corpus_name": corpus.name}
-            _pipeline_ = pipeline.get("_pipeline_", {})
+            _pipeline_ = pipeline.get(eKonf.Keys.PIPELINE, {})
             df = apply_pipeline(
                 corpus._data, _pipeline_, pipeline, update_args=update_args
             )

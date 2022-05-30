@@ -16,6 +16,8 @@ from . import _version
 
 log = logging.getLogger(__name__)
 
+__hydra_version_base__ = "1.2"
+
 
 def __ekorpkit_path__():
     return pathlib.Path(__file__).parent.as_posix()
@@ -124,7 +126,9 @@ def _compose(
         key = None
         value = None
     if key and value:
-        with hydra.initialize_config_module(config_module="ekorpkit.conf"):
+        with hydra.initialize_config_module(
+            config_module="ekorpkit.conf", version_base=__hydra_version_base__
+        ):
             cfg = hydra.compose(config_name=config_name, overrides=overrides)
             cfg = _select(
                 cfg,
@@ -143,7 +147,9 @@ def _compose(
                 overrides = [overide]
     if verbose:
         print(f"compose config with overrides: {overrides}")
-    with hydra.initialize_config_module(config_module="ekorpkit.conf"):
+    with hydra.initialize_config_module(
+        config_module="ekorpkit.conf", version_base=__hydra_version_base__
+    ):
         cfg = hydra.compose(config_name=config_name, overrides=overrides)
         if key:
             cfg = _select(
@@ -232,8 +238,15 @@ class _Keys(str, Enum):
     EXEC = "_exec_"
     PARMS = "_parms_"
     METHOD = "_method_"
-    FUNCTION = "_func_"
+    FUNC = "_func_"
     NAME = "_name_"
+    SPLIT = "split"
+    CORPUS = "corpus"
+    DATASET = "dataset"
+    ID = "id"
+    TEXT = "text"
+    TIMESTAMP = "timestamp"
+    DATETIME = "datetime"
 
 
 def _methods(cfg: Any, obj: object):
@@ -281,11 +294,11 @@ def _function(cfg: Any, _name_, return_function=False, **parms):
         log.info("No function defined to execute")
         return None
 
-    if _Keys.FUNCTION not in cfg:
+    if _Keys.FUNC not in cfg:
         log.info("No function defined to execute")
         return None
 
-    _functions_ = cfg[_Keys.FUNCTION]
+    _functions_ = cfg[_Keys.FUNC]
     fn = _partial(_functions_[_name_])
     if _name_ in cfg:
         _parms = cfg[_name_]
@@ -551,7 +564,7 @@ def _stop_env_(cfg, verbose=False):
 
 
 def apply_pipe(df, pipe):
-    _func_ = pipe.get(_Keys.FUNCTION)
+    _func_ = pipe.get(_Keys.FUNC)
     fn = eKonf.partial(_func_)
     log.info(f"Applying pipe: {fn}")
     if isinstance(df, dict):

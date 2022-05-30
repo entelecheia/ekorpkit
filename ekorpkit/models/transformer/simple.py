@@ -19,7 +19,7 @@ class SimpleTrainer:
         self.verbose = args.get("verbose", True)
         self._model_cfg = args["config"]
         self._model_eval = args.get("model", {}).get("eval")
-        self._dataset = args.get("dataset", None)
+        self._dataset = args.get(eKonf.Keys.DATASET, None)
         self._to_predict = args["to_predict"]
         self._to_train = args["to_train"]
         self._method_ = self.args.get("_method_")

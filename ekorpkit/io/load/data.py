@@ -7,6 +7,7 @@ from ekorpkit.io.parse.json import parse_data
 from joblib import Parallel, delayed
 from ekorpkit.utils.batch.batcher import tqdm_joblib
 from ekorpkit.io.file import get_files_from_archive, get_filepaths
+from ekorpkit import eKonf
 
 
 log = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ def load_data(split_name, **loader_cfg):
     # data_items =  args['data']['item'].keys()
     multiprocessing_at = loader_cfg.get("multiprocessing_at", "load_data")
 
-    default_items = {"split": split_name}
+    default_items = {eKonf.Keys.SPLIT: split_name}
     documents = []
     num_workers = num_workers if num_workers else 1
     num_files = len(filepaths)
@@ -97,7 +98,7 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
             continue
 
         if contents is None:
-            log.warning('contents is empty, skipping')
+            log.warning("contents is empty, skipping")
             continue
         if executor is not None:
             pbar.set_description(f"{filename}")

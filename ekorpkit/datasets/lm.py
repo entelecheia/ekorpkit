@@ -100,7 +100,7 @@ class HFDS(Dataset):
         self.name = args["name"]
         self.path = args["path"]
         self.subset = args["subset"]
-        self.split = args["split"]
+        self.split = args[eKonf.Keys.SPLIT]
         self.download_mode = args["download_mode"]
         self.cache_dir = args["cache_dir"]
         self.streaming = args["streaming"]

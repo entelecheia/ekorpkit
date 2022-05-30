@@ -10,21 +10,21 @@ log = logging.getLogger(__name__)
 
 
 def build_corpus(**args):
-    cfg = args.get("corpus", {}).get("builtin", None)
+    cfg = args.get(eKonf.Keys.CORPUS, {}).get("builtin", None)
     # print(cfg)
     if cfg:
         DatasetBuilder(**cfg)
 
 
 def build_t5(**args):
-    cfg = args.get("dataset", {}).get("t5", None)
+    cfg = args.get(eKonf.Keys.DATASET, {}).get("t5", None)
     # print(cfg)
     if cfg:
         DatasetBuilder(**cfg)
 
 
 def build_simple(**args):
-    cfg = args.get("dataset", {}).get("simple", None)
+    cfg = args.get(eKonf.Keys.DATASET, {}).get("simple", None)
     # print(cfg)
     if cfg:
         DatasetBuilder(**cfg)

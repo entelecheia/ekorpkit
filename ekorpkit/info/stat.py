@@ -168,7 +168,7 @@ def summary_stats(
     rename_columns = args.get("rename_columns", None)
     convert_to_humanbytes = args.get("convert_to_humanbytes", None)
     num_workers = args.get("num_workers", None)
-    _func_ = args.get(eKonf.Keys.FUNCTION, None)
+    _func_ = args.get(eKonf.Keys.FUNC, None)
 
     df = df.copy(deep=True)
     num_workers = num_workers if num_workers else 1

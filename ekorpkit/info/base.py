@@ -10,14 +10,7 @@ class ColumnInfo:
     def __init__(self, **args):
         self.args = eKonf.to_dict(args)
 
-        self._id_key = "id"
-        self._text_key = "text"
         self._merge_meta_on_key = "merge_meta_on"
-        self._timestamp_key = "timestamp"
-        self._datetime_key = "datetime"
-        self._split_key = "split"
-        self._corpus_key = "corpus"
-        self._dataset_key = "dataset"
         self._orginal_id_key = "_id"
 
         self.KEYs = self.KEYs
@@ -199,11 +192,11 @@ class ColumnInfo:
 
     @property
     def ID(self):
-        return self._id_key
+        return eKonf.Keys.ID
 
     @ID.setter
     def ID(self, value):
-        self.KEYs[self._id_key] = value
+        self.KEYs[eKonf.Keys.ID] = value
 
     @property
     def _ID(self):
@@ -227,27 +220,27 @@ class ColumnInfo:
 
     @property
     def IDs(self):
-        return eKonf.ensure_list(self.COLUMNs[self._id_key])
+        return eKonf.ensure_list(self.COLUMNs[eKonf.Keys.ID])
 
     @IDs.setter
     def IDs(self, value):
-        self.COLUMNs[self._id_key] = value
+        self.COLUMNs[eKonf.Keys.ID] = value
 
     @property
     def TEXT(self):
-        return self._text_key
+        return eKonf.Keys.TEXT
 
     @TEXT.setter
     def TEXT(self, value):
-        self.KEYs[self._text_key] = value
+        self.KEYs[eKonf.Keys.TEXT] = value
 
     @property
     def TEXTs(self):
-        return eKonf.ensure_list(self.COLUMNs[self._text_key])
+        return eKonf.ensure_list(self.COLUMNs[eKonf.Keys.TEXT])
 
     @TEXTs.setter
     def TEXTs(self, value):
-        self.COLUMNs[self._text_key] = value
+        self.COLUMNs[eKonf.Keys.TEXT] = value
 
     @property
     def DATA(self):
@@ -263,35 +256,35 @@ class ColumnInfo:
 
     @property
     def TIMESTAMP(self):
-        return self._timestamp_key
+        return eKonf.Keys.TIMESTAMP
 
     @TIMESTAMP.setter
     def TIMESTAMP(self, value):
-        self.KEYs[self._timestamp_key] = value
+        self.KEYs[eKonf.Keys.TIMESTAMP] = value
 
     @property
     def SPLIT(self):
-        return self.KEYs.get(self._split_key) or self._split_key
+        return self.KEYs.get(eKonf.Keys.SPLIT) or eKonf.Keys.SPLIT
 
     @SPLIT.setter
     def SPLIT(self, value):
-        self.KEYs[self._split_key] = value
+        self.KEYs[eKonf.Keys.SPLIT] = value
 
     @property
     def CORPUS(self):
-        return self.KEYs.get(self._corpus_key) or self._corpus_key
+        return self.KEYs.get(eKonf.Keys.CORPUS) or eKonf.Keys.CORPUS
 
     @CORPUS.setter
     def CORPUS(self, value):
-        self.KEYs[self._corpus_key] = value
+        self.KEYs[eKonf.Keys.CORPUS] = value
 
     @property
     def DATASET(self):
-        return self.KEYs.get(self._dataset_key) or self._dataset_key
+        return self.KEYs.get(eKonf.Keys.DATASET) or eKonf.Keys.DATASET
 
     @DATASET.setter
     def DATASET(self, value):
-        self.KEYs[self._dataset_key] = value
+        self.KEYs[eKonf.Keys.DATASET] = value
 
     @property
     def KEYs(self):
@@ -327,19 +320,19 @@ class ColumnInfo:
 
     @property
     def TIMESTAMP_PARM(self):
-        return self.INFO.get(self._timestamp_key)
+        return self.INFO.get(eKonf.Keys.TIMESTAMP)
 
     @TIMESTAMP_PARM.setter
     def TIMESTAMP_PARM(self, value):
-        self.INFO[self._timestamp_key] = value
+        self.INFO[eKonf.Keys.TIMESTAMP] = value
 
     @property
     def DATETIME_PARM(self):
-        return self.INFO.get(self._datetime_key)
+        return self.INFO.get(eKonf.Keys.DATETIME)
 
     @DATETIME_PARM.setter
     def DATETIME_PARM(self, value):
-        self.INFO[self._datetime_key] = value
+        self.INFO[eKonf.Keys.DATETIME] = value
 
     @property
     def SEGMENT_SEP(self):
