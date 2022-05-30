@@ -77,7 +77,7 @@ def _path(
     url_or_filename,
     extract_archive: bool = False,
     force_extract: bool = False,
-    return_dir: bool = False,
+    return_parent_dir: bool = False,
     cache_dir=None,
     verbose: bool = False,
 ):
@@ -85,7 +85,7 @@ def _path(
         url_or_filename,
         extract_archive=extract_archive,
         force_extract=force_extract,
-        return_dir=return_dir,
+        return_parent_dir=return_parent_dir,
         cache_dir=cache_dir,
         verbose=verbose,
     )
@@ -244,6 +244,8 @@ class _Keys(str, Enum):
     CORPUS = "corpus"
     DATASET = "dataset"
     ID = "id"
+    _ID = "_id_"
+    META_MERGE_ON = "meta_merge_on"
     TEXT = "text"
     TIMESTAMP = "timestamp"
     DATETIME = "datetime"
@@ -796,6 +798,7 @@ class eKonf:
         url_or_filename,
         extract_archive: bool = False,
         force_extract: bool = False,
+        return_parent_dir: bool = False,
         cache_dir=None,
     ):
         """
@@ -883,6 +886,7 @@ class eKonf:
             url_or_filename,
             extract_archive=extract_archive,
             force_extract=force_extract,
+            return_parent_dir=return_parent_dir,
             cache_dir=cache_dir,
         )
 

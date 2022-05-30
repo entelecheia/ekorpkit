@@ -1380,10 +1380,13 @@ def pipeline(data=None, **cfg):
     args = eKonf.to_dict(cfg)
     verbose = args.get("verbose", False)
 
-    if eKonf.is_instantiatable(data):
-        data = eKonf.instantiate(data)
+    if isinstance(data, pd.DataFrame):
+        df = data.copy()
+    else:
+        if eKonf.is_instantiatable(data):
+            data = eKonf.instantiate(data)
+        df = data.data.copy()
 
-    df = data.data
     if df is None:
         raise ValueError("No dataframe to process")
 

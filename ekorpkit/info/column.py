@@ -10,9 +10,6 @@ class ColumnInfo:
     def __init__(self, **args):
         self.args = eKonf.to_dict(args)
 
-        self._merge_meta_on_key = "merge_meta_on"
-        self._orginal_id_key = "_id"
-
         self.KEYs = self.KEYs
         self.COLUMNs = self.COLUMNs
         self.DATATYPEs = self.DATATYPEs
@@ -130,7 +127,7 @@ class ColumnInfo:
             if self.METADATA and self.SPLIT not in self.METADATA:
                 self.METATYPEs[self.SPLIT] = "str"
 
-            log.info(f"Added split column [{self.SPLIT}] with value [{_split}]")
+            log.info(f"Added a column [{self.SPLIT}] with value [{_split}]")
 
         return data
 
@@ -147,7 +144,7 @@ class ColumnInfo:
             if self.METADATA and self.CORPUS not in self.METADATA:
                 self.METATYPEs[self.CORPUS] = "str"
 
-            log.info(f"Added corpus column [{self.CORPUS}] with value [{_corpus}]")
+            log.info(f"Added a column [{self.CORPUS}] with value [{_corpus}]")
 
         return data
 
@@ -174,7 +171,7 @@ class ColumnInfo:
             if self.DATA and self.DATASET not in self.DATA:
                 self.DATATYPEs[self.DATASET] = "str"
 
-            log.info(f"Added dataset column [{self.DATASET}] with value [{_dataset}]")
+            log.info(f"Added a column [{self.DATASET}] with value [{_dataset}]")
 
         return data
 
@@ -192,7 +189,7 @@ class ColumnInfo:
 
     @property
     def ID(self):
-        return eKonf.Keys.ID
+        return eKonf.Keys.ID.value
 
     @ID.setter
     def ID(self, value):
@@ -200,11 +197,11 @@ class ColumnInfo:
 
     @property
     def _ID(self):
-        return self.KEYs.get(self._orginal_id_key) or self._orginal_id_key
+        return self.KEYs.get(eKonf.Keys._ID) or eKonf.Keys._ID.value
 
     @_ID.setter
     def _ID(self, value):
-        self.KEYs[self._orginal_id_key] = value
+        self.KEYs[eKonf.Keys._ID] = value
 
     @property
     def ID_SEPARATOR(self):
@@ -212,11 +209,11 @@ class ColumnInfo:
 
     @property
     def MERGE_META_ON(self):
-        return eKonf.ensure_list(self.COLUMNs[self._merge_meta_on_key]) or self.IDs
+        return eKonf.ensure_list(self.COLUMNs.get(eKonf.Keys.META_MERGE_ON)) or self.IDs
 
     @MERGE_META_ON.setter
     def MERGE_META_ON(self, value):
-        self.COLUMNs[self._merge_meta_on_key] = value
+        self.COLUMNs[eKonf.Keys.META_MERGE_ON] = value
 
     @property
     def IDs(self):
@@ -228,7 +225,7 @@ class ColumnInfo:
 
     @property
     def TEXT(self):
-        return eKonf.Keys.TEXT
+        return eKonf.Keys.TEXT.value
 
     @TEXT.setter
     def TEXT(self, value):
@@ -256,7 +253,7 @@ class ColumnInfo:
 
     @property
     def TIMESTAMP(self):
-        return eKonf.Keys.TIMESTAMP
+        return eKonf.Keys.TIMESTAMP.value
 
     @TIMESTAMP.setter
     def TIMESTAMP(self, value):
@@ -264,7 +261,7 @@ class ColumnInfo:
 
     @property
     def SPLIT(self):
-        return self.KEYs.get(eKonf.Keys.SPLIT) or eKonf.Keys.SPLIT
+        return self.KEYs.get(eKonf.Keys.SPLIT) or eKonf.Keys.SPLIT.value
 
     @SPLIT.setter
     def SPLIT(self, value):
@@ -272,7 +269,7 @@ class ColumnInfo:
 
     @property
     def CORPUS(self):
-        return self.KEYs.get(eKonf.Keys.CORPUS) or eKonf.Keys.CORPUS
+        return self.KEYs.get(eKonf.Keys.CORPUS) or eKonf.Keys.CORPUS.value
 
     @CORPUS.setter
     def CORPUS(self, value):
@@ -280,7 +277,7 @@ class ColumnInfo:
 
     @property
     def DATASET(self):
-        return self.KEYs.get(eKonf.Keys.DATASET) or eKonf.Keys.DATASET
+        return self.KEYs.get(eKonf.Keys.DATASET) or eKonf.Keys.DATASET.value
 
     @DATASET.setter
     def DATASET(self, value):

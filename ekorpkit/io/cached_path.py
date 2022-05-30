@@ -9,7 +9,7 @@ def cached_path(
     url_or_filename,
     extract_archive: bool = False,
     force_extract: bool = False,
-    return_dir: bool = False,
+    return_parent_dir: bool = False,
     cache_dir=None,
     verbose: bool = False,
 ):
@@ -49,7 +49,7 @@ def cached_path(
                 ).as_posix()
 
             log.info(f"cached path: {_path}")
-            if return_dir and pathlib.Path(_path).is_file():
+            if return_parent_dir and pathlib.Path(_path).is_file():
                 _path = pathlib.Path(_path).parent
 
             return _path
