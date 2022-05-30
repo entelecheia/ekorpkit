@@ -40,7 +40,7 @@ def test_predict_sentiments():
     cfg = eKonf.compose(config_group="pipeline")
     cfg.verbose = True
     cfg.output_dir = "./data/tmp/predict"
-    cfg.dataset = ds_cfg
+    cfg.data.dataset = ds_cfg
     cfg._pipeline_ = ["subset", "predict"]
     cfg.subset.sample_frac = 0.5
     cfg.predict.model = model_cfg
@@ -66,14 +66,14 @@ def test_eval_sentiments():
 
 @pytest.mark.skip(reason=".")
 def test_eval_fomc_sentiments():
-    cfg = eKonf.compose(config_group="corpus")
+    cfg = eKonf.compose(config_group=eKonf.Keys.CORPUS)
     cfg.name = "fomc"
     cfg.data_dir = "${cached_path:'https://github.com/entelecheia/ekorpkit-config/raw/main/data/fomc.zip',true,false}"
     cfg.automerge = True
     fomc = eKonf.instantiate(cfg)
 
     fomc_statements = fomc.data[fomc.data.content_type == "fomc_statement"]
-    fomc_statements.set_index("timestamp", inplace=True)
+    fomc_statements.set_index(eKonf.Keys.TIMESTAMP, inplace=True)
 
     assert True 
 

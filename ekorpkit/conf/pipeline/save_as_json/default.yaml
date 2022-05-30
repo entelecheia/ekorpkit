@@ -1,5 +1,5 @@
 defaults:
-  - /function: save_as_json
+  - /_func_: save_as_json
 
 apply_to: ${oc.select:..apply_to, text}
 task_dir: corpus_txt

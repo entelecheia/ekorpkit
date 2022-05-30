@@ -31,7 +31,7 @@ meta_files:
   train: meta-aihub_koen_formal-train.parquet
   test: meta-aihub_koen_formal-test.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

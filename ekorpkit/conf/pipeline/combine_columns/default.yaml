@@ -1,5 +1,5 @@
 defaults:
-  - /function: combine_columns
+  - /_func_: combine_columns
 
 into: text
 columns:

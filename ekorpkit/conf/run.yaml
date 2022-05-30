@@ -10,7 +10,7 @@ defaults:
   - workflow: null
 
   - override hydra/help: help
-  - override hydra/hydra_logging: colorlog
+  - override hydra/hydra_logging: disabled
   - override hydra/job_logging: colorlog
 
 ekorpkit:

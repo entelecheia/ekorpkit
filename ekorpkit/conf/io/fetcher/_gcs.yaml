@@ -1,5 +1,5 @@
 defaults:
   - _default
   
-_target_: ekorpkit.io.download.web.download_from_gcs
+_target_: ekorpkit.io.fetch.web.download_from_gcs
 data_sources:

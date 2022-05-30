@@ -14,7 +14,7 @@ lang: ko
 category: informal
 domain: mixed
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

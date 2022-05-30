@@ -24,7 +24,7 @@ meta_files:
   train: meta-aihub_book-train.parquet
   test: meta-aihub_book-test.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

@@ -1,11 +1,11 @@
 defaults:
-  - /function: load_dataframe
+  - /_func_: load_dataframe
 
 filepath:
 filetype:
 data_dir: ${oc.select:..data_dir, ''}
 data_file: ${oc.select:..data_file, ''}
-columns_to_keep:
+columns:
 concatenate: true
 dtype:
 parse_dates:

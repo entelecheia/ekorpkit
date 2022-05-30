@@ -1,13 +1,7 @@
 defaults:
+  - _default
   - loader: parser
 
-name: ${oc.select:..name,''}
 data_dir: ${dir.archive}/datasets/source/${.name}
-data_sources:
-  train: 
-num_workers: ${oc.select:task.num_workers,100}
-force_download: false
-overwrite: false
 calculate_stats: true
 preprocess_text: true
-verbose: ${oc.select:verbose, false}

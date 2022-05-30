@@ -1,0 +1,24 @@
+keys:
+  id: id
+  text: text
+  timestamp: timestamp
+  split: split
+columns:
+  id: ${oc.select:..keys.id,id}
+  text: ${oc.select:..keys.text,text}
+  merge_meta_on: ${oc.select:..id}
+  timestamp: ${oc.select:..timestamp.key,timestamp}
+data:
+  id: int
+  text: str
+meta:
+timestamp:
+  key:
+  format:
+  _parms_:
+datetime:
+  key:
+  format:
+  _parms_:
+segment_separator: ${oc.select:..segment_separator, '\n\n'}
+sentence_separator: ${oc.select:..sentence_separator, '\n'}

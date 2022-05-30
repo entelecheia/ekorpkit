@@ -1,5 +1,5 @@
 defaults:
-  - /function: split_sampling
+  - /_func_: split_sampling
 
 stratify_on:
 random_state: 987

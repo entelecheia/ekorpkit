@@ -3,5 +3,5 @@ name: stopwords
 lowercase: true
 stopwords:
 stopwords_path: ${oc.select:..stopwords_path, null}
-nltk_stopwords: english
+nltk_stopwords:
 verbose: ${oc.select:..verbose, false}

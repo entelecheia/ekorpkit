@@ -1,5 +1,5 @@
 defaults:
-  - /function: plot
+  - /_func_: plot
 
 output_dir: 
 output_file:

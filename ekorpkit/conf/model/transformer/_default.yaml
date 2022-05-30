@@ -1,4 +1,4 @@
-_call_:
+_method_:
 name: ${oc.select:..name, ${.model_name}-${.model_class}}
 dataset: ${dataset}
 model_class:

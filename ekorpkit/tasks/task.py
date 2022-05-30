@@ -20,10 +20,10 @@ def topic_tasks(**cfg):
 
         for subtask in _subtasks_:
             subtask_cfg = subtasks[subtask]
-            if "_target_" in subtask_cfg:
+            if eKonf.Keys.TARGET in subtask_cfg:
                 log.info(f"Instantiate {subtask} ...")
                 eKonf.instantiate(subtask_cfg, model=model)
-            elif "_name_" in subtask_cfg:
+            elif eKonf.Keys.NAME in subtask_cfg:
                 log.info(f"Running model.{subtask} ...")
                 getattr(model, subtask)(**subtask_cfg)
             else:
@@ -44,7 +44,7 @@ def corpora_tasks(**cfg):
         corpora.load()
         corpora.concat_corpora()
 
-        _pipeline_ = pipeline.get("_pipeline_", {})
+        _pipeline_ = pipeline.get(eKonf.Keys.PIPELINE, {})
         df = apply_pipeline(corpora._data, _pipeline_, pipeline)
         log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
@@ -71,7 +71,7 @@ def corpus_tasks(**cfg):
             if merge_metadata:
                 corpus.merge_metadata()
             update_args = {"corpus_name": corpus.name}
-            _pipeline_ = pipeline.get("_pipeline_", {})
+            _pipeline_ = pipeline.get(eKonf.Keys.PIPELINE, {})
             df = apply_pipeline(
                 corpus._data, _pipeline_, pipeline, update_args=update_args
             )

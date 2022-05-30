@@ -27,6 +27,7 @@ defaults:
   - save_metadata: default
   - save_samples: default
   - segment: default
+  - split_column: default
   - split_dataframe: default
   - split_sampling: default
   - stdout_samples: default

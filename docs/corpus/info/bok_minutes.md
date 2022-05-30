@@ -29,7 +29,7 @@ data_files:
 meta_files:
   train: meta-bok_minutes-train.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

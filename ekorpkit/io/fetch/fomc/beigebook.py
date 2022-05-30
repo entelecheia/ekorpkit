@@ -5,10 +5,10 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 # Import parent class
-from .base import FomcBase
+from .base import FOMC
 
 
-class BeigeBook(FomcBase):
+class BeigeBook(FOMC):
     """
     A convenient class for extracting statement from the FOMC website
     """

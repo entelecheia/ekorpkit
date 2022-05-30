@@ -28,7 +28,7 @@ data_files:
 meta_files:
   train: meta-enron_mail-train.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

@@ -1,6 +1,6 @@
 defaults:
-  - /function: general_function
-  - /_call_: replace
+  - /_func_: general_function
+  - /_method_: replace
 
 apply_to: ${oc.select:..apply_to, ''}
 parameters:

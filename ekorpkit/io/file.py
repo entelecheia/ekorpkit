@@ -4,7 +4,7 @@ import pandas as pd
 from glob import glob
 from pathlib import Path
 from ekorpkit.utils.func import elapsed_timer
-
+from ekorpkit import eKonf
 
 log = logging.getLogger(__name__)
 
@@ -68,25 +68,50 @@ def get_files_from_archive(archive_path, filetype=None):
 
 def save_dataframe(
     df,
-    filepath,
+    filepath=None,
     filetype=None,
     verbose=False,
     index=False,
-    columns_to_keep=None,
+    columns=None,
+    name=None,
+    _name_=None,
+    output_dir=None,
+    output_file=None,
     **kwargs,
 ):
     if df is None:
         log.warning("Dataframe is None")
         return df
-    if columns_to_keep is not None:
-        df = df[columns_to_keep]
+    if isinstance(columns, list):
+        df = df[columns]
     if verbose > 1:
         print(df.tail())
 
-    output_dir = os.path.dirname(filepath)
+    if filepath:
+        output_dir = os.path.dirname(filepath)
+        output_file = os.path.basename(filepath)
+    if output_file:
+        fileinfo = os.path.splitext(output_file)
+        filename = fileinfo[0]
+        filetype = (
+            fileinfo[1]
+            if len(fileinfo) > 1
+            else ("parquet" if not filetype else filetype)
+        )
+    else:
+        filename = f"{name}"
+        if not filetype:
+            filetype = "parquet"
+    filetype = "." + filetype.replace(".", "")
+    if _name_ is not None:
+        if _name_.endswith(filetype):
+            filename = f"{filename}-{_name_}"
+        else:
+            filename = f"{filename}-{_name_}{filetype}"
+    else:
+        filename = f"{filename}{filetype}"
+    filepath = os.path.join(output_dir, filename)
     os.makedirs(os.path.abspath(output_dir), exist_ok=True)
-    if filetype is None:
-        filetype = os.path.splitext(filepath)[1]
 
     log.info(f"Saving dataframe as {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
@@ -99,13 +124,71 @@ def save_dataframe(
         if verbose:
             log.info(" >> elapsed time to save data: {}".format(elapsed()))
     if verbose:
-        print(f" >> saved dataframe to {filepath}")
+        log.info(f" >> saved dataframe to {filepath}")
 
 
-def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwargs):
+def concat_dataframes(
+    data,
+    add_key_as_name=False,
+    name_column=eKonf.Keys.NAME,
+    concat={},
+    columns=None,
+    verbose=False,
+    **kwargs,
+):
+    if isinstance(data, dict):
+        log.info(f"Concatenating {len(data)} dataframes")
+        dfs = []
+        for df_name in data:
+            df_each = data[df_name]
+            if isinstance(columns, list):
+                columns = [c for c in columns if c in df_each.columns]
+                df_each = df_each[columns]
+            if add_key_as_name:
+                df_each[name_column] = df_name
+            dfs.append(df_each)
+        data = pd.concat(dfs, **concat)
+        return data
+    else:
+        if verbose:
+            log.info("Returning the original dataframe")
+        return data
+
+
+def load_dataframe(
+    filepath=None,
+    filetype=None,
+    verbose=False,
+    index_col=None,
+    columns=None,
+    name=None,
+    data_dir=None,
+    data_file=None,
+    **kwargs,
+):
+    if filepath:
+        data_dir = os.path.dirname(filepath)
+        data_file = os.path.basename(filepath)
+    if data_file:
+        fileinfo = os.path.splitext(data_file)
+        filename = fileinfo[0]
+        filetype = (
+            fileinfo[1]
+            if len(fileinfo) > 1
+            else ("parquet" if not filetype else filetype)
+        )
+    else:
+        filename = f"{name}"
+        if not filetype:
+            filetype = "parquet"
+    filetype = "." + filetype.replace(".", "")
+    filename = f"{filename}{filetype}"
+    filepath = os.path.join(data_dir, filename)
+
+    if not os.path.exists(filepath):
+        log.warning(f"File {filepath} does not exist")
+        return None
     log.info("Loading data from {}".format(filepath))
-    if filetype is None:
-        filetype = os.path.splitext(filepath)[1]
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype:
             df = pd.read_csv(filepath, index_col=index_col, **kwargs)
@@ -115,6 +198,9 @@ def load_dataframe(filepath, filetype=None, verbose=False, index_col=None, **kwa
             df = pd.read_parquet(filepath, engine="pyarrow")
         else:
             raise ValueError("filetype must be .csv or .parquet")
+        if isinstance(columns, list):
+            columns = [c for c in columns if c in df.columns]
+            df = df[columns]
         if verbose:
             log.info(" >> elapsed time to load data: {}".format(elapsed()))
     return df

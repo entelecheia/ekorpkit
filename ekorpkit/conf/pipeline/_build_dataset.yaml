@@ -5,4 +5,4 @@ _transform_:
   - reset_index
 _preprocess_:
   - save_samples
-apply_to: ${oc.select:..column_info.keys.text, text}
+apply_to: ${oc.select:..column_info.columns:.text, text}

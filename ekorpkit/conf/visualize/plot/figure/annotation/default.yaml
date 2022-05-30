@@ -1,0 +1,13 @@
+text:
+x:
+y:
+xy:
+xtext:
+ytext:
+xytext:
+bbox:
+  boxstyle: round
+  facecolor: wheat
+  alpha: 0.5
+ha: center
+va: center

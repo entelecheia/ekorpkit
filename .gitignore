@@ -3,7 +3,7 @@
 tmp
 package-lock.json
 node_modules/
-data
+/data
 logs/
 workspace/
 .history/

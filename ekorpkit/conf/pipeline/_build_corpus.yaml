@@ -8,5 +8,5 @@ _preprocess_:
   - fillna
   - filter_length
   - drop_duplicates
-apply_to: ${oc.select:..column_info.keys.text, text}
+apply_to: ${oc.select:..column_info.columns:.text, text}
 data_dir:

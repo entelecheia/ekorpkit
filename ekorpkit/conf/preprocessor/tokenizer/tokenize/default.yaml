@@ -1,0 +1,13 @@
+lowercase: false
+flatten: true
+concat_surface_and_pos: true
+include_whitespace_token: true
+tokenize_each_word: false
+punct_postags:
+  - SF
+  - SP
+  - SSO
+  - SSC
+  - SY
+wordpieces_prefix: "##"
+userdic_path: ${oc.select:..userdic_path, null}

@@ -1,0 +1,5 @@
+_partial_: true
+_target_: ekorpkit.models.ngram.score.branching_entropy
+name: branching_entropy
+min_count: ${oc.select:..candidates.min_count,10}
+delimiter: ${oc.select:..ngram.delimiter,_}

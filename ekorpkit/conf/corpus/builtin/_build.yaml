@@ -1,9 +1,10 @@
 defaults:
+  - /column_info: _build
   - /io: _build_corpus
   - /info: _build_corpus
   - /pipeline: _build_corpus
 
-_target_: ekorpkit.io.fetch.build.DatasetBuilder
+_target_: ekorpkit.corpora.build.DatasetBuilder
 name:
 data_dir: ${dir.corpus}/${.name}
 # data_dir: ${dir.archive}/datasets/lmdata/${.name}
@@ -13,9 +14,10 @@ sentence_separator: \n
 verbose: ${oc.select:..verbose, true}
 autoload: true
 
-normalize:
-  preprocessor:
-    normalizer: ${oc.select:corpus.builtin.preprocessor.normalizer,null}
-segment:
-  preprocessor:
-    segmenter: ${oc.select:corpus.builtin.preprocessor.segmenter,null}
+pipeline:
+  normalize:
+    preprocessor:
+      normalizer: ${oc.select:corpus.builtin.preprocessor.normalizer,null}
+  segment:
+    preprocessor:
+      segmenter: ${oc.select:corpus.builtin.preprocessor.segmenter,null}

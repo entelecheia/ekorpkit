@@ -10,8 +10,4 @@ verbose: ${oc.select:..verbose, true}
 collapse_ids: false
 column_info:
   keys:
-    id: id
-    text: text
-  data:
-    id: int
-    text: str
+    corpus: corpus

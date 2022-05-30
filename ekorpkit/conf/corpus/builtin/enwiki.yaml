@@ -15,7 +15,7 @@ license: 'CC Attribution / Share-Alike 3.0'
 homepage: https://en.wikipedia.org
 version: 1.0.0
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

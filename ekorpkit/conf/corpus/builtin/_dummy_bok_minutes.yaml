@@ -2,7 +2,7 @@ defaults:
   - _build
   - /io/fetcher: _dummy
   - /preprocessor/normalizer: formal_ko
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: bok_minutes
 fullname: BOK MPB Minutes
@@ -14,7 +14,7 @@ license: "Bank of Korea"
 homepage: https://www.bok.or.kr
 version: 1.0.0
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

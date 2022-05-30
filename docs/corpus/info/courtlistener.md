@@ -32,7 +32,7 @@ data_files:
   valid: courtlistener-valid.parquet
 meta_files: {}
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

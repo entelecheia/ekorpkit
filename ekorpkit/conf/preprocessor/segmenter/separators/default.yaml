@@ -1,0 +1,4 @@
+in_segment: '\n\n'
+in_sentence: '\n'
+out_segment: '\n\n'
+out_sentence: '\n'

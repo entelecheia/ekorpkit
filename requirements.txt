@@ -2,7 +2,7 @@ numpy
 tqdm
 openpyxl
 pandas
-hydra-core>=1.1.2
+hydra-core>=1.2.0
 hydra-colorlog
 python-dotenv
 gdown

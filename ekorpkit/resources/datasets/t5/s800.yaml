@@ -12,7 +12,7 @@ data_files:
   dev: s800-dev.csv
   test: s800-test.csv
 column_info:
-  keys:
+  columns:
     id: id
     text: input_text
   data:

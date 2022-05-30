@@ -16,7 +16,7 @@ lang: en
 category: academic
 domain: econ
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

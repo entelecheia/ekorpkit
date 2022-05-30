@@ -6,5 +6,5 @@ data_dir: ${oc.select:.t5.data_dir, ${dir.dataset}/t5}
 filetype: ${oc.select:.t5.filetype, .csv}
 autoload: true
 column_info:
-  keys: ${oc.select:..t5.column_info.keys, null}
+  columns: ${oc.select:..t5.column_info.columns:, ${.keys}}
   data: ${oc.select:..t5.column_info.data, null}

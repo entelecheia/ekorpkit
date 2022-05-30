@@ -7,5 +7,5 @@ data_dir: ${oc.select:.simple.data_dir, ${dir.dataset}/simple}
 filetype: ${oc.select:.simple.filetype, .csv}
 autoload: true
 column_info:
-  keys: ${oc.select:..simple.column_info.keys, null}
+  columns: ${oc.select:..simple.column_info.columns:, ${.keys}}
   data: ${oc.select:..simple.column_info.data, null}

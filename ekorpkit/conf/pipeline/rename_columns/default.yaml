@@ -1,5 +1,5 @@
 defaults:
-  - /function: rename_columns
+  - /_func_: rename_columns
 
 new_names:
 verbose: ${oc.select:..verbose, true}

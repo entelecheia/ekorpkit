@@ -3,7 +3,7 @@ defaults:
   - /io/fetcher: esg_report
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: esg_report 
 fullname: Korean ESG Reports
@@ -14,7 +14,7 @@ description: ESG Reports Corpus
 license: All Rights Reserved. 
 version: 1.0.0
 column_info:
-  keys:
+  columns:
     id: id
     text: text
     split: 

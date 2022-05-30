@@ -3,7 +3,7 @@ defaults:
   - /io/fetcher: _dummy
   - /preprocessor/normalizer: formal_en
   - /preprocessor/segmenter: pysbd
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: fomc_minutes
 fullname: Federal Open Market Committee (FOMC) Corpus
@@ -15,7 +15,7 @@ license:
 homepage: https://www.federalreserve.gov
 version: 1.0.0
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

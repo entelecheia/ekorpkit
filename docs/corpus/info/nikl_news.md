@@ -29,7 +29,7 @@ data_files:
 meta_files:
   train: meta-nikl_news-train.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

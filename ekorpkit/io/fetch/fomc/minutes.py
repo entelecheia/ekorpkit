@@ -5,10 +5,10 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 # Import parent class
-from .base import FomcBase
+from .base import FOMC
 
 
-class Minutes(FomcBase):
+class Minutes(FOMC):
     """
     A convenient class for extracting minutes from the FOMC website
     """

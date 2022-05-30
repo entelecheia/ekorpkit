@@ -16,6 +16,8 @@ from . import _version
 
 log = logging.getLogger(__name__)
 
+__hydra_version_base__ = "1.2"
+
 
 def __ekorpkit_path__():
     return pathlib.Path(__file__).parent.as_posix()
@@ -36,10 +38,46 @@ def check_path(path: str, alt_path: str = None):
         return alt_path
 
 
+def _today(_format="%Y-%m-%d"):
+    from datetime import datetime
+
+    if _format is None:
+        return datetime.today().date()
+    else:
+        return datetime.today().strftime(_format)
+
+
+def _now(_format="%Y-%m-%d %H:%M:%S"):
+    from datetime import datetime
+
+    if _format is None:
+        return datetime.now()
+    else:
+        return datetime.now().strftime(_format)
+
+
+def _strptime(
+    _date_str: str,
+    _format: str = "%Y-%m-%d",
+):
+    from datetime import datetime
+
+    return datetime.strptime(_date_str, _format)
+
+
+def _to_dateparm(_date, _format="%Y-%m-%d"):
+    from datetime import datetime
+
+    _dtstr = datetime.strftime(_date, _format)
+    _dtstr = "${to_datetime:" + _dtstr + "," + _format + "}"
+    return _dtstr
+
+
 def _path(
     url_or_filename,
     extract_archive: bool = False,
     force_extract: bool = False,
+    return_dir: bool = False,
     cache_dir=None,
     verbose: bool = False,
 ):
@@ -47,6 +85,7 @@ def _path(
         url_or_filename,
         extract_archive=extract_archive,
         force_extract=force_extract,
+        return_dir=return_dir,
         cache_dir=cache_dir,
         verbose=verbose,
     )
@@ -87,7 +126,9 @@ def _compose(
         key = None
         value = None
     if key and value:
-        with hydra.initialize_config_module(config_module="ekorpkit.conf"):
+        with hydra.initialize_config_module(
+            config_module="ekorpkit.conf", version_base=__hydra_version_base__
+        ):
             cfg = hydra.compose(config_name=config_name, overrides=overrides)
             cfg = _select(
                 cfg,
@@ -106,7 +147,9 @@ def _compose(
                 overrides = [overide]
     if verbose:
         print(f"compose config with overrides: {overrides}")
-    with hydra.initialize_config_module(config_module="ekorpkit.conf"):
+    with hydra.initialize_config_module(
+        config_module="ekorpkit.conf", version_base=__hydra_version_base__
+    ):
         cfg = hydra.compose(config_name=config_name, overrides=overrides)
         if key:
             cfg = _select(
@@ -165,6 +208,8 @@ DictKeyType = Union[str, int, Enum, float, bool]
 OmegaConf.register_new_resolver("__ekorpkit_path__", __ekorpkit_path__)
 OmegaConf.register_new_resolver("__home_path__", __home_path__)
 OmegaConf.register_new_resolver("__version__", __version__)
+OmegaConf.register_new_resolver("today", _today)
+OmegaConf.register_new_resolver("to_datetime", _strptime)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
@@ -188,38 +233,105 @@ class _Keys(str, Enum):
     CONFIG = "_config_"
     CONFIG_GROUP = "_config_group_"
     PIPELINE = "_pipeline_"
+    TASK = "_task_"
     CALL = "_call_"
+    EXEC = "_exec_"
+    PARMS = "_parms_"
+    METHOD = "_method_"
+    FUNC = "_func_"
+    NAME = "_name_"
+    SPLIT = "split"
+    CORPUS = "corpus"
+    DATASET = "dataset"
+    ID = "id"
+    TEXT = "text"
+    TIMESTAMP = "timestamp"
+    DATETIME = "datetime"
 
 
-def _call(cfg: Any, obj: object):
+def _methods(cfg: Any, obj: object):
     cfg = eKonf.to_dict(cfg)
-    if cfg:
-        if isinstance(cfg, dict) and _Keys.CALL in cfg:
-            _call_ = cfg[_Keys.CALL]
-        else:
-            _call_ = cfg
-        if isinstance(_call_, str):
-            log.info(f"Calling {_call_}")
-            return getattr(obj, _call_)()
-        elif isinstance(_call_, dict):
-            log.info(f"Calling {_call_}")
-            return getattr(obj, _call_["name"])(**_call_["args"])
-        elif isinstance(_call_, list):
-            for _run in _call_:
-                log.info(f"Calling {_run}")
-                if isinstance(_run, str):
-                    getattr(obj, _run)()
-                elif isinstance(_run, dict):
-                    getattr(obj, _run["name"])(**_run["args"])
+    if not cfg:
+        log.info("No method defined to call")
+        return
+
+    if isinstance(cfg, dict) and _Keys.METHOD in cfg:
+        _method_ = cfg[_Keys.METHOD]
     else:
-        log.info("No call function defined")
+        _method_ = cfg
+    if isinstance(_method_, str):
+        log.info(f"Calling {_method_}")
+        return getattr(obj, _method_)()
+    elif isinstance(_method_, dict):
+        log.info(f"Calling {_method_}")
+        if _Keys.CALL in _method_:
+            _call_ = _method_.pop(_Keys.CALL)
+        else:
+            _call_ = True
+        if _call_:
+            return getattr(obj, _method_[_Keys.NAME])(**_method_[_Keys.PARMS])
+        else:
+            log.info(f"Skipping call to {_method_}")
+    elif isinstance(_method_, list):
+        for _each_method in _method_:
+            log.info(f"Calling {_each_method}")
+            if isinstance(_each_method, str):
+                getattr(obj, _each_method)()
+            elif isinstance(_each_method, dict):
+                if _Keys.CALL in _each_method:
+                    _call_ = _each_method.pop(_Keys.CALL)
+                else:
+                    _call_ = True
+                if _call_:
+                    getattr(obj, _each_method[_Keys.NAME])(**_each_method[_Keys.PARMS])
+                else:
+                    log.info(f"Skipping call to {_each_method}")
 
 
-def _print(cfg: Any, **kwargs):
+def _function(cfg: Any, _name_, return_function=False, **parms):
+    cfg = eKonf.to_dict(cfg)
+    if not isinstance(cfg, dict):
+        log.info("No function defined to execute")
+        return None
+
+    if _Keys.FUNC not in cfg:
+        log.info("No function defined to execute")
+        return None
+
+    _functions_ = cfg[_Keys.FUNC]
+    fn = _partial(_functions_[_name_])
+    if _name_ in cfg:
+        _parms = cfg[_name_]
+        _parms = {**_parms, **parms}
+    else:
+        _parms = parms
+    if _Keys.EXEC in _parms:
+        _exec_ = _parms.pop(_Keys.EXEC)
+    else:
+        _exec_ = True
+    if _exec_:
+        if callable(fn):
+            if return_function:
+                log.info(f"Returning function {fn}")
+                return fn
+            log.info(f"Executing function {fn} with parms {_parms}")
+            return fn(**_parms)
+        else:
+            log.info(f"Function {_name_} not callable")
+            return None
+    else:
+        log.info(f"Skipping execute of {fn}")
+        return None
+
+
+def _print(cfg: Any, resolve: bool = True, **kwargs):
     import pprint
 
     if _is_config(cfg):
-        pprint.pprint(_to_dict(cfg), **kwargs)
+        if resolve:
+            pprint.pprint(_to_dict(cfg), **kwargs)
+        else:
+            pprint.pprint(cfg, **kwargs)
     else:
         print(cfg)
 
@@ -260,6 +372,17 @@ def _save(
     config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
 ) -> None:
     OmegaConf.save(config, f, resolve=resolve)
+
+
+def _update(_dict, _overrides):
+    import collections.abc
+
+    for k, v in _overrides.items():
+        if isinstance(v, collections.abc.Mapping):
+            _dict[k] = _update((_dict.get(k) or {}), v)
+        else:
+            _dict[k] = v
+    return _dict
 
 
 def _merge(
@@ -314,7 +437,14 @@ def _run(config: Any, **kwargs: Any) -> Any:
         _instantiate(cfg)
 
 
-def _partial(config: Any, *args: Any, **kwargs: Any) -> Any:
+def _partial(
+    config: Any = None, config_group: str = None, *args: Any, **kwargs: Any
+) -> Any:
+    if config is None and config_group is None:
+        log.warning("No config specified")
+        return None
+    elif config_group is not None:
+        config = _compose(config_group=config_group)
     kwargs[_Keys.PARTIAL] = True
     return _instantiate(config, *args, **kwargs)
 
@@ -351,7 +481,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     if not _env_initialized_:
         _init_env_()
     if not _is_instantiatable(config):
-        log.warning(f"Config {config} is not instantiatable, returning config")
+        log.warning(f"Config is not instantiatable, returning config")
         return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
@@ -434,7 +564,8 @@ def _stop_env_(cfg, verbose=False):
 
 
 def apply_pipe(df, pipe):
-    fn = eKonf.partial(pipe["function"])
+    _func_ = pipe.get(_Keys.FUNC)
+    fn = eKonf.partial(_func_)
     log.info(f"Applying pipe: {fn}")
     if isinstance(df, dict):
         if "concat_dataframes" in str(fn):
@@ -446,7 +577,7 @@ def apply_pipe(df, pipe):
                 log.info(
                     f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
                 )
-                pipe["dataframe_name"] = df_name
+                pipe[_Keys.NAME] = df_name
                 dfs[df_name] = fn(df_each, pipe)
             return dfs
     else:
@@ -481,6 +612,14 @@ def _dependencies(key, path=None):
         return set(extra_deps.keys())
     else:
         return extra_deps[key]
+
+
+def _ensure_list(value):
+    if not value:
+        return []
+    elif isinstance(value, str):
+        return [value]
+    return list(value)
 
 
 class eKonf:
@@ -569,8 +708,10 @@ class eKonf:
         )
 
     @staticmethod
-    def partial(config: Any, *args: Any, **kwargs: Any) -> Any:
-        return _partial(config, *args, **kwargs)
+    def partial(
+        config: Any = None, config_group: str = None, *args: Any, **kwargs: Any
+    ) -> Any:
+        return _partial(config=config, config_group=config_group, *args, **kwargs)
 
     @staticmethod
     def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
@@ -589,6 +730,10 @@ class eKonf:
     @staticmethod
     def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
         return _load(file_)
+
+    @staticmethod
+    def update(_dict, _overrides):
+        return _update(_dict, _overrides)
 
     @staticmethod
     def merge(
@@ -615,16 +760,20 @@ class eKonf:
         _save(config, f, resolve)
 
     @staticmethod
-    def pprint(cfg: Any, **kwargs):
-        _print(cfg, **kwargs)
+    def pprint(cfg: Any, resolve: bool = True, **kwargs):
+        _print(cfg, resolve=resolve, **kwargs)
 
     @staticmethod
-    def print(cfg: Any, **kwargs):
-        _print(cfg, **kwargs)
+    def print(cfg: Any, resolve: bool = True, **kwargs):
+        _print(cfg, resolve=resolve, **kwargs)
 
     @staticmethod
-    def call(cfg: Any, obj: object):
-        _call(cfg, obj)
+    def methods(cfg: Any, obj: object):
+        _methods(cfg, obj)
+
+    @staticmethod
+    def function(cfg: Any, _name_, return_function=False, **parms):
+        return _function(cfg, _name_, return_function, **parms)
 
     @staticmethod
     def run(config: Any, **kwargs: Any) -> Any:
@@ -744,3 +893,11 @@ class eKonf:
     @staticmethod
     def dependencies(key, path=None):
         return _dependencies(key, path)
+
+    @staticmethod
+    def ensure_list(value):
+        return _ensure_list(value)
+
+    @staticmethod
+    def to_dateparm(_date, _format="%Y-%m-%d"):
+        return _to_dateparm(_date, _format)

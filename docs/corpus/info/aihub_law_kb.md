@@ -27,7 +27,7 @@ data_files:
   train: aihub_law_kb-train.parquet
 meta_files: {}
 column_info:
-  keys:
+  columns:
     id: id
     text:
     - text

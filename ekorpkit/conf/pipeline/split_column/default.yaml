@@ -1,0 +1,10 @@
+defaults:
+  - /_func_: split_column
+
+source:
+target:
+split:
+  pat:
+  n: -1
+  expand: false
+verbose: ${oc.select:..verbose, false}

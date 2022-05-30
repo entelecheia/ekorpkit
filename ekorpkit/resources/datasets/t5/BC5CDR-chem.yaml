@@ -12,7 +12,7 @@ data_files:
   dev: BC5CDR-chem-dev.csv
   test: BC5CDR-chem-test.csv
 column_info:
-  keys:
+  columns:
     id: id
     text: input_text
   data:

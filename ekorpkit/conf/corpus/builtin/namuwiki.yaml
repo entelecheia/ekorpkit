@@ -3,7 +3,7 @@ defaults:
   - /io/fetcher: namuwiki
   - /preprocessor/normalizer: formal_ko
   - /preprocessor/segmenter: kss
-  - override /io/loader: csv
+  - override /io/loader: dataframe
 
 name: namuwiki
 fullname: NamuWiki Corpus
@@ -15,7 +15,7 @@ lang: ko
 category: formal
 domain: general
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

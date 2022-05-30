@@ -10,7 +10,7 @@ from .dataset import Dataset, _SPLITS
 log = logging.getLogger(__name__)
 
 
-class Datasets:    
+class Datasets:
     SPLITS = _SPLITS
 
     def __init__(self, **args):
@@ -32,26 +32,18 @@ class Datasets:
 
         self.verbose = args.get("verbose", False)
         self.data_dir = args["data_dir"]
-        self._data_files = self.args.get("data_files", None)
+        self.data_files = self.args.get("data_files", None)
         self.filetype = self.args.get("filetype", "csv")
-        self._call_ = self.args.get("_call_", None)
+        self._method_ = self.args.get("_method_", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
-        self.info_args = self.args.get("info", None)
+        self._info_args = self.args.get("info", None)
 
-        self.column_info = self.args.get("column_info", {})
+        self._column_info = self.args.get("column_info", {})
+        self._column = eKonf.instantiate(self._column_info)
+
         self.splits = None
         self._datasets_concatenated = False
-
-        self._id_key = "id"
-        self._org_id_key = "org_id"
-        self._id_separator = "_"
-        self._dataset_key = "dataset"
-        self._keys = self.column_info.get("keys", None)
-        self._id_keys = self._keys[self._id_key]
-        if isinstance(self._id_keys, str):
-            self._id_keys = [self._id_keys]
-        self._data_keys = self.column_info.get("data", None)
 
         with elapsed_timer(format_time=True) as elapsed:
             for name in self.datasets:
@@ -60,18 +52,18 @@ class Datasets:
                 args["data_dir"] = self.data_dir
                 args["use_name_as_subdir"] = use_name_as_subdir
                 args["verbose"] = self.verbose
-                if self._data_files is not None:
-                    if name in self._data_files:
-                        args["data_files"] = self._data_files[name]
-                    elif "train" in self._data_files:
-                        args["data_files"] = self._data_files
+                if self.data_files is not None:
+                    if name in self.data_files:
+                        args["data_files"] = self.data_files[name]
+                    elif "train" in self.data_files:
+                        args["data_files"] = self.data_files
                 dataset = Dataset(**args)
                 self.datasets[name] = dataset
                 if self.splits is None:
                     self.splits = {split: None for split in dataset.data_files}
             log.info(f">>> Elapsed time: {elapsed()} <<< ")
 
-        eKonf.call(self._call_, self)
+        eKonf.methods(self._method_, self)
 
     def __str__(self):
         classname = self.__class__.__name__
@@ -93,18 +85,20 @@ class Datasets:
         return len(self.datasets)
 
     @property
+    def COLUMN(self):
+        return self._column
+
+    @property
     def ID(self):
-        return self._id_key
+        return self.COLUMN.ID
 
     @property
     def IDs(self):
-        return self._id_keys
+        return self.COLUMN.IDs
 
     @property
     def DATA(self):
-        if self._data_keys is None:
-            return None
-        return list(self._data_keys.keys())
+        return self.COLUMN.DATA
 
     def load(self):
         for _name in self.datasets:
@@ -115,18 +109,20 @@ class Datasets:
         self.concat_datasets(append_dataset_name=append_dataset_name)
 
     def concat_datasets(self, append_dataset_name=True):
-        if append_dataset_name:
-            if self._dataset_key not in self._id_keys:
-                self._id_keys.append(self._dataset_key)
+        dfs = []
+        for name in self.datasets:
+            df = self.datasets[name][_SPLITS.TRAIN]
+            dfs.append(df)
+        common_columns = self.COLUMN.common_columns(dfs)
 
         for split in self.splits:
             dfs = []
             for name in self.datasets:
                 df = self.datasets[name][split]
-                if self.DATA:
-                    df = df[self.DATA].copy()
+                if common_columns:
+                    df = df[common_columns].copy()
                 if append_dataset_name:
-                    df[self._dataset_key] = name
+                    df = self.COLUMN.append_dataset(df, name)
                 dfs.append(df)
             self.splits[split] = pd.concat(dfs, ignore_index=True)
         if self.verbose:
@@ -145,19 +141,18 @@ class Datasets:
         os.makedirs(data_dir, exist_ok=True)
 
         summary_info = None
-        if self.info_args:
-            self.info_args["data_dir"] = data_dir
-            self.info_args["name"] = self.name
-            self.info_args["info_file"] = None
-            summary_info = eKonf.instantiate(self.info_args)
+        if self._info_args:
+            self._info_args["data_dir"] = data_dir
+            self._info_args["name"] = self.name
+            self._info_args["info_file"] = None
+            summary_info = eKonf.instantiate(self._info_args)
         if summary_info:
             summary_info.load(self.info)
 
         for split, df in self.splits.items():
             data_file = f"{self.name}-{split}.{self.filetype}"
             data_path = f"{data_dir}/{data_file}"
-            df.rename({self._id_key: self._org_id_key}, inplace=True)
-            df.reset_index().rename({"index": self._id_key}, inplace=True)
+            df = self.COLUMN.reset_id(df)
             save_dataframe(df, data_path)
             if self.verbose:
                 log.info(f"saved {data_path}")
@@ -166,6 +161,4 @@ class Datasets:
                 summary_info.init_stats(split_name=split, stats=stats)
                 summary_info.calculate_stats(df, split)
         if summary_info and df is not None:
-            dtypes = df.dtypes.apply(lambda x: x.name).to_dict()
-            self.column_info["data"] = dtypes
-            summary_info.save(info={"column_info": self.column_info})
+            summary_info.save(info={"column_info": self.COLUMN.INFO})

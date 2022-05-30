@@ -5,7 +5,7 @@ import pandas as pd
 from multiprocessing import Pool
 from ekorpkit import eKonf
 from glob import glob
-from ekorpkit.io.download.web import web_download, gdrive_download_un7z
+from ekorpkit.io.fetch.web import web_download, gdrive_download_un7z
 
 
 class Wiki:

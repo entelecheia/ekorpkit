@@ -3,7 +3,7 @@ defaults:
   - /info: _build_t5
   - /pipeline: _build_dataset
 
-_target_: ekorpkit.io.fetch.build.DatasetBuilder
+_target_: ekorpkit.corpora.build.DatasetBuilder
 name:
 category: general
 data_dir: ${dir.dataset}/t5/${.name}

@@ -1,0 +1,16 @@
+defaults:
+  - _default
+  - /pipeline/eval_columns: default
+
+_target_: ekorpkit.io.fetch.quandl.Quandl
+name: fred
+fred_api_key: ${oc.env:FRED_API_KEY,null}
+nasdaq_api_key: ${oc.env:NASDAQ_API_KEY,null}
+series_id:
+series_name:
+start_date:
+end_date:
+value_column: value
+pipeline:
+  eval_columns:
+    expressions:

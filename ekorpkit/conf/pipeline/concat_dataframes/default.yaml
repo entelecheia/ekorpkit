@@ -1,4 +1,4 @@
 defaults:
-  - /function: concat_dataframes
+  - /_func_: concat_dataframes
 
 verbose: ${oc.select:..verbose, true}

@@ -1,0 +1,25 @@
+Volcker:
+  last_name: Volcker
+  first_name: Paul
+  from_date: ${to_datetime:1979-08-06}
+  to_date: ${to_datetime:1987-08-10}
+Greenspan:
+  last_name: Greenspan
+  first_name: Alan
+  from_date: ${to_datetime:1987-08-11}
+  to_date: ${to_datetime:2006-01-31}
+Bernanke:
+  last_name: Bernanke
+  first_name: Ben
+  from_date: ${to_datetime:2006-02-01}
+  to_date: ${to_datetime:2014-01-31}
+Yellen:
+  last_name: Yellen
+  first_name: Janet
+  from_date: ${to_datetime:2014-02-03}
+  to_date: ${to_datetime:2018-02-03}
+Powell:
+  last_name: Powell
+  first_name: Jerome
+  from_date: ${to_datetime:2018-02-05}
+  to_date: ${today:null}

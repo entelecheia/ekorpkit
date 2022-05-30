@@ -1,3 +1,10 @@
+axvspans:
+  - ${oc.select:..axvspan, null}
+annotations:
+  - ${oc.select:..annotation, null}
+axno: 0
+secondary_y: false
+secondary_to: 0
 xlabel:
   xlabel:
 ylabel:

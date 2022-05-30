@@ -1,0 +1,32 @@
+defaults:
+  - score_function: mutual_information
+  - /data: concat
+
+_target_: ekorpkit.models.ngram.base.Ngrams
+name: ${oc.select:corpus.name,''}_ngram_${oc.select:.score_function.name,''}_model
+tokenize:
+ngram:
+  max_n: 5
+  # The maximum window must be larger than ngram length n.
+  max_window: 6
+  max_skip: 
+  delimiter: ;
+candidates:
+  threshold: 10.0
+  min_count: 10
+  max_candidates: 40000000
+  num_sents_per_pruning: 10000
+  prune_min_ngram_count: 2
+surface:
+  delimiter: ''
+  strip_pos: true
+postag:
+  delimiter: /
+  max_len: 2
+  templates:
+    - ('/NN', '/J', '/NN')
+    - ('/NN', '/NN')
+output_dir: ${dir.project}/outputs/ngrams/
+output_file: ${.name}.parquet
+progress_per: 1000
+verbose: ${oc.select:..verbose,false}

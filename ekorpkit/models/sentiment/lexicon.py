@@ -131,12 +131,12 @@ class Lexicon:
         return s
 
     @staticmethod
-    def check_subset_tokens(word, ngrams, ngram_distiance_tolerance=0):
+    def check_subset_tokens(word, ngrams, ngram_distance_tolerance=0):
         for token, ngram in ngrams.items():
             if (
                 set(word).issubset(set(ngram))
                 and len(ngram) >= len(word)
-                and len(ngram) - len(word) <= ngram_distiance_tolerance
+                and len(ngram) - len(word) <= ngram_distance_tolerance
             ):
                 return token
         return np.nan

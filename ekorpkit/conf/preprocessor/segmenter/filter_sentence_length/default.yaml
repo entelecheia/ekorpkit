@@ -1,0 +1,3 @@
+filter: false
+min_num_words: 3
+min_length: 10

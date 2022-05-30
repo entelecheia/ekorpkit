@@ -1,0 +1,27 @@
+defaults:
+  - /column_info: default
+  - /_func_/load_dataframe: default
+  - /_func_/concat_dataframes: default
+  - /_func_/save_dataframe: default
+
+_target_: ekorpkit.pipelines.data.Data
+name: ${iif:${iif:${oc.select:corpus.name, null}, ${oc.select:corpus.name, null}, ${oc.select:dataset.name, null}},${iif:${oc.select:corpus.name, null}, ${oc.select:corpus.name, null}, ${oc.select:dataset.name, null}},data}
+corpus: ${oc.select:corpus,null}
+dataset: ${oc.select:dataset,null}
+data_dir: ${oc.select:..data_dir, null}
+data_file: ${oc.select:..data_file, null}
+columns: ${oc.select:..columns, null}
+output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
+output_file: ${oc.select:..output_file, null}
+load_dataframe:
+  filepath: ${..data_dir}/${..data_file}
+  columns: ${oc.select:..columns, null}
+  verbose: ${oc.select:..verbose, false}
+save_dataframe:
+  filepath: ${..output_dir}/${..output_file}
+concat_dataframes:
+  _exec_: false
+  add_key_as_name: false
+  name_column: _name_
+  concat:
+verbose: ${oc.select:..verbose, false}

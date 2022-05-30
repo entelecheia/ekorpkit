@@ -1,0 +1,4 @@
+defaults:
+  - _build
+
+_target_: ekorpkit.info.base.ColumnInfo

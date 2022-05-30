@@ -28,7 +28,7 @@ data_files:
 meta_files:
   train: meta-nih_exporter-train.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

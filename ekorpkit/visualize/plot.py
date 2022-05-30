@@ -1,23 +1,29 @@
-from cmath import isinf
+import logging
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from cmath import isinf
 from pathlib import Path
 from .base import set_style, set_figure
+from .classification import confusion_matrix
 from ekorpkit import eKonf
+
+
+log = logging.getLogger(__name__)
 
 
 def plot(data, verbose=False, **kwargs):
     kwargs = eKonf.to_dict(kwargs)
     plots = kwargs.get("plots")
-    dataset = {} or kwargs.get("dataset")
+    figures = kwargs.get("figures")
+    series = {} or kwargs.get("series")
     plot = {} or kwargs.get("plot")
-    figure = {} or kwargs.get("figure")
-    figure2 = {} or kwargs.get("figure2")
+    subplots = {} or kwargs.get("subplots")
+    # figure = {} or kwargs.get("figure")
     savefig = {} or kwargs.get("savefig")
 
     if data is None:
-        if verbose:
-            print("No data to plot")
+        log.warning("No data to plot")
         return
 
     set_style(**plot)
@@ -25,84 +31,122 @@ def plot(data, verbose=False, **kwargs):
     if figsize is not None and isinstance(figsize, str):
         figsize = eval(figsize)
 
-    dataform = dataset.get("form", "individual")
-    xcol = dataset["x"]
+    dataform = series.get("form", "individual")
+    xcol = series["x"]
     if isinstance(xcol, list):
         xcol = xcol[0]
-    x = data[xcol] if xcol in data.columns else data.index
-    ycols = dataset["y"]
+    if isinstance(data, pd.DataFrame):
+        x = data[xcol] if xcol in data.columns else data.index
+    else:
+        x = xcol
+    ycols = series["y"]
     if isinstance(ycols, str):
         ycols = [ycols]
 
-    plt.figure(figsize=figsize, tight_layout=True)
-    ax = plt.gca()
-    ax2 = None
+    sencondary_axes = {}
+    if subplots["nrows"] > 1 or subplots["ncols"] > 1:
+        fig, axes = plt.subplots(**subplots, figsize=figsize)
+        ax = None
+        axes = axes.flatten()
+    else:
+        plt.figure(figsize=figsize, tight_layout=True)
+        ax = plt.gca()
+        axes = [ax]
 
     if dataform == "individual":
         if isinstance(plots, dict):
             plots = [plots]
-        for plot_args in plots:
-            _function = eval(plot_args.get("function"))
-            y = plot_args.pop("y")
-            secondary_y = plot_args.get("secondary_y", False)
-            if secondary_y and ax2 is None:
-                if verbose:
-                    print("Creating secondary axis")
-                ax2 = ax.twinx()
-            _function(ax2 if secondary_y else ax, x, y, data, **plot_args)
+        for _plot_cfg_ in plots:
+            _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNC))
+            _x = _plot_cfg_.pop("x") or x
+            _y = _plot_cfg_.pop("y")
+            secondary_y = _plot_cfg_.get("secondary_y", False)
+            if secondary_y:
+                secondary_to = _plot_cfg_.get("secondary_to", 0)
+                log.info(f"Creating secondary axis to axis[{secondary_to}]")
+                if secondary_to in sencondary_axes:
+                    ax = sencondary_axes[secondary_to]
+                else:
+                    ax = axes[secondary_to].twinx()
+                    sencondary_axes[secondary_to] = ax
+            else:
+                axno = _plot_cfg_.get("axno", 0)
+                ax = axes[axno]
+            _func_(ax, _x, _y, data, **_plot_cfg_)
     else:
         if isinstance(plots, list):
-            plot_args = plots[0]
+            _plot_cfg_ = plots[0]
         else:
-            plot_args = plots
-        _function = eval(plot_args.get("function"))
-        if len(ycols) == 1:
+            _plot_cfg_ = plots
+        _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNC))
+        if ycols and len(ycols) == 1:
             ycols = ycols[0]
-        y = plot_args.pop("y")
-        if plot_args.get("dataform"):
-            dataform = plot_args.pop("dataform")
+        _x = _plot_cfg_.pop("x") or xcol
+        _y = _plot_cfg_.pop("y") or ycols
+        if _plot_cfg_.get("dataform"):
+            dataform = _plot_cfg_.pop("dataform")
         if dataform == "wide":
-            if xcol and xcol in data.columns:
-                _data = data.set_index(xcol)[ycols]
+            if isinstance(data, pd.DataFrame):
+                if _x and _x in data.columns:
+                    _data = data.set_index(_x)[_y]
+                else:
+                    _data = data[_y]
             else:
-                _data = data[ycols]
-            _function(ax, x=None, y=None, data=_data, **plot_args)
+                _data = data
+            _func_(ax, x=None, y=None, data=_data, **_plot_cfg_)
         else:
-            _function(ax, x=xcol, y=ycols, data=data, **plot_args)
+            _func_(ax, x=_x, y=_y, data=data, **_plot_cfg_)
 
-    add_decorations(ax, **kwargs)
-    set_figure(ax, **figure)
-    if ax2 is not None and figure2 is not None:
-        set_figure(ax2, **figure2)
+    if figures is None:
+        figures = []
+    elif not isinstance(figures, (dict, list)):
+        figures = []
+    elif isinstance(figures, dict):
+        figures = [figures]
+    for _fig_cfg_ in figures:
+        secondary_y = _fig_cfg_.get("secondary_y", False)
+        if secondary_y:
+            secondary_to = _fig_cfg_.get("secondary_to", 0)
+            if secondary_to in sencondary_axes:
+                ax = sencondary_axes[secondary_to]
+            else:
+                ax = None
+        else:
+            axno = _fig_cfg_.get("axno", 0)
+            ax = axes[axno]
+        add_decorations(ax, **_fig_cfg_)
+        set_figure(ax, **_fig_cfg_)
 
     fname = savefig.get("fname", None)
     if fname:
         Path(fname).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(**savefig)
-        if verbose:
-            print(f"Saved figure to {fname}")
+        log.info(f"Saved figure to {fname}")
 
 
-def lineplot(ax=None, x=None, y=None, data=None, args=None, **kwargs):
+def lineplot(ax=None, x=None, y=None, data=None, **kwargs):
+    _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
     if ax is None:
         ax = plt.gca()
-    sns.lineplot(x=x, y=y, data=data, ax=ax, **args)
+    sns.lineplot(x=x, y=y, data=data, ax=ax, **_parms_)
 
 
-def stackplot(ax=None, x=None, y=None, data=None, args=None, **kwargs):
+def stackplot(ax=None, x=None, y=None, data=None, **kwargs):
+    _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
     if ax is None:
         ax = plt.gca()
     if x is None:
         x = data.index
     elif isinstance(x, str):
         x = data[x]
-    plt.stackplot(x, data[y].T, **args)
+    plt.stackplot(x, data[y].T, **_parms_)
 
 
-def scatter(ax=None, x=None, y=None, data=None, args=None, **kwargs):
+def scatter(ax=None, x=None, y=None, data=None, **kwargs):
+    _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
     if ax is None:
         ax = plt.gca()
-    sns.scatterplot(x=x, y=y, data=data, ax=ax, **args)
+    sns.scatterplot(x=x, y=y, data=data, ax=ax, **_parms_)
 
 
 def add_decorations(ax=None, **kwargs):
@@ -121,10 +165,14 @@ def add_decorations(ax=None, **kwargs):
             ax.axvspan(**span)
     for annot in annotations:
         if isinstance(annot, dict):
-            if annot.get("xy") is not None and isinstance(annot.get("xy"), str):
-                annot["xy"] = eval(annot["xy"])
-            if annot.get("xytext") is not None and isinstance(annot.get("xytext"), str):
-                annot["xytext"] = eval(annot["xytext"])
+            x = annot.pop("x")
+            y = annot.pop("y")
+            if x and y:
+                annot["xy"] = (x, y)
+            xtext = annot.pop("xtext")
+            ytext = annot.pop("ytext")
+            if xtext and ytext:
+                annot["xytext"] = (xtext, ytext)
             ax.annotate(**annot)
 
 

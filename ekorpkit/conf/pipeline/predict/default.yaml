@@ -1,9 +1,9 @@
 defaults:
-  - /function: predict
+  - /_func_: predict
 
 name: predict
 model:
-columns_to_keep:
+columns:
 output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
 output_file: ${oc.select:..output_file, null}
 num_workers: ${oc.select:..num_workers,1}
@@ -13,4 +13,5 @@ to_predict:
   prefix:
   input: ${oc.select:..apply_to, text}
   predicted: pred_labels
+  model_outputs: raw_preds
   task_prefix: ${oc.select:..model.model_class, null}

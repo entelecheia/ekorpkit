@@ -1,12 +1,10 @@
+defaults:
+  - /column_info: default
+
 _target_: ekorpkit.datasets.dataset.Dataset
 name: ${oc.select:.builtin.name, null} 
 data_dir: ${dir.dataset}/dataset
 filetype: ${oc.select:.builtin.filetype, csv}
 autoload: true
 verbose: ${oc.select:..verbose, true}
-column_info:
-  keys:
-    id: id
-    text: text
-  data:
 use_name_as_subdir: true

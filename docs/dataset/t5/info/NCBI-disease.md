@@ -17,7 +17,7 @@ data_files:
   dev: NCBI-disease-dev.csv
   test: NCBI-disease-test.csv
 column_info:
-  keys:
+  columns:
     id: id
     text: input_text
   data:

@@ -6,4 +6,4 @@ from .press_conf import PresConfScript
 from .speech import Speech
 from .testimony import Testimony
 from .beigebook import BeigeBook
-from .base import build_fomc
+from .base import build_fomc, FOMC

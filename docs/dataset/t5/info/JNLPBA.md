@@ -17,7 +17,7 @@ data_files:
   dev: JNLPBA-dev.csv
   test: JNLPBA-test.csv
 column_info:
-  keys:
+  columns:
     id: id
     text: input_text
   data:

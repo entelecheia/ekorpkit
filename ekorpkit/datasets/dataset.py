@@ -59,23 +59,14 @@ class Dataset:
 
         self.description = self.args.get("description", "")
         self.license = self.args.get("license", "")
-        self.column_info = self.args.get("column_info")
-        if self.column_info is None:
+        self._column_info = self.args.get("column_info")
+        if self._column_info is None:
             raise ValueError("Column info can't be None")
 
-        self._id_key = "id"
-        self._split_key = "split"
-        self._keys = self.column_info["keys"]
-        self._id_keys = self._keys[self._id_key]
-        if isinstance(self._id_keys, str):
-            self._id_keys = [self._id_keys]
-        self._data_keys = self.column_info.get("data", None)
+        self._column = eKonf.instantiate(self._column_info)
 
         self.pipeline_args = self.args.get("pipeline", {})
-        self.transform_pipeline = self.pipeline_args.get("_transform_", [])
-        self.process_pipeline = self.pipeline_args.get("_pipeline_", [])
-        if self.transform_pipeline is None:
-            self.transform_pipeline = []
+        self.process_pipeline = self.pipeline_args.get(eKonf.Keys.PIPELINE, [])
         if self.process_pipeline is None:
             self.process_pipeline = []
 
@@ -94,24 +85,32 @@ class Dataset:
         return self.splits[split]
 
     @property
+    def COLUMN(self):
+        return self._column
+
+    @property
     def ID(self):
-        return self._id_key
+        return self.COLUMN.ID
 
     @property
     def IDs(self):
-        return self._id_keys
+        return self.COLUMN.IDs
 
     @property
     def DATA(self):
-        return list(self._data_keys.keys())
+        return self.COLUMN.DATA
+
+    @property
+    def DATATYPEs(self):
+        return self.COLUMN.DATATYPEs
 
     def load(self):
         if self._loaded:
             return
         for split, data_file in self.data_files.items():
             data_file = self.data_dir / data_file
-            df = load_dataframe(data_file, dtype=self._data_keys)
-            df[self._split_key] = split
+            df = load_dataframe(data_file, dtype=self.DATATYPEs)
+            df = self.COLUMN.append_split(df, split)
             if self.process_pipeline and len(self.process_pipeline) > 0:
                 df = apply_pipeline(df, self.process_pipeline, self.pipeline_args)
             self.splits[split] = df

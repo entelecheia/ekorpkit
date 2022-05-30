@@ -27,7 +27,7 @@ data_files:
 meta_files:
   train: meta-pathobook-train.parquet
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

@@ -3,12 +3,10 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-
-# Import parent class
-from .base import FomcBase
+from .base import FOMC
 
 
-class Statement(FomcBase):
+class Statement(FOMC):
     """
     A convenient class for extracting statement from the FOMC website
     """

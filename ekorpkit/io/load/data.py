@@ -7,6 +7,7 @@ from ekorpkit.io.parse.json import parse_data
 from joblib import Parallel, delayed
 from ekorpkit.utils.batch.batcher import tqdm_joblib
 from ekorpkit.io.file import get_files_from_archive, get_filepaths
+from ekorpkit import eKonf
 
 
 log = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ def load_data(split_name, **loader_cfg):
     # data_items =  args['data']['item'].keys()
     multiprocessing_at = loader_cfg.get("multiprocessing_at", "load_data")
 
-    default_items = {"split": split_name}
+    default_items = {eKonf.Keys.SPLIT: split_name}
     documents = []
     num_workers = num_workers if num_workers else 1
     num_files = len(filepaths)
@@ -95,10 +96,9 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
         except Exception as e:
             log.critical(f"Error reading {filename}", e)
             continue
-            # raise ValueError(f'Error reading {file}')
 
         if contents is None:
-            # print('contents is empty, skipping')
+            log.warning("contents is empty, skipping")
             continue
         if executor is not None:
             pbar.set_description(f"{filename}")
@@ -118,7 +118,9 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
     return documents
 
 
-def load_csv_data(split_name, **loader_cfg):
+def load_dataframe(split_name, **loader_cfg):
+    from ekorpkit.io.file import load_dataframe
+
     data_dir = loader_cfg["data_dir"]
     data_files = loader_cfg["data_souces"][split_name]
     filepaths = get_filepaths(data_files, data_dir)
@@ -134,7 +136,7 @@ def load_csv_data(split_name, **loader_cfg):
                         content = zfo.read().decode(errors="ignore")
             df = pd.read_csv(StringIO(content), index_col=None)
         else:
-            df = pd.read_csv(filepath, index_col=None)
+            df = load_dataframe(filepath=filepath, index_col=None)
         documents.append(df)
     df = pd.concat(documents, ignore_index=True)
     return df

@@ -1,5 +1,5 @@
 defaults:
-  - /function: save_as_text
+  - /_func_: save_as_text
 
 apply_to: ${oc.select:..apply_to, text}
 task_dir: corpus_txt

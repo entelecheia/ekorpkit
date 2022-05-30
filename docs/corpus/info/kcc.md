@@ -28,7 +28,7 @@ data_files:
   train: kcc-train.parquet
 meta_files: {}
 column_info:
-  keys:
+  columns:
     id: id
     text: text
   data:

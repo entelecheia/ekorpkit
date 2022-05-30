@@ -6,7 +6,7 @@ domain: biomed
 task: ner
 lang: en
 column_info: 
-  keys:
+  columns:
     id: id
     text: input_text
   data:

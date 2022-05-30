@@ -1,9 +1,0 @@
-text:
-xy:
-xytext:
-bbox:
-  boxstyle: round
-  facecolor: wheat
-  alpha: 0.5
-ha: center
-va: center

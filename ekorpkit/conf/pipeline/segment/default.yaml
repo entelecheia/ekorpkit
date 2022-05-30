@@ -1,5 +1,5 @@
 defaults:
-  - /function: segment
+  - /_func_: segment
 
 apply_to: ${oc.select:..apply_to, text}
 verbose: ${oc.select:..verbose, true}

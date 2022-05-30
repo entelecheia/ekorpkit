@@ -1,10 +1,10 @@
 defaults:
-  - /function: save_dataframe
+  - /_func_: save_dataframe
 
 name: ${oc.select:..name, pipeline}
-columns_to_keep:
+columns:
 filepath:
-filetype: parquet
+filetype:
 output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
 output_file: ${oc.select:..output_file, ${.name}.${.filetype}}
 verbose: ${oc.select:..verbose, true}

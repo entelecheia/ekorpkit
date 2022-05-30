@@ -7,7 +7,7 @@ domain: general
 task: classification
 lang: en
 column_info: 
-  keys:
+  columns:
     id: id
     text: text
   data:
