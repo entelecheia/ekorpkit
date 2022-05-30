@@ -1,10 +1,29 @@
-# ekorpkit[iːkɔːkɪt]: (e)nglish (K)orean C(orp)us Tool(kit)
+# ekorpkit 【iːkɔːkɪt】 : **eKo**nomic **R**esearch **P**ython Tool**kit**
 
 [![PyPI version](https://badge.fury.io/py/ekorpkit.svg)](https://badge.fury.io/py/ekorpkit) [![Jupyter Book Badge](https://jupyterbook.org/en/stable/_images/badge.svg)](https://entelecheia.github.io/ekorpkit-config/) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6497226.svg)](https://doi.org/10.5281/zenodo.6497226) [![release](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml) [![CodeQL](https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml) [![test](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml) [![CircleCI](https://circleci.com/gh/entelecheia/ekorpkit/tree/main.svg?style=shield)](https://circleci.com/gh/entelecheia/ekorpkit/tree/main) [![codecov](https://codecov.io/gh/entelecheia/ekorpkit/branch/main/graph/badge.svg?token=8I4ORHRREL)](https://codecov.io/gh/entelecheia/ekorpkit) [![markdown-autodocs](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml)
 
-eKorpkit provides a flexible interface for corpus management and analysis pipelines such as extraction, transformation, tokenization, training, and visualization.
+eKorpkit provides a flexible interface for NLP and ML research pipelines such as extraction, transformation, tokenization, training, and visualization. Its powerful config composition is backed by [Hydra](https://hydra.cc/).
 
-- Powerful config composition backed by [Hydra](https://hydra.cc/) - Easily swap out corpora, datasets, models, preprocessors, visualizers and many more configurations without touching the code.
+## Key features
+
+### Easy Configuration
+
+- You can compose your configuration dynamically, enabling you to easily get the perfect configuration for each research. 
+- You can override everything from the command line, which makes experimentation fast, and removes the need to maintain multiple similar configuration files. 
+- With a help of the **eKonf** class, it is also easy to compose configurations in a jupyter notebook environment.
+
+### No Boilerplate
+
+- eKorpkit lets you focus on the problem at hand instead of spending time on boilerplate code like command line flags, loading configuration files, logging etc.
+
+### Pluggable Architecture
+
+- eKorpkit has a pluggable architecture, enabling it to combine with your own implementation.
+
+### Sharable and Reproducible
+
+- With eKorpkit, you can easily share your datasets and models.
+- Sharing configs along with datasets and models makes every research reproducible.
 
 ## [Tutorials](https://entelecheia.github.io/ekorpkit-config)
 

@@ -46,19 +46,19 @@ class ColumnInfo:
 
         _key = self.TIMESTAMP_PARM.get("key")
         _format = self.TIMESTAMP_PARM.get("format")
-        _params = self.TIMESTAMP_PARM.get("params") or {}
+        _parms_ = self.TIMESTAMP_PARM.get(eKonf.Keys.PARMS) or {}
         if _key is None:
             log.info("No timestamp key found")
             return data, metadata
         if isinstance(data, pd.DataFrame):
             if _key in data.columns:
                 data[self.TIMESTAMP] = pd.to_datetime(
-                    data[_key], format=_format, **_params
+                    data[_key], format=_format, **_parms_
                 )
                 log.info(f"Loaded timestamp column {self.TIMESTAMP}")
             elif metadata is not None and _key in metadata.columns:
                 metadata[self.TIMESTAMP] = pd.to_datetime(
-                    metadata[_key], format=_format, **_params
+                    metadata[_key], format=_format, **_parms_
                 )
                 df_dt = metadata[self.MERGE_META_ON + [self.TIMESTAMP]].copy()
                 data = data.merge(df_dt, on=self.MERGE_META_ON, how="left")
@@ -72,14 +72,14 @@ class ColumnInfo:
 
         _columns = eKonf.ensure_list(self.DATETIME_PARM.get("key"))
         _format = self.DATETIME_PARM.get("format", None)
-        _params = self.DATETIME_PARM.get("params") or {}
+        _parms_ = self.DATETIME_PARM.get(eKonf.Keys.PARMS) or {}
         if _columns is None:
             log.info("No datetime column found")
             return data
         if isinstance(data, pd.DataFrame):
             for _col in _columns:
                 if _col in data.columns:
-                    data[_col] = pd.to_datetime(data[_col], format=_format, **_params)
+                    data[_col] = pd.to_datetime(data[_col], format=_format, **_parms_)
                     log.info(f"converted datetime column {_col}")
         return data
 
@@ -181,7 +181,7 @@ class ColumnInfo:
             if self.DATA and self.DATASET not in self.DATA:
                 self.DATATYPEs[self.DATASET] = "str"
 
-            log.info(f"Added corpus column [{self.CORPUS}] with value [{_dataset}]")
+            log.info(f"Added dataset column [{self.DATASET}] with value [{_dataset}]")
 
         return data
 

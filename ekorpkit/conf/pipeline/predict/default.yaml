@@ -13,4 +13,5 @@ to_predict:
   prefix:
   input: ${oc.select:..apply_to, text}
   predicted: pred_labels
+  model_outputs: raw_preds
   task_prefix: ${oc.select:..model.model_class, null}

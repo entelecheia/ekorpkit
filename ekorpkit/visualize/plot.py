@@ -1,11 +1,15 @@
-import numpy as np
-import copy
+import logging
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from cmath import isinf
 from pathlib import Path
 from .base import set_style, set_figure
+from .classification import confusion_matrix
 from ekorpkit import eKonf
+
+
+log = logging.getLogger(__name__)
 
 
 def plot(data, verbose=False, **kwargs):
@@ -15,12 +19,11 @@ def plot(data, verbose=False, **kwargs):
     series = {} or kwargs.get("series")
     plot = {} or kwargs.get("plot")
     subplots = {} or kwargs.get("subplots")
-    figure = {} or kwargs.get("figure")
+    # figure = {} or kwargs.get("figure")
     savefig = {} or kwargs.get("savefig")
 
     if data is None:
-        if verbose:
-            print("No data to plot")
+        log.warning("No data to plot")
         return
 
     set_style(**plot)
@@ -32,7 +35,10 @@ def plot(data, verbose=False, **kwargs):
     xcol = series["x"]
     if isinstance(xcol, list):
         xcol = xcol[0]
-    x = data[xcol] if xcol in data.columns else data.index
+    if isinstance(data, pd.DataFrame):
+        x = data[xcol] if xcol in data.columns else data.index
+    else:
+        x = xcol
     ycols = series["y"]
     if isinstance(ycols, str):
         ycols = [ycols]
@@ -57,8 +63,7 @@ def plot(data, verbose=False, **kwargs):
             secondary_y = _plot_cfg_.get("secondary_y", False)
             if secondary_y:
                 secondary_to = _plot_cfg_.get("secondary_to", 0)
-                if verbose:
-                    print(f"Creating secondary axis to axis[{secondary_to}]")
+                log.info(f"Creating secondary axis to axis[{secondary_to}]")
                 if secondary_to in sencondary_axes:
                     ax = sencondary_axes[secondary_to]
                 else:
@@ -74,22 +79,29 @@ def plot(data, verbose=False, **kwargs):
         else:
             _plot_cfg_ = plots
         _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNCTION))
-        if len(ycols) == 1:
+        if ycols and len(ycols) == 1:
             ycols = ycols[0]
         _x = _plot_cfg_.pop("x") or xcol
         _y = _plot_cfg_.pop("y") or ycols
         if _plot_cfg_.get("dataform"):
             dataform = _plot_cfg_.pop("dataform")
         if dataform == "wide":
-            if _x and _x in data.columns:
-                _data = data.set_index(_x)[_y]
+            if isinstance(data, pd.DataFrame):
+                if _x and _x in data.columns:
+                    _data = data.set_index(_x)[_y]
+                else:
+                    _data = data[_y]
             else:
-                _data = data[_y]
+                _data = data
             _func_(ax, x=None, y=None, data=_data, **_plot_cfg_)
         else:
             _func_(ax, x=_x, y=_y, data=data, **_plot_cfg_)
 
-    if isinstance(figures, dict):
+    if figures is None:
+        figures = []
+    elif not isinstance(figures, (dict, list)):
+        figures = []
+    elif isinstance(figures, dict):
         figures = [figures]
     for _fig_cfg_ in figures:
         secondary_y = _fig_cfg_.get("secondary_y", False)
@@ -109,8 +121,7 @@ def plot(data, verbose=False, **kwargs):
     if fname:
         Path(fname).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(**savefig)
-        if verbose:
-            print(f"Saved figure to {fname}")
+        log.info(f"Saved figure to {fname}")
 
 
 def lineplot(ax=None, x=None, y=None, data=None, **kwargs):

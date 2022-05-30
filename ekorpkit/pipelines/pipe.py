@@ -633,7 +633,6 @@ def normalize(df, args):
         return df
     if isinstance(apply_to, str):
         apply_to = [apply_to]
-    log.info(f"Normalizing text: {args}")
     log.info("instantiating normalizer")
     normalizer = eKonf.instantiate(normalizer)
     for key in apply_to:
@@ -681,21 +680,18 @@ def predict(df, args):
     to_predict = args.get("to_predict", None)
     model = args.get("model", None)
     if model is None:
-        if verbose:
-            log.warning("No model specified")
+        log.warning("No model specified")
         return df
 
     if isinstance(apply_to, list):
         apply_to = apply_to[0]
 
-    if verbose:
-        log.info(f"Predicting: {args}")
-        log.info("instantiating model")
+    log.info("instantiating model")
 
     _target_ = model[eKonf.Keys.TARGET]
     model = eKonf.instantiate(model)
-    if "sentiment.analyser" in _target_:
 
+    if "sentiment.analyser" in _target_:
         key = apply_to
         with elapsed_timer(format_time=True) as elapsed:
             predictions = apply(
@@ -711,9 +707,7 @@ def predict(df, args):
                 columns += pred_df.columns.tolist()
                 args["columns"] = columns
             df = df.join(pred_df)
-            if verbose:
-                log.info(" >> elapsed time to predict: {}".format(elapsed()))
-
+            log.info(" >> elapsed time to predict: {}".format(elapsed()))
     else:
         df = model.predict(df, to_predict)
         if columns:
@@ -737,14 +731,11 @@ def segment(df, args):
         return df
     segmenter = args.get("preprocessor", {}).get("segmenter", None)
     if segmenter is None:
-        if verbose:
-            log.warning("No segmenter specified")
+        log.warning("No segmenter specified")
         return df
     if isinstance(apply_to, str):
         apply_to = [apply_to]
-    if verbose:
-        log.info(f"Splitting text: {args}")
-        log.info("instantiating segmenter")
+    log.info("instantiating segmenter")
     segmenter = eKonf.instantiate(segmenter)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
@@ -756,8 +747,7 @@ def segment(df, args):
                 use_batcher=use_batcher,
                 minibatch_size=minibatch_size,
             )
-            if verbose:
-                log.info(" >> elapsed time to segment: {}".format(elapsed()))
+            log.info(" >> elapsed time to segment: {}".format(elapsed()))
     return df
 
 
@@ -768,19 +758,15 @@ def tokenize(df, args):
     minibatch_size = args.get("minibatch_size", None)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
-        if verbose:
-            log.warning("No columns specified")
+        log.warning("No columns specified")
         return df
     tokenizer = args.get("preprocessor", {}).get("tokenizer", None)
     if tokenizer is None:
-        if verbose:
-            log.warning("No tokenizer specified")
+        log.warning("No tokenizer specified")
         return df
     if isinstance(apply_to, str):
         apply_to = [apply_to]
-    if verbose:
-        log.info(f"Tokenizing text: {args}")
-        log.info("instantiating tokenizer")
+    log.info("instantiating tokenizer")
     tokenizer = eKonf.instantiate(tokenizer)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
@@ -792,8 +778,7 @@ def tokenize(df, args):
                 use_batcher=use_batcher,
                 minibatch_size=minibatch_size,
             )
-            if verbose:
-                log.info(" >> elapsed time to segment: {}".format(elapsed()))
+            log.info(" >> elapsed time to segment: {}".format(elapsed()))
     return df
 
 
@@ -806,19 +791,15 @@ def extract_tokens(df, args):
     minibatch_size = args.get("minibatch_size", None)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
-        if verbose:
-            log.warning("No columns specified")
+        log.warning("No columns specified")
         return df
     tokenizer = args.get("preprocessor", {}).get("tokenizer", None)
     if tokenizer is None:
-        if verbose:
-            log.warning("No tokenizer specified")
+        log.warning("No tokenizer specified")
         return df
     if isinstance(apply_to, str):
         apply_to = [apply_to]
-    if verbose:
-        log.info(f"Extracting tokens: {args}")
-        log.info("instantiating tokenizer")
+    log.info("instantiating tokenizer")
     tokenizer = eKonf.instantiate(tokenizer)
     if filter_stopwords_only:
         extract_func = tokenizer.filter_article_stopwords
@@ -838,8 +819,7 @@ def extract_tokens(df, args):
                 use_batcher=use_batcher,
                 minibatch_size=minibatch_size,
             )
-            if verbose:
-                log.info(" >> elapsed time to extract tokens: {}".format(elapsed()))
+            log.info(" >> elapsed time to extract tokens: {}".format(elapsed()))
     return df
 
 
@@ -850,19 +830,15 @@ def chunk(df, args):
     minibatch_size = args.get("minibatch_size", None)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
-        if verbose:
-            log.warning("No columns specified")
+        log.warning("No columns specified")
         return df
     segmenter = args.get("preprocessor", {}).get("segmenter", None)
     if segmenter is None:
-        if verbose:
-            log.warning("No segmenter specified")
+        log.warning("No segmenter specified")
         return df
     if isinstance(apply_to, str):
         apply_to = [apply_to]
-    if verbose:
-        log.info(f"Chunking text: {args}")
-        log.info("instantiating segmenter")
+    log.info("instantiating segmenter")
     segmenter = eKonf.instantiate(segmenter)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
@@ -874,8 +850,7 @@ def chunk(df, args):
                 use_batcher=use_batcher,
                 minibatch_size=minibatch_size,
             )
-            if verbose:
-                log.info(" >> elapsed time to segment: {}".format(elapsed()))
+            log.info(" >> elapsed time to segment: {}".format(elapsed()))
     return df
 
 
@@ -894,14 +869,13 @@ def general_function(df, args):
             if isinstance(apply_to, str):
                 apply_to = [apply_to]
             for key in apply_to:
-                if verbose:
-                    log.info(f"processing column: {key}")
+                log.info(f"processing column: {key}")
                 df[key] = getattr(df[key], method[eKonf.Keys.NAME])(
                     **method[eKonf.Keys.PARMS]
                 )
 
+        log.info(" >> elapsed time to replace: {}".format(elapsed()))
         if verbose:
-            log.info(" >> elapsed time to replace: {}".format(elapsed()))
             print(df.head())
     return df
 
@@ -1287,13 +1261,10 @@ def save_metadata(df, args):
 
 def save_dataframe(df, args):
     args = eKonf.to_dict(args)
-    verbose = args.get("verbose", False)
 
     if df is None:
         log.warning("Dataframe is None")
         return df
-    if verbose:
-        log.info(f"Saving dataframe: {args}")
 
     save_dataframe_(df, **args)
     return df
@@ -1321,10 +1292,7 @@ def load_dataframe(df=None, args=None):
         filepaths = get_filepaths(filepath)
     else:
         filepaths = get_filepaths(data_file, data_dir)
-    if verbose:
-        print(f"Loading {len(filepaths)} dataframes from {filepaths}")
-    else:
-        log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
+    log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
     if len(filepaths) == 1:
         df = _load_dataframe(
             filepaths[0],
@@ -1376,15 +1344,13 @@ def summary_stats(df, args):
         return df
     if output_file is None:
         output_file = "summary_stats.csv"
-    if verbose:
-        log.info(f"Summary stats: {args}")
     os.makedirs(os.path.abspath(output_dir), exist_ok=True)
     info_path = f"{output_dir}/{output_file}"
     stat_fn = eKonf.instantiate(stat_args)
     stats = stat_fn(df)
     eKonf.save(stats, f=info_path)
+    log.info(f"Saving summary stats: {info_path}")
     if verbose:
-        log.info(f"Saving summary stats: {info_path}")
         eKonf.pprint(stats)
 
     return df
@@ -1406,8 +1372,7 @@ def save_as_json(df, args):
     output_file_path = f"{output_dir}/{filename}"
 
     df.to_json(output_file_path, orient="records", lines=True, force_ascii=force_ascii)
-    if verbose:
-        log.info(f"Corpus is exported to {output_file_path}")
+    log.info(f"Corpus is exported to {output_file_path}")
     return df
 
 
@@ -1428,7 +1393,7 @@ def pipeline(data=None, **cfg):
 
     if len(process_pipeline) > 0:
         df = apply_pipeline(df, process_pipeline, args)
-    elif verbose:
+    else:
         log.warning("No pipeline specified")
 
     return df

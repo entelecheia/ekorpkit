@@ -15,6 +15,7 @@ to_train:
 to_predict:
   input: text
   predicted: ${..model.eval.to_eval.predicted}
+  model_outputs: raw_preds
 model:
   output_dir: ${..pred_output_dir}
   labels: ${..labels}

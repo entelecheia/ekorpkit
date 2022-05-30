@@ -1,48 +1,27 @@
+import logging
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from pathlib import Path
-from .base import set_style, set_figure
+from .base import set_figure
 from ekorpkit import eKonf
 
 
-def plot_confusion_matrix(
-    data,
-    confusion_matrix={},
-    savefig={},
-    plot={},
-    figure={},
-    verbose=False,
-    **kwargs,
-):
-    """
-    This function will make a pretty plot of an sklearn Confusion Matrix cm using a Seaborn heatmap visualization.
+log = logging.getLogger(__name__)
 
-    Arguments
-    ---------
-    data:                   confusion matrix to be passed in
-    confusion_matrix:       dictionary of arguments to pass to seaborn.heatmap
-        display_labels:         List of strings containing the display_labels to be displayed on the x,y axis. Default is 'auto'
-        matrix_labels:          List of strings that represent the labels row by row to be shown in each square.
-        include_values:         If True, show the raw number in the confusion matrix. Default is True.
-        include_percentages:    If True, show the proportions for each category. Default is True.
-        summary_stats:          If True, display summary statistics below the figure. Default is True.
-        cbar:                   If True, show the color bar. The cbar values are based off the values in the confusion matrix.
-                                Default is True.
-        cmap:                   Colormap of the values displayed from matplotlib.pyplot.cm. Default is 'Blues'
-    """
-    # confusion_matrix = confusion_matrix or cfg["confusion_matrix"]
-    # savefig = savefig or cfg["savefig"]
-    # plot = plot or cfg["plot"]
-    # figure = figure or cfg["figure"]
 
-    display_labels = confusion_matrix.get("display_labels") or "auto"
-    matrix_labels = confusion_matrix.get("matrix_labels")
-    include_values = confusion_matrix.get("include_values") or True
-    include_percentages = confusion_matrix.get("include_percentages") or True
-    summary_stats = confusion_matrix.get("summary_stats") or True
-    cbar = confusion_matrix.get("cbar") or True
-    cmap = confusion_matrix.get("cmap") or "Blues"
+def confusion_matrix(ax=None, x=None, y=None, data=None, **kwargs):
+    _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
+    _figure = {} or kwargs.get("figure")
+    if ax is None:
+        ax = plt.gca()
+
+    log.info(f"Confusion matrix: {kwargs}")
+
+    display_labels = kwargs.get("display_labels") or "auto"
+    matrix_labels = kwargs.get("matrix_labels")
+    include_values = kwargs.get("include_values")
+    include_percentages = kwargs.get("include_percentages")
+    summary_stats = kwargs.get("summary_stats")
 
     # CODE TO GENERATE TEXT INSIDE EACH SQUARE
     blanks = ["" for i in range(data.size)]
@@ -89,37 +68,20 @@ def plot_confusion_matrix(
     else:
         stats_text = ""
 
-    set_style(**plot)
-    figsize = plot.get("figsize", None)
-    if figsize is not None and isinstance(figsize, str):
-        figsize = eval(figsize)
-    plt.figure(figsize=figsize, tight_layout=True)
-    ax = plt.gca()
-
     sns.heatmap(
         data,
         annot=box_labels,
         fmt="",
-        cmap=cmap,
-        cbar=cbar,
         xticklabels=display_labels,
         yticklabels=display_labels,
+        ax=ax,
+        **_parms_,
     )
 
-    fig_args = figure.copy()
-    xlabel = fig_args.get("xlabel", {}).get("xlabel")
-    if xlabel:
-        xlabel = xlabel + stats_text
+    xlabel = _figure.get("xlabel")
+    if isinstance(xlabel, str):
+        _figure["xlabel"] = xlabel + stats_text
     else:
-        xlabel = stats_text
-    fig_args.get("xlabel", {}).update({"xlabel": xlabel})
+        _figure["xlabel"] = stats_text
 
-    set_figure(ax, **fig_args)
-
-    plt.tight_layout()
-    fname = savefig.get("fname", None)
-    if fname:
-        Path(fname).parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(**savefig)
-        if verbose:
-            print(f"Saved figure to {fname}")
+    set_figure(ax, **_figure)

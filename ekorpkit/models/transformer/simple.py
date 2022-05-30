@@ -26,7 +26,10 @@ class SimpleTrainer:
         self._pred_output_dir = args["pred_output_dir"]
         self._pred_output_file = args["pred_output_file"]
 
-        self.labels_key = self._to_train.get("labels")
+        self._labels_key = self._to_train.get("labels")
+
+        self._predicted_key = "predicted"
+        self._model_outputs_key = "model_outputs"
 
         os.makedirs(args["output_dir"], exist_ok=True)
         os.makedirs(args["cache_dir"], exist_ok=True)
@@ -86,8 +89,10 @@ class SimpleTrainer:
         return to_predict
 
     def append_predictions(self, df, preds):
-        predicted_key = self._to_predict["predicted"]
-        df[predicted_key] = preds
+        predicted_column = self._to_predict[self._predicted_key]
+        model_outputs_column = self._to_predict[self._model_outputs_key]
+        df[predicted_column] = preds[self._predicted_key]
+        df[model_outputs_column] = preds[self._model_outputs_key]
         return df
 
     def predict(self, df, _to_predict={}):
@@ -126,7 +131,7 @@ class SimpleNER(SimpleTrainer):
 
         args = self.args
         if args.labels is None:
-            labels = list(self.train_data[self.labels_key].unique())
+            labels = list(self.train_data[self._labels_key].unique())
 
         # Create a NERModel
         model = NERModel(
@@ -187,7 +192,7 @@ class SimpleClassification(SimpleTrainer):
             self.load_datasets()
 
         self._model_cfg["labels_list"] = (
-            self.train_data[self.labels_key].unique().tolist()
+            self.train_data[self._labels_key].unique().tolist()
         )
         args["num_labels"] = len(self._model_cfg["labels_list"])
 
@@ -232,4 +237,10 @@ class SimpleClassification(SimpleTrainer):
             self.load_model()
 
         predictions, raw_outputs = self.model.predict(to_predict)
-        return predictions
+        log.info(f"type of raw_outputs: {type(raw_outputs)}")
+        raw_outputs= [output.flatten().tolist() for output in raw_outputs]
+        log.info(f"raw_output: {raw_outputs[0]}")
+        return {
+            self._predicted_key: predictions,
+            self._model_outputs_key: raw_outputs,
+        }

@@ -20,8 +20,6 @@ column_info:
     text: text
   timestamp: 
     key: date
-    format: 
-    params:
   data:
     id: int
     text: str
