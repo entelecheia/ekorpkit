@@ -1,6 +1,6 @@
 # ekorpkit 【iːkɔːkɪt】 : **eKo**nomic **R**esearch **P**ython Tool**kit**
 
-[![PyPI version](https://badge.fury.io/py/ekorpkit.svg)](https://badge.fury.io/py/ekorpkit) [![Jupyter Book Badge](https://jupyterbook.org/en/stable/_images/badge.svg)](https://entelecheia.github.io/ekorpkit-config/) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6497226.svg)](https://doi.org/10.5281/zenodo.6497226) [![release](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml) [![CodeQL](https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml) [![test](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml) [![CircleCI](https://circleci.com/gh/entelecheia/ekorpkit/tree/main.svg?style=shield)](https://circleci.com/gh/entelecheia/ekorpkit/tree/main) [![codecov](https://codecov.io/gh/entelecheia/ekorpkit/branch/main/graph/badge.svg?token=8I4ORHRREL)](https://codecov.io/gh/entelecheia/ekorpkit) [![markdown-autodocs](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml)
+[![PyPI version](https://badge.fury.io/py/ekorpkit.svg)](https://badge.fury.io/py/ekorpkit) [![Jupyter Book Badge](https://jupyterbook.org/en/stable/_images/badge.svg)](https://entelecheia.github.io/ekorpkit-book/) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6497226.svg)](https://doi.org/10.5281/zenodo.6497226) [![release](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/release.yaml) [![CodeQL](https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml) [![test](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml) [![CircleCI](https://circleci.com/gh/entelecheia/ekorpkit/tree/main.svg?style=shield)](https://circleci.com/gh/entelecheia/ekorpkit/tree/main) [![codecov](https://codecov.io/gh/entelecheia/ekorpkit/branch/main/graph/badge.svg?token=8I4ORHRREL)](https://codecov.io/gh/entelecheia/ekorpkit) [![markdown-autodocs](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml/badge.svg)](https://github.com/entelecheia/ekorpkit/actions/workflows/markdown-autodocs.yaml)
 
 eKorpkit provides a flexible interface for NLP and ML research pipelines such as extraction, transformation, tokenization, training, and visualization. Its powerful config composition is backed by [Hydra](https://hydra.cc/).
 
@@ -25,11 +25,11 @@ eKorpkit provides a flexible interface for NLP and ML research pipelines such as
 - With eKorpkit, you can easily share your datasets and models.
 - Sharing configs along with datasets and models makes every research reproducible.
 
-## [Tutorials](https://entelecheia.github.io/ekorpkit-config)
+## [Tutorials](https://entelecheia.github.io/ekorpkit-book)
 
 Tutorials for [ekorpkit](https://github.com/entelecheia/ekorpkit) package can be found at https://entelecheia.github.io/ekorpkit-config/
 
-## [Installation](https://entelecheia.github.io/ekorpkit-config/docs/basics/install.html)
+## [Installation](https://entelecheia.github.io/ekorpkit-book/docs/basics/install.html)
 
 Install the latest version of ekorpit:
 
@@ -54,7 +54,7 @@ The eKorpkit Corpus is a large, diverse, bilingual (ko/en) language modelling da
 ```tex
 @software{lee_2022_6497226,
   author       = {Young Joon Lee},
-  title        = {eKorpkit: English Korean Corpus Toolkit},
+  title        = {eKorpkit: eKonomic Research Python Toolkit},
   month        = apr,
   year         = 2022,
   publisher    = {Zenodo},
@@ -66,7 +66,7 @@ The eKorpkit Corpus is a large, diverse, bilingual (ko/en) language modelling da
 ```tex
 @software{lee_2022_ekorpkit,
   author       = {Young Joon Lee},
-  title        = {eKorpkit: English Korean Corpus Toolkit},
+  title        = {eKorpkit: eKonomic Research Python Toolkit},
   month        = apr,
   year         = 2022,
   publisher    = {GitHub},
