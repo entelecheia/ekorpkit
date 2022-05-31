@@ -1,5 +1,7 @@
 import os
 import logging
+import cached_path as _cpath
+import gdown
 import shutil
 from pathlib import Path
 
@@ -12,12 +14,9 @@ def cached_path(
     extract_archive: bool = False,
     force_extract: bool = False,
     return_parent_dir: bool = False,
-    persist_cache: bool = False,
-    persistent_dir=None,
     cache_dir=None,
     verbose: bool = False,
 ):
-    import cached_path
 
     if verbose:
         log.info(
@@ -43,7 +42,7 @@ def cached_path(
                 else:
                     cache_dir = Path(cache_dir) / "cached_path"
 
-                _path = cached_path.cached_path(
+                _path = _cpath.cached_path(
                     url_or_filename,
                     extract_archive=extract_archive,
                     force_extract=force_extract,
@@ -51,6 +50,7 @@ def cached_path(
                 ).as_posix()
 
             log.info(f"cached path: {_path}")
+
             if Path(_path).is_file():
                 _parent_dir = Path(_path).parent
             elif Path(_path).is_dir():
@@ -81,7 +81,6 @@ def cached_gdown(
     :type cache_dir: str
     :returns: str
     """
-    import gdown
 
     if verbose:
         log.info(f"Downloading {url}...")

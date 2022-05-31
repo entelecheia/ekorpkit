@@ -1,0 +1,7 @@
+uri:
+extract_archive: true
+force_extract: false
+return_parent_dir: true
+cache_dir: ${dir.cache}
+verbose: ${oc.select:..verbose, false}
+path: ${cached_path:${.uri},${.extract_archive},${.force_extract},${.return_parent_dir},${.cache_dir},${.verbose}}

@@ -10,21 +10,6 @@ class ColumnInfo:
     def __init__(self, **args):
         self.args = eKonf.to_dict(args)
 
-        self.KEYs = self.KEYs
-        self.COLUMNs = self.COLUMNs
-        self.DATATYPEs = self.DATATYPEs
-        self.METATYPEs = self.METATYPEs
-        self.TIMESTAMP_PARM = self.TIMESTAMP_PARM
-        self.DATETIME_PARM = self.DATETIME_PARM
-
-        self.ID = self.ID
-        self._ID = self._ID
-        self.TEXT = self.TEXT
-        self.TIMESTAMP = self.TIMESTAMP
-        self.SPLIT = self.SPLIT
-        self.CORPUS = self.CORPUS
-        self.DATASET = self.DATASET
-
     def __str__(self):
         classname = self.__class__.__name__
         s = f"{classname} : {self.INFO}"
@@ -217,7 +202,7 @@ class ColumnInfo:
 
     @property
     def IDs(self):
-        return eKonf.ensure_list(self.COLUMNs[eKonf.Keys.ID])
+        return eKonf.ensure_list(self.COLUMNs.get(eKonf.Keys.ID))
 
     @IDs.setter
     def IDs(self, value):
@@ -233,7 +218,7 @@ class ColumnInfo:
 
     @property
     def TEXTs(self):
-        return eKonf.ensure_list(self.COLUMNs[eKonf.Keys.TEXT])
+        return eKonf.ensure_list(self.COLUMNs.get(eKonf.Keys.TEXT))
 
     @TEXTs.setter
     def TEXTs(self, value):

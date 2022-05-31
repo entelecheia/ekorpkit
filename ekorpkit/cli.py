@@ -29,7 +29,6 @@ def about(**args):
     print()
     for k, v in args.items():
         print(f"{k:11} : {v}")
-    # print(f"{'version':11} : {__version__}")
     print(f"\nExecute `{name} --help` to see what eKorpkit provides")
 
 

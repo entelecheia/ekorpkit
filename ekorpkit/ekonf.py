@@ -2,11 +2,10 @@ import logging
 import os
 import random
 import hydra
-import pathlib
 import dotenv
 import ekorpkit.utils.batch.batcher as batcher
 from enum import Enum
-from hydra.core.config_store import ConfigStore
+from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
 from ekorpkit.io.cached_path import cached_path
@@ -20,11 +19,11 @@ __hydra_version_base__ = "1.2"
 
 
 def __ekorpkit_path__():
-    return pathlib.Path(__file__).parent.as_posix()
+    return Path(__file__).parent.as_posix()
 
 
 def __home_path__():
-    return pathlib.Path.home().as_posix()
+    return Path.home().as_posix()
 
 
 def __version__():
@@ -78,8 +77,6 @@ def _path(
     extract_archive: bool = False,
     force_extract: bool = False,
     return_parent_dir: bool = False,
-    persist_cache: bool = False,
-    persistent_dir=None,
     cache_dir=None,
     verbose: bool = False,
 ):
@@ -88,8 +85,6 @@ def _path(
         extract_archive=extract_archive,
         force_extract=force_extract,
         return_parent_dir=return_parent_dir,
-        persist_cache=persist_cache,
-        persistent_dir=persistent_dir,
         cache_dir=cache_dir,
         verbose=verbose,
     )
@@ -370,13 +365,11 @@ def _is_instantiatable(cfg: Any):
     return _is_config(cfg) and _Keys.TARGET in cfg
 
 
-def _load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
+def _load(file_: Union[str, Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
     return OmegaConf.load(file_)
 
 
-def _save(
-    config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
-) -> None:
+def _save(config: Any, f: Union[str, Path, IO[Any]], resolve: bool = False) -> None:
     OmegaConf.save(config, f, resolve=resolve)
 
 
@@ -497,7 +490,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
 
 def _load_dotenv(verbose=False):
     original_cwd = getcwd()
-    dotenv_path = pathlib.Path(original_cwd, ".env")
+    dotenv_path = Path(original_cwd, ".env")
     dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
 
 
@@ -524,8 +517,7 @@ def _init_env_(cfg=None, verbose=False):
 
             ray_cfg = env.get("ray", None)
             ray_cfg = eKonf.to_container(ray_cfg, resolve=True)
-            if verbose:
-                log.info(f"initializing ray with {ray_cfg}")
+            log.info(f"initializing ray with {ray_cfg}")
             ray.init(**ray_cfg)
             backend_handle = ray
 
@@ -534,8 +526,7 @@ def _init_env_(cfg=None, verbose=False):
 
             dask_cfg = env.get("dask", None)
             dask_cfg = eKonf.to_container(dask_cfg, resolve=True)
-            if verbose:
-                log.info(f"initializing dask client with {dask_cfg}")
+            log.info(f"initializing dask client with {dask_cfg}")
             client = Client(**dask_cfg)
             if verbose:
                 log.info(client)
@@ -543,14 +534,14 @@ def _init_env_(cfg=None, verbose=False):
         batcher.batcher_instance = batcher.Batcher(
             backend_handle=backend_handle, **env.batcher
         )
-        if verbose:
-            log.info(batcher.batcher_instance)
+        log.info(f"initialized batcher with {batcher.batcher_instance}")
     _env_initialized_ = True
 
 
 def _stop_env_(cfg, verbose=False):
     env = cfg.env
     backend = env.distributed_framework.backend
+    log.info(f"stopping {backend}, if running")
 
     if env.distributed_framework.initialize:
         if backend == "ray":
@@ -734,7 +725,7 @@ class eKonf:
         return _is_instantiatable(cfg)
 
     @staticmethod
-    def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
+    def load(file_: Union[str, Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
         return _load(file_)
 
     @staticmethod
@@ -760,9 +751,7 @@ class eKonf:
         return _merge(*configs)
 
     @staticmethod
-    def save(
-        config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
-    ) -> None:
+    def save(config: Any, f: Union[str, Path, IO[Any]], resolve: bool = False) -> None:
         _save(config, f, resolve)
 
     @staticmethod
@@ -803,8 +792,6 @@ class eKonf:
         extract_archive: bool = False,
         force_extract: bool = False,
         return_parent_dir: bool = False,
-        persist_cache: bool = False,
-        persistent_dir=None,
         cache_dir=None,
         verbose: bool = False,
     ):
@@ -894,8 +881,6 @@ class eKonf:
             extract_archive=extract_archive,
             force_extract=force_extract,
             return_parent_dir=return_parent_dir,
-            persist_cache=persist_cache,
-            persistent_dir=persistent_dir,
             cache_dir=cache_dir,
             verbose=verbose,
         )

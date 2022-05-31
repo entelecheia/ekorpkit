@@ -1,6 +1,6 @@
 defaults:
   - /column_info: default
-  - /cached_path: extract_archive
+  - /cache: extract_archive
 
 _target_: ekorpkit.corpora.corpus.Corpus
 name: ${oc.select:.builtin.name, null}
