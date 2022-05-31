@@ -16,14 +16,21 @@ eKorpkit provides a flexible interface for NLP and ML research pipelines such as
 
 - eKorpkit lets you focus on the problem at hand instead of spending time on boilerplate code like command line flags, loading configuration files, logging etc.
 
-### Pluggable Architecture
+### Workflows
 
-- eKorpkit has a pluggable architecture, enabling it to combine with your own implementation.
+- A workflow is a configurable automated process that will run one or more jobs.
+- You can divide your research into several unit jobs (tasks), then combine those jobs into one workflow.
+- You can have multiple workflows, each of which can perform a different set of tasks.
 
 ### Sharable and Reproducible
 
 - With eKorpkit, you can easily share your datasets and models.
 - Sharing configs along with datasets and models makes every research reproducible.
+- You can share each unit jobs or an entire workflow.
+
+### Pluggable Architecture
+
+- eKorpkit has a pluggable architecture, enabling it to combine with your own implementation.
 
 ## [Tutorials](https://entelecheia.github.io/ekorpkit-book)
 
