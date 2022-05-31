@@ -1,9 +1,0 @@
-# @package _global_
-defaults:
-  - default
-  
-uri:
-extract_archive: true
-force_extract: false
-verbose: false
-path: ${cached_path:${.uri},${.extract_archive},${.force_extract},${dir.cache},${.verbose}}

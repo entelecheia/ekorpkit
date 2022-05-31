@@ -60,7 +60,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements(),
-    extras_require=get_extra_requires("ekorpkit/resources/requirements-extra.txt"),
+    extras_require=get_extra_requires("ekorpkit/resources/requirements-extra.yaml"),
     keywords=[],
     packages=find_packages(),
     python_requires=">=3.7",

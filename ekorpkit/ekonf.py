@@ -78,6 +78,8 @@ def _path(
     extract_archive: bool = False,
     force_extract: bool = False,
     return_parent_dir: bool = False,
+    persist_cache: bool = False,
+    persistent_dir=None,
     cache_dir=None,
     verbose: bool = False,
 ):
@@ -86,6 +88,8 @@ def _path(
         extract_archive=extract_archive,
         force_extract=force_extract,
         return_parent_dir=return_parent_dir,
+        persist_cache=persist_cache,
+        persistent_dir=persistent_dir,
         cache_dir=cache_dir,
         verbose=verbose,
     )
@@ -586,16 +590,16 @@ def apply_pipe(df, pipe):
         return fn(df, pipe)
 
 
-def _dependencies(key, path=None):
+def _dependencies(_key=None, _path=None):
     import re
     from collections import defaultdict
 
-    if path is None:
-        path = os.path.join(
-            os.path.dirname(__file__), "resources", "requirements-extra.txt"
+    if _path is None:
+        _path = os.path.join(
+            os.path.dirname(__file__), "resources", "requirements-extra.yaml"
         )
 
-    with open(path) as fp:
+    with open(_path) as fp:
         extra_deps = defaultdict(set)
         for k in fp:
             if k.strip() and not k.startswith("#"):
@@ -610,10 +614,10 @@ def _dependencies(key, path=None):
         # add tag `exhaustive` at the end
         extra_deps["exhaustive"] = set(vv for v in extra_deps.values() for vv in v)
 
-    if key == "keys":
+    if _key is None or _key == "keys":
         return set(extra_deps.keys())
     else:
-        return extra_deps[key]
+        return extra_deps[_key]
 
 
 def _ensure_list(value):
@@ -799,7 +803,10 @@ class eKonf:
         extract_archive: bool = False,
         force_extract: bool = False,
         return_parent_dir: bool = False,
+        persist_cache: bool = False,
+        persistent_dir=None,
         cache_dir=None,
+        verbose: bool = False,
     ):
         """
         Given something that might be a URL or local path, determine which.
@@ -887,7 +894,10 @@ class eKonf:
             extract_archive=extract_archive,
             force_extract=force_extract,
             return_parent_dir=return_parent_dir,
+            persist_cache=persist_cache,
+            persistent_dir=persistent_dir,
             cache_dir=cache_dir,
+            verbose=verbose,
         )
 
     @staticmethod
@@ -895,8 +905,8 @@ class eKonf:
         return apply_pipe(data, cfg)
 
     @staticmethod
-    def dependencies(key, path=None):
-        return _dependencies(key, path)
+    def dependencies(_key=None, path=None):
+        return _dependencies(_key, path)
 
     @staticmethod
     def ensure_list(value):
