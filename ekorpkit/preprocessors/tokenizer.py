@@ -228,15 +228,28 @@ class Tokenizer:
             return term_pos
         return tokens
 
-    def extract(self, text, nouns_only=False, return_as_list=True):
+    def extract(
+        self,
+        text,
+        nouns_only=False,
+        return_as_list=True,
+        postags=None,
+        stop_postags=None,
+        strip_pos=None,
+    ):
+        if strip_pos is None:
+            strip_pos = self._extract_strip_pos
+        if stop_postags is None:
+            stop_postags = self._stop_postags
+        if postags is None:
+            postags = self._noun_postags if nouns_only else self._postags
 
-        postags = self._noun_postags if nouns_only else self._postags
         tokens = _extract_tokens(
             text,
             postags=postags,
-            stop_postags=self._stop_postags,
+            stop_postags=stop_postags,
             stopwords=self._stopwords,
-            strip_pos=self._extract_strip_pos,
+            strip_pos=strip_pos,
             postag_delim=self._extract_postag_delim,
             postag_length=self._extract_postag_length,
         )

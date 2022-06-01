@@ -3,6 +3,7 @@ max_len: 2
 templates:
   - ('/NN', '/J', '/NN')
   - ('/NN', '/NN')
+strip_pos: false
 stop_tags:
   - SP
   - SF

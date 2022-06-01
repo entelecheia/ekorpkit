@@ -14,14 +14,12 @@ log = logging.getLogger(__name__)
 
 
 def _exist_ordered_overlap(list_s, list_l):
-    if len(list_s) == len(list_l):
-        return list_s == list_l
     if len(list_s) > len(list_l):
         return _exist_ordered_overlap(list_l, list_s)
     matched_first_item = False
     for s_i, s in enumerate(list_s):
         if not list_l:
-            return False
+            break
         matched = -1
         for l_i, l in enumerate(list_l):
             if s == l:
@@ -29,9 +27,9 @@ def _exist_ordered_overlap(list_s, list_l):
                 if l_i == 0 or s_i == 0:
                     matched_first_item = True
                 break
-        if matched == -1:
-            return False
         list_l = list_l[matched + 1 :]
+    if matched == -1:
+        return False
     if not matched_first_item and len(list_l) > 0:
         return False
     return True
@@ -40,22 +38,42 @@ def _exist_ordered_overlap(list_s, list_l):
 def _remove_overlapping_ngrams_by_score(ngram_pos_scores):
     """Remove overlapping ngrams by score"""
     result = []
-    for ngram_pos_score in ngram_pos_scores:
-        ngram, pos, score = ngram_pos_score
+    unigram_pos_scores = []
+    for uniram_pos_score in ngram_pos_scores:
+        unigram, pos, score = uniram_pos_score
+        if len(unigram) == 1:
+            unigram_pos_scores.append(uniram_pos_score)
+            continue
         exist_overlap = False
         for _ngram_pos_score in ngram_pos_scores:
             _ngram, _pos, _score = _ngram_pos_score
-            if _ngram == ngram or len(_ngram) == 1:
+            if _ngram == unigram or len(_ngram) == 1:
                 continue
-            if min(_pos) > max(pos):
-                break
-            if _exist_ordered_overlap(_pos, pos):
+            if min(_pos) > max(pos) or max(_pos) < min(pos):
+                continue
+            if _exist_ordered_overlap(pos, _pos):
                 if score < _score:
                     exist_overlap = True
                     break
         if not exist_overlap:
-            result.append(ngram_pos_score)
+            result.append(uniram_pos_score)
 
+    for uniram_pos_score in unigram_pos_scores:
+        unigram, pos, score = uniram_pos_score
+        exist_overlap = False
+        for _ngram_pos_score in result:
+            _ngram, _pos, _score = _ngram_pos_score
+            if _ngram == unigram or len(_ngram) == 1:
+                continue
+            if min(_pos) > max(pos) or max(_pos) < min(pos):
+                continue
+            if pos[0] in _pos:
+                exist_overlap = True
+                break
+        if not exist_overlap:
+            result.append(uniram_pos_score)
+
+    result = sorted(result, key=lambda x: x[1][0], reverse=False)
     return result
 
 
@@ -180,6 +198,8 @@ class Ngrams:
         self.candidates = {}
         self.total_words = 0
 
+        self.initialize()
+
     def initialize(self):
         self.load_candidates()
         if not self.candidates or self.force_train:
@@ -188,8 +208,11 @@ class Ngrams:
 
     def tokenize(self, text):
         tokens = self._tokenizer.tokenize(text)
-        return self._tokenizer.extract(tokens)
-
+        return self._tokenizer.extract(
+            tokens,
+            strip_pos=self._postag.strip_pos,
+            stop_postags=self._postag.stop_tags,
+        )
 
     def load_candidates(self):
         """Load a previously saved model"""
@@ -198,7 +221,7 @@ class Ngrams:
             Ngram = namedtuple("ngram", df.columns)
             _cands = df.to_dict(orient="records")
             self.candidates = {
-                tuple(cand["words"].split(self._ngram.delimiter)): Ngram(*cand)
+                tuple(cand["words"].split(self._ngram.delimiter)): Ngram(**cand)
                 for cand in _cands
             }
             log.info(f"loaded {len(self.candidates)} candidates")

@@ -6,7 +6,7 @@ defaults:
   - /preprocessor/tokenizer: simple
 
 _target_: ekorpkit.models.ngram.base.Ngrams
-name: ${oc.select:corpus.name,''}_ngram_${oc.select:.score_function.name,''}_model
+name: ngram
 force_train: false
 analyze:
   exclude_overlaps: true
@@ -21,6 +21,6 @@ ngramize:
   delimiter: ""
   strip_pos: true
 output_dir: ${dir.project}/outputs/ngrams/
-output_file: ${.name}.parquet
+output_file: ${.score_function.name}_${.name}_model.parquet
 progress_per: 1000
 verbose: ${oc.select:..verbose,false}
