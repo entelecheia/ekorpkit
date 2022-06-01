@@ -21,6 +21,6 @@ ngramize:
   delimiter: ""
   strip_pos: true
 output_dir: ${dir.project}/outputs/ngrams/
-output_file: ${.score_function.name}_${.name}_model.parquet
+output_file: ${.name}_${.score_function.name}_model.parquet
 progress_per: 1000
 verbose: ${oc.select:..verbose,false}

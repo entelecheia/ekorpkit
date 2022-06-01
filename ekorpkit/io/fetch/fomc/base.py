@@ -2,12 +2,13 @@ import logging
 import re
 import threading
 import os
+from numpy import dtype
 import pandas as pd
 import codecs
 import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import date, datetime
 from abc import abstractmethod
 from ekorpkit import eKonf
 from ekorpkit.io.file import save_dataframe, load_dataframe
@@ -75,6 +76,9 @@ class FOMC:
         self.articles = None
         self.speakers = None
         self.titles = None
+
+        # missing articles
+        self._articles = args.get("articles")
 
         # FOMC website URLs
         self.base_url = args["base_url"]
@@ -196,10 +200,23 @@ class FOMC:
             "title": self.titles,
             "text": self.articles,
         }
-        self.df = pd.DataFrame(dict).sort_values(by=["date"])
+        self.df = pd.DataFrame(dict)
         self.df["content_type"] = self.content_type
+        _df = self.get_missing_contents(self.content_type)
+        if _df is not None:
+            self.df = pd.concat([self.df, _df])
+        self.df.sort_values(by="date", inplace=True)
         self.df.reset_index(drop=True, inplace=True)
         return self.df
+
+    def get_missing_contents(self, content_type):
+        if isinstance(self._articles, dict) and content_type in self._articles:
+            articles = self._articles[content_type]
+            df = pd.DataFrame.from_dict(articles, orient="records")
+            df["content_type"] = content_type
+            return df
+        else:
+            return None
 
     def save(self):
         """
@@ -444,3 +461,88 @@ class FOMC:
         results = pd.DataFrame(results)
         results.set_index(index_name, inplace=True)
         return target.merge(results, how="left", left_index=True, right_index=True)
+
+    def postprocess_metadata(self, data, content_type):
+        """
+        - Add type
+        - Add rate, decision (for meeting documents, None for the others)
+        - Add next meeting date, rate and decision
+        """
+
+        if content_type in (
+            "fomc_statement",
+            "fomc_minutes",
+            "fomc_press_conf",
+            "fomc_meeting_script",
+        ):
+            is_meeting_doc = True
+        elif content_type in ("fomc_speech", "fomc_testimony"):
+            is_meeting_doc = False
+        else:
+            print("Invalid doc_type [{}] is given!".format(content_type))
+            return None
+
+        df = data.copy()
+
+        df["decision"] = df["date"].map(
+            lambda x: self._get_rate_change(x) if is_meeting_doc else None
+        )
+        df["rate"] = df["date"].map(
+            lambda x: self._get_rate(x) if is_meeting_doc else None
+        )
+        df["next_meeting"] = df["date"].map(lambda x: self._get_next_meeting_date(x))
+        df["next_decision"] = df["next_meeting"].map(lambda x: self._get_rate_change(x))
+        df["next_rate"] = df["next_meeting"].map(lambda x: self._get_rate(x))
+
+        return df
+
+    def _get_rate_change(self, article_date):
+        """
+        Returns rate change decision of the FOMC Decision for the given date x.
+        x should be of datetime type or yyyy-mm-dd format string.
+        """
+        if isinstance(article_date, str):
+            article_date = datetime.strptime(article_date, "%Y-%m-%d")
+
+        if article_date in self.calendar.index:
+            return self.calendar.loc[article_date]["rate_decision"]
+        else:
+            return None
+
+    def _get_rate(self, article_date):
+        """
+        Returns rate of the FOMC Decision for the given date x.
+        x should be of datetime type or yyyy-mm-dd format string.
+        """
+        if isinstance(article_date, str):
+            article_date = datetime.strptime(article_date, "%Y-%m-%d")
+
+        if article_date in self.calendar.index:
+            return self.calendar.loc[article_date]["rate"]
+        else:
+            return None
+
+    def _get_next_meeting_date(self, article_date):
+        """
+        Returns the next fomc meeting date for the given date x, referring to fomc_calendar DataFrame.
+        Usually FOMC Meetings takes two days, so it starts searching from x+2.
+        x should be of datetime type or yyyy-mm-dd format string.
+        """
+        import datetime as dt
+
+        if isinstance(article_date, str):
+            article_date = datetime.strptime(article_date, "%Y-%m-%d")
+
+        # Add two days to get the day after next
+        article_date += dt.timedelta(days=2)
+
+        cal = self.calendar.copy()
+        if cal.index.min() > article_date:
+            # If the date is older than the first FOMC Meeting, do not return any date.
+            return None
+        else:
+            dt_ix = cal[cal.index > article_date].index.min()
+            if not pd.isnull(dt_ix):
+                return dt_ix
+            else:
+                return None

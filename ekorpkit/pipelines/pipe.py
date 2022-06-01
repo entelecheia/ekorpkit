@@ -8,7 +8,7 @@ from collections import OrderedDict
 from functools import partial, reduce
 from ekorpkit.utils import print_status
 from ekorpkit.utils.batch import decorator_apply
-from ekorpkit.utils.func import check_max_len, check_min_len, elapsed_timer
+from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.file import save_dataframe as save_dataframe_
 from ekorpkit import eKonf
 from ekorpkit.ekonf import apply_pipe
@@ -942,54 +942,46 @@ def filter_length(df, args, **kwargs):
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
-        if verbose:
-            log.warning("No columns specified")
+        log.warning("No columns specified")
         return df
     if isinstance(apply_to, str):
         apply_to = [apply_to]
     min_length = args.get("min_length", None)
     max_length = args.get("max_length", None)
     if min_length is None and max_length is None:
-        if verbose:
-            log.warning("No length specified")
+        log.warning("No length specified")
         return df
-    len_func = args[eKonf.Keys.FUNC].get("len_bytes", None)
+    add_len_column = args.get("add_len_column", False)
+    len_column = args.get("len_column", "num_bytes")
+    func_name = args.get("len_func", "len_bytes")
+    len_func = args[eKonf.Keys.FUNC].get(func_name, None)
     len_func = eKonf.instantiate(len_func)
-    _check_max_len = partial(check_max_len, max_len=max_length, len_func=len_func)
-    _check_min_len = partial(check_min_len, min_len=min_length, len_func=len_func)
 
+    df = df.copy()
     if verbose:
         log.info(f"Filtering by length: {args}")
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
+            _len_column = f"{key}_{len_column}"
+            df[_len_column] = apply(
+                len_func, df[key], description=f"Calculating length"
+            )
             if min_length and min_length > 0:
                 n_docs = df.shape[0]
-                idx = apply(
-                    _check_min_len,
-                    df[key].astype(str),
-                    verbose=verbose,
-                    description=f"min length: {min_length}",
+                df = df.loc[df[_len_column] >= min_length]
+                log.info(
+                    f"removed {(n_docs-df.shape[0])} of {n_docs} documents with length < {min_length}"
                 )
-                df = df[idx]
-                if verbose:
-                    log.info(
-                        f"{(n_docs-df.shape[0])} of {n_docs} documents removed due to length is less than {min_length}"
-                    )
             if max_length and max_length > 0:
                 n_docs = df.shape[0]
-                idx = apply(
-                    _check_max_len,
-                    df[key].astype(str),
-                    verbose=verbose,
-                    description=f"max length: {max_length}",
+                df = df.loc[df[_len_column] <= max_length]
+                log.info(
+                    f"removed {(n_docs-df.shape[0])} of {n_docs} documents with length > {max_length}"
                 )
-                df = df[idx]
-                if verbose:
-                    log.info(
-                        f"{(n_docs-df.shape[0])} of {n_docs} documents removed due to length is greater than {max_length}"
-                    )
-            if verbose:
-                log.info(" >> elapsed time to filter length: {}".format(elapsed()))
+            log.info(" >> elapsed time to filter length: {}".format(elapsed()))
+        if not add_len_column:
+            df = df.drop(_len_column, axis=1)
+
     return df
 
 

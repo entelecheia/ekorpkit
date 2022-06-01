@@ -1,6 +1,6 @@
 _partial_: true
 _target_: ekorpkit.models.ngram.score.mutual_information
-name: mutual_information
+name: pmi
 delta: 0.0
 expansion_method: average
 normalize: false
