@@ -1,5 +1,6 @@
 defaults:
   - default
+  - override extract: mecab
 
 _target_: ekorpkit.preprocessors.tokenizer.MecabTokenizer
 mecab:

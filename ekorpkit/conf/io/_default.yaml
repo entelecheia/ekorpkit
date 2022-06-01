@@ -1,3 +1,6 @@
+defaults:
+  - /cache: default
+
 name: ${oc.select:..name,''}
 data_dir: ${dir.archive}/datasets/source/${.name}
 data_sources:

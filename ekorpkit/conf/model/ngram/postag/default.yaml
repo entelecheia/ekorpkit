@@ -1,0 +1,14 @@
+delimiter: /
+max_len: 2
+templates:
+  - ('/NN', '/J', '/NN')
+  - ('/NN', '/NN')
+stop_tags:
+  - SP
+  - SF
+  - SE
+  - SSO
+  - SSC
+  - SC
+  - SY
+  - SH

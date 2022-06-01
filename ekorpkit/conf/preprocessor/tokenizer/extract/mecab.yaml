@@ -1,4 +1,6 @@
-postags:
+defaults:
+  - default
+
 noun_postags:
   - NNG
   - NNP
@@ -16,6 +18,3 @@ stop_postags:
   - SC
   - SY
   - SH
-strip_pos: true
-postag_delim: /
-postag_length:

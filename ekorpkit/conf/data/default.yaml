@@ -3,6 +3,7 @@ defaults:
   - /_func_/load_dataframe: default
   - /_func_/concat_dataframes: default
   - /_func_/save_dataframe: default
+  - /cache: extract_archive
 
 _target_: ekorpkit.pipelines.data.Data
 name: ${iif:${iif:${oc.select:corpus.name, null}, ${oc.select:corpus.name, null}, ${oc.select:dataset.name, null}},${iif:${oc.select:corpus.name, null}, ${oc.select:corpus.name, null}, ${oc.select:dataset.name, null}},data}

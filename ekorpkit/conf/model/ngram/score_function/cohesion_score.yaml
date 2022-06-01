@@ -2,5 +2,5 @@ _partial_: true
 _target_: ekorpkit.models.ngram.score.cohesion_score
 name: cohesion_score
 min_count: ${oc.select:..candidates.min_count,10}
-expansion_method: max
+expansion_method: average
 delimiter: ${oc.select:..ngram.delimiter,_}

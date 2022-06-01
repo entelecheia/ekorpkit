@@ -1,0 +1,5 @@
+threshold: 0.5
+min_count: 10
+max_candidates: 40000000
+num_sents_per_pruning: 10000
+prune_min_ngram_count: 2

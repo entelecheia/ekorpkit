@@ -4,7 +4,7 @@ defaults:
   - tokenize_article: default
   - extract: default
 
-_target_: ekorpkit.preprocessors.tokenizer.Tokenizer
+_target_: ekorpkit.preprocessors.tokenizer.SimpleTokenizer
 normalize:
 return_as_list: false
 stopwords_path: ${oc.select:..stopwords_path, null}

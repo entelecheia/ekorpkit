@@ -1,6 +1,8 @@
 lowercase: false
 flatten: true
-concat_surface_and_pos: true
+strip_pos: false
+postag_delim: /
+postag_length:
 include_whitespace_token: true
 tokenize_each_word: false
 punct_postags:

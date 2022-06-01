@@ -20,6 +20,7 @@ BranchingEntropy = namedtuple(
 
 def cohesion_score(
     ngrams,
+    total_words=None,
     min_count=30,
     expansion_method="max",
     delimiter="_",
@@ -63,6 +64,7 @@ def cohesion_score(
 
 def branching_entropy(
     ngrams,
+    total_words=None,
     min_count=10,
     delimiter="_",
     **kwargs,
@@ -129,8 +131,10 @@ def branching_entropy(
 
 def mutual_information(
     ngrams,
+    total_words=None,
     delta=0.0,
     expansion_method="average",
+    normalize=False,
     delimiter="_",
     **kwargs,
 ):
@@ -149,7 +153,8 @@ def mutual_information(
 
     # max_n = max([len(ngram) for ngram in ngrams.keys()])
     candidates = {}
-
+    total_words = float(total_words)
+    num_ngrams = len(ngrams)
     for ngram, ab in tqdm(ngrams.items()):
         if (len(ngram) == 1) or (ab <= delta):
             continue
@@ -159,7 +164,13 @@ def mutual_information(
             b = ngrams.get(tuple(ngram[i:]), 0)
             if (a == 0) or (b == 0):
                 continue
-            score = (ab - delta) / (a * b)
+            if normalize:
+                pa = a / total_words
+                pb = b / total_words
+                pab = ab / total_words
+                score = math.log(pab / (pa * pb)) / -math.log(pab)
+            else:
+                score = (ab - delta) / float(a * b) * num_ngrams
             score_candidates[i] = score
 
         if not score_candidates:
@@ -173,7 +184,7 @@ def mutual_information(
             score = sum(score_candidates.values()) / len(score_candidates)
 
         candidates[ngram] = MutualInformation(
-            delimiter.join(ngram), len(ngram), ab, score
+            delimiter.join(ngram), num_ngrams, ab, score
         )
     return candidates
 
