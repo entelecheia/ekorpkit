@@ -606,7 +606,11 @@ def _dependencies(_key=None, _path=None):
         extra_deps["exhaustive"] = set(vv for v in extra_deps.values() for vv in v)
 
     if _key is None or _key == "keys":
-        return set(extra_deps.keys())
+        tags = []
+        for tag, deps in extra_deps.items():
+            if len(deps) > 1:
+                tags.append(tag)
+        return tags
     else:
         return extra_deps[_key]
 

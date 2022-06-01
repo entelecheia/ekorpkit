@@ -39,15 +39,15 @@ def _remove_overlapping_ngrams_by_score(ngram_pos_scores):
     """Remove overlapping ngrams by score"""
     result = []
     unigram_pos_scores = []
-    for uniram_pos_score in ngram_pos_scores:
-        unigram, pos, score = uniram_pos_score
-        if len(unigram) == 1:
-            unigram_pos_scores.append(uniram_pos_score)
+    for nram_pos_score in ngram_pos_scores:
+        ngram, pos, score = nram_pos_score
+        if len(ngram) == 1:
+            unigram_pos_scores.append(nram_pos_score)
             continue
         exist_overlap = False
         for _ngram_pos_score in ngram_pos_scores:
             _ngram, _pos, _score = _ngram_pos_score
-            if _ngram == unigram or len(_ngram) == 1:
+            if _ngram == ngram or len(_ngram) == 1:
                 continue
             if min(_pos) > max(pos) or max(_pos) < min(pos):
                 continue
@@ -56,7 +56,7 @@ def _remove_overlapping_ngrams_by_score(ngram_pos_scores):
                     exist_overlap = True
                     break
         if not exist_overlap:
-            result.append(uniram_pos_score)
+            result.append(nram_pos_score)
 
     for uniram_pos_score in unigram_pos_scores:
         unigram, pos, score = uniram_pos_score
