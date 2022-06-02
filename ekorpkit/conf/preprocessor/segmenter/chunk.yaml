@@ -7,3 +7,4 @@ split:
 chunk:
   chunk_size: ${oc.select:..chunk_size, 300}
   chunk_overlap: ${oc.select:..chunk_overlap, false}
+  len_func: ${oc.select:..len_func, len_bytes}

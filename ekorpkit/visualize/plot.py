@@ -32,16 +32,12 @@ def plot(data, verbose=False, **kwargs):
         figsize = eval(figsize)
 
     dataform = series.get("form", "individual")
-    xcol = series["x"]
-    if isinstance(xcol, list):
-        xcol = xcol[0]
-    if isinstance(data, pd.DataFrame):
-        x = data[xcol] if xcol in data.columns else data.index
-    else:
-        x = xcol
-    ycols = series["y"]
-    if isinstance(ycols, str):
-        ycols = [ycols]
+    x = series["x"]
+    if isinstance(x, list):
+        x = x[0]
+    y = series["y"]
+    if isinstance(y, str):
+        y = [y]
 
     sencondary_axes = {}
     if subplots["nrows"] > 1 or subplots["ncols"] > 1:
@@ -56,10 +52,13 @@ def plot(data, verbose=False, **kwargs):
     if dataform == "individual":
         if isinstance(plots, dict):
             plots = [plots]
-        for _plot_cfg_ in plots:
+        for i, _plot_cfg_ in enumerate(plots):
             _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNC))
             _x = _plot_cfg_.pop("x") or x
-            _y = _plot_cfg_.pop("y")
+            if y and len(y) == len(plots):
+                _y = _plot_cfg_.pop("y") or y[i]
+            else:
+                _y = _plot_cfg_.pop("y")
             secondary_y = _plot_cfg_.get("secondary_y", False)
             if secondary_y:
                 secondary_to = _plot_cfg_.get("secondary_to", 0)
@@ -79,10 +78,10 @@ def plot(data, verbose=False, **kwargs):
         else:
             _plot_cfg_ = plots
         _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNC))
-        if ycols and len(ycols) == 1:
-            ycols = ycols[0]
-        _x = _plot_cfg_.pop("x") or xcol
-        _y = _plot_cfg_.pop("y") or ycols
+        if y and len(y) == 1:
+            y = y[0]
+        _x = _plot_cfg_.pop("x") or x
+        _y = _plot_cfg_.pop("y") or y
         if _plot_cfg_.get("dataform"):
             dataform = _plot_cfg_.pop("dataform")
         if dataform == "wide":
@@ -129,6 +128,16 @@ def lineplot(ax=None, x=None, y=None, data=None, **kwargs):
     if ax is None:
         ax = plt.gca()
     sns.lineplot(x=x, y=y, data=data, ax=ax, **_parms_)
+
+
+def histplot(ax=None, x=None, y=None, data=None, **kwargs):
+    _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
+    _query = kwargs.get("query", None)
+    if _query is not None:
+        data = data.copy().query(_query, engine="python")
+    if ax is None:
+        ax = plt.gca()
+    sns.histplot(x=x, y=y, data=data, ax=ax, **_parms_)
 
 
 def stackplot(ax=None, x=None, y=None, data=None, **kwargs):

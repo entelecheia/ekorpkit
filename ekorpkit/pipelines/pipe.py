@@ -722,6 +722,7 @@ def predict(df, args):
 def segment(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
+    num_workers = args.get("num_workers", 1)
     use_batcher = args.get("use_batcher", True)
     minibatch_size = args.get("minibatch_size", None)
     apply_to = args.get("apply_to", "text")
@@ -746,6 +747,7 @@ def segment(df, args):
                 verbose=verbose,
                 use_batcher=use_batcher,
                 minibatch_size=minibatch_size,
+                num_workers=num_workers,
             )
             log.info(" >> elapsed time to segment: {}".format(elapsed()))
     return df
@@ -990,8 +992,7 @@ def filter_query(df, args):
     verbose = args.get("verbose", False)
     query = args.get("query", None)
     if query is None:
-        if verbose:
-            log.warning("No query specified")
+        log.warning("No query specified")
         return df
     if isinstance(query, str):
         query = [query]

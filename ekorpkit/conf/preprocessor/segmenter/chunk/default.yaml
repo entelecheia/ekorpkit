@@ -1,2 +1,7 @@
+defaults:
+  - /_func_/len_bytes: default
+  - /_func_/len_words: default
+
 chunk_size: 300
 chunk_overlap: false
+len_func: len_bytes

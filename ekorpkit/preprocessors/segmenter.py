@@ -4,6 +4,8 @@ import re
 import math
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
+from typing import Callable
+from ekorpkit import eKonf
 
 
 log = logging.getLogger(__name__)
@@ -74,6 +76,9 @@ class Segmenter(BaseSegmenter):
 
         chunk_size = _chunk.get("chunk_size", 300)
         chunk_overlap = _chunk.get("chunk_overlap", False)
+        self.len_func_name = _chunk.get("len_func", "len_bytes")
+        len_func = _chunk[eKonf.Keys.FUNC].get(self.len_func_name, None)
+        self.len_func = eKonf.partial(len_func)
 
         self._in_segment_separator = codecs.decode(
             in_segment_separator, "unicode_escape"
@@ -354,6 +359,7 @@ class Segmenter(BaseSegmenter):
         sentences: list,
         max_length: int,
         overlap: bool = False,
+        len_func: Callable = None,
     ):
         """
         Split chunks from input texts by max_length.
@@ -370,10 +376,14 @@ class Segmenter(BaseSegmenter):
         assert isinstance(sentences, list), "param `sentences` must be str."
         assert isinstance(max_length, int), "param `max_length` must be `int` type."
         assert isinstance(overlap, bool), "param `overlap` must be `bool` type."
+        if len_func is None:
+            len_func = self.len_func
+        if not callable(len_func):
+            len_func = len
 
         span, chunks = [], []
 
-        for offset in _get_sentence_offsets(sentences):
+        for offset in _get_sentence_offsets(sentences, len_func):
             if len(span) > 0:
                 if offset.this_cum_len - span[0].prev_cum_len > max_length:
                     chunks.append(_get_chunk_with_offset(sentences, span))
@@ -387,12 +397,12 @@ class Segmenter(BaseSegmenter):
         return chunks
 
 
-def _get_sentence_offsets(sentences):
+def _get_sentence_offsets(sentences, len_func: Callable = None):
     sentence_offsets = []
     offset = None
     for i, sentence in enumerate(sentences):
         prev_cum_len = offset.this_cum_len if offset is not None else 0
-        offset = Offset(i, i + 1, prev_cum_len, prev_cum_len + len(sentence))
+        offset = Offset(i, i + 1, prev_cum_len, prev_cum_len + len_func(sentence))
         sentence_offsets.append(offset)
     return sentence_offsets
 

@@ -462,33 +462,64 @@ class FOMC:
         results.set_index(index_name, inplace=True)
         return target.merge(results, how="left", left_index=True, right_index=True)
 
-    def postprocess_metadata(self, data, content_type):
+    def find_speaker_of_sections(self, data):
+        """
+        Find the speaker of each section.
+        """
+
+        def find_speaker(row):
+            content_type = row.content_type
+            speaker = row.speaker
+            text = row.text
+            if content_type in ["fomc_press_conf", "fomc_meeting_script"]:
+                match = re.findall(r"(^[A-Za-zŞ. ]*[A-Z]{3}).\d? (.*)", text)
+                if len(match) == 0:
+                    match = re.findall(r"(^[A-Za-zŞ. ]*[A-Z]{3}).\d(.*)", text)
+                if len(match) == 1:
+                    speaker, text = match[0]
+                    return speaker
+                return None
+            else:
+                return speaker
+
+        df = data.copy()
+        df["speaker"] = df.apply(find_speaker, axis=1)
+        return df
+
+    def postprocess_metadata(self, data):
         """
         - Add type
         - Add rate, decision (for meeting documents, None for the others)
         - Add next meeting date, rate and decision
         """
 
-        if content_type in (
-            "fomc_statement",
-            "fomc_minutes",
-            "fomc_press_conf",
-            "fomc_meeting_script",
-        ):
-            is_meeting_doc = True
-        elif content_type in ("fomc_speech", "fomc_testimony"):
-            is_meeting_doc = False
-        else:
-            print("Invalid doc_type [{}] is given!".format(content_type))
-            return None
+        def is_meeting_doc(content_type):
+            if content_type in (
+                "fomc_statement",
+                "fomc_minutes",
+                "fomc_press_conf",
+                "fomc_meeting_script",
+            ):
+                return True
+            elif content_type in ("fomc_speech", "fomc_testimony", "fomc_beigebook"):
+                return False
+            else:
+                log.warning(f"Invalid doc_type [{content_type}] is given!")
+                return None
 
         df = data.copy()
 
-        df["decision"] = df["date"].map(
-            lambda x: self._get_rate_change(x) if is_meeting_doc else None
+        df["decision"] = df.apply(
+            lambda x: self._get_rate_change(x["date"])
+            if is_meeting_doc(x["content_type"])
+            else None,
+            axis=1,
         )
-        df["rate"] = df["date"].map(
-            lambda x: self._get_rate(x) if is_meeting_doc else None
+        df["rate"] = df.apply(
+            lambda x: self._get_rate(x["date"])
+            if is_meeting_doc(x["content_type"])
+            else None,
+            axis=1,
         )
         df["next_meeting"] = df["date"].map(lambda x: self._get_next_meeting_date(x))
         df["next_decision"] = df["next_meeting"].map(lambda x: self._get_rate_change(x))
