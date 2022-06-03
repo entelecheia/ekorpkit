@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - heatmap: default
+
+output_file: ${oc.select:..output_file, heatmap.png}
+plots:
+  - ${..heatmap}

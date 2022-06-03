@@ -1,0 +1,49 @@
+axvspans:
+  - ${oc.select:..axvspan, null}
+annotations:
+  - ${oc.select:..annotation, null}
+axno: 0
+secondary_y: false
+secondary_to: 0
+xlabel:
+  xlabel:
+ylabel:
+  ylabel:
+title:
+  label:
+legend:
+  title:
+  title_fontsize: 12
+  labels:
+  loc:
+grid:
+xlim:
+#   left:
+#   right:
+ylim:
+#   bottom:
+#   top:
+# xticks:
+#   ticks:
+#   labels:
+# yticks:
+#   ticks:
+#   labels:
+xtickmajorformatterfunc:
+ytickmajorformatterfunc:
+# xticklabels:
+# yticklabels:
+# xticklabelsize:
+# yticklabelsize:
+# xticklabelrotation:
+# yticklabelrotation:
+# xticklabelpad:
+# yticklabelpad:
+# xtickpad:
+# ytickpad:
+# xtickangle:
+# ytickangle:
+# xtickminorlocator:
+# ytickminorlocator:
+# xtickmajorlocator:
+# ytickmajorlocator:

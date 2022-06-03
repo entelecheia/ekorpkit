@@ -1,4 +1,5 @@
-_func_: histplot
+_func_: snsplot
+_name_: histplot
 axno: 0
 x:
 y:

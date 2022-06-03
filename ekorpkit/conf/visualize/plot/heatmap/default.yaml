@@ -1,0 +1,20 @@
+_func_: heatmap
+axno: 0
+datano: 0
+x:
+y:
+query:
+secondary_y: false
+secondary_to: 0
+cmap:
+annot: true
+fmt: .1f
+vmin:
+vmax:
+_parms_:
+  cmap: ${oc.select:..cmap, null}
+  annot: ${oc.select:..annot, true}
+  fmt: ${oc.select:..fmt, .1f}
+  vmin: ${oc.select:..vmin, null}
+  vmax: ${oc.select:..vmax, null}
+

@@ -9,6 +9,29 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 
+def set_super(
+    fig,
+    xlabel=None,
+    ylabel=None,
+    title=None,
+    **kwargs,
+):
+    if xlabel is not None:
+        if isinstance(xlabel, str):
+            fig.supxlabel(xlabel)
+        else:
+            fig.supxlabel(**xlabel)
+    if ylabel is not None:
+        if isinstance(ylabel, str):
+            fig.supylabel(ylabel)
+        else:
+            fig.supylabel(**ylabel)
+    if title is not None:
+        if isinstance(title, str):
+            fig.suptitle(title)
+        else:
+            fig.suptitle(**title)
+
 def set_figure(
     ax,
     xlabel=None,

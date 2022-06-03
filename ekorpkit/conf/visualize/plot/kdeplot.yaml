@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - kdeplot: default
+
+output_file: ${oc.select:..output_file, distplot.png}
+plots:
+  - ${..kdeplot}

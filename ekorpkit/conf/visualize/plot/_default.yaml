@@ -1,12 +1,13 @@
 defaults:
-  - series: default
-  - plot: default
-  - subplots: default
   - figure: default
+  - gridspec: default
+  - subplots: default
+  - ax: default
   - savefig: default
 
+name:
 output_dir: ${oc.select:..output_dir, ./figs}
-output_file: ${oc.select:..output_file, plot1.png}
+output_file: ${oc.select:..output_file, plot_${.name}.png}
 verbose: ${oc.select:verbose, true}
-figures:
-  - ${..figure}
+axes:
+  - ${..ax}

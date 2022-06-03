@@ -1,0 +1,6 @@
+defaults:
+  - _default
+  - theme: seaborn
+
+_target_: ekorpkit.visualize.plot.grid
+axes:

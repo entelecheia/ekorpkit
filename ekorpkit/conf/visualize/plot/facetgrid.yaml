@@ -1,0 +1,6 @@
+defaults:
+  - _grid
+  - facetgrid: default
+
+output_file: ${oc.select:..output_file, ${.name}_facetplot.png}
+grid: ${.facetgrid}

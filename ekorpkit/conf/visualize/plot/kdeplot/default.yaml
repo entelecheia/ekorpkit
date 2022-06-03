@@ -1,0 +1,16 @@
+_func_: snsplot
+_name_: kdeplot
+axno: 0
+datano: 0
+x:
+y:
+query:
+secondary_y: false
+secondary_to: 0
+shade: true
+hue:
+palette:
+_parms_:
+  shade: ${oc.select:..shade, true}
+  hue: ${oc.select:..hue, null}
+  palette: ${oc.select:..palette, null}

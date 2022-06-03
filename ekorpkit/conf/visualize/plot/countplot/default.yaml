@@ -1,0 +1,12 @@
+_func_: snsplot
+_name_: countplot
+axno: 0
+datano: 0
+x:
+y:
+query:
+secondary_y: false
+secondary_to: 0
+hue:
+_parms_:
+  hue: ${oc.select:..hues, null}

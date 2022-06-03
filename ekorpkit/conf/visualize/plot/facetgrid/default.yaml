@@ -1,0 +1,37 @@
+_func_: facetgrid
+_name_: map_dataframe
+axno: 0
+datano: 0
+x:
+y:
+query:
+secondary_y: false
+secondary_to: 0
+add_legend: false
+map:
+  _func_:
+  _parms_:
+map_dataframe:
+  _func_:
+  _parms_:
+row:
+col:
+hue:
+sharex: true
+sharey: true
+height: 3
+aspect: 1
+col_wrap:
+gridspec_kws:
+subplot_kws:
+_parms_:
+  row: ${oc.select:..row, null}
+  col: ${oc.select:..col, null}
+  hue: ${oc.select:..hue, null}
+  sharex: ${oc.select:..sharex, true}
+  sharey: ${oc.select:..sharey, true}
+  height: ${oc.select:..height, 3}
+  aspect: ${oc.select:..aspect, 1}
+  col_wrap: ${oc.select:..col_wrap, null}
+  gridspec_kws: ${oc.select:..gridspec_kws, null}
+  subplot_kws: ${oc.select:..subplot_kws, null}

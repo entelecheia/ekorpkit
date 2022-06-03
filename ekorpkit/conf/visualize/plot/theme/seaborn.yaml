@@ -1,0 +1,8 @@
+context: notebook
+style: white
+#  {darkgrid, whitegrid, dark, white, ticks}
+palette: deep
+font: sans-serif
+font_scale: 1
+color_codes: true
+rc:

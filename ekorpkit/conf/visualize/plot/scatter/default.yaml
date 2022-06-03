@@ -1,11 +1,15 @@
-_func_: scatter
+_func_: snsplot
+_name_: scatterplot
 axno: 0
+datano: 0
 x:
 y:
 secondary_y: false
 secondary_to: 0
+hue:
+palette:
 _parms_:
-  hue:
+  hue: ${oc.select:..hue, null}
   # vector or key in data
   # Grouping variable that will produce points with different colors. Can be either categorical or numeric, although color mapping will behave differently in latter case.
   size:
@@ -14,7 +18,7 @@ _parms_:
   style:
   # vector or key in data
   # Grouping variable that will produce points with different markers. Can have a numeric dtype but will always be treated as categorical.
-  palette:
+  palette: ${oc.select:..palette, null}
   # string, list, dict, or matplotlib.colors.Colormap
   # Method for choosing the colors to use when mapping the hue semantic. String values are passed to color_palette(). List or dict values imply categorical mapping, while a colormap object implies numeric mapping.
   hue_order:
