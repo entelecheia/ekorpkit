@@ -2,7 +2,7 @@ defaults:
   - /_method_: fittransform_show
 
 _func_: yellowbrick_features
-_name_: RadViz
+_name_: Rank1D
 axno: 0
 datano: 0
 x:

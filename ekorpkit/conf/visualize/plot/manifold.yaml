@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - manifold: default
+
+name: Manifold
+plots:
+  - ${..manifold}

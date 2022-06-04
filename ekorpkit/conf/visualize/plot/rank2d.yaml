@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - rank2d: default
+
+name: Rank2D
+plots:
+  - ${..rank2d}

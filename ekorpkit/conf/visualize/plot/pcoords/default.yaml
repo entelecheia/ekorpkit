@@ -1,0 +1,22 @@
+defaults:
+  - /_method_: fit_transform_show
+
+_func_: yellowbrick_features
+_name_: ParallelCoordinates
+axno: 0
+datano: 0
+x:
+y:
+secondary_y: false
+secondary_to: 0
+normalize: standard
+sample: 0.5
+shuffle: true
+classes:
+features:
+_parms_:
+  normalize: ${oc.select:..algorithm, standard}
+  sample: ${oc.select:..sample, 0.5}
+  shuffle: ${oc.select:..shuffle, true}
+  classes: ${oc.select:..classes, null}
+  features: ${oc.select:..features, null}

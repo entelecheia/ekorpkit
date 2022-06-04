@@ -1,0 +1,14 @@
+defaults:
+  - /_method_: fit_transform_show
+  
+_func_: yellowbrick_features
+_name_: JointPlotVisualizer
+axno: 0
+datano: 0
+x:
+y:
+secondary_y: false
+secondary_to: 0
+columns:
+_parms_:
+  columns: ${oc.select:..columns, null}

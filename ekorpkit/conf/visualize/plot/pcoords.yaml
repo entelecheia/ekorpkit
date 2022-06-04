@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - pcoords: default
+
+name: ParallelCoordinates
+plots:
+  - ${..pcoords}
