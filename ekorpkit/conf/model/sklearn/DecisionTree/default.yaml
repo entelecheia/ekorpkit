@@ -1,0 +1,4 @@
+_name_: DecisionTree
+_description_: Decision Tree Classifier
+_target_: sklearn.tree.DecisionTreeClassifier
+random_state: ${oc.select..random_state, 987}

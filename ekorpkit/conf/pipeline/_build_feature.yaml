@@ -1,0 +1,10 @@
+defaults:
+  - _blank
+  - load_dataframe: default
+  - reset_index: default
+  - split_sampling: default
+
+_pipeline_:
+  - load_dataframe
+  - reset_index
+  - split_sampling

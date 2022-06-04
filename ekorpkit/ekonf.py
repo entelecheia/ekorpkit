@@ -33,8 +33,16 @@ def __version__():
 def check_path(path: str, alt_path: str = None):
     if os.path.exists(path):
         return path
-    elif alt_path:
+    elif os.path.exists(alt_path):
         return alt_path
+    else:
+        log.warning(f"{path} and {alt_path} do not exist")
+        return None
+
+
+def _exists(a, *p):
+    path = os.path.join(a, *p)
+    return os.path.exists(path)
 
 
 def _today(_format="%Y-%m-%d"):
@@ -213,6 +221,7 @@ OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
+OmegaConf.register_new_resolver("exists", _exists)
 OmegaConf.register_new_resolver("check_path", check_path)
 OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
@@ -221,8 +230,16 @@ OmegaConf.register_new_resolver(
 OmegaConf.register_new_resolver("dotenv_values", dotenv_values)
 
 
+class _SPLITS(str, Enum):
+    """Split keys in configs used by Dataset."""
+
+    TRAIN = "train"
+    DEV = "dev"
+    TEST = "test"
+
+
 class _Keys(str, Enum):
-    """Special keys in configs used by instantiate."""
+    """Special keys in configs used by ekorpkit."""
 
     TARGET = "_target_"
     CONVERT = "_convert_"
@@ -248,6 +265,15 @@ class _Keys(str, Enum):
     TEXT = "text"
     TIMESTAMP = "timestamp"
     DATETIME = "datetime"
+    X = "x"
+    Y = "y"
+    INDEX = "index"
+    COLUMNS = "columns"
+    KEY = "key"
+    KEYS = "keys"
+    DATA = "data"
+    META = "meta"
+    FORMAT = "format"
 
 
 def _methods(cfg: Any, obj: object):
@@ -517,7 +543,8 @@ def _init_env_(cfg=None, verbose=False):
 
             ray_cfg = env.get("ray", None)
             ray_cfg = eKonf.to_container(ray_cfg, resolve=True)
-            log.info(f"initializing ray with {ray_cfg}")
+            if verbose:
+                log.info(f"initializing ray with {ray_cfg}")
             ray.init(**ray_cfg)
             backend_handle = ray
 
@@ -526,7 +553,8 @@ def _init_env_(cfg=None, verbose=False):
 
             dask_cfg = env.get("dask", None)
             dask_cfg = eKonf.to_container(dask_cfg, resolve=True)
-            log.info(f"initializing dask client with {dask_cfg}")
+            if verbose:
+                log.info(f"initializing dask client with {dask_cfg}")
             client = Client(**dask_cfg)
             if verbose:
                 log.info(client)
@@ -534,14 +562,16 @@ def _init_env_(cfg=None, verbose=False):
         batcher.batcher_instance = batcher.Batcher(
             backend_handle=backend_handle, **env.batcher
         )
-        log.info(f"initialized batcher with {batcher.batcher_instance}")
+        if verbose:
+            log.info(f"initialized batcher with {batcher.batcher_instance}")
     _env_initialized_ = True
 
 
 def _stop_env_(cfg, verbose=False):
     env = cfg.env
     backend = env.distributed_framework.backend
-    log.info(f"stopping {backend}, if running")
+    if verbose:
+        log.info(f"stopping {backend}, if running")
 
     if env.distributed_framework.initialize:
         if backend == "ray":
@@ -631,6 +661,7 @@ class eKonf:
     __home_path__ = __home_path__()
     config = _config
     Keys = _Keys
+    SPLITS = _SPLITS
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
@@ -904,3 +935,7 @@ class eKonf:
     @staticmethod
     def to_dateparm(_date, _format="%Y-%m-%d"):
         return _to_dateparm(_date, _format)
+
+    @staticmethod
+    def exists(a, *p):
+        return _exists(a, *p)

@@ -1,0 +1,7 @@
+defaults:
+  - _default_build
+  - override stats: feature
+
+aggregate_info:  
+  num_examples: num_examples
+  size_in_bytes: num_bytes

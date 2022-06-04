@@ -4,14 +4,15 @@ import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.file import save_dataframe
-from .dataset import Dataset, _SPLITS
+from .dataset import Dataset
 
 
 log = logging.getLogger(__name__)
 
 
 class Datasets:
-    SPLITS = _SPLITS
+
+    SPLITS = eKonf.SPLITS
 
     def __init__(self, **args):
         args = eKonf.to_dict(args)
@@ -37,7 +38,7 @@ class Datasets:
         self._method_ = self.args.get("_method_", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
-        self._info_args = self.args.get("info", None)
+        self._info_cfg = self.args.get("info", None)
 
         self._column_info = self.args.get("column_info", {})
         self._column = eKonf.instantiate(self._column_info)
@@ -111,7 +112,7 @@ class Datasets:
     def concat_datasets(self, append_dataset_name=True):
         dfs = []
         for name in self.datasets:
-            df = self.datasets[name][_SPLITS.TRAIN]
+            df = self.datasets[name][self.SPLITS.TRAIN]
             dfs.append(df)
         common_columns = self.COLUMN.common_columns(dfs)
 
@@ -141,11 +142,11 @@ class Datasets:
         os.makedirs(data_dir, exist_ok=True)
 
         summary_info = None
-        if self._info_args:
-            self._info_args["data_dir"] = data_dir
-            self._info_args["name"] = self.name
-            self._info_args["info_file"] = None
-            summary_info = eKonf.instantiate(self._info_args)
+        if self._info_cfg:
+            self._info_cfg["data_dir"] = data_dir
+            self._info_cfg["name"] = self.name
+            self._info_cfg["info_file"] = None
+            summary_info = eKonf.instantiate(self._info_cfg)
         if summary_info:
             summary_info.load(self.info)
 

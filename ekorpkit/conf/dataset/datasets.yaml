@@ -2,7 +2,7 @@ defaults:
   - default
   - /info: _build_dataset
 
-_target_: ekorpkit.datasets.loader.Datasets
+_target_: ekorpkit.datasets.datasets.Datasets
 name: 
 datasets:
 data_dir: ${dir.dataset}/dataset

@@ -301,6 +301,7 @@ def split_sampling(df, args):
     verbose = args.get("verbose", False)
     stratify_on = args.get("stratify_on", None)
     random_state = args.get("random_state", 123)
+    shuffle = args.get("shuffle", True)
     groupby = args.get("groupby", stratify_on)
     unique_key = args.get("unique_key", "id")
     test_size = args.get("test_size", 0.1)
@@ -311,15 +312,19 @@ def split_sampling(df, args):
     train, dev, test = None, None, None
     if stratify_on is None:
         train, test = train_test_split(
-            df, test_size=test_size, random_state=random_state
+            df, test_size=test_size, random_state=random_state, shuffle=shuffle
         )
         if dev_size:
             train, dev = train_test_split(
-                train, test_size=dev_size, random_state=random_state
+                train, test_size=dev_size, random_state=random_state, shuffle=shuffle
             )
     else:
         train, test = train_test_split(
-            df, test_size=test_size, random_state=random_state, stratify=df[stratify_on]
+            df,
+            test_size=test_size,
+            random_state=random_state,
+            stratify=df[stratify_on],
+            shuffle=shuffle,
         )
         if dev_size:
             train, dev = train_test_split(
@@ -327,6 +332,7 @@ def split_sampling(df, args):
                 test_size=dev_size,
                 random_state=random_state,
                 stratify=train[stratify_on],
+                shuffle=shuffle,
             )
     train.reset_index(drop=True, inplace=True)
     test.reset_index(drop=True, inplace=True)
@@ -339,34 +345,35 @@ def split_sampling(df, args):
         if dev_size:
             log.info(f"Dev: {len(dev)}")
 
-        grp_all = (
-            df.groupby(groupby)[unique_key]
-            .count()
-            .rename("population")
-            .transform(lambda x: x / x.sum() * 100)
-        )
-        grp_train = (
-            train.groupby(groupby)[unique_key]
-            .count()
-            .rename("train")
-            .transform(lambda x: x / x.sum() * 100)
-        )
-        grp_test = (
-            test.groupby(groupby)[unique_key]
-            .count()
-            .rename("test")
-            .transform(lambda x: x / x.sum() * 100)
-        )
-        grp_dists = pd.concat([grp_all, grp_train, grp_test], axis=1)
-        if dev_size:
-            grp_dev = (
-                dev.groupby(groupby)[unique_key]
+        if groupby in df.columns and unique_key in df.columns:
+            grp_all = (
+                df.groupby(groupby)[unique_key]
                 .count()
-                .rename("dev")
+                .rename("population")
                 .transform(lambda x: x / x.sum() * 100)
             )
-            grp_dists = pd.concat([grp_dists, grp_dev], axis=1)
-        print(grp_dists)
+            grp_train = (
+                train.groupby(groupby)[unique_key]
+                .count()
+                .rename("train")
+                .transform(lambda x: x / x.sum() * 100)
+            )
+            grp_test = (
+                test.groupby(groupby)[unique_key]
+                .count()
+                .rename("test")
+                .transform(lambda x: x / x.sum() * 100)
+            )
+            grp_dists = pd.concat([grp_all, grp_train, grp_test], axis=1)
+            if dev_size:
+                grp_dev = (
+                    dev.groupby(groupby)[unique_key]
+                    .count()
+                    .rename("dev")
+                    .transform(lambda x: x / x.sum() * 100)
+                )
+                grp_dists = pd.concat([grp_dists, grp_dev], axis=1)
+            print(grp_dists)
 
     output_dir = args.get("output_dir", ".")
     train_file = args.get("train_file", None)

@@ -1,7 +1,7 @@
 defaults:
   - default
 
-_target_: ekorpkit.corpora.loader.Corpora
+_target_: ekorpkit.corpora.corpora.Corpora
 corpora:
 data_dir: ${dir.corpus}
 use_name_as_subdir: true

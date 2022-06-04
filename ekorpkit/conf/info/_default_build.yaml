@@ -2,7 +2,7 @@ defaults:
   - stats: default
 
 _target_: ekorpkit.info.stat.SummaryInfo
-name: ${oc.select:..name,''} 
+name: ${oc.select:..name,null}
 data_dir: ${oc.select:..data_dir, .}
 info_file: info-${.name}.yaml
 info_list:
@@ -36,5 +36,5 @@ update_info:
   - version
 modified_info:
   data_files_modified: data_file
-key_columns: ${oc.select:..column_info.columns:, ''}
+key_columns: ${oc.select:..column_info.columns:, null}
 verbose: ${oc.select:..verbose, false}

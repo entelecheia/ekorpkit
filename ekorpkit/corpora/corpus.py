@@ -34,12 +34,12 @@ class Corpus:
             if use_name_as_subdir:
                 self.metadata_dir = self.metadata_dir / self.name
         self.info_file = self.data_dir / f"info-{self.name}.yaml"
-        self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
-        if self.info:
+        self._info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
+        if self._info:
             if self.verbose:
                 log.info(f"Loaded info file: {self.info_file}")
-            self.args = eKonf.to_dict(eKonf.update(self.args, self.info))
-            self.info = eKonf.to_dict(self.info)
+            self.args = eKonf.to_dict(eKonf.update(self.args, self._info))
+            self._info = eKonf.to_dict(self._info)
 
         if self.verbose:
             log.info(f"Intantiating a corpus {self.name} with a config:")
@@ -79,6 +79,10 @@ class Corpus:
         classname = self.__class__.__name__
         s = f"{classname} : {self.name}"
         return s
+
+    @property
+    def INFO(self):
+        return self._info
 
     @property
     def COLUMN(self):

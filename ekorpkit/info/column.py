@@ -19,8 +19,8 @@ class ColumnInfo:
         if self.TIMESTAMP_PARM is None:
             return data, metadata
 
-        _key = self.TIMESTAMP_PARM.get("key")
-        _format = self.TIMESTAMP_PARM.get("format")
+        _key = self.TIMESTAMP_PARM.get(eKonf.Keys.KEY)
+        _format = self.TIMESTAMP_PARM.get(eKonf.Keys.FORMAT)
         _parms_ = self.TIMESTAMP_PARM.get(eKonf.Keys.PARMS) or {}
         if _key is None:
             log.info("No timestamp key found")
@@ -45,8 +45,8 @@ class ColumnInfo:
         if self.DATETIME_PARM is None:
             return data
 
-        _columns = eKonf.ensure_list(self.DATETIME_PARM.get("key"))
-        _format = self.DATETIME_PARM.get("format", None)
+        _columns = eKonf.ensure_list(self.DATETIME_PARM.get(eKonf.Keys.COLUMNS))
+        _format = self.DATETIME_PARM.get(eKonf.Keys.FORMAT, None)
         _parms_ = self.DATETIME_PARM.get(eKonf.Keys.PARMS) or {}
         if _columns is None:
             log.info("No datetime column found")
@@ -160,13 +160,13 @@ class ColumnInfo:
 
         return data
 
-    def reset_id(self, df):
-        if isinstance(df, pd.DataFrame):
-            df.rename({self.ID: self._ID}, inplace=True)
-            df.reset_index().rename({"index": self.ID}, inplace=True)
-            dtypes = df.dtypes.apply(lambda x: x.name).to_dict()
+    def reset_id(self, data):
+        if isinstance(data, pd.DataFrame):
+            data.rename({self.ID: self._ID}, inplace=True)
+            data.reset_index().rename({"index": self.ID}, inplace=True)
+            dtypes = data.dtypes.apply(lambda x: x.name).to_dict()
             self.DATATYPEs = dtypes
-        return df
+        return data
 
     @property
     def INFO(self):
@@ -270,35 +270,35 @@ class ColumnInfo:
 
     @property
     def KEYs(self):
-        return self.INFO.get("keys") or {}
+        return self.INFO.get(eKonf.Keys.KEYS) or {}
 
     @KEYs.setter
     def KEYs(self, value):
-        self.INFO["keys"] = value
+        self.INFO[eKonf.Keys.KEYS] = value
 
     @property
     def COLUMNs(self):
-        return self.INFO.get("columns") or {}
+        return self.INFO.get(eKonf.Keys.COLUMNS) or {}
 
     @COLUMNs.setter
     def COLUMNs(self, value):
-        self.INFO["columns"] = value
+        self.INFO[eKonf.Keys.COLUMNS] = value
 
     @property
     def DATATYPEs(self):
-        return self.INFO.get("data")
+        return self.INFO.get(eKonf.Keys.DATA)
 
     @DATATYPEs.setter
     def DATATYPEs(self, value):
-        self.INFO["data"] = value
+        self.INFO[eKonf.Keys.DATA] = value
 
     @property
     def METATYPEs(self):
-        return self.INFO.get("meta")
+        return self.INFO.get(eKonf.Keys.META)
 
     @METATYPEs.setter
     def METATYPEs(self, value):
-        self.INFO["meta"] = value
+        self.INFO[eKonf.Keys.META] = value
 
     @property
     def TIMESTAMP_PARM(self):
