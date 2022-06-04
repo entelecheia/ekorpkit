@@ -37,9 +37,9 @@ datasets: all, transformers, dataset, model
 tensorflow: all, transformers, model
 # tf-nightly: transformers, model
 google-api-python-client: all, transformers, model
-# yellowbrick: model, visualize
 google-cloud-storage>=2.0.0: all, transformers, model, dataset
 flaml: automl, model
+yellowbrick: automl, model
 
 modin: pandas
 ray: pandas

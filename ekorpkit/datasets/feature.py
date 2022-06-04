@@ -1,4 +1,4 @@
-import os
+import pandas as pd
 import logging
 from pathlib import Path
 from ekorpkit import eKonf
@@ -93,7 +93,7 @@ class FeatureSet:
     def X_train(self):
         _data = self.splits[self.SPLITS.TRAIN]
         if _data is not None:
-            return _data[self.FEATURE.X].values
+            return _data[self.FEATURE.X]
         else:
             return None
 
@@ -101,7 +101,7 @@ class FeatureSet:
     def X_dev(self):
         _data = self.splits[self.SPLITS.DEV]
         if _data is not None:
-            return _data[self.FEATURE.X].values
+            return _data[self.FEATURE.X]
         else:
             return None
 
@@ -109,7 +109,7 @@ class FeatureSet:
     def X_test(self):
         _data = self.splits[self.SPLITS.TEST]
         if _data is not None:
-            return _data[self.FEATURE.X].values
+            return _data[self.FEATURE.X]
         else:
             return None
 
@@ -117,7 +117,7 @@ class FeatureSet:
     def y_train(self):
         _data = self.splits[self.SPLITS.TRAIN]
         if _data is not None:
-            return _data[self.FEATURE.Y].values
+            return _data[self.FEATURE.Y]
         else:
             return None
 
@@ -125,7 +125,7 @@ class FeatureSet:
     def y_dev(self):
         _data = self.splits[self.SPLITS.DEV]
         if _data is not None:
-            return _data[self.FEATURE.Y].values
+            return _data[self.FEATURE.Y]
         else:
             return None
 
@@ -133,9 +133,26 @@ class FeatureSet:
     def y_test(self):
         _data = self.splits[self.SPLITS.TEST]
         if _data is not None:
-            return _data[self.FEATURE.Y].values
+            return _data[self.FEATURE.Y]
         else:
             return None
+
+    @property
+    def X(self):
+        return self.data[self.FEATURE.X]
+
+    @property
+    def y(self):
+        return self.data[self.FEATURE.Y]
+
+    @property
+    def data(self):
+        dfs = []
+        for split, _data in self.splits.items():
+            if _data is not None:
+                dfs.append(_data)
+        df = pd.concat(dfs)
+        return df
 
     @property
     def INFO(self):
@@ -148,18 +165,6 @@ class FeatureSet:
     @property
     def ID(self):
         return self.FEATURE.ID
-
-    @property
-    def X(self):
-        return self.FEATURE.X
-
-    @property
-    def Y(self):
-        return self.FEATURE.Y
-
-    @property
-    def DATA(self):
-        return self.FEATURE.DATA
 
     @property
     def DATATYPEs(self):

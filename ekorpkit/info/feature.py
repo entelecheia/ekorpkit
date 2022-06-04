@@ -141,7 +141,7 @@ class FeatureInfo:
 
     @INDEX.setter
     def INDEX(self, value):
-        self.KEYs[eKonf.Keys.INDEX] = value
+        self.COLUMNs[eKonf.Keys.INDEX] = value
 
     @property
     def ID(self):

@@ -2,6 +2,6 @@ defaults:
   - default
   - histplot: default
 
-output_file: ${oc.select:..output_file, distplot.png}
+name: HistPlot
 plots:
   - ${..histplot}

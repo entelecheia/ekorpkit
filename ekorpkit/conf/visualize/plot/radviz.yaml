@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - radviz: default
+
+name: RadViz
+plots:
+  - ${..radviz}

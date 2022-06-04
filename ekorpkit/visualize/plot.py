@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from cmath import isinf
 from pathlib import Path
-from .base import set_style, set_figure, set_super
+from .base import set_style, set_figure, set_super, add_decorations
 from .classification import confusion_matrix
+from .yellowbrick import yellowbrick_features
 from ekorpkit import eKonf
 
 
@@ -242,124 +243,3 @@ def scatter(ax=None, x=None, y=None, data=None, **kwargs):
     if ax is None:
         ax = plt.gca()
     sns.scatterplot(x=x, y=y, data=data, ax=ax, **_parms_)
-
-
-def add_decorations(ax=None, **kwargs):
-    if ax is None:
-        ax = plt.gca()
-    axvspans = [] or kwargs.get("axvspans")
-    annotations = [] or kwargs.get("annotations")
-
-    if isinstance(axvspans, dict):
-        axvspans = [axvspans]
-    if isinstance(annotations, dict):
-        annotations = [annotations]
-
-    for span in axvspans:
-        if isinstance(span, dict):
-            ax.axvspan(**span)
-    for annot in annotations:
-        if isinstance(annot, dict):
-            x = annot.pop("x")
-            y = annot.pop("y")
-            if x and y:
-                annot["xy"] = (x, y)
-            xtext = annot.pop("xtext")
-            ytext = annot.pop("ytext")
-            if xtext and ytext:
-                annot["xytext"] = (xtext, ytext)
-            ax.annotate(**annot)
-
-
-def treemap(
-    df,
-    fig_filepath,
-    scale=1.5,
-    columns=None,
-    treemap=None,
-    layout=None,
-    update_layout=None,
-    **kwargs,
-):
-    # textinfo = "label+value+percent parent+percent root"
-    # import plotly.express as px
-    import plotly.graph_objects as go
-
-    labels = list(df[columns.label].to_list())
-    values = list(df[columns.value].to_list())
-    parents = list(df[columns.parent].to_list())
-
-    layout = go.Layout(**layout)
-    fig = go.Figure(
-        go.Treemap(
-            labels=labels,
-            parents=parents,
-            values=values,
-            **treemap,
-        ),
-        layout=layout,
-    )
-    fig.update_layout(
-        **update_layout,
-    )
-
-    fig.write_image(fig_filepath, scale=scale)
-
-
-# def barplot(df, columns=None, savefig={}, plot={}, figure={}, verbose=False, **kwargs):
-#     if df is None:
-#         if verbose:
-#             print("No data to plot")
-#         return
-#     set_style(**plot)
-#     figsize = plot.get("figsize", None)
-#     if figsize is not None and isinstance(figsize, str):
-#         figsize = eval(figsize)
-#     ycols = columns.yvalue
-#     xcol = columns.xvalue
-#     index = columns.get("index", None)
-#     if index:
-#         df.index = list(index)
-#         xcol = None
-#     data = df
-
-#     # plt.figure(figsize=figsize, tight_layout=True)
-#     stacked = plot.get("stacked", False)
-#     ax = data.plot(x=xcol, y=ycols, kind="bar", stacked=stacked, figsize=figsize)
-#     set_figure(ax, **figure)
-#     plt.tight_layout()
-
-#     fname = savefig.get("fname", None)
-#     if fname:
-#         Path(fname).parent.mkdir(parents=True, exist_ok=True)
-#         plt.savefig(**savefig)
-#         if verbose:
-#             print(f"Saved figure to {fname}")
-def t(econ_train_large, econ_train_small):
-
-    # Retail sales growth ratio is difficult to estimate. Though it is not ideal, simply use the average
-    econ_train_small["RSALES_diff_year"].fillna(
-        econ_train_small["RSALES_diff_year"].mean(), inplace=True
-    )
-    econ_train_large["RSALES_diff_prev"].fillna(
-        econ_train_large["RSALES_diff_prev"].mean(), inplace=True
-    )
-    econ_train_large["RSALES_diff_year"].fillna(
-        econ_train_large["RSALES_diff_year"].mean(), inplace=True
-    )
-
-    econ_train_small["Inertia_diff"].fillna(
-        econ_train_small["Inertia_diff"].mean(), inplace=True
-    )
-    econ_train_small["Balanced_diff"].fillna(
-        econ_train_small["Balanced_diff"].mean(), inplace=True
-    )
-    econ_train_large["Inertia_diff"].fillna(
-        econ_train_large["Inertia_diff"].mean(), inplace=True
-    )
-    econ_train_large["Balanced_diff"].fillna(
-        econ_train_large["Balanced_diff"].mean(), inplace=True
-    )
-    econ_train_large["Taylor_diff"].fillna(
-        econ_train_large["Taylor_diff"].mean(), inplace=True
-    )

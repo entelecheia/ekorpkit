@@ -9,6 +9,33 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 
+def add_decorations(ax=None, **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    axvspans = [] or kwargs.get("axvspans")
+    annotations = [] or kwargs.get("annotations")
+
+    if isinstance(axvspans, dict):
+        axvspans = [axvspans]
+    if isinstance(annotations, dict):
+        annotations = [annotations]
+
+    for span in axvspans:
+        if isinstance(span, dict):
+            ax.axvspan(**span)
+    for annot in annotations:
+        if isinstance(annot, dict):
+            x = annot.pop("x")
+            y = annot.pop("y")
+            if x and y:
+                annot["xy"] = (x, y)
+            xtext = annot.pop("xtext")
+            ytext = annot.pop("ytext")
+            if xtext and ytext:
+                annot["xytext"] = (xtext, ytext)
+            ax.annotate(**annot)
+
+
 def set_super(
     fig,
     xlabel=None,
@@ -31,6 +58,7 @@ def set_super(
             fig.suptitle(title)
         else:
             fig.suptitle(**title)
+
 
 def set_figure(
     ax,

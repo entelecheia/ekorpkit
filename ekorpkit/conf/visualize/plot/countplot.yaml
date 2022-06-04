@@ -2,6 +2,6 @@ defaults:
   - default
   - countplot: default
 
-output_file: ${oc.select:..output_file, countplot.png}
+name: CountPlot
 plots:
   - ${..countplot}
