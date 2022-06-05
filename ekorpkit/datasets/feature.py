@@ -99,6 +99,8 @@ class FeatureSet:
 
     @property
     def X_dev(self):
+        if self.SPLITS.DEV not in self.splits:
+            return None
         _data = self.splits[self.SPLITS.DEV]
         if _data is not None:
             return _data[self.FEATURE.X]
@@ -107,6 +109,8 @@ class FeatureSet:
 
     @property
     def X_test(self):
+        if self.SPLITS.TEST not in self.splits:
+            return None
         _data = self.splits[self.SPLITS.TEST]
         if _data is not None:
             return _data[self.FEATURE.X]
@@ -123,6 +127,8 @@ class FeatureSet:
 
     @property
     def y_dev(self):
+        if self.SPLITS.DEV not in self.splits:
+            return None
         _data = self.splits[self.SPLITS.DEV]
         if _data is not None:
             return _data[self.FEATURE.Y]
@@ -131,6 +137,8 @@ class FeatureSet:
 
     @property
     def y_test(self):
+        if self.SPLITS.TEST not in self.splits:
+            return None
         _data = self.splits[self.SPLITS.TEST]
         if _data is not None:
             return _data[self.FEATURE.Y]

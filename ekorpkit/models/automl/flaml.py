@@ -21,11 +21,12 @@ class AutoML:
         self.verbose = args.get("verbose", True)
         self._model_cfg = args["config"]
         self._model_eval = args.get("model", {}).get("eval")
-        self._dataset = args.get(eKonf.Keys.DATASET, None)
+        self._dataset_cfg = args.get(eKonf.Keys.DATASET, None)
         self._to_predict = args["to_predict"]
         self._method_ = self.args.get("_method_")
         self._output_dir = args["output_dir"]
         self._model_file = os.path.join(self._output_dir, args["model_file"])
+        self._log_file = args["log_file"]
         self._pred_output_file = args["pred_output_file"]
 
         os.makedirs(self._output_dir, exist_ok=True)
@@ -47,15 +48,15 @@ class AutoML:
 
     def fit(self):
         if self._X_train is None:
-            self.load_datasets()
+            self.load_dataset()
 
         self._automl.fit(
             X_train=self._X_train.values,
             y_train=self._y_train.values,
-            **self._model_cfg
+            **self._model_cfg,
         )
-        # Print the best model
-        print(self._automl.model.estimator)
+        # Print the results
+        self.show_results()
 
     def save(self):
         """pickle and save the automl object"""
@@ -63,16 +64,18 @@ class AutoML:
 
         with open(self._model_file, "wb") as f:
             pickle.dump(self._automl, f, pickle.HIGHEST_PROTOCOL)
+        log.info(f"Saved model to {self._model_file}")
 
     def load(self):
         import pickle
 
         with open(self._model_file, "rb") as f:
             self._automl = pickle.load(f)
+        log.info(f"Loaded model from {self._model_file}")
 
     @property
     def best_estimator(self):
-        return self._automl.best_estimator
+        return self._automl.model.estimator
 
     def show_results(self):
         """retrieve best config and best learner"""
@@ -88,6 +91,24 @@ class AutoML:
                 self._automl.best_config_train_time
             )
         )
+
+    def get_logs(self, time_budget=240):
+        from flaml.data import get_output_from_log
+
+        (
+            time_history,
+            best_valid_loss_history,
+            valid_loss_history,
+            config_history,
+            metric_history,
+        ) = get_output_from_log(filename=self._log_file, time_budget=time_budget)
+        return {
+            "time_history": time_history,
+            "best_valid_loss_history": best_valid_loss_history,
+            "valid_loss_history": valid_loss_history,
+            "config_history": config_history,
+            "metric_history": metric_history,
+        }
 
     def _predict(self, X):
         """compute predictions of testing dataset"""
@@ -123,8 +144,8 @@ class AutoML:
     def eval(self):
         from flaml.ml import sklearn_metric_loss_score
 
-        if not self.splits:
-            self.load_datasets()
+        if self._X_test is None:
+            self.load_dataset()
 
         if self._X_test is None:
             log.warning("No test data found")
@@ -155,11 +176,11 @@ class AutoML:
             sklearn_metric_loss_score("log_loss", y_probs, self._y_test),
         )
 
-    def load_datasets(self):
-        if self._dataset is None:
+    def load_dataset(self):
+        if self._dataset_cfg is None:
             log.warning("No dataset config found")
             return
-        self._dataset = eKonf.instantiate(self._dataset)
+        self._dataset = eKonf.instantiate(self._dataset_cfg)
 
         self._X_train = self._dataset.X_train
         self._X_dev = self._dataset.X_dev

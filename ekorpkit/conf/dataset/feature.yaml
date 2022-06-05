@@ -1,7 +1,5 @@
 defaults:
   - default
-  - /pipeline: _build_feature
-  - /info: _build_feature
   - override /column_info: feature
 
 _target_: ekorpkit.datasets.feature.FeatureSet
@@ -10,13 +8,3 @@ data_dir: ${dir.dataset}/features
 data_file:
 filetype: .parquet
 autoload: true
-autobuild: true
-force_rebuild: false
-info:
-  data_dir: ${iif:${..use_name_as_subdir},${..data_dir}/${.name},${..data_dir}}
-pipeline:
-  name: ${oc.select:..name, null}
-  output_dir: ${iif:${..use_name_as_subdir},${..data_dir}/${.name},${..data_dir}}
-  split_sampling:
-    dev_size:
-    test_size: 0.2

@@ -1,5 +1,5 @@
 _method_:
-name: ${oc.select:..name, automl_${oc.select:.dataset.name,default}}
+name: automl_${oc.select:.dataset.name,default}
 dataset: ${dataset}
 output_dir: ${dir.project}/outputs/${.name}
 log_file: ${.name}.log
