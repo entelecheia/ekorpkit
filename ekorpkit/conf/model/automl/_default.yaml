@@ -1,0 +1,8 @@
+_method_:
+name: ${oc.select:..name, automl_${oc.select:.dataset.name,default}}
+dataset: ${dataset}
+output_dir: ${dir.project}/outputs/${.name}
+log_file: ${.name}.log
+model_file: ${.name}.mdl
+pred_output_file: ${.name}_test_predictions.parquet
+verbose: ${oc.select:..verbose, false}

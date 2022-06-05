@@ -2,7 +2,7 @@ import os
 import logging
 import hydra
 from ekorpkit import eKonf, __hydra_version_base__
-from .tasks.info import make_table
+from ekorpkit.info.docs import make_table
 
 
 log = logging.getLogger(__name__)
