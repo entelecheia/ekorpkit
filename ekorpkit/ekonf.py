@@ -508,7 +508,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     if not _env_initialized_:
         _init_env_()
     if not _is_instantiatable(config):
-        log.warning(f"Config is not instantiatable, returning config")
+        log.info(f"Config is not instantiatable, returning config")
         return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:

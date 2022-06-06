@@ -1,3 +1,6 @@
+defaults:
+  - /model/ngram: default
+
 _target_: ekorpkit.models.sentiment.lexicon.Lexicon
 name: 
 fullname:
@@ -16,3 +19,8 @@ analyze:
   ngram_distiance_tolerance: 0
   ngram_delim: ${..ngram_delim}
 verbose: ${oc.select:..verbose, true}
+model:
+  ngram:
+    scores:
+    ngram:
+    postag:

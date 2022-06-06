@@ -1,0 +1,36 @@
+defaults:
+  - lexicon
+
+_method_:
+  - load_candidates
+scores:
+  score_path: ${dir.resource}/lexicons/mpko/mp_polarity_lexicon_lex.parquet
+  columns:
+    words: word
+    score: polarity
+  use_surfaces_to_score: true
+ngram:
+  max_n: 5
+  max_window: 7
+  max_skip: 2
+  delimiter: ;
+  postag_rules:
+    - /NN
+postag:
+  max_len: 2
+  delimiter: /
+  use_tags:
+    - NN
+    - VA
+    - MA
+    - XS
+    - XP
+    - VC
+    - MM
+ngramize:
+  exclude_overlaps: true
+  threshold:
+  delimiter: ;
+  strip_pos: false
+  ignore_scores: false
+  apply_postag_rules: true

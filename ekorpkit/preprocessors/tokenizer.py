@@ -236,6 +236,8 @@ class Tokenizer:
         postags=None,
         stop_postags=None,
         strip_pos=None,
+        postag_delim=None,
+        postag_length=None,
     ):
         if strip_pos is None:
             strip_pos = self._extract_strip_pos
@@ -243,6 +245,10 @@ class Tokenizer:
             stop_postags = self._stop_postags
         if postags is None:
             postags = self._noun_postags if nouns_only else self._postags
+        if postag_delim is None:
+            postag_delim = self._extract_postag_delim
+        if postag_length is None:
+            postag_length = self._extract_postag_length
 
         tokens = _extract_tokens(
             text,
@@ -250,8 +256,8 @@ class Tokenizer:
             stop_postags=stop_postags,
             stopwords=self._stopwords,
             strip_pos=strip_pos,
-            postag_delim=self._extract_postag_delim,
-            postag_length=self._extract_postag_length,
+            postag_delim=postag_delim,
+            postag_length=postag_length,
         )
         return tokens if return_as_list else " ".join(tokens)
 

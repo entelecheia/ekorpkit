@@ -5,3 +5,4 @@ columns:
   words: words
   score: score
 ngram_delim: ${..ngram.delimiter}
+use_surfaces_to_score: true

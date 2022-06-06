@@ -1,0 +1,6 @@
+exclude_overlaps: true
+threshold:
+delimiter: ""
+strip_pos: true
+ignore_scores: false
+apply_postag_rules: true

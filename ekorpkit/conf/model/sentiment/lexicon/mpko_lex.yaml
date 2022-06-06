@@ -20,3 +20,10 @@ postag_delim: /
 postag_length: 2
 analyze:
   ngram_distiance_tolerance: 1
+model:
+  ngram:
+    scores:
+      score_path: ${dir.resource}/lexicons/mpko/mp_polarity_lexicon_lex.parquet
+      columns:
+    ngram:
+    postag:

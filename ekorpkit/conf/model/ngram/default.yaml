@@ -4,19 +4,15 @@ defaults:
   - scores: default
   - candidates: default
   - postag: default
+  - ngramize: default
   - /data: concat
   - /preprocessor/tokenizer: simple
 
 _target_: ekorpkit.models.ngram.base.Ngrams
+_method_:
+  - initialize
 name: ngram
 autoload: true
 force_train: false
-analyze:
-  exclude_overlaps: true
-  threshold:
-ngramize:
-  delimiter: ""
-  strip_pos: true
-
 progress_per: 1000
 verbose: ${oc.select:..verbose,false}
