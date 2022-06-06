@@ -79,6 +79,8 @@ class LMSA(BaseSentimentAnalyser):
         lxfeat_names = self._features.get(feature).get("lexicon_features")
         lxfeat = pd.DataFrame.from_dict(lexicon_features, orient="index")
         score = {}
+        if lxfeat.empty:
+            return score
         if feature == "polarity":
             lxfeat["pos"] = lxfeat.apply(
                 lambda x: 1 * x["count"] if x["Positive"] > 0 else 0, axis=1

@@ -77,7 +77,7 @@ class Segmenter(BaseSegmenter):
         chunk_size = _chunk.get("chunk_size", 300)
         chunk_overlap = _chunk.get("chunk_overlap", False)
         self.len_func_name = _chunk.get("len_func", "len_bytes")
-        len_func = _chunk[eKonf.Keys.FUNC].get(self.len_func_name, None)
+        len_func = _chunk.get(eKonf.Keys.FUNC, {}).get(self.len_func_name, None)
         self.len_func = eKonf.partial(len_func)
 
         self._in_segment_separator = codecs.decode(
