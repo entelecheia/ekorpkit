@@ -1,3 +1,2 @@
 defaults:
   - default
-  - override score_function: npmi

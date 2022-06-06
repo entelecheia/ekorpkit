@@ -1,9 +1,7 @@
 delimiter: /
 max_len: 2
-templates:
-  - ('/NN', '/J', '/NN')
-  - ('/NN', '/NN')
 strip_pos: false
+valid_tags:
 stop_tags:
   - SP
   - SF

@@ -222,6 +222,8 @@ OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
 OmegaConf.register_new_resolver("exists", _exists)
+OmegaConf.register_new_resolver("join_paths", os.path.join)
+OmegaConf.register_new_resolver("dirname", os.path.dirname)
 OmegaConf.register_new_resolver("check_path", check_path)
 OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
@@ -650,7 +652,7 @@ def _ensure_list(value):
         return []
     elif isinstance(value, str):
         return [value]
-    return list(value)
+    return _to_dict(value)
 
 
 class eKonf:

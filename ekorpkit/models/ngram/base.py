@@ -78,21 +78,23 @@ def _remove_overlapping_ngrams_by_score(ngram_pos_scores):
 
 
 def _prepare_ngram_tuples(
-    words, max_n=5, max_window=None, max_skip=None, include_positions=False
+    words,
+    max_n=5,
+    max_window=None,
+    max_skip=None,
+    postag_rules=[],
+    include_positions=False,
 ):
     num_words = len(words)
-    # ngrams = [(word,) for word in words]
     ngrams = []
     for ngram_index_set in _get_ngram_indices(num_words, max_n, max_window, max_skip):
-        if include_positions:
-            ngrams.append(
-                (
-                    tuple(words[i] for i in ngram_index_set),
-                    tuple(i for i in ngram_index_set),
-                )
-            )
-        else:
-            ngrams.append(tuple([words[i] for i in ngram_index_set]))
+        ngram = tuple(words[i] for i in ngram_index_set)
+        position = tuple(i for i in ngram_index_set)
+        if _match_any_rules(ngram, postag_rules) or len(ngram) == 1:
+            if include_positions:
+                ngrams.append((ngram, position))
+            else:
+                ngrams.append(ngram)
 
     return ngrams
 
@@ -147,6 +149,31 @@ def _get_word_surface(token, postag_delim="/", strip_pos=True, postag_length=Non
     )
 
 
+def _match(ngram, postag_rule):
+    if isinstance(postag_rule, str):
+        for token in ngram:
+            if postag_rule in token:
+                return True
+        return False
+    if isinstance(postag_rule, list):
+        postag_rule = tuple(postag_rule)
+        if len(ngram) != len(postag_rule):
+            return False
+        for token, tag in zip(ngram, postag_rule):
+            if tag not in token:
+                return False
+        return True
+
+
+def _match_any_rules(ngram, postag_rules):
+    if not postag_rules:
+        return True
+    for rule in postag_rules:
+        if _match(ngram, rule):
+            return True
+    return False
+
+
 class Ngrams:
     def __init__(
         self,
@@ -162,7 +189,9 @@ class Ngrams:
         self._ngramize = args.ngramize
         self._postag = args.postag
         self._analyze = args.analyze
+        self._scores = args.scores
         self.score_function = eKonf.partial(args.score_function)
+        self.autoload = args.autoload
         self.force_train = args.force_train
 
         assert type(self._ngram.max_n) == int
@@ -173,6 +202,7 @@ class Ngrams:
             self._ngram.max_window = self._ngram.max_n
         if not self._ngram.max_skip:
             self._ngram.max_skip = self._ngram.max_window - self._ngram.max_n
+        self.postag_rules = eKonf.ensure_list(self._ngram.postag_rules)
 
         if self._candidates.min_count <= 0:
             self._candidates.min_count = 10
@@ -183,9 +213,9 @@ class Ngrams:
         self.progress_per = args.progress_per
         self.verbose = args.verbose
 
-        self.output_dir = args.output_dir
-        self.output_file = os.path.join(self.output_dir, args.output_file)
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.score_path = args.scores.score_path
+        self.score_dir = os.path.dirname(self.score_path)
+        os.makedirs(self.score_dir, exist_ok=True)
 
         self._tokenizer = args.preprocessor.tokenizer
         if eKonf.is_instantiatable(self._tokenizer):
@@ -198,7 +228,8 @@ class Ngrams:
         self.candidates = {}
         self.total_words = 0
 
-        self.initialize()
+        if self.autoload:
+            self.initialize()
 
     def initialize(self):
         self.load_candidates()
@@ -216,12 +247,14 @@ class Ngrams:
 
     def load_candidates(self):
         """Load a previously saved model"""
-        if os.path.exists(self.output_file):
-            df = load_dataframe(self.output_file, verbose=self.verbose)
+        if os.path.exists(self.score_path):
+            df = load_dataframe(self.score_path, verbose=self.verbose)
             Ngram = namedtuple("ngram", df.columns)
             _cands = df.to_dict(orient="records")
             self.candidates = {
-                tuple(cand["words"].split(self._ngram.delimiter)): Ngram(**cand)
+                tuple(
+                    cand[self._scores.columns.words].split(self._scores.ngram_delim)
+                ): Ngram(**cand)
                 for cand in _cands
             }
             log.info(f"loaded {len(self.candidates)} candidates")
@@ -232,7 +265,7 @@ class Ngrams:
         """Save the candidates to a file"""
         if len(self.candidates) > 0:
             df = pd.DataFrame(self.candidates.values())
-            save_dataframe(df, self.output_file, verbose=self.verbose)
+            save_dataframe(df, self.score_path, verbose=self.verbose)
         else:
             log.info("no candidates to save")
 
@@ -248,7 +281,7 @@ class Ngrams:
             )
         )
 
-    def _load_data(self):
+    def load_data(self):
         """Load data"""
         if self._data is None:
             log.warning("No data config found")
@@ -262,14 +295,17 @@ class Ngrams:
     def train(self):
         """Train the model"""
         if not self.sentences:
-            self._load_data()
-        self._learn_ngrams()
+            self.load_data()
+        self.learn_ngrams()
+        self.score_ngrams()
+
+    def score_ngrams(self):
         if self.score_function is not None and callable(self.score_function):
             self.candidates = self.score_function(
                 self.ngrams, total_words=self.total_words
             )
 
-    def _learn_ngrams(self):
+    def learn_ngrams(self):
 
         self.ngrams = {}
         sentence_no, total_words = -1, 0
@@ -278,7 +314,9 @@ class Ngrams:
             total_words += len(words)
 
             ngrams = self.prepare_ngram_tuples(
-                words, max_n=self._ngram.max_n, max_window=self._ngram.max_window
+                words,
+                max_n=self._ngram.max_n,
+                max_window=self._ngram.max_window,
             )
             for ngram in ngrams:
                 self.ngrams[ngram] = self.ngrams.get(ngram, 0) + 1
@@ -308,6 +346,8 @@ class Ngrams:
         sentences,
         exclude_overlaps=True,
         threshold=None,
+        ignore_scores=False,
+        apply_postag_rules=True,
         surface_delim=";",
         postag_delim="/",
         strip_pos=True,
@@ -318,7 +358,11 @@ class Ngrams:
         result = {}
         for sentence in tqdm(sentences):
             for ngram, _, score in self.analyze_sentence(
-                sentence, exclude_overlaps=exclude_overlaps, threshold=threshold
+                sentence,
+                exclude_overlaps=exclude_overlaps,
+                threshold=threshold,
+                ignore_scores=ignore_scores,
+                apply_postag_rules=apply_postag_rules,
             ):
                 ngram = self.get_surface(
                     ngram,
@@ -362,6 +406,8 @@ class Ngrams:
         sentence,
         exclude_overlaps=True,
         threshold=None,
+        ignore_scores=False,
+        apply_postag_rules=True,
     ):
         """Analyze a sentence, concatenating any detected ngrams into a single token.
 
@@ -371,11 +417,13 @@ class Ngrams:
             Token sequence representing the sentence to be analyzed.
         """
 
+        postag_rules = self.postag_rules if apply_postag_rules else []
         words = self.tokenize(sentence)
         ngram_with_positions = self.prepare_ngram_tuples(
             words,
             max_n=self._ngram.max_n,
             max_window=self._ngram.max_window,
+            postag_rules=postag_rules,
             include_positions=True,
         )
 
@@ -383,7 +431,7 @@ class Ngrams:
         for ngram_pos in ngram_with_positions:
             ngram, pos = ngram_pos
             score = self.ngram_score(ngram, threshold=threshold)
-            if score is not None:
+            if score is not None or ignore_scores:
                 tokens.append((ngram, pos, score))
         if exclude_overlaps:
             tokens = self.remove_overlapping_ngrams_by_score(tokens)
@@ -395,13 +443,14 @@ class Ngrams:
         if len(ngram) == 1:
             return unigram_score
 
+        _score = self._scores.columns.score
         if ngram in self.candidates:
-            score = self.candidates[ngram].score
+            score = getattr(self.candidates[ngram], _score)
             if threshold is None or score >= threshold:
                 return score
         return None
 
-    def export_ngrams(self, threshold=None):
+    def export_ngrams(self, threshold=None, apply_postag_rules=False):
         """Extract all found ngrams.
         Returns
         ------
@@ -409,18 +458,34 @@ class Ngrams:
             Mapping between phrases and their scores.
         """
         result = {}
+        _score = self._scores.columns.score
         for ngram, score in self.candidates.items():
             if len(ngram) < 2:
                 continue  # no phrases here
-            if threshold is None or score.score > threshold:
+            if apply_postag_rules and not self.match_any_rules(
+                ngram, self.postag_rules
+            ):
+                continue
+            if threshold is None or getattr(score, _score) > threshold:
                 result[ngram] = score
         # sort by score
-        result = sorted(result.items(), key=lambda x: x[1].score, reverse=True)
+        result = sorted(
+            result.items(), key=lambda x: getattr(x[1], _score), reverse=True
+        )
         return result
 
     @staticmethod
+    def match_any_rules(ngram, postag_rules):
+        return _match_any_rules(ngram, postag_rules)
+
+    @staticmethod
     def prepare_ngram_tuples(
-        words, max_n=5, max_window=None, max_skip=None, include_positions=False
+        words,
+        max_n=5,
+        max_window=None,
+        max_skip=None,
+        postag_rules=[],
+        include_positions=False,
     ):
         """Prepare ngram tuples from a list of words."""
 
@@ -429,6 +494,7 @@ class Ngrams:
             max_n=max_n,
             max_window=max_window,
             max_skip=max_skip,
+            postag_rules=postag_rules,
             include_positions=include_positions,
         )
 
