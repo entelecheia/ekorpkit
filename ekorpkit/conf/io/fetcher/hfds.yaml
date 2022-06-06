@@ -1,6 +1,6 @@
 defaults:
   - _default
-  - /pipeline: pipeline
+  - /pipeline: default
 
 _target_: ekorpkit.io.fetch.hfds.HFDS
 subsets:

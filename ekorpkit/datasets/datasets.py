@@ -25,11 +25,11 @@ class Datasets:
             self.datasets = {self.datasets: None}
         elif isinstance(self.datasets, list):
             self.datasets = {name: None for name in self.datasets}
-        if isinstance(self.name, list):
-            self.name = "-".join(self.name)
-        self.info = args.copy()
-        self.info["name"] = self.name
-        self.info["datasets"] = self.datasets
+        if self.name is None and isinstance(self.datasets, dict):
+            self.name = "-".join(self.datasets.keys())
+        self._info = args.copy()
+        self._info["name"] = self.name
+        self._info["datasets"] = self.datasets
 
         self.verbose = args.get("verbose", False)
         self.data_dir = args["data_dir"]
@@ -84,6 +84,10 @@ class Datasets:
 
     def __len__(self):
         return len(self.datasets)
+
+    @property
+    def INFO(self):
+        return self._info
 
     @property
     def COLUMN(self):
@@ -148,7 +152,7 @@ class Datasets:
             self._info_cfg["info_file"] = None
             summary_info = eKonf.instantiate(self._info_cfg)
         if summary_info:
-            summary_info.load(self.info)
+            summary_info.load(self._info)
 
         for split, df in self.splits.items():
             data_file = f"{self.name}-{split}.{self.filetype}"

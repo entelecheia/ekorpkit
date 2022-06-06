@@ -7,7 +7,7 @@ def test_dummy_corpus():
     cfg.verbose = True
     cfg.name = "fomc_minutes"
     eKonf.instantiate(cfg)
-    output_file = cfg["output_file"]
+    output_file = cfg.output_file
     assert os.path.exists(output_file)
     os.remove(output_file)
     assert not os.path.exists(output_file)
@@ -37,7 +37,7 @@ def test_build_corpora():
 
 
 def test_corpus_task():
-    corpus_cfg = eKonf.compose(config_group=eKonf.Keys.CORPUS)
+    corpus_cfg = eKonf.compose(config_group="corpus")
     corpus_cfg.verbose = True
     corpus_cfg.name = "bok_minutes"
     corpus_cfg.automerge = True
