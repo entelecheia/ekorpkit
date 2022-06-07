@@ -34,11 +34,8 @@ def __version__():
 def check_path(path: str, alt_path: str = None):
     if os.path.exists(path):
         return path
-    elif os.path.exists(alt_path):
-        return alt_path
     else:
-        log.warning(f"{path} and {alt_path} do not exist")
-        return None
+        return alt_path
 
 
 def _exists(a, *p):

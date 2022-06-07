@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 def confusion_matrix(ax=None, x=None, y=None, data=None, **kwargs):
     _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
-    _figure = {} or kwargs.get("figure")
+    _ax_cfg_ = {} or kwargs.get("_ax_")
     if ax is None:
         ax = plt.gca()
 
@@ -78,10 +78,10 @@ def confusion_matrix(ax=None, x=None, y=None, data=None, **kwargs):
         **_parms_,
     )
 
-    xlabel = _figure.get("xlabel")
+    xlabel = _ax_cfg_.get("xlabel")
     if isinstance(xlabel, str):
-        _figure["xlabel"] = xlabel + stats_text
+        _ax_cfg_["xlabel"] = xlabel + stats_text
     else:
-        _figure["xlabel"] = stats_text
+        _ax_cfg_["xlabel"] = stats_text
 
-    set_figure(ax, **_figure)
+    set_figure(ax, **_ax_cfg_)
