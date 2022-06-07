@@ -2,7 +2,6 @@ defaults:
   - default
   - confusion_matrix: default
 
-output_file: ${oc.select:..output_file, cm.png}
+name: confusion_matrix
 plots:
   - ${..confusion_matrix}
-figures:

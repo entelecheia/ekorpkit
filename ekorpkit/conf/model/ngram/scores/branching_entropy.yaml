@@ -1,0 +1,9 @@
+defaults:
+   - default
+
+features:
+  - score
+  - frequency
+  - length
+  - leftside_entropy
+  - rightside_entropy

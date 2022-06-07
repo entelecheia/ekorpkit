@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - histplot: default
+
+name: HistPlot
+plots:
+  - ${..histplot}

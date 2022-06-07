@@ -1,8 +1,10 @@
 import os
 import pandas as pd
 from ekorpkit import eKonf
-from ekorpkit.corpora import Corpus, Corpora
-from ekorpkit.datasets import Dataset, Datasets
+from ekorpkit.corpora.corpus import Corpus
+from ekorpkit.corpora.corpora import Corpora
+from ekorpkit.datasets.dataset import Dataset
+from ekorpkit.datasets.datasets import Datasets
 from ekorpkit.io.file import load_dataframe
 
 

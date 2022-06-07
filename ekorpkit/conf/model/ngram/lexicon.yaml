@@ -1,0 +1,8 @@
+defaults:
+  - default
+  - override /data: _na
+  - override score_function: _na
+
+_method_:
+  - load_candidates
+name: ${.info.name}

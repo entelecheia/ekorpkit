@@ -1,10 +1,11 @@
 defaults:
   - /column_info: default
+  - /cache: extract_archive
 
 _target_: ekorpkit.datasets.dataset.Dataset
-name: ${oc.select:.builtin.name, null} 
+name: ${oc.select:.builtin.name, null}
 data_dir: ${dir.dataset}/dataset
-filetype: ${oc.select:.builtin.filetype, csv}
+filetype: ${oc.select:.builtin.filetype, .parquet}
 autoload: true
-verbose: ${oc.select:..verbose, true}
 use_name_as_subdir: true
+verbose: ${oc.select:..verbose, true}

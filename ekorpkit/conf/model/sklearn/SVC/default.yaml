@@ -1,0 +1,4 @@
+_name_: SVC
+_description_: Support Vector Classifier
+_target_: sklearn.svm.SVC
+random_state: ${oc.select..random_state, 987}

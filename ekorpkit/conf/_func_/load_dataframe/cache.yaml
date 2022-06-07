@@ -1,0 +1,6 @@
+defaults:
+  - /cache: default
+
+_partial_: false
+_target_: ekorpkit.io.file.load_dataframe
+filepath: .cache.path

@@ -1,8 +1,5 @@
 import logging
-from enum import Enum
 from pathlib import Path
-from pprint import pprint
-from re import S
 from ekorpkit import eKonf
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit.io.file import load_dataframe
@@ -11,18 +8,10 @@ from ekorpkit.io.file import load_dataframe
 log = logging.getLogger(__name__)
 
 
-class _SPLITS(str, Enum):
-    """Split keys in configs used by Dataset."""
-
-    TRAIN = "train"
-    DEV = "dev"
-    TEST = "test"
-
-
 class Dataset:
     """Dataset class."""
 
-    SPLITS = _SPLITS
+    SPLITS = eKonf.SPLITS
 
     def __init__(self, **args):
         self.args = eKonf.to_dict(args)
@@ -37,24 +26,23 @@ class Dataset:
         if use_name_as_subdir:
             self.data_dir = self.data_dir / self.name
         self.info_file = self.data_dir / f"info-{self.name}.yaml"
-        self.info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
-        if self.info:
-            if self.verbose:
-                log.info(f"Loaded info file: {self.info_file}")
-            self.args = eKonf.to_dict(eKonf.merge(self.args, self.info))
-            self.info = eKonf.to_dict(self.info)
+        self._info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
+        if self._info:
+            log.info(f"Loaded info file: {self.info_file}")
+            self.args = eKonf.to_dict(eKonf.merge(self.args, self._info))
+            self._info = eKonf.to_dict(self._info)
 
         if self.verbose:
-            log.info(f"Intantiating a dataset {self.name} with a config:")
-            pprint(eKonf.to_dict(self.args))
+            print(f"Intantiating a dataset {self.name} with a config:")
+            eKonf.print(self.args)
 
-        self.filetype = self.args.get("filetype", "csv")
+        self.filetype = self.args.get("filetype", "parquet").replace(".", "")
         self.data_files = self.args.get("data_files", None)
         if self.data_files is None:
             self.data_files = {
-                _SPLITS.TRAIN: f"{self.name}-train.{self.filetype}",
-                _SPLITS.DEV: f"{self.name}-dev.{self.filetype}",
-                _SPLITS.TEST: f"{self.name}-test.{self.filetype}",
+                self.SPLITS.TRAIN.value: f"{self.name}-train.{self.filetype}",
+                self.SPLITS.DEV.value: f"{self.name}-dev.{self.filetype}",
+                self.SPLITS.TEST.value: f"{self.name}-test.{self.filetype}",
             }
 
         self.description = self.args.get("description", "")
@@ -65,10 +53,10 @@ class Dataset:
 
         self._column = eKonf.instantiate(self._column_info)
 
-        self.pipeline_args = self.args.get("pipeline", {})
-        self.process_pipeline = self.pipeline_args.get(eKonf.Keys.PIPELINE, [])
-        if self.process_pipeline is None:
-            self.process_pipeline = []
+        self._pipeline_cfg = self.args.get("pipeline", {})
+        self._pipeline_ = self._pipeline_cfg.get(eKonf.Keys.PIPELINE, [])
+        if self._pipeline_ is None:
+            self._pipeline_ = []
 
         self.splits = {}
         self._loaded = False
@@ -83,6 +71,10 @@ class Dataset:
 
     def __getitem__(self, split):
         return self.splits[split]
+
+    @property
+    def INFO(self):
+        return self._info
 
     @property
     def COLUMN(self):
@@ -111,7 +103,7 @@ class Dataset:
             data_file = self.data_dir / data_file
             df = load_dataframe(data_file, dtype=self.DATATYPEs)
             df = self.COLUMN.append_split(df, split)
-            if self.process_pipeline and len(self.process_pipeline) > 0:
-                df = apply_pipeline(df, self.process_pipeline, self.pipeline_args)
+            if self._pipeline_ and len(self._pipeline_) > 0:
+                df = apply_pipeline(df, self._pipeline_, self._pipeline_cfg)
             self.splits[split] = df
         self._loaded = True

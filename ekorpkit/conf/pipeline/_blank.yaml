@@ -1,3 +1,6 @@
+defaults:
+  - /cache: extract_archive
+
 name: ${oc.select:..name, pipeline}
 apply_to: ${oc.select:..apply_to, text}
 columns:

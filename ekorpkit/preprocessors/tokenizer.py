@@ -8,6 +8,93 @@ from ekorpkit import eKonf
 log = logging.getLogger(__name__)
 
 
+def _match_tags(token, tags):
+    for tag in tags:
+        if token[1].startswith(tag):
+            return True
+    return False
+
+
+def _extract_tokens(
+    tokenized_text,
+    postags=[],
+    stop_postags=["SP"],
+    stopwords=None,
+    strip_pos=True,
+    postag_delim="/",
+    postag_length=None,
+    **kwargs,
+):
+    if isinstance(tokenized_text, str):
+        tokens = tokenized_text.split()
+    else:
+        tokens = tokenized_text
+    _token_pos_tuples = [
+        _token_to_tuple(token, postag_delim=postag_delim, postag_length=postag_length)
+        for token in tokens
+    ]
+    postags = [
+        postag[:postag_length] if postag_length else postag
+        for postag in postags
+        if postag not in stop_postags
+    ]
+    stop_postags = [
+        postag[:postag_length] if postag_length else postag for postag in stop_postags
+    ]
+    _tokens = []
+    if len(postags) > 0:
+        _tokens = [
+            token_pos
+            for token_pos in _token_pos_tuples
+            if len(token_pos) == 1
+            or (
+                not _match_tags(token_pos, stop_postags)
+                and _match_tags(token_pos, postags)
+            )
+        ]
+    else:
+        _tokens = [
+            token_pos
+            for token_pos in _token_pos_tuples
+            if len(token_pos) == 1 or not _match_tags(token_pos, stop_postags)
+        ]
+    if stopwords is not None:
+        _tokens = [token_pos for token_pos in _tokens if not stopwords(token_pos[0])]
+
+    _tokens = [
+        _tuple_to_token(
+            token_pos,
+            strip_pos=strip_pos,
+            postag_delim=postag_delim,
+            postag_length=postag_length,
+        )
+        for token_pos in _tokens
+    ]
+    return _tokens
+
+
+def _tuple_to_token(token_pos, strip_pos=True, postag_delim="/", postag_length=None):
+    if strip_pos or len(token_pos) == 1:
+        return token_pos[0]
+    return (
+        token_pos[0].strip()
+        + postag_delim
+        + (token_pos[1][:postag_length] if postag_length else token_pos[1])
+    )
+
+
+def _token_to_tuple(_token, postag_delim="/", postag_length=None):
+    if isinstance(_token, str):
+        token_pos = _token.split(postag_delim)
+        if len(token_pos) == 2:
+            return (
+                token_pos[0],
+                token_pos[1][:postag_length] if postag_length else token_pos[1],
+            )
+        return tuple(token_pos)
+    return _token
+
+
 class Tokenizer:
     __metaclass__ = ABCMeta
 
@@ -37,7 +124,9 @@ class Tokenizer:
 
         self._lowercase = tokenize.get("lowercase", False)
         self._flatten = tokenize.get("flatten", True)
-        self._concat_surface_and_pos = tokenize.get("concat_surface_and_pos", True)
+        self._strip_pos = tokenize.get("strip_pos", False)
+        self._postag_delim = tokenize.get("postag_delim", "/")
+        self._postag_length = tokenize.get("postag_length", None)
         self._include_whitespace_token = tokenize.get("include_whitespace_token", True)
         self._tokenize_each_word = tokenize.get("tokenize_each_word", False)
         self._wordpieces_prefix = tokenize.get("wordpieces_prefix", "##")
@@ -61,13 +150,14 @@ class Tokenizer:
         self._stop_postags = extract.get("stop_postags", None)
         if self._stop_postags is None:
             self._stop_postags = ["SP"]
-        self._no_space_for_non_nouns = extract.get("no_space_for_non_nouns", False)
+        self._extract_strip_pos = extract.get("strip_pos", True)
+        self._extract_postag_delim = extract.get("postag_delim", "/")
+        self._extract_postag_length = extract.get("postag_length", None)
 
         stopwords = kwargs.get("stopwords")
         self._stopwords = stopwords
         if eKonf.is_instantiatable(self._stopwords):
-            if self.verbose:
-                log.info(f"instantiating {self._stopwords['_target_']}...")
+            log.info(f"instantiating {self._stopwords['_target_']}...")
             self._stopwords = eKonf.instantiate(self._stopwords)
 
         self._return_as_list = kwargs.get("return_as_list", False)
@@ -84,9 +174,12 @@ class Tokenizer:
 
     def _to_token(self, term_pos):
         if isinstance(term_pos, tuple):
-            if self._concat_surface_and_pos:
-                return _tuple_to_token(term_pos)
-            return term_pos[0]
+            return _tuple_to_token(
+                term_pos,
+                self._strip_pos,
+                self._postag_delim,
+                self._postag_length,
+            )
         return term_pos
 
     def tokenize_article(self, article, return_as_list=None):
@@ -106,7 +199,7 @@ class Tokenizer:
             else self._sentence_separator.join(tokenized_article)
         )
 
-    def tokenize(self, text, return_as_list="list"):
+    def tokenize(self, text, return_as_list=True):
         if isinstance(text, list):
             return text
         text = str(text)
@@ -145,23 +238,38 @@ class Tokenizer:
             return term_pos
         return tokens
 
-    def extract(self, text, nouns_only=False, return_as_list="list"):
-        if nouns_only:
-            tokens = _extract(
-                text,
-                postags=self._noun_postags,
-                noun_postags=self._noun_postags,
-                stopwords=self._stopwords,
-            )
-        else:
-            tokens = _extract(
-                text,
-                postags=self._postags,
-                stop_postags=self._stop_postags,
-                no_space_for_non_nouns=self._no_space_for_non_nouns,
-                stopwords=self._stopwords,
-            )
-        return tokens if return_as_list == "list" else " ".join(tokens)
+    def extract(
+        self,
+        text,
+        nouns_only=False,
+        return_as_list=True,
+        postags=None,
+        stop_postags=None,
+        strip_pos=None,
+        postag_delim=None,
+        postag_length=None,
+    ):
+        if strip_pos is None:
+            strip_pos = self._extract_strip_pos
+        if stop_postags is None:
+            stop_postags = self._stop_postags
+        if postags is None:
+            postags = self._noun_postags if nouns_only else self._postags
+        if postag_delim is None:
+            postag_delim = self._extract_postag_delim
+        if postag_length is None:
+            postag_length = self._extract_postag_length
+
+        tokens = _extract_tokens(
+            text,
+            postags=postags,
+            stop_postags=stop_postags,
+            stopwords=self._stopwords,
+            strip_pos=strip_pos,
+            postag_delim=postag_delim,
+            postag_length=postag_length,
+        )
+        return tokens if return_as_list else " ".join(tokens)
 
     def extract_article(self, article, nouns_only=False):
         if article is None:
@@ -224,101 +332,14 @@ class Tokenizer:
         return self.tokens(text)
 
 
-def _tuple_to_token(_tuple):
-    if isinstance(_tuple, tuple):
-        return "/".join(list(_tuple))
-    return _tuple
-
-
-def _token_to_tuple(_token):
-    if isinstance(_token, str):
-        return tuple(_token.split("/"))
-    return _token
-
-
-def _extract(
-    tokenized_text,
-    postags=[],
-    noun_postags=["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"],
-    stop_postags=["SP"],
-    no_space_for_non_nouns=False,
-    stopwords=None,
-    **kwargs,
-):
-    if isinstance(tokenized_text, str):
-        tokens = tokenized_text.split()
-    else:
-        tokens = tokenized_text
-    _tokens_pos = [
-        _token_to_tuple(token) for token in tokens if len(_token_to_tuple(token)) == 2
-    ]
-
-    exist_sp_tag = False
-    if no_space_for_non_nouns:
-        for i, token in enumerate(_tokens_pos):
-            if token[1] == "SP":
-                exist_sp_tag = True
-                break
-
-    _tokens = []
-    if exist_sp_tag and no_space_for_non_nouns:
-        prev_nonnoun_check = False
-        cont_morphs = []
-        i = 0
-        while i < len(_tokens_pos):
-            token = _tokens_pos[i]
-            if not prev_nonnoun_check and token[1] in noun_postags:
-                _tokens.append(token[0])
-            elif (
-                not prev_nonnoun_check
-                and token[1] not in noun_postags
-                and token[1][0] != "S"
-            ):
-                prev_nonnoun_check = True
-                cont_morphs.append(token[0])
-            elif (
-                prev_nonnoun_check
-                and token[1] not in noun_postags
-                and token[1][0] != "S"
-            ):
-                cont_morphs.append(token[0])
-            else:
-                if len(cont_morphs) > 0:
-                    _tokens.append("".join(cont_morphs))
-                    cont_morphs = []
-                    prev_nonnoun_check = False
-                if token[1] != "SP":
-                    _tokens.append(token[0])
-            i += 1
-        if len(cont_morphs) > 0:
-            _tokens.append("".join(cont_morphs))
-    else:
-        if len(postags) > 0:
-            _tokens = [
-                token[0].strip()
-                for token in _tokens_pos
-                if token[1] not in stop_postags and token[1] in postags
-            ]
-        else:
-            _tokens = [
-                token[0].strip()
-                for token in _tokens_pos
-                if token[1] not in stop_postags
-            ]
-
-    if stopwords is not None:
-        _tokens = [token for token in _tokens if not stopwords(token)]
-    return _tokens
-
-
 class NLTKTokenizer(Tokenizer):
     def __init__(self, nltk={}, **kwargs):
         import nltk as NLTK
 
         NLTK.download("punkt", quiet=True)
         NLTK.download("averaged_perceptron_tagger", quiet=True)
-        NLTK.download('wordnet', quiet=True)
-        NLTK.download('omw-1.4', quiet=True)
+        NLTK.download("wordnet", quiet=True)
+        NLTK.download("omw-1.4", quiet=True)
 
         nltk = nltk or {}
         self.verbose = kwargs.get("verbose", False)
@@ -437,9 +458,6 @@ class PynoriTokenizer(Tokenizer):
 
     def parse(self, text):
 
-        _concat_surface_and_pos = (
-            False if self._tokenize_each_word else self._concat_surface_and_pos
-        )
         tokens = self._tokenizer.do_analysis(text)
         term_pos = [
             (term, pos)
@@ -516,3 +534,78 @@ class BWPTokenizer(Tokenizer):
 
     def parse(self, text):
         return self._tokenizer.tokenize(text)
+
+
+# def _extract(
+#     tokenized_text,
+#     postags=[],
+#     noun_postags=["NNG", "NNP", "XSN", "SL", "XR", "NNB", "NR"],
+#     stop_postags=["SP"],
+#     no_space_for_non_nouns=False,
+#     stopwords=None,
+#     **kwargs,
+# ):
+#     if isinstance(tokenized_text, str):
+#         tokens = tokenized_text.split()
+#     else:
+#         tokens = tokenized_text
+#     _tokens_pos = [
+#         _token_to_tuple(token) for token in tokens if len(_token_to_tuple(token)) == 2
+#     ]
+
+#     exist_sp_tag = False
+#     if no_space_for_non_nouns:
+#         for i, token in enumerate(_tokens_pos):
+#             if token[1] == "SP":
+#                 exist_sp_tag = True
+#                 break
+
+#     _tokens = []
+#     if exist_sp_tag and no_space_for_non_nouns:
+#         prev_nonnoun_check = False
+#         cont_morphs = []
+#         i = 0
+#         while i < len(_tokens_pos):
+#             token = _tokens_pos[i]
+#             if not prev_nonnoun_check and token[1] in noun_postags:
+#                 _tokens.append(token[0])
+#             elif (
+#                 not prev_nonnoun_check
+#                 and token[1] not in noun_postags
+#                 and token[1][0] != "S"
+#             ):
+#                 prev_nonnoun_check = True
+#                 cont_morphs.append(token[0])
+#             elif (
+#                 prev_nonnoun_check
+#                 and token[1] not in noun_postags
+#                 and token[1][0] != "S"
+#             ):
+#                 cont_morphs.append(token[0])
+#             else:
+#                 if len(cont_morphs) > 0:
+#                     _tokens.append("".join(cont_morphs))
+#                     cont_morphs = []
+#                     prev_nonnoun_check = False
+#                 if token[1] != "SP":
+#                     _tokens.append(token[0])
+#             i += 1
+#         if len(cont_morphs) > 0:
+#             _tokens.append("".join(cont_morphs))
+#     else:
+#         if len(postags) > 0:
+#             _tokens = [
+#                 token[0].strip()
+#                 for token in _tokens_pos
+#                 if token[1] not in stop_postags and token[1] in postags
+#             ]
+#         else:
+#             _tokens = [
+#                 token[0].strip()
+#                 for token in _tokens_pos
+#                 if token[1] not in stop_postags
+#             ]
+
+#     if stopwords is not None:
+#         _tokens = [token for token in _tokens if not stopwords(token)]
+#     return _tokens

@@ -1,0 +1,13 @@
+delimiter: /
+max_len: 3
+strip_pos: false
+use_tags:
+stop_tags:
+  - SP
+  - SF
+  - SE
+  - SSO
+  - SSC
+  - SC
+  - SY
+  - SH

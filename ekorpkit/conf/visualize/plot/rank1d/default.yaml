@@ -1,0 +1,16 @@
+defaults:
+  - /_method_: fittransform_show
+
+_func_: yellowbrick_features
+_name_: Rank1D
+axno: 0
+datano: 0
+x:
+y:
+secondary_y: false
+secondary_to: 0
+classes:
+features:
+_parms_:
+  classes: ${oc.select:..classes, null}
+  features: ${oc.select:..features, null}

@@ -1,0 +1,45 @@
+defaults:
+  - lexicon
+  - override /preprocessor/tokenizer: mecab
+
+info:
+  name: mpko_tone_lex
+  fullname: Korean Monetary Policy Tone Lexicon - Lexical Approach
+  source: https://github.com/entelecheia/eKoNLPy
+  lang: ko
+scores:
+  score_path: ${dir.resource}/lexicons/mpko/mp_polarity_lexicon_lex.parquet
+  keys:
+    words: word
+    score: polarity
+    count: count
+  features:
+    - label
+    - polarity
+    - intensity
+    - pos_score
+    - neg_score
+ngram:
+  max_n: 5
+  max_window: 7
+  max_skip: 2
+  postag_rules:
+    - /NN
+postag:
+  use_tags:
+    - NN
+    - VA
+    - MA
+    - XS
+    - XP
+    - VC
+    - MM
+ngramize:
+  exclude_overlaps: true
+  overlaps_to_keep: longest_with_score
+  threshold:
+  delimiter: ;
+  strip_pos: false
+  ignore_scores: false
+  apply_postag_rules: true
+  use_surfaces_to_score: true

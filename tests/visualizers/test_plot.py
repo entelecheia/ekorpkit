@@ -1,0 +1,20 @@
+import pytest
+from ekorpkit import eKonf
+
+
+def test_plot():
+
+    cfg = eKonf.compose(config_group="dataset=feature")
+    cfg.name = "fomc_features_small"
+    cfg.cache.uri = "https://github.com/entelecheia/ekorpkit-book/raw/main/data/fomc_features_small.zip"
+    cfg.data_dir = cfg.cache.path
+    f_small = eKonf.instantiate(cfg)
+
+    cfg = eKonf.compose(config_group="visualize/plot=lineplot")
+    cfg.plots[0].x = "date"
+    cfg.plots[0].y = "PMI"
+    cfg.figure.figsize = (15, 8)
+    cfg.ax.title = "PMI"
+    eKonf.instantiate(cfg, data=f_small.data)
+
+    assert True

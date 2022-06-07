@@ -1,7 +1,6 @@
 defaults:
   - _default
-  - /preprocessor/tokenizer: nltk
-  - lexicon: hiv4
+  - /model/ngram: hiv4
 
 _target_: ekorpkit.models.sentiment.analyser.HIV4SA
 name: hiv4sa
@@ -21,10 +20,3 @@ predict:
   features:
     - polarity
     - legal
-preprocessor:
-  tokenizer:
-    tokenize:
-      concat_surface_and_pos: false
-    nltk:
-      lemmatize: false
-      stem: false

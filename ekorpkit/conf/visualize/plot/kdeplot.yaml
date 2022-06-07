@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - kdeplot: default
+
+name: KDEPlot
+plots:
+  - ${..kdeplot}

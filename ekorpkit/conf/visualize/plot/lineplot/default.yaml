@@ -1,5 +1,7 @@
-_func_: lineplot
+_func_: snsplot
+_name_: lineplot
 axno: 0
+datano: 0
 x:
 y:
 secondary_y: false

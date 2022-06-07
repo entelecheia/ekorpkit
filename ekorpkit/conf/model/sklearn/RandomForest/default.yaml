@@ -1,0 +1,5 @@
+_name_: RandomForest
+_description_: Random Forest Classifier
+_target_: sklearn.ensemble.RandomForestClassifier
+random_state: ${oc.select..random_state, 987}
+n_estimators: 100

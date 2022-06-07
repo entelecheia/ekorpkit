@@ -17,7 +17,7 @@ timestamp:
   format:
   _parms_:
 datetime:
-  key:
+  columns:
   format:
   _parms_:
 segment_separator: ${oc.select:..segment_separator, '\n\n'}

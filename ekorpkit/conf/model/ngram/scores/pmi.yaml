@@ -1,0 +1,7 @@
+defaults:
+   - default
+
+features:
+  - score
+  - frequency
+  - length

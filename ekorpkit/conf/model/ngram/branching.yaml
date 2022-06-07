@@ -1,0 +1,4 @@
+defaults:
+  - default
+  - override score_function: branching_entropy
+  - override scores: branching_entropy

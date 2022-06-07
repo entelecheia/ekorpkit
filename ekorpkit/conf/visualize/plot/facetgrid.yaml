@@ -1,0 +1,6 @@
+defaults:
+  - _grid
+  - facetgrid: default
+
+name: FacetGrid
+grid: ${.facetgrid}

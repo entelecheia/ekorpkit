@@ -1,49 +1,20 @@
-axvspans:
-  - ${oc.select:..axvspan, null}
-annotations:
-  - ${oc.select:..annotation, null}
-axno: 0
-secondary_y: false
-secondary_to: 0
-xlabel:
+figsize: (10, 5)
+fontsize: 10
+style: fivethirtyeight
+tight_layout: true
+rcParams:
+  axes.unicode_minus: False
+  axes.labelsize: ${..fontsize}
+  text.color: dimgrey
+  font.family: NanumGothic
+  font.size: ${..fontsize}
+  # savefig.edgecolor: black
+fontpath:
+language:
+super:
   xlabel:
-ylabel:
+    t:
   ylabel:
-title:
-  label:
-legend:
+    t:
   title:
-  title_fontsize: 12
-  labels:
-  loc:
-grid:
-xlim:
-#   left:
-#   right:
-ylim:
-#   bottom:
-#   top:
-# xticks:
-#   ticks:
-#   labels:
-# yticks:
-#   ticks:
-#   labels:
-xtickmajorformatterfunc:
-ytickmajorformatterfunc:
-# xticklabels:
-# yticklabels:
-# xticklabelsize:
-# yticklabelsize:
-# xticklabelrotation:
-# yticklabelrotation:
-# xticklabelpad:
-# yticklabelpad:
-# xtickpad:
-# ytickpad:
-# xtickangle:
-# ytickangle:
-# xtickminorlocator:
-# ytickminorlocator:
-# xtickmajorlocator:
-# ytickmajorlocator:
+    t:

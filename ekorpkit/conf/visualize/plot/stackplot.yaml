@@ -2,7 +2,6 @@ defaults:
   - _default
   - stackplot: default
 
-_target_: ekorpkit.visualize.plot.plot
-output_file: ${oc.select:..output_file, stackplot.png}
+name: StackPlot
 plots:
   - ${..stackplot}

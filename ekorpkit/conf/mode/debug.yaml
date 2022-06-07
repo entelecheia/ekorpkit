@@ -10,7 +10,7 @@ env:
   os:
     HYDRA_FULL_ERROR: 1
 hydra:
-  verbose: true
+  verbose: false
   job_logging:
     root:
       level: DEBUG

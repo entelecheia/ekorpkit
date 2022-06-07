@@ -1,0 +1,7 @@
+defaults:
+  - default
+  - pca: default
+
+name: PCA
+plots:
+  - ${..pca}

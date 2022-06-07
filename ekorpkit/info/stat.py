@@ -188,13 +188,36 @@ def summary_stats(
 
     for col, _func_name_ in num_columns.items():
         len_func = eKonf.partial(_func_[_func_name_])
-        df[col] = apply(len_func, df[text_key], description=f"apply {_func_name_} to {col}")
+        df[col] = apply(
+            len_func, df[text_key], description=f"apply {_func_name_} to {col}"
+        )
 
     agg_funcs = {k: list(v) for k, v in agg_funcs.items()}
     df_sum = df.groupby(lambda _: True).agg(agg_funcs)
     df_sum.columns = ["_".join(x) for x in df_sum.columns.values]
     df_sum.rename(columns=dict(rename_columns), inplace=True)
     info = df_sum.to_dict(orient="records")[0]
+    if convert_to_humanbytes:
+        for k, v in convert_to_humanbytes.items():
+            if k in info:
+                info[v] = humanbytes(info[k])
+    return info
+
+
+def feature_stats(
+    df,
+    **args,
+):
+
+    args = eKonf.to_dict(args)
+    stats = args.get("stats", None)
+    convert_to_humanbytes = args.get("convert_to_humanbytes", None)
+
+    df = df.copy(deep=True)
+
+    info = {}
+    for name, expr in stats.items():
+        info[name] = eval(expr)
     if convert_to_humanbytes:
         for k, v in convert_to_humanbytes.items():
             if k in info:

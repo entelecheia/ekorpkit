@@ -20,6 +20,6 @@ _parms_:
   # Default is True.
   cmap: Blues
   # Colormap of the values displayed from matplotlib.pyplot.cm. Default is 'Blues'
-figure:
+_ax_:
   xlabel: Predicted label
   ylabel: Actual label

@@ -1,0 +1,6 @@
+_name_: AdaBoost
+_description_: AdaBoost Classifier
+_target_: sklearn.ensemble.AdaBoostClassifier
+random_state: ${oc.select..random_state, 987}
+learning_rate: 0.1
+base_estimator:

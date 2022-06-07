@@ -2,4 +2,3 @@ nrows: 1
 ncols: 1
 sharex: false
 sharey: false
-tight_layout: false

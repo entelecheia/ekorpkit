@@ -1,0 +1,20 @@
+defaults:
+  - /_method_: fittransform_show
+
+_func_: yellowbrick_features
+_name_: PCA
+axno: 0
+datano: 0
+x:
+y:
+secondary_y: false
+secondary_to: 0
+classes:
+features:
+scale: true
+proj_features: true
+_parms_:
+  classes: ${oc.select:..classes, null}
+  features: ${oc.select:..features, null}
+  scale: ${oc.select:..scale, true}
+  proj_features: ${oc.select:..proj_features, true}

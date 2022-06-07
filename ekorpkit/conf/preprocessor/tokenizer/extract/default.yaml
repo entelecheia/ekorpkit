@@ -9,4 +9,13 @@ noun_postags:
   - NR
 stop_postags:
   - SP
-no_space_for_non_nouns: false
+  - SF
+  - SE
+  - SSO
+  - SSC
+  - SC
+  - SY
+  - SH
+strip_pos: true
+postag_delim: /
+postag_length:

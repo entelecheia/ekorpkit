@@ -1,0 +1,3 @@
+_name_: GaussianNB
+_description_: Gaussian Naive Bayes Classifier
+_target_: sklearn.naive_bayes.GaussianNB

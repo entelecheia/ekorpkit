@@ -1,0 +1,13 @@
+estimator:
+X:
+y:
+groups:
+scoring:
+cv:
+n_jobs:
+verbose: 0
+fit_params:
+pre_dispatch: "2*n_jobs"
+return_train_score: false
+return_estimator: false
+error_score:

@@ -1,5 +1,6 @@
 defaults:
   - /meta/chairpersons: fomc
+  - articles: statemenet
 
 name: ${oc.select:.content_type, fomc}
 base_url: https://www.federalreserve.gov

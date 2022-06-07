@@ -7,5 +7,7 @@ apply_to: ${oc.select:..apply_to, text}
 min_length: 3
 max_length: 
 len_func: len_bytes
+len_column: num_bytes
+add_len_column: true
 verbose: ${oc.select:..verbose, true}
 use_batcher: ${oc.select:..use_batcher, true}

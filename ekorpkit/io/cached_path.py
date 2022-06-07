@@ -1,6 +1,10 @@
 import os
-import pathlib
 import logging
+import cached_path as _cpath
+import gdown
+import shutil
+from pathlib import Path
+
 
 log = logging.getLogger(__name__)
 
@@ -9,12 +13,12 @@ def cached_path(
     url_or_filename,
     extract_archive: bool = False,
     force_extract: bool = False,
-    return_dir: bool = False,
+    return_parent_dir: bool = False,
     cache_dir=None,
     verbose: bool = False,
 ):
-    import cached_path
-
+    if url_or_filename is None:
+        return None
     if verbose:
         log.info(
             "caching path: {}, extract_archive: {}, force_extract: {}, cache_dir: {}".format(
@@ -22,41 +26,47 @@ def cached_path(
             )
         )
 
-    if url_or_filename:
-        try:
-            if url_or_filename.startswith("gd://"):
+    try:
+        if url_or_filename.startswith("gd://"):
 
-                _path = cached_gdown(
-                    url_or_filename,
-                    verbose=verbose,
-                    extract_archive=extract_archive,
-                    force_extract=force_extract,
-                    cache_dir=cache_dir,
-                )
+            _path = cached_gdown(
+                url_or_filename,
+                verbose=verbose,
+                extract_archive=extract_archive,
+                force_extract=force_extract,
+                cache_dir=cache_dir,
+            )
+        else:
+            if cache_dir is None:
+                cache_dir = Path.home() / ".ekorpkit" / ".cache" / "cached_path"
             else:
-                if cache_dir is None:
-                    cache_dir = (
-                        pathlib.Path.home() / ".ekorpkit" / ".cache" / "cached_path"
-                    )
-                else:
-                    cache_dir = pathlib.Path(cache_dir) / "cached_path"
+                cache_dir = Path(cache_dir) / "cached_path"
 
-                _path = cached_path.cached_path(
-                    url_or_filename,
-                    extract_archive=extract_archive,
-                    force_extract=force_extract,
-                    cache_dir=cache_dir,
-                ).as_posix()
+            _path = _cpath.cached_path(
+                url_or_filename,
+                extract_archive=extract_archive,
+                force_extract=force_extract,
+                cache_dir=cache_dir,
+            ).as_posix()
 
-            log.info(f"cached path: {_path}")
-            if return_dir and pathlib.Path(_path).is_file():
-                _path = pathlib.Path(_path).parent
+        log.info(f"cached path: {_path}")
 
+        if Path(_path).is_file():
+            _parent_dir = Path(_path).parent
+        elif Path(_path).is_dir():
+            _parent_dir = Path(_path)
+        else:
+            log.warning(f"Unknown path: {_path}")
+            return None
+
+        if return_parent_dir:
+            return _parent_dir.as_posix()
+        else:
             return _path
 
-        except Exception as e:
-            log.error(e)
-            return None
+    except Exception as e:
+        log.error(e)
+        return None
 
 
 def cached_gdown(
@@ -71,14 +81,13 @@ def cached_gdown(
     :type cache_dir: str
     :returns: str
     """
-    import gdown
 
     if verbose:
         log.info(f"Downloading {url}...")
     if cache_dir is None:
-        cache_dir = pathlib.Path.home() / ".ekorpkit" / ".cache" / "gdown"
+        cache_dir = Path.home() / ".ekorpkit" / ".cache" / "gdown"
     else:
-        cache_dir = pathlib.Path(cache_dir) / "gdown"
+        cache_dir = Path(cache_dir) / "gdown"
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     gd_prefix = "gd://"
@@ -167,7 +176,7 @@ def extractall(path, to=None, force_extract=False):
             files.append(fname)
         return files
 
-    extraction_name = pathlib.Path(path).stem
+    extraction_name = Path(path).stem
     extraction_path = f"{to}/{extraction_name}"
     if extraction_path is not None:
         # If the extracted directory already exists (and is non-empty), then no

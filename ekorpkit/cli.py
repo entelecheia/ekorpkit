@@ -2,7 +2,7 @@ import os
 import logging
 import hydra
 from ekorpkit import eKonf, __hydra_version_base__
-from .tasks.info import make_table
+from ekorpkit.info.docs import make_table
 
 
 log = logging.getLogger(__name__)
@@ -29,7 +29,6 @@ def about(**args):
     print()
     for k, v in args.items():
         print(f"{k:11} : {v}")
-    # print(f"{'version':11} : {__version__}")
     print(f"\nExecute `{name} --help` to see what eKorpkit provides")
 
 

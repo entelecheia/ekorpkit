@@ -1,0 +1,4 @@
+defaults:
+  - default
+  - override score_function: pmi
+  - override scores: pmi

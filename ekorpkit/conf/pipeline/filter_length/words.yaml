@@ -1,0 +1,5 @@
+defaults:
+  - default
+
+len_func: len_words
+len_column: num_words

@@ -1,0 +1,10 @@
+max_n: 3
+# The maximum window must be larger than ngram length n.
+max_window: ${.max_n}
+max_skip:
+delimiter: ;
+postag_rules:
+  # - ["/NN", "/J", "/NN"]
+  # - ["/XP", "/NN"]
+  # - ["/XP", "/NN", "/NN"]
+  # - /NN

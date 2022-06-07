@@ -1,0 +1,4 @@
+defaults:
+  - default
+  - override score_function: cohesion_score
+  - override scores: cohesion_score

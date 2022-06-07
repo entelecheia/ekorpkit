@@ -1,0 +1,8 @@
+exclude_overlaps: true
+overlaps_to_keep: highest_score
+threshold:
+delimiter: ""
+strip_pos: true
+ignore_scores: false
+apply_postag_rules: true
+use_surfaces_to_score: false

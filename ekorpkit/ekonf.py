@@ -1,12 +1,12 @@
 import logging
 import os
 import random
+from tabnanny import verbose
 import hydra
-import pathlib
 import dotenv
 import ekorpkit.utils.batch.batcher as batcher
 from enum import Enum
-from hydra.core.config_store import ConfigStore
+from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
 from ekorpkit.io.cached_path import cached_path
@@ -20,11 +20,11 @@ __hydra_version_base__ = "1.2"
 
 
 def __ekorpkit_path__():
-    return pathlib.Path(__file__).parent.as_posix()
+    return Path(__file__).parent.as_posix()
 
 
 def __home_path__():
-    return pathlib.Path.home().as_posix()
+    return Path.home().as_posix()
 
 
 def __version__():
@@ -34,8 +34,13 @@ def __version__():
 def check_path(path: str, alt_path: str = None):
     if os.path.exists(path):
         return path
-    elif alt_path:
+    else:
         return alt_path
+
+
+def _exists(a, *p):
+    path = os.path.join(a, *p)
+    return os.path.exists(path)
 
 
 def _today(_format="%Y-%m-%d"):
@@ -77,7 +82,7 @@ def _path(
     url_or_filename,
     extract_archive: bool = False,
     force_extract: bool = False,
-    return_dir: bool = False,
+    return_parent_dir: bool = False,
     cache_dir=None,
     verbose: bool = False,
 ):
@@ -85,7 +90,7 @@ def _path(
         url_or_filename,
         extract_archive=extract_archive,
         force_extract=force_extract,
-        return_dir=return_dir,
+        return_parent_dir=return_parent_dir,
         cache_dir=cache_dir,
         verbose=verbose,
     )
@@ -214,6 +219,9 @@ OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
+OmegaConf.register_new_resolver("exists", _exists)
+OmegaConf.register_new_resolver("join_paths", os.path.join)
+OmegaConf.register_new_resolver("dirname", os.path.dirname)
 OmegaConf.register_new_resolver("check_path", check_path)
 OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
@@ -222,8 +230,16 @@ OmegaConf.register_new_resolver(
 OmegaConf.register_new_resolver("dotenv_values", dotenv_values)
 
 
+class _SPLITS(str, Enum):
+    """Split keys in configs used by Dataset."""
+
+    TRAIN = "train"
+    DEV = "dev"
+    TEST = "test"
+
+
 class _Keys(str, Enum):
-    """Special keys in configs used by instantiate."""
+    """Special keys in configs used by ekorpkit."""
 
     TARGET = "_target_"
     CONVERT = "_convert_"
@@ -244,9 +260,21 @@ class _Keys(str, Enum):
     CORPUS = "corpus"
     DATASET = "dataset"
     ID = "id"
+    _ID = "_id_"
+    META_MERGE_ON = "meta_merge_on"
     TEXT = "text"
     TIMESTAMP = "timestamp"
     DATETIME = "datetime"
+    X = "x"
+    Y = "y"
+    INDEX = "index"
+    COLUMNS = "columns"
+    KEY = "key"
+    KEYS = "keys"
+    DATA = "data"
+    META = "meta"
+    FORMAT = "format"
+    VERBOSE = "verbose"
 
 
 def _methods(cfg: Any, obj: object):
@@ -364,13 +392,11 @@ def _is_instantiatable(cfg: Any):
     return _is_config(cfg) and _Keys.TARGET in cfg
 
 
-def _load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
+def _load(file_: Union[str, Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
     return OmegaConf.load(file_)
 
 
-def _save(
-    config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
-) -> None:
+def _save(config: Any, f: Union[str, Path, IO[Any]], resolve: bool = False) -> None:
     OmegaConf.save(config, f, resolve=resolve)
 
 
@@ -480,18 +506,22 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     """
     if not _env_initialized_:
         _init_env_()
+    verbose = config.get(_Keys.VERBOSE, False)
     if not _is_instantiatable(config):
-        log.warning(f"Config is not instantiatable, returning config")
+        if verbose:
+            log.info(f"Config is not instantiatable, returning config")
         return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
         kwargs[_Keys.RECURSIVE] = _recursive_
+    if verbose:
+        log.info(f"instantiating {config.get(_Keys.TARGET)}...")
     return hydra.utils.instantiate(config, *args, **kwargs)
 
 
 def _load_dotenv(verbose=False):
     original_cwd = getcwd()
-    dotenv_path = pathlib.Path(original_cwd, ".env")
+    dotenv_path = Path(original_cwd, ".env")
     dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
 
 
@@ -538,13 +568,15 @@ def _init_env_(cfg=None, verbose=False):
             backend_handle=backend_handle, **env.batcher
         )
         if verbose:
-            log.info(batcher.batcher_instance)
+            log.info(f"initialized batcher with {batcher.batcher_instance}")
     _env_initialized_ = True
 
 
 def _stop_env_(cfg, verbose=False):
     env = cfg.env
     backend = env.distributed_framework.backend
+    if verbose:
+        log.info(f"stopping {backend}, if running")
 
     if env.distributed_framework.initialize:
         if backend == "ray":
@@ -584,16 +616,16 @@ def apply_pipe(df, pipe):
         return fn(df, pipe)
 
 
-def _dependencies(key, path=None):
+def _dependencies(_key=None, _path=None):
     import re
     from collections import defaultdict
 
-    if path is None:
-        path = os.path.join(
-            os.path.dirname(__file__), "resources", "requirements-extra.txt"
+    if _path is None:
+        _path = os.path.join(
+            os.path.dirname(__file__), "resources", "requirements-extra.yaml"
         )
 
-    with open(path) as fp:
+    with open(_path) as fp:
         extra_deps = defaultdict(set)
         for k in fp:
             if k.strip() and not k.startswith("#"):
@@ -608,10 +640,14 @@ def _dependencies(key, path=None):
         # add tag `exhaustive` at the end
         extra_deps["exhaustive"] = set(vv for v in extra_deps.values() for vv in v)
 
-    if key == "keys":
-        return set(extra_deps.keys())
+    if _key is None or _key == "keys":
+        tags = []
+        for tag, deps in extra_deps.items():
+            if len(deps) > 1:
+                tags.append(tag)
+        return tags
     else:
-        return extra_deps[key]
+        return extra_deps[_key]
 
 
 def _ensure_list(value):
@@ -619,7 +655,7 @@ def _ensure_list(value):
         return []
     elif isinstance(value, str):
         return [value]
-    return list(value)
+    return _to_dict(value)
 
 
 class eKonf:
@@ -630,6 +666,7 @@ class eKonf:
     __home_path__ = __home_path__()
     config = _config
     Keys = _Keys
+    SPLITS = _SPLITS
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
@@ -728,7 +765,7 @@ class eKonf:
         return _is_instantiatable(cfg)
 
     @staticmethod
-    def load(file_: Union[str, pathlib.Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
+    def load(file_: Union[str, Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
         return _load(file_)
 
     @staticmethod
@@ -754,9 +791,7 @@ class eKonf:
         return _merge(*configs)
 
     @staticmethod
-    def save(
-        config: Any, f: Union[str, pathlib.Path, IO[Any]], resolve: bool = False
-    ) -> None:
+    def save(config: Any, f: Union[str, Path, IO[Any]], resolve: bool = False) -> None:
         _save(config, f, resolve)
 
     @staticmethod
@@ -796,7 +831,9 @@ class eKonf:
         url_or_filename,
         extract_archive: bool = False,
         force_extract: bool = False,
+        return_parent_dir: bool = False,
         cache_dir=None,
+        verbose: bool = False,
     ):
         """
         Given something that might be a URL or local path, determine which.
@@ -883,7 +920,9 @@ class eKonf:
             url_or_filename,
             extract_archive=extract_archive,
             force_extract=force_extract,
+            return_parent_dir=return_parent_dir,
             cache_dir=cache_dir,
+            verbose=verbose,
         )
 
     @staticmethod
@@ -891,8 +930,8 @@ class eKonf:
         return apply_pipe(data, cfg)
 
     @staticmethod
-    def dependencies(key, path=None):
-        return _dependencies(key, path)
+    def dependencies(_key=None, path=None):
+        return _dependencies(_key, path)
 
     @staticmethod
     def ensure_list(value):
@@ -901,3 +940,7 @@ class eKonf:
     @staticmethod
     def to_dateparm(_date, _format="%Y-%m-%d"):
         return _to_dateparm(_date, _format)
+
+    @staticmethod
+    def exists(a, *p):
+        return _exists(a, *p)
