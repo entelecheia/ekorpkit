@@ -8,6 +8,13 @@ from ekorpkit import eKonf
 log = logging.getLogger(__name__)
 
 
+def _match_tags(token, tags):
+    for tag in tags:
+        if token[1].startswith(tag):
+            return True
+    return False
+
+
 def _extract_tokens(
     tokenized_text,
     postags=[],
@@ -40,13 +47,16 @@ def _extract_tokens(
             token_pos
             for token_pos in _token_pos_tuples
             if len(token_pos) == 1
-            or (token_pos[1] not in stop_postags and token_pos[1] in postags)
+            or (
+                not _match_tags(token_pos, stop_postags)
+                and _match_tags(token_pos, postags)
+            )
         ]
     else:
         _tokens = [
             token_pos
             for token_pos in _token_pos_tuples
-            if len(token_pos) == 1 or token_pos[1] not in stop_postags
+            if len(token_pos) == 1 or not _match_tags(token_pos, stop_postags)
         ]
     if stopwords is not None:
         _tokens = [token_pos for token_pos in _tokens if not stopwords(token_pos[0])]
@@ -64,7 +74,7 @@ def _extract_tokens(
 
 
 def _tuple_to_token(token_pos, strip_pos=True, postag_delim="/", postag_length=None):
-    if strip_pos:
+    if strip_pos or len(token_pos) == 1:
         return token_pos[0]
     return (
         token_pos[0].strip()

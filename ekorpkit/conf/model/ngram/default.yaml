@@ -1,4 +1,5 @@
 defaults:
+  - /info: default
   - ngram: default
   - score_function: npmi
   - scores: default

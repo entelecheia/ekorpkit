@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+from tabnanny import verbose
 import hydra
 import dotenv
 import ekorpkit.utils.batch.batcher as batcher
@@ -276,6 +277,7 @@ class _Keys(str, Enum):
     DATA = "data"
     META = "meta"
     FORMAT = "format"
+    VERBOSE = "verbose"
 
 
 def _methods(cfg: Any, obj: object):
@@ -507,12 +509,16 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     """
     if not _env_initialized_:
         _init_env_()
+    verbose = config.get(_Keys.VERBOSE, False)
     if not _is_instantiatable(config):
-        log.info(f"Config is not instantiatable, returning config")
+        if verbose:
+            log.info(f"Config is not instantiatable, returning config")
         return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
         kwargs[_Keys.RECURSIVE] = _recursive_
+    if verbose:
+        log.info(f"instantiating {config.get(_Keys.TARGET)}...")
     return hydra.utils.instantiate(config, *args, **kwargs)
 
 

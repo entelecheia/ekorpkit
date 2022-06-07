@@ -10,8 +10,8 @@ class HIV4SA(BaseSentimentAnalyser):
     A class for sentiment analysis using the HIV4 lexicon.
     """
 
-    def __init__(self, preprocessor=None, lexicon=None, **kwargs):
-        super().__init__(preprocessor=preprocessor, lexicon=lexicon, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def _get_score(self, tokens, lexicon_features, feature="polarity"):
         """Get score for features.
@@ -68,8 +68,8 @@ class LMSA(BaseSentimentAnalyser):
     A class for sentiment analysis using the LM lexicon.
     """
 
-    def __init__(self, preprocessor=None, lexicon=None, **kwargs):
-        super().__init__(preprocessor=preprocessor, lexicon=lexicon, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def _get_score(self, tokens, lexicon_features, feature="polarity"):
         """Get score for features.

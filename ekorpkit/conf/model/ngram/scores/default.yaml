@@ -1,8 +1,12 @@
 score_dir: ${dir.project}/outputs/ngrams/
 score_file: ${..name}_${..score_function.name}_scores.parquet
 score_path: ${join_paths:${.score_dir},${.score_file}}
-columns:
+lowercase: true
+keys:
   words: words
   score: score
+  count: count
+features:
+  - score
+  - count
 ngram_delim: ${..ngram.delimiter}
-use_surfaces_to_score: true

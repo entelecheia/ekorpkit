@@ -4,32 +4,28 @@ from ekorpkit import eKonf
 
 
 def test_setiment_lexicon():
-    config_group = "model/sentiment/lexicon=mpko_lex"
-    cfg = eKonf.compose(config_group=config_group)
-    cfg.verbose = True
-    cfg.ignore_pos = True
-    cfg.analyze.ngram_distiance_tolerance = 1
-    lexicon = eKonf.instantiate(cfg)
+    ngram_cfg = eKonf.compose(config_group="model/ngram=mpko_lex")
+    ngram_cfg.verbose = True
+    ngram_cfg.autoload = True
+    ngram = eKonf.instantiate(ngram_cfg)
 
-    tokens = ["투기", "억제", "금리", "인상", "인상", "투기;;억제", "금리;인상"]
-    sentiments = lexicon.analyze(tokens, tags=["label", "polarity"])
-    assert len(sentiments) == 4
+    sentence = "투기를 억제하기 위해 금리를 인상해야 한다."
+    tokens = ngram.ngramize_sentence(sentence)
+    assert len(tokens) == 4
 
-    config_group = "model/sentiment/lexicon=lm"
-    cfg = eKonf.compose(config_group=config_group)
-    cfg.verbose = True
-    lexicon = eKonf.instantiate(cfg)
+    ngram_cfg = eKonf.compose(config_group="model/ngram=lm")
+    ngram_cfg.verbose = True
+    ngram_cfg.autoload = True
+    ngram = eKonf.instantiate(ngram_cfg)
 
-    tokens = ["Bad", "Fraud", "Good", "Sound", "uncertain", "beat", "wrong"]
-    sentimetns = lexicon.analyze(tokens, tags=["Positive", "Negative", "Uncertainty"])
-    assert len(sentimetns) == len(tokens)
+    sentence = "Beyond the improved voice capabilities, customers now have a streamlined way to comply with recalls and other traceability requirements, providing them with a competitive advantage."
+    _features = ngram.find_features(sentence)
+    assert len(_features) == 22
 
 
 def test_predict_sentiments():
     config_group = "model/sentiment=lm"
     model_cfg = eKonf.compose(config_group=config_group)
-    model_cfg.verbose = True
-    model_cfg.preprocessor.tokenizer.nltk.lemmatize = True
 
     ds_cfg = eKonf.compose(config_group="dataset")
     ds_cfg.verbose = True

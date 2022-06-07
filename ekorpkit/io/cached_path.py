@@ -17,7 +17,8 @@ def cached_path(
     cache_dir=None,
     verbose: bool = False,
 ):
-
+    if url_or_filename is None:
+        return None
     if verbose:
         log.info(
             "caching path: {}, extract_archive: {}, force_extract: {}, cache_dir: {}".format(
@@ -25,48 +26,47 @@ def cached_path(
             )
         )
 
-    if url_or_filename:
-        try:
-            if url_or_filename.startswith("gd://"):
+    try:
+        if url_or_filename.startswith("gd://"):
 
-                _path = cached_gdown(
-                    url_or_filename,
-                    verbose=verbose,
-                    extract_archive=extract_archive,
-                    force_extract=force_extract,
-                    cache_dir=cache_dir,
-                )
+            _path = cached_gdown(
+                url_or_filename,
+                verbose=verbose,
+                extract_archive=extract_archive,
+                force_extract=force_extract,
+                cache_dir=cache_dir,
+            )
+        else:
+            if cache_dir is None:
+                cache_dir = Path.home() / ".ekorpkit" / ".cache" / "cached_path"
             else:
-                if cache_dir is None:
-                    cache_dir = Path.home() / ".ekorpkit" / ".cache" / "cached_path"
-                else:
-                    cache_dir = Path(cache_dir) / "cached_path"
+                cache_dir = Path(cache_dir) / "cached_path"
 
-                _path = _cpath.cached_path(
-                    url_or_filename,
-                    extract_archive=extract_archive,
-                    force_extract=force_extract,
-                    cache_dir=cache_dir,
-                ).as_posix()
+            _path = _cpath.cached_path(
+                url_or_filename,
+                extract_archive=extract_archive,
+                force_extract=force_extract,
+                cache_dir=cache_dir,
+            ).as_posix()
 
-            log.info(f"cached path: {_path}")
+        log.info(f"cached path: {_path}")
 
-            if Path(_path).is_file():
-                _parent_dir = Path(_path).parent
-            elif Path(_path).is_dir():
-                _parent_dir = Path(_path)
-            else:
-                log.warning(f"Unknown path: {_path}")
-                return None
-
-            if return_parent_dir:
-                return _parent_dir.as_posix()
-            else:
-                return _path
-
-        except Exception as e:
-            log.error(e)
+        if Path(_path).is_file():
+            _parent_dir = Path(_path).parent
+        elif Path(_path).is_dir():
+            _parent_dir = Path(_path)
+        else:
+            log.warning(f"Unknown path: {_path}")
             return None
+
+        if return_parent_dir:
+            return _parent_dir.as_posix()
+        else:
+            return _path
+
+    except Exception as e:
+        log.error(e)
+        return None
 
 
 def cached_gdown(

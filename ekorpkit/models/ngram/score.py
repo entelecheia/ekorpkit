@@ -9,12 +9,12 @@ log = logging.getLogger(__name__)
 NEG_INF = float("-inf")
 
 
-MutualInformation = namedtuple("ngram", "words length frequency score")
+MutualInformation = namedtuple("score", "words length frequency score")
 CohesionScore = namedtuple(
-    "ngram", "words length frequency cohesion_forward cohesion_backward score"
+    "score", "words length frequency cohesion_forward cohesion_backward score"
 )
 BranchingEntropy = namedtuple(
-    "ngram", "words length frequency leftside_entropy rightside_entropy score"
+    "score", "words length frequency leftside_entropy rightside_entropy score"
 )
 
 

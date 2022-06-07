@@ -1,5 +1,6 @@
 defaults:
-   - _default
+  - _default
+  - override /model/ngram: default
 
 name: mpko_tone_lex
 fullname: Korean Monetary Policy Tone Lexicon - Lexical Approach
@@ -24,6 +25,3 @@ model:
   ngram:
     scores:
       score_path: ${dir.resource}/lexicons/mpko/mp_polarity_lexicon_lex.parquet
-      columns:
-    ngram:
-    postag:

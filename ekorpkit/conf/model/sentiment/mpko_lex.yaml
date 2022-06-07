@@ -1,7 +1,6 @@
 defaults:
   - _default
-  - /preprocessor/tokenizer: mecab
-  - lexicon: mpko_lex
+  - /model/ngram: mpko_lex
 
 _target_: ekorpkit.models.sentiment.analyser.MPKOL
 name: mpko_lex

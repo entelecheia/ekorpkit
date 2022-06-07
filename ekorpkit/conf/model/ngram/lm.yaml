@@ -1,0 +1,39 @@
+defaults:
+  - lexicon
+  - override /preprocessor/tokenizer: nltk
+
+info:
+  name: lm
+  fullname: Loughran-McDonald Sentiment lexicon
+  source: https://sraf.nd.edu/loughranmcdonald-master-dictionary
+  lang: en
+scores:
+  score_path: ${dir.resource}/lexicons/LM.parquet
+  lowercase: true
+  keys:
+    words: Word
+    score: Negative
+    count: count
+  features:
+    - Negative
+    - Positive
+    - Uncertainty
+    - Litigious
+    - Constraining
+    - Superfluous
+    - Interesting
+    - Modal
+ngram:
+  max_n: 1
+  max_window: 1
+  max_skip: 0
+ngramize:
+  exclude_overlaps: false
+preprocessor:
+  tokenizer:
+    tokenize:
+      lowercase: true
+      strip_pos: true
+    nltk:
+      lemmatize: true
+      stem: false
