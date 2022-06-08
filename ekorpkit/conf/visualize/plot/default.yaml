@@ -2,4 +2,5 @@ defaults:
   - _default
 
 _target_: ekorpkit.visualize.plot.plot
+name: plot
 plots:

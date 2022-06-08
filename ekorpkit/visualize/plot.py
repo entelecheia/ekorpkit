@@ -25,8 +25,7 @@ def plot(data, verbose=False, **kwargs):
     _savefig = {} or kwargs.get("savefig")
 
     if data is None:
-        log.warning("No data to plot")
-        return
+        log.info("No data to plot")
     if isinstance(data, omegaconf.listconfig.ListConfig):
         data = list(data)
     if verbose:
@@ -56,6 +55,9 @@ def plot(data, verbose=False, **kwargs):
 
     if isinstance(_plots, dict):
         _plots = [_plots]
+    if not isinstance(_plots, list) or data is None:
+        log.info("No plots to plot")
+        _plots = []
     for i, _plot_cfg_ in enumerate(_plots):
         _func_ = eval(_plot_cfg_.pop(eKonf.Keys.FUNC))
         _x = _plot_cfg_.pop("x", None)
