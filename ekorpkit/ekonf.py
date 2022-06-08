@@ -6,9 +6,11 @@ import hydra
 import dotenv
 import ekorpkit.utils.batch.batcher as batcher
 from enum import Enum
+from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
+from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
@@ -41,6 +43,13 @@ def check_path(path: str, alt_path: str = None):
 def _exists(a, *p):
     path = os.path.join(a, *p)
     return os.path.exists(path)
+
+
+def _join_paths(a, *p):
+    if p and p[0] is not None:
+        return os.path.join(a, *p)
+    else:
+        return a
 
 
 def _today(_format="%Y-%m-%d"):
@@ -97,8 +106,8 @@ def _path(
 
 
 def _compose(
-    overrides: List[str] = [],
     config_group: str = None,
+    overrides: List[str] = [],
     *,
     return_as_dict: bool = False,
     throw_on_resolution_failure: bool = True,
@@ -220,7 +229,7 @@ OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
 OmegaConf.register_new_resolver("exists", _exists)
-OmegaConf.register_new_resolver("join_paths", os.path.join)
+OmegaConf.register_new_resolver("join_paths", _join_paths)
 OmegaConf.register_new_resolver("dirname", os.path.dirname)
 OmegaConf.register_new_resolver("check_path", check_path)
 OmegaConf.register_new_resolver("cached_path", _path)
@@ -658,6 +667,60 @@ def _ensure_list(value):
     return _to_dict(value)
 
 
+def _ensure_kwargs(_kwargs, _fn):
+    from inspect import getfullargspec as getargspec
+
+    if callable(_fn):
+        kwargs = {}
+        args = getargspec(_fn).args
+        log.info(f"args of {_fn}: {args}")
+        for k, v in _kwargs.items():
+            if k in args:
+                kwargs[k] = v
+        return kwargs
+    return _kwargs
+
+
+def _apply(
+    func,
+    series,
+    description=None,
+    use_batcher=True,
+    minibatch_size=None,
+    num_workers=None,
+    verbose=False,
+    **kwargs,
+):
+    batcher_instance = batcher.batcher_instance
+    if use_batcher and batcher_instance is not None:
+        if batcher_instance is not None:
+            batcher_minibatch_size = batcher_instance.minibatch_size
+        else:
+            batcher_minibatch_size = 1000
+        if minibatch_size is None:
+            minibatch_size = batcher_minibatch_size
+        if num_workers is not None:
+            batcher_instance.procs = num_workers
+        if batcher_instance.procs > 1:
+            batcher_instance.minibatch_size = min(
+                int(len(series) / batcher_instance.procs) + 1, minibatch_size
+            )
+            log.info(
+                f"Using batcher with minibatch size: {batcher_instance.minibatch_size}"
+            )
+            results = decorator_apply(func, batcher_instance, description=description)(
+                series
+            )
+            if batcher_instance is not None:
+                batcher_instance.minibatch_size = batcher_minibatch_size
+            return results
+
+    if batcher_instance is None:
+        log.warning("Warning: batcher not initialized")
+    tqdm.pandas(desc=description)
+    return series.progress_apply(func)
+
+
 class eKonf:
     """ekorpkit config primary class"""
 
@@ -673,8 +736,8 @@ class eKonf:
 
     @staticmethod
     def compose(
-        overrides: List[str] = [],
         config_group: str = None,
+        overrides: List[str] = [],
         *,
         return_as_dict: bool = False,
         throw_on_resolution_failure: bool = True,
@@ -683,8 +746,8 @@ class eKonf:
         verbose: bool = False,
     ):
         return _compose(
-            overrides,
             config_group=config_group,
+            overrides=overrides,
             return_as_dict=return_as_dict,
             throw_on_resolution_failure=throw_on_resolution_failure,
             throw_on_missing=throw_on_missing,
@@ -944,3 +1007,29 @@ class eKonf:
     @staticmethod
     def exists(a, *p):
         return _exists(a, *p)
+
+    @staticmethod
+    def apply(
+        func,
+        series,
+        description=None,
+        use_batcher=True,
+        minibatch_size=None,
+        num_workers=None,
+        verbose=False,
+        **kwargs,
+    ):
+        return _apply(
+            func,
+            series,
+            description=description,
+            use_batcher=use_batcher,
+            minibatch_size=minibatch_size,
+            num_workers=num_workers,
+            verbose=verbose,
+            **kwargs,
+        )
+
+    @staticmethod
+    def ensure_kwargs(_kwargs, _fn):
+        return _ensure_kwargs(_kwargs, _fn)

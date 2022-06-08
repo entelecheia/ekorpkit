@@ -57,12 +57,15 @@ def plot(data, verbose=False, **kwargs):
     if isinstance(_plots, dict):
         _plots = [_plots]
     for i, _plot_cfg_ in enumerate(_plots):
-        _func_ = eval(_plot_cfg_.get(eKonf.Keys.FUNC))
+        _func_ = eval(_plot_cfg_.pop(eKonf.Keys.FUNC))
         _x = _plot_cfg_.pop("x", None)
         _y = _plot_cfg_.pop("y", None)
-        secondary_y = _plot_cfg_.get("secondary_y", False)
+        secondary_y = _plot_cfg_.pop("secondary_y", False)
+        secondary_to = _plot_cfg_.pop("secondary_to", 0)
+        axno = _plot_cfg_.pop("axno", 0)
+        datano = _plot_cfg_.pop("datano", 0)
+
         if secondary_y:
-            secondary_to = _plot_cfg_.get("secondary_to", 0)
             if secondary_to in sencondary_axes:
                 ax = sencondary_axes[secondary_to]
             else:
@@ -70,9 +73,7 @@ def plot(data, verbose=False, **kwargs):
                 log.info(f"Creating secondary axis to axis[{secondary_to}]")
                 sencondary_axes[secondary_to] = ax
         else:
-            axno = _plot_cfg_.get("axno", 0)
             ax = axes[axno]
-        datano = _plot_cfg_.get("datano", 0)
         if isinstance(data, list):
             _data = data[datano]
             log.debug(f"Plotting data[{datano}]")
@@ -185,8 +186,8 @@ def facetgrid(data=None, **kwargs):
 
 
 def snsplot(ax=None, x=None, y=None, data=None, **kwargs):
-    _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
-    _name_ = kwargs.get(eKonf.Keys.NAME)
+    _parms_ = kwargs.pop(eKonf.Keys.PARMS, {}) or {}
+    _name_ = kwargs.pop(eKonf.Keys.NAME)
     if ax is None:
         ax = plt.gca()
     if isinstance(y, list):
@@ -196,7 +197,11 @@ def snsplot(ax=None, x=None, y=None, data=None, **kwargs):
         _parms_["x"] = x
     if y is not None:
         _parms_["y"] = y
-    getattr(sns, _name_)(data=data, ax=ax, **_parms_)
+    _fn = getattr(sns, _name_)
+    if isinstance(kwargs, dict):
+        _parms_.update(kwargs)
+    log.info(f"Plotting {_name_} with {_parms_}")
+    _fn(data=data, ax=ax, **_parms_)
 
 
 def heatmap(ax=None, x=None, y=None, data=None, **kwargs):

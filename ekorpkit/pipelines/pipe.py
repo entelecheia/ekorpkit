@@ -3,59 +3,16 @@ import codecs
 import os
 import numpy as np
 import pandas as pd
-import ekorpkit.utils.batch.batcher as batcher
 from collections import OrderedDict
-from functools import partial, reduce
+from functools import reduce
 from ekorpkit.utils import print_status
-from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.io.file import save_dataframe as save_dataframe_
 from ekorpkit import eKonf
 from ekorpkit.ekonf import apply_pipe
-from tqdm.auto import tqdm
 
 
 log = logging.getLogger(__name__)
-
-
-def apply(
-    func,
-    series,
-    description=None,
-    verbose=False,
-    use_batcher=True,
-    minibatch_size=None,
-    num_workers=None,
-    **kwargs,
-):
-    batcher_instance = batcher.batcher_instance
-    if use_batcher and batcher_instance is not None:
-        if batcher_instance is not None:
-            batcher_minibatch_size = batcher_instance.minibatch_size
-        else:
-            batcher_minibatch_size = 1000
-        if minibatch_size is None:
-            minibatch_size = batcher_minibatch_size
-        if num_workers is not None:
-            batcher_instance.procs = num_workers
-        if batcher_instance.procs > 1:
-            batcher_instance.minibatch_size = min(
-                int(len(series) / batcher_instance.procs) + 1, minibatch_size
-            )
-            log.info(
-                f"Using batcher with minibatch size: {batcher_instance.minibatch_size}"
-            )
-            results = decorator_apply(func, batcher_instance, description=description)(
-                series
-            )
-            if batcher_instance is not None:
-                batcher_instance.minibatch_size = batcher_minibatch_size
-            return results
-
-    if batcher_instance is None:
-        log.warning("Warning: batcher not initialized")
-    tqdm.pandas(desc=description)
-    return series.progress_apply(func)
 
 
 def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
@@ -416,7 +373,7 @@ def top_values(df, args):
 
     if value_label is not None and value_name is not None:
         # df[value_name] = df.apply(label, axis=1)
-        df[value_name] = apply(
+        df[value_name] = eKonf.apply(
             label,
             df,
             description="labeling",
@@ -644,7 +601,7 @@ def normalize(df, args):
     normalizer = eKonf.instantiate(normalizer)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 normalizer.normalize,
                 df[key],
                 description=f"Normalizing column: {key}",
@@ -701,7 +658,7 @@ def predict(df, args):
     if "sentiment.analyser" in _target_:
         key = apply_to
         with elapsed_timer(format_time=True) as elapsed:
-            predictions = apply(
+            predictions = eKonf.apply(
                 model.predict,
                 df[key],
                 description=f"Predicting [{key}]",
@@ -747,7 +704,7 @@ def segment(df, args):
     segmenter = eKonf.instantiate(segmenter)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 segmenter.segment_article,
                 df[key],
                 description=f"Splitting column: {key}",
@@ -779,7 +736,7 @@ def tokenize(df, args):
     tokenizer = eKonf.instantiate(tokenizer)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 tokenizer.tokenize_article,
                 df[key],
                 description=f"Tokenizing column: {key}",
@@ -820,7 +777,7 @@ def extract_tokens(df, args):
 
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 extract_func,
                 df[key],
                 description=f"Extracting column: {key}",
@@ -851,7 +808,7 @@ def chunk(df, args):
     segmenter = eKonf.instantiate(segmenter)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 segmenter.chunk_article,
                 df[key],
                 description=f"Chunking column: {key}",
@@ -972,7 +929,7 @@ def filter_length(df, args, **kwargs):
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
             _len_column = f"{key}_{len_column}"
-            df[_len_column] = apply(
+            df[_len_column] = eKonf.apply(
                 len_func, df[key], description=f"Calculating length"
             )
             if min_length and min_length > 0:
