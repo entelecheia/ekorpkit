@@ -172,7 +172,7 @@ class TopicModel:
                     for cand in self.ngrams
                 ]
                 df = pd.DataFrame(ngram_list)
-                eKonf.save_datadf, self.ngram_candidates_path, verbose=self.verbose)
+                eKonf.save_data(df, self.ngram_candidates_path, verbose=self.verbose)
                 print("Elapsed time is %.2f seconds" % elapsed())
 
     def _load_ngram_docs(self, rebuild=False):
