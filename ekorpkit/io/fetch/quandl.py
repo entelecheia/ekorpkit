@@ -4,7 +4,7 @@ import logging
 import os
 import pandas as pd
 from ekorpkit import eKonf
-from ekorpkit.io.file import save_dataframe, load_dataframe
+
 
 log = logging.getLogger(__name__)
 
@@ -151,10 +151,10 @@ class Quandl:
             self.data = self._load_series(
                 series_id, series_name, start_date, end_date, index_name, reset_index
             )
-            save_dataframe(self.data, filepath, verbose=self.verbose)
+            eKonf.save_data(self.data, filepath, verbose=self.verbose)
         else:
             log.info(f"{filepath} already exists.")
-            self.data = load_dataframe(filepath, verbose=self.verbose)
+            self.data = eKonf.load_data(filepath, verbose=self.verbose)
         return self.data.copy()
 
     def _load_series(

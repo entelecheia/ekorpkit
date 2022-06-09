@@ -3,7 +3,6 @@ import pandas as pd
 import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
-from ekorpkit.io.file import save_dataframe
 from .dataset import Dataset
 
 
@@ -158,7 +157,7 @@ class Datasets:
             data_file = f"{self.name}-{split}.{self.filetype}"
             data_path = f"{data_dir}/{data_file}"
             df = self.COLUMN.reset_id(df)
-            save_dataframe(df, data_path)
+            eKonf.save_data(df, data_path)
             if self.verbose:
                 log.info(f"saved {data_path}")
             if summary_info:

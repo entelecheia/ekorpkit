@@ -1,10 +1,11 @@
 import logging
 import os
+import pandas as pd
 import random
-from tabnanny import verbose
 import hydra
 import dotenv
 import ekorpkit.utils.batch.batcher as batcher
+from glob import glob
 from enum import Enum
 from tqdm.auto import tqdm
 from pathlib import Path
@@ -12,7 +13,7 @@ from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
-from ekorpkit.utils.func import lower_case_with_underscores
+from ekorpkit.utils.func import lower_case_with_underscores, elapsed_timer
 from . import _version
 
 
@@ -721,6 +722,178 @@ def _apply(
     return series.progress_apply(func)
 
 
+def _save_data(
+    data,
+    filename,
+    base_dir=None,
+    columns=None,
+    index=False,
+    filetype="parquet",
+    verbose=False,
+    **kwargs,
+):
+    fileinfo = os.path.splitext(filename)
+    filename = fileinfo[0]
+    filetype = fileinfo[1] if len(fileinfo) > 1 else filetype
+    filetype = "." + filetype.replace(".", "")
+    filename = f"{filename}{filetype}"
+    if base_dir is not None:
+        filepath = os.path.join(base_dir, filename)
+    else:
+        filepath = filename
+    base_dir = os.path.dirname(filepath)
+    filename = os.path.basename(filepath)
+    os.makedirs(base_dir, exist_ok=True)
+
+    if isinstance(data, dict):
+        for k, v in data.items():
+            _save_data(v, k, base_dir, columns, index, filetype, verbose, **kwargs)
+    elif isinstance(data, pd.DataFrame):
+        log.info(f"Saving dataframe to {filepath}")
+        with elapsed_timer(format_time=True) as elapsed:
+            if "csv" in filetype or "tsv" in filetype:
+                data.to_csv(filepath, index=index)
+            elif "parquet" in filetype:
+                compression = kwargs.get("compression", "gzip")
+                engine = kwargs.get("engine", "pyarrow")
+                data.to_parquet(filepath, compression=compression, engine=engine)
+            else:
+                raise ValueError("filetype must be .csv or .parquet")
+            if verbose:
+                log.info(" >> elapsed time to save data: {}".format(elapsed()))
+    else:
+        raise ValueError(f"Unsupported data type: {type(data)}")
+
+
+def _get_filepaths(
+    filename_patterns, base_dir=None, recursive=True, verbose=True, **kwargs
+):
+    if isinstance(filename_patterns, str):
+        filename_patterns = [filename_patterns]
+    filepaths = []
+    for file in filename_patterns:
+        file = os.path.join(base_dir, file) if base_dir else file
+        if os.path.exists(file):
+            if Path(file).is_file():
+                filepaths.append(file)
+        else:
+            filepaths += glob(file, recursive=recursive)
+    filepaths = [fp for fp in filepaths if Path(fp).is_file()]
+    if verbose:
+        log.info(f"Processing [{len(filepaths)}] files from {filename_patterns}")
+
+    return filepaths
+
+
+def _concat_data(
+    data,
+    columns=None,
+    add_key_as_name=False,
+    name_column=_Keys.NAME.value,
+    concat={},
+    verbose=False,
+    **kwargs,
+):
+    if isinstance(data, dict):
+        log.info(f"Concatenating {len(data)} dataframes")
+        dfs = []
+        for df_name in data:
+            df_each = data[df_name]
+            if isinstance(columns, list):
+                _columns = [c for c in columns if c in df_each.columns]
+                df_each = df_each[_columns]
+            if add_key_as_name:
+                df_each[name_column] = df_name
+            dfs.append(df_each)
+        return pd.concat(dfs, **concat)
+    elif isinstance(data, list):
+        log.info(f"Concatenating {len(data)} dataframes")
+        return pd.concat(data, **concat)
+    else:
+        log.warning("Warning: data is not a dict")
+        return data
+
+
+def _load_data(filename, base_dir=None, verbose=False, **kwargs):
+    kwargs = _to_dict(kwargs)
+    concatenate = kwargs.pop("concatenate", False)
+    ignore_index = kwargs.pop("ignore_index", False)
+
+    if base_dir:
+        filepaths = _get_filepaths(filename, base_dir)
+    else:
+        filepaths = _get_filepaths(filename)
+    log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
+
+    data = {
+        os.path.basename(f): _load_dataframe(f, verbose=verbose, **kwargs)
+        for f in filepaths
+    }
+    data = {k: v for k, v in data.items() if v is not None}
+    if len(data) == 1:
+        return list(data.values())[0]
+    elif len(filepaths) > 1:
+        if concatenate:
+            return pd.concat(data.values(), ignore_index=ignore_index)
+        else:
+            return data
+    else:
+        log.warning(f"No files found for {filename}")
+        return None
+
+
+def _load_dataframe(
+    filename,
+    base_dir=None,
+    columns=None,
+    index_col=None,
+    verbose=False,
+    **kwargs,
+):
+    columns = kwargs.pop("columns", None)
+    dtype = kwargs.pop("dtype", None)
+    if isinstance(dtype, list):
+        dtype = {k: "str" for k in dtype}
+    parse_dates = kwargs.pop("parse_dates", False)
+
+    filetype = kwargs.pop("filetype", None) or "parquet"
+    fileinfo = os.path.splitext(filename)
+    filename = fileinfo[0]
+    filetype = fileinfo[1] if len(fileinfo) > 1 else filetype
+    filetype = "." + filetype.replace(".", "")
+    filename = f"{filename}{filetype}"
+    if base_dir is not None:
+        filepath = os.path.join(base_dir, filename)
+    else:
+        filepath = filename
+
+    if not os.path.exists(filepath):
+        log.warning(f"File {filepath} does not exist")
+        return None
+    log.info(f"Loading data from {filepath}")
+    with elapsed_timer(format_time=True) as elapsed:
+        if "csv" in filetype or "tsv" in filetype:
+            sep = kwargs.pop("sep", "\t") if "tsv" in filetype else None
+            data = pd.read_csv(
+                filepath,
+                index_col=index_col,
+                dtype=dtype,
+                parse_dates=parse_dates,
+                sep=sep,
+            )
+        elif "parquet" in filetype:
+            engine = kwargs.pop("engine", "pyarrow")
+            data = pd.read_parquet(filepath, engine=engine)
+        else:
+            raise ValueError("filetype must be .csv or .parquet")
+        if isinstance(columns, list):
+            columns = [c for c in columns if c in data.columns]
+            data = data[columns]
+        if verbose:
+            log.info(" >> elapsed time to load data: {}".format(elapsed()))
+    return data
+
+
 class eKonf:
     """ekorpkit config primary class"""
 
@@ -1033,3 +1206,59 @@ class eKonf:
     @staticmethod
     def ensure_kwargs(_kwargs, _fn):
         return _ensure_kwargs(_kwargs, _fn)
+
+    @staticmethod
+    def save_data(
+        data,
+        filename,
+        base_dir=None,
+        columns=None,
+        index=False,
+        filetype="parquet",
+        verbose=False,
+        **kwargs,
+    ):
+        _save_data(
+            data,
+            filename,
+            base_dir=base_dir,
+            columns=columns,
+            index=index,
+            filetype=filetype,
+            verbose=verbose,
+            **kwargs,
+        )
+
+    @staticmethod
+    def load_data(filename, base_dir=None, verbose=False, **kwargs):
+        return _load_data(filename, base_dir=base_dir, verbose=verbose, **kwargs)
+
+    @staticmethod
+    def get_filepaths(
+        filename_patterns, base_dir=None, recursive=True, verbose=True, **kwargs
+    ):
+        return _get_filepaths(
+            filename_patterns,
+            base_dir=base_dir,
+            recursive=recursive,
+            verbose=verbose,
+            **kwargs,
+        )
+
+    @staticmethod
+    def concat_data(
+        data,
+        columns=None,
+        add_key_as_name=False,
+        name_column=Keys.NAME.value,
+        verbose=False,
+        **kwargs,
+    ):
+        return _concat_data(
+            data,
+            columns=columns,
+            add_key_as_name=add_key_as_name,
+            name_column=name_column,
+            verbose=verbose,
+            **kwargs,
+        )

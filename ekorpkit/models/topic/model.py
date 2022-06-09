@@ -96,7 +96,7 @@ class TopicModel:
         self.summary_file = Path(self.files.summary)
         self.summaries = []
         if self.summary_file.is_file():
-            df = load_dataframe(self.summary_file, index_col=0)
+            df = eKonf.load_data(self.summary_file, index_col=0)
             for row in df.itertuples():
                 self.summaries.append(ModelSummary(*row[1:]))
 
@@ -144,8 +144,8 @@ class TopicModel:
                 self._raw_corpus_keys = df[self.corpora._id_keys].values.tolist()
                 self._raw_corpus.process(df[self.corpora._text_key].to_list())
 
-                save_dataframe(
-                    df[self.corpora._id_keys],
+                eKonf.save_data(
+                    df[self.corpora.IDs],
                     self._raw_corpus_key_path,
                     verbose=self.verbose,
                 )
@@ -172,7 +172,7 @@ class TopicModel:
                     for cand in self.ngrams
                 ]
                 df = pd.DataFrame(ngram_list)
-                save_dataframe(df, self.ngram_candidates_path, verbose=self.verbose)
+                eKonf.save_datadf, self.ngram_candidates_path, verbose=self.verbose)
                 print("Elapsed time is %.2f seconds" % elapsed())
 
     def _load_ngram_docs(self, rebuild=False):
@@ -180,7 +180,7 @@ class TopicModel:
             with elapsed_timer() as elapsed:
                 print(f"Starting to load ngram documents from {self.ngram_docs_path}")
                 self._raw_corpus = tp.utils.Corpus().load(self.ngram_docs_path)
-                df = load_dataframe(self._raw_corpus_key_path)
+                df = eKonf.load_data(self._raw_corpus_key_path)
                 self._raw_corpus_keys = df[self.corpora._id_keys].values.tolist()
                 # self._raw_corpus.load(self.ngram_doc_path)
                 print(f"{len(self._raw_corpus)} documents are loaded.")
@@ -275,7 +275,7 @@ class TopicModel:
         print(f"Total {i_doc-n_skipped+1} documents are loaded.")
         print(f"Total {n_skipped} documents are removed from the corpus.")
         df = pd.DataFrame(self.corpus_keys, columns=self.corpora._id_keys)
-        save_dataframe(
+        eKonf.save_data(
             df[self.corpora._id_keys], self.corpus_key_path, verbose=self.verbose
         )
 
@@ -302,7 +302,7 @@ class TopicModel:
         text_key = self.corpora._text_key
         id_keys = self.corpora._id_keys
 
-        df_ngram = load_dataframe(self.ngram_candidates_path)
+        df_ngram = eKonf.load_data(self.ngram_candidates_path)
         ngrams = []
         for ngram in df_ngram['words'].to_list():
             ngrams.append(ngram.split(','))
@@ -361,7 +361,7 @@ class TopicModel:
                 df_infer = pd.DataFrame(topic_dists, columns=[f"topic{i}" for i in idx])
                 df_infer = pd.concat([df[id_keys], df_infer], axis=1)
                 output_path = f"{output_dir}/{output_file}"
-                save_dataframe(df_infer, output_path, verbose=self.verbose)
+                eKonf.save_data(df_infer, output_path, verbose=self.verbose)
                 print(f"Corpus is saved as {output_path}")
             else:
                 print("The number of inferred is not same as the number of input.")
@@ -379,7 +379,7 @@ class TopicModel:
         if self.corpus_keys:
             df = pd.DataFrame(self.corpus_keys, columns=self.corpora._id_keys)
         elif self.corpus_key_path.is_file():
-            df = load_dataframe(self.corpus_key_path, verbose=self.verbose)
+            df = eKonf.load_data(self.corpus_key_path, verbose=self.verbose)
         else:
             print("Corpus keys do not exist")
             return
@@ -396,7 +396,7 @@ class TopicModel:
                 self.model_name, self.active_model_id
             )
             output_path = f"{self.model_dir}/{filename}"
-            save_dataframe(df_infer, output_path, verbose=self.verbose)
+            eKonf.save_data(df_infer, output_path, verbose=self.verbose)
             print(f"Corpus is saved as {output_path}")
         else:
             print("The number of inferred is not same as the number of input.")
@@ -733,7 +733,7 @@ class TopicModel:
         )
         self.summaries.append(entry)
         df = pd.DataFrame(self.summaries)
-        save_dataframe(df, self.summary_file, index=True)
+        eKonf.save_data(df, self.summary_file, index=True)
         return df_ll, entry
 
     def eval_coherence_value(
@@ -799,7 +799,7 @@ class TopicModel:
         label_file = "{}-labels.csv".format(self.active_model_id)
         label_file = self.output_dir / label_file
         df = pd.DataFrame(self.labels)
-        save_dataframe(df, label_file, index=False, verbose=self.verbose)
+        eKonf.save_data(df, label_file, index=False, verbose=self.verbose)
 
     def label_topics(
         self,
@@ -820,7 +820,7 @@ class TopicModel:
         label_file = self.output_dir / label_file
         if label_file.is_file() and not rebuild:
             print("loading labels from {}".format(label_file))
-            df = load_dataframe(label_file)
+            df = eKonf.load_data(label_file)
             self.labels = df.to_dict("records")
         else:
             assert self.model, "Model not found"
@@ -886,7 +886,7 @@ class TopicModel:
 
             self.labels = labels
             df = pd.DataFrame(self.labels)
-            save_dataframe(df, label_file, index=False, verbose=self.verbose)
+            eKonf.save_data(df, label_file, index=False, verbose=self.verbose)
 
     def visualize(self, **kwargs):
         import pyLDAvis

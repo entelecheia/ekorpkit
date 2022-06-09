@@ -3,7 +3,6 @@ from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.pipelines.pipe import apply_pipeline
-from ekorpkit.io.file import load_dataframe
 from hydra.utils import instantiate
 
 log = logging.getLogger(__name__)
@@ -158,7 +157,7 @@ class DatasetBuilder:
         else:
             log.info(f"{output_file} already exists")
             if self.calculate_stats or self.preprocess_text:
-                df = load_dataframe(output_file, self.data_filetype)
+                df = eKonf.load_data(output_file, filetype=self.data_filetype)
 
         if df is None:
             log.warning("No datasets found")

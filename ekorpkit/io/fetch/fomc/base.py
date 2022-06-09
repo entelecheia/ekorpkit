@@ -2,16 +2,14 @@ import logging
 import re
 import threading
 import os
-from numpy import dtype
 import pandas as pd
 import codecs
 import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
-from datetime import date, datetime
+from datetime import datetime
 from abc import abstractmethod
 from ekorpkit import eKonf
-from ekorpkit.io.file import save_dataframe, load_dataframe
 
 
 log = logging.getLogger(__name__)
@@ -220,21 +218,18 @@ class FOMC:
 
     def save(self):
         """
-        save the dataframe to a csv file
+        save the dataframe to a parquet file
         """
-        if self.verbose:
-            print("Writing to ", self.output_filepath)
-        os.makedirs(self.output_dir, exist_ok=True)
-        save_dataframe(self.df, self.output_filepath)
+        log.info("Writing to ", self.output_filepath)
+        eKonf.save_data(self.df, self.output_filepath)
 
     def load_calendar(self, from_year=None, force_download=False):
         """
         get the calendar from the FOMC website
         """
         if os.path.exists(self.calendar_filepath) and not force_download:
-            if self.verbose:
-                print("Loading calendar from cache...")
-            self.calendar = load_dataframe(self.calendar_filepath)
+            log.info("Loading calendar from cache...")
+            self.calendar = eKonf.load_data(self.calendar_filepath)
             return self.calendar
 
         if self.verbose:
@@ -355,7 +350,7 @@ class FOMC:
         # # Use date as index
         df.set_index("date", inplace=True)
 
-        save_dataframe(df, self.calendar_filepath)
+        eKonf.save_data(df, self.calendar_filepath)
         self.calendar = df
         return df.copy()
 
@@ -399,7 +394,7 @@ class FOMC:
         fomc_calendar[columns] = results[columns]
         fomc_calendar = fomc_calendar[fomc_calendar["rate"].notnull()]
 
-        save_dataframe(fomc_calendar, self.calendar_filepath)
+        eKonf.save_data(fomc_calendar, self.calendar_filepath)
         self.calendar = fomc_calendar
         return fomc_calendar.copy()
 
@@ -427,7 +422,7 @@ class FOMC:
             lambda x: 0 if x == 0 else 1
         )
 
-        save_dataframe(fomc_calendar, self.calendar_filepath)
+        eKonf.save_data(fomc_calendar, self.calendar_filepath)
         self.calendar = fomc_calendar
         return fomc_calendar.copy()
 

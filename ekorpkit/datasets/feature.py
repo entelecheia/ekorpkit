@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.pipelines.pipe import apply_pipeline
-from ekorpkit.io.file import load_dataframe, save_dataframe
 
 
 log = logging.getLogger(__name__)
@@ -184,7 +183,7 @@ class FeatureSet:
         for split, data_file in self.data_files.items():
             data_file = self.data_dir / data_file
             if eKonf.exists(data_file):
-                df = load_dataframe(data_file, dtype=self.DATATYPEs)
+                df = eKonf.load_data(data_file, dtype=self.DATATYPEs)
                 df = self.FEATURE.init_info(df)
                 df = self.FEATURE.append_split(df, split)
                 self._splits[split] = df
@@ -212,10 +211,10 @@ class FeatureSet:
             if data is None:
                 continue
             data_file = self.data_files[split]
-            save_dataframe(
+            eKonf.save_data(
                 data,
-                output_dir=self.data_dir,
-                output_file=data_file,
+                data_file,
+                base_dir=self.data_dir,
                 verbose=self.verbose,
             )
             if summary_info:

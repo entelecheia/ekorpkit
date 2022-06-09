@@ -3,7 +3,6 @@ import os
 import sklearn
 from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
-from ekorpkit.io.file import save_dataframe
 
 
 log = logging.getLogger(__name__)
@@ -115,7 +114,7 @@ class SimpleTrainer:
         preds = self._predict(to_predict)
         self.pred_data = self.append_predictions(self.test_data, preds)
         pred_filepath = os.path.join(self._pred_output_dir, self._pred_output_file)
-        save_dataframe(self.pred_data, pred_filepath)
+        eKonf.save_data(self.pred_data, pred_filepath)
         if self.verbose:
             print(self.pred_data.head())
         if self._model_eval:

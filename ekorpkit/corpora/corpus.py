@@ -3,7 +3,7 @@ import codecs
 import pandas as pd
 from pathlib import Path
 from ekorpkit import eKonf
-from ekorpkit.io.file import load_dataframe, get_filepaths
+
 
 DESCRIPTION = "Corpus for Language Models"
 LICENSE = "Copyright of the corpus is owned by the authors."
@@ -136,8 +136,7 @@ class Corpus:
     def load(self):
         dfs = []
         for split, data_file in self.data_files.items():
-            filepaths = get_filepaths(data_file, self.data_dir)
-            df = pd.concat([load_dataframe(f, verbose=self.verbose) for f in filepaths])
+            df = eKonf.load_data(data_file, self.data_dir, concatenate=True)
             df = self.COLUMN.combine_texts(df)
             if self._collapse_ids:
                 df = self.COLUMN.append_split(df, split)
@@ -158,8 +157,7 @@ class Corpus:
 
         dfs = []
         for split, data_file in self.meta_files.items():
-            filepaths = get_filepaths(data_file, self.metadata_dir)
-            df = pd.concat([load_dataframe(f, verbose=self.verbose) for f in filepaths])
+            df = eKonf.load_data(data_file, self.metadata_dir, concatenate=True)
             if self._collapse_ids:
                 df = self.COLUMN.append_split(df, split)
             dfs.append(df)

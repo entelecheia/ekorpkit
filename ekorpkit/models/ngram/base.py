@@ -4,7 +4,6 @@ import pandas as pd
 from collections import namedtuple
 from tqdm import tqdm
 from .score import get_process_memory, prune_vocab, NEG_INF
-from ekorpkit.io.file import save_dataframe, load_dataframe
 from ekorpkit import eKonf
 
 # from inspect import getfullargspec as getargspec
@@ -338,7 +337,7 @@ class Ngrams:
             _features = self._scores.features
             _lowercase = self._scores.lowercase
 
-            df = load_dataframe(self.score_path, verbose=self.verbose)
+            df = eKonf.load_data(self.score_path, verbose=self.verbose)
             df = df.dropna(subset=[_words])
             columns = [_words] + _features
             Score = namedtuple("score", columns)
@@ -380,7 +379,7 @@ class Ngrams:
         """Save the candidates to a file"""
         if len(self.candidates) > 0:
             df = pd.DataFrame(self.candidates.values())
-            save_dataframe(df, self.score_path, verbose=self.verbose)
+            eKonf.save_data(df, self.score_path, verbose=self.verbose)
         else:
             log.info("no candidates to save")
 

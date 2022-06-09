@@ -7,7 +7,6 @@ from collections import OrderedDict
 from functools import reduce
 from ekorpkit.utils import print_status
 from ekorpkit.utils.func import elapsed_timer
-from ekorpkit.io.file import save_dataframe as save_dataframe_
 from ekorpkit import eKonf
 from ekorpkit.ekonf import apply_pipe
 
@@ -337,17 +336,11 @@ def split_sampling(df, args):
     test_file = args.get("test_file", None)
     dev_file = args.get("dev_file", None)
     if train_file and train is not None:
-        save_dataframe_(
-            train, output_dir=output_dir, output_file=train_file, verbose=verbose
-        )
+        eKonf.save_data(train, train_file, base_dir=output_dir, verbose=verbose)
     if test_file and test is not None:
-        save_dataframe_(
-            test, output_dir=output_dir, output_file=test_file, verbose=verbose
-        )
+        eKonf.save_data(test, test_file, base_dir=output_dir, verbose=verbose)
     if dev_file and dev is not None:
-        save_dataframe_(
-            dev, output_dir=output_dir, output_file=dev_file, verbose=verbose
-        )
+        eKonf.save_data(dev, dev_file, base_dir=output_dir, verbose=verbose)
 
     return df
 
@@ -1148,11 +1141,9 @@ def split_dataframe(df, args):
 
 
 def concat_dataframes(dataframes, args):
-    from ekorpkit.io.file import concat_dataframes as concat_dataframes_
-
     args = eKonf.to_dict(args)
 
-    return concat_dataframes_(data=dataframes, **args)
+    return eKonf.concat_data(data=dataframes, **args)
 
 
 def merge_dataframe(df=None, args=None):
@@ -1201,7 +1192,7 @@ def save_metadata(df, args):
         if eKonf.Keys.SPLIT in meta_columns and eKonf.Keys.SPLIT not in df.columns:
             df[eKonf.Keys.SPLIT] = split_name
         df_meta = df[meta_columns]
-        save_dataframe_(df_meta, filepath, filetype, verbose)
+        eKonf.save_data(df_meta, filepath, filetype=filetype, verbose=verbose)
 
     data_info = column_info.get("data", None)
     if isinstance(data_info, dict):
@@ -1222,72 +1213,34 @@ def save_dataframe(df, args):
     if df is None:
         log.warning("Dataframe is None")
         return df
+    filepath = args.pop("filepath", None)
+    output_dir = args.pop("output_dir", None)
+    output_file = args.pop("output_file", None)
 
-    save_dataframe_(df, **args)
+    if filepath:
+        filename = filepath
+        output_dir = None
+    else:
+        filename = output_file
+    eKonf.save_data(df, filename, output_dir, **args)
     return df
 
 
 def load_dataframe(df=None, args=None):
-    from ekorpkit.io.file import get_filepaths, load_dataframe as _load_dataframe
-
     if args is None:
         raise ValueError("args must be specified")
 
     args = eKonf.to_dict(args)
-    verbose = args.get("verbose", False)
-    concatenate = args.get("concatenate", True)
-    filepath = args.get("filepath", None)
-    data_dir = args.get("data_dir", None)
-    data_file = args.get("data_file", None)
-    dtype = args.get("dtype", None)
-    if isinstance(dtype, list):
-        dtype = {k: "str" for k in dtype}
-    parse_dates = args.get("parse_dates", False)
-    columns = args.get("columns", None)
+    filepath = args.pop("filepath", None)
+    data_dir = args.pop("data_dir", None)
+    data_file = args.pop("data_file", None)
 
-    if filepath:
-        filepaths = get_filepaths(filepath)
+    if data_file:
+        filename = data_file
     else:
-        filepaths = get_filepaths(data_file, data_dir)
-    log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
-    if len(filepaths) == 1:
-        df = _load_dataframe(
-            filepaths[0],
-            verbose=verbose,
-            dtype=dtype,
-            parse_dates=parse_dates,
-            columns=columns,
-        )
-        return df
-    else:
-        if concatenate:
-            df = pd.concat(
-                [
-                    _load_dataframe(
-                        f,
-                        verbose=verbose,
-                        dtype=dtype,
-                        parse_dates=parse_dates,
-                        columns=columns,
-                    )
-                    for f in filepaths
-                ]
-            )
-            return df
-        else:
-            df_dict = {}
-
-            for f in filepaths:
-                df = _load_dataframe(
-                    f,
-                    verbose=verbose,
-                    dtype=dtype,
-                    parse_dates=parse_dates,
-                    columns=columns,
-                )
-                df_name = os.path.basename(f)
-                df_dict[df_name] = df
-            return df_dict
+        filename = filepath
+        data_dir = None
+    return eKonf.load_data(filename, data_dir, **args)
 
 
 def summary_stats(df, args):

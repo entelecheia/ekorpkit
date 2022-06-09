@@ -3,7 +3,6 @@ import os
 import sklearn
 from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
-from ekorpkit.io.file import save_dataframe
 
 
 log = logging.getLogger(__name__)
@@ -154,7 +153,7 @@ class AutoML:
         y_preds, y_probs = self._predict(self._X_test.values())
         self._pred_data = self.append_predictions(self._X_test, y_preds)
         pred_filepath = os.path.join(self._output_dir, self._pred_output_file)
-        save_dataframe(self._pred_data, pred_filepath)
+        eKonf.save_data(self._pred_data, pred_filepath)
         if self.verbose:
             print(self._pred_data.head())
         if self._model_eval:
