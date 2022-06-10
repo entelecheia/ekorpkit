@@ -1,9 +1,6 @@
 defaults:
-  - _default
+  - _build
   - loader: tsv
-  - data: default
-  - meta: default
-  - sample: default
 
 data_dir: ${dir.archive}/datasets/t5/source/${.name}
 calculate_stats: false

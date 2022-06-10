@@ -100,9 +100,12 @@ class Dataset:
             return
         for split, data_file in self.data_files.items():
             data_file = os.path.join(self.data_dir, data_file)
-            df = eKonf.load_data(data_file, dtype=self.DATATYPEs)
-            df = self.COLUMN.append_split(df, split)
-            if self._pipeline_ and len(self._pipeline_) > 0:
-                df = apply_pipeline(df, self._pipeline_, self._pipeline_cfg)
-            self.splits[split] = df
+            if eKonf.exists(data_file):
+                df = eKonf.load_data(data_file, dtype=self.DATATYPEs)
+                df = self.COLUMN.append_split(df, split)
+                if self._pipeline_ and len(self._pipeline_) > 0:
+                    df = apply_pipeline(df, self._pipeline_, self._pipeline_cfg)
+                self.splits[split] = df
+            else:
+                log.info(f"Dataset {self.name} split {split} is empty")
         self._loaded = True

@@ -403,6 +403,12 @@ def _is_config(
     return isinstance(cfg, (DictConfig, dict))
 
 
+def _is_list(
+    cfg: Any,
+):
+    return isinstance(cfg, (ListConfig, list))
+
+
 def _is_instantiatable(cfg: Any):
     return _is_config(cfg) and _Keys.TARGET in cfg
 
@@ -412,6 +418,7 @@ def _load(file_: Union[str, Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
 
 
 def _save(config: Any, f: Union[str, Path, IO[Any]], resolve: bool = False) -> None:
+    os.makedirs(os.path.dirname(f), exist_ok=True)
     OmegaConf.save(config, f, resolve=resolve)
 
 
@@ -828,6 +835,12 @@ class eKonf:
         cfg: Any,
     ):
         return _is_config(cfg)
+
+    @staticmethod
+    def is_list(
+        cfg: Any,
+    ):
+        return _is_list(cfg)
 
     @staticmethod
     def is_instantiatable(cfg: Any):

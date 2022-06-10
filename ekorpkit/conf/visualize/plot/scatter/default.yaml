@@ -8,6 +8,8 @@ secondary_y: false
 secondary_to: 0
 hue:
 palette:
+color:
+alpha:
 _parms_:
   hue: ${oc.select:..hue, null}
   # vector or key in data

@@ -1,6 +1,6 @@
 defaults:
   - /column_info: default
-  - /path: data
+  - /path: cache
 
 _target_: ekorpkit.datasets.dataset.Dataset
 name: ${oc.select:.builtin.name, null}

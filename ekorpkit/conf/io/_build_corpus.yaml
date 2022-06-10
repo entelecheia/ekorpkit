@@ -1,9 +1,6 @@
 defaults:
-  - _default
+  - _build
   - loader: parser
-  - data: default
-  - meta: default
-  - sample: default
 
 data_dir: ${dir.archive}/datasets/source/${.name}
 calculate_stats: true

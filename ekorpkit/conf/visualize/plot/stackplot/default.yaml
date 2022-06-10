@@ -1,5 +1,7 @@
 _func_: stackplot
+_name_: 
 axno: 0
+datano: 0
 dataform: transpose
 x:
 y:

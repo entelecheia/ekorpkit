@@ -9,6 +9,4 @@ data_sources:
 num_workers: ${oc.select:num_workers,1}
 force_download: false
 overwrite: false
-calculate_stats: true
-preprocess_text: true
 verbose: ${oc.select:verbose, false}

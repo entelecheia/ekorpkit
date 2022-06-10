@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from cmath import isinf
 from pathlib import Path
-from .base import set_style, set_figure, set_super, add_decorations
+from .base import set_style, set_figure, set_super, add_decorations, save_figure
 from .classification import confusion_matrix
 from .yellowbrick import yellowbrick_features
 from ekorpkit import eKonf
@@ -106,11 +106,7 @@ def plot(data, verbose=False, **kwargs):
 
     set_super(fig, **_figure["super"])
 
-    fname = _savefig.get("fname", None)
-    if fname:
-        Path(fname).parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(**_savefig)
-        log.info(f"Saved figure to {fname}")
+    save_figure(fig, **_savefig)
 
 
 def grid(data, verbose=False, **kwargs):
@@ -148,11 +144,7 @@ def grid(data, verbose=False, **kwargs):
     _data = prepare_data(data, **_grid)
     g = _func_(_data, **_grid)
 
-    fname = _savefig.get("fname", None)
-    if fname:
-        Path(fname).parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(**_savefig)
-        log.info(f"Saved figure to {fname}")
+    save_figure(plt, **_savefig)
 
 
 def prepare_data(data, **kwargs):
@@ -195,6 +187,9 @@ def snsplot(ax=None, x=None, y=None, data=None, **kwargs):
     if isinstance(y, list):
         data = data[y]
         y = None
+        if x is not None and x in data.columns:
+            data.set_index(x, inplace=True)
+            x = None
     if x is not None:
         _parms_["x"] = x
     if y is not None:
@@ -238,7 +233,7 @@ def stackplot(ax=None, x=None, y=None, data=None, **kwargs):
     _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
     if ax is None:
         ax = plt.gca()
-    if x is None:
+    if x is None or x not in data.columns:
         x = data.index
     elif isinstance(x, str):
         x = data[x]

@@ -6,12 +6,14 @@ x:
 y:
 secondary_y: false
 secondary_to: 0
+linewidth: 2
+palette:
+color:
+alpha:
 _parms_:
-  linewidth: 2
   hue:
   size:
   style:
-  palette:
   hue_order:
   hue_norm:
   sizes:

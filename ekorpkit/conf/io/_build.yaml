@@ -1,0 +1,13 @@
+defaults:
+  - _default
+  - data: default
+  - meta: default
+  - sample: default
+
+data_sources:
+  train:
+parent_dir: ${oc.select:..data_dir, ${.data_dir}}
+calculate_stats: false
+preprocess_text: false
+force_download: false
+overwrite: false

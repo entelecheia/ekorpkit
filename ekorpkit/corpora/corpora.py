@@ -10,17 +10,17 @@ log = logging.getLogger(__name__)
 
 class Corpora:
     def __init__(self, **args):
-        args = eKonf.to_dict(args)
+        args = eKonf.to_config(args)
         self.args = args
-        self.name = args["name"]
-        self.corpora = args.get("corpora", None)
+        self.name = args.name
+        self.corpora = args.get("corpora")
         if self.corpora is None:
             self.corpora = self.name
         if isinstance(self.corpora, str):
             self.corpora = {self.corpora: None}
-        elif isinstance(self.corpora, list):
+        elif eKonf.is_list(self.corpora):
             self.corpora = {name: None for name in self.corpora}
-        if isinstance(self.name, list):
+        if eKonf.is_list(self.name):
             self.name = "-".join(self.name)
 
         self.data_dir = args["data_dir"]
@@ -29,8 +29,7 @@ class Corpora:
             self.metadata_dir = self.data_dir
         self.data_files = self.args.get("data_files", None)
         self.meta_files = self.args.get("meta_files", None)
-        autoload = self.args.get("autoload", False)
-        automerge = self.args.get("automerge", False)
+        auto = self.args.auto
         use_name_as_subdir = args.get("use_name_as_subdir", True)
         self.verbose = args.get("verbose", False)
 
@@ -47,8 +46,7 @@ class Corpora:
                 args["name"] = name
                 args["data_dir"] = self.data_dir
                 args["metadata_dir"] = self.metadata_dir
-                args["autoload"] = autoload
-                args["automerge"] = automerge
+                args["auto"] = auto
                 args["use_name_as_subdir"] = use_name_as_subdir
                 if self.data_files is not None:
                     if name in self.data_files:

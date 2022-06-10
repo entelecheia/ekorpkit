@@ -5,7 +5,8 @@ _target_: ekorpkit.corpora.corpora.Corpora
 corpora:
 data_dir: ${dir.corpus}
 use_name_as_subdir: true
-autoload: false
+auto:
+  load: false
 verbose: ${oc.select:..verbose, true}
 collapse_ids: false
 column_info:

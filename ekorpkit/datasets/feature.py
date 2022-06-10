@@ -1,6 +1,6 @@
+import os
 import pandas as pd
 import logging
-from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.pipelines.pipe import apply_pipeline
 
@@ -26,13 +26,13 @@ class FeatureSet:
         self.force_rebuild = self.args.get("force_rebuild", False)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
-        self.data_dir = Path(self.args["data_dir"])
+        self.data_dir = self.args["data_dir"]
         if use_name_as_subdir:
-            self.data_dir = self.data_dir / self.name
+            self.data_dir = os.path.join(self.data_dir, self.name)
 
         self._info_cfg = self.args.get("info", None)
 
-        self.info_file = self.data_dir / f"info-{self.name}.yaml"
+        self.info_file = os.path.join(self.data_dir, f"info-{self.name}.yaml")
         self._info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
         if self._info:
             log.info(f"Loaded info file: {self.info_file}")
@@ -181,7 +181,7 @@ class FeatureSet:
         if self._loaded:
             return
         for split, data_file in self.data_files.items():
-            data_file = self.data_dir / data_file
+            data_file = os.path.join(self.data_dir, data_file)
             if eKonf.exists(data_file):
                 df = eKonf.load_data(data_file, dtype=self.DATATYPEs)
                 df = self.FEATURE.init_info(df)

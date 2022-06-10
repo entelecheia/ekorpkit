@@ -112,15 +112,6 @@ class DatasetBuilder:
             if pipe not in self.process_pipeline:
                 self.process_pipeline.append(pipe)
             self._pipeline_[pipe].path.output = _sample_path_
-        pipe = "save_dataframe"
-        if pipe in self._pipeline_:
-            if pipe not in self.process_pipeline:
-                self.process_pipeline.append(pipe)
-            self._pipeline_[pipe].filepath = _data_path_.filepath
-            columns = self.column_info.data
-            if columns:
-                columns = list(columns.keys())
-            self._pipeline_[pipe].columns = columns
 
         df = None
         if eKonf.exists(_data_path_.filepath) or self.overwrite:
@@ -140,6 +131,13 @@ class DatasetBuilder:
                     f"\nTransforming dataframe with pipeline: {self.transform_pipeline}"
                 )
                 df = apply_pipeline(df, self.transform_pipeline, self._pipeline_)
+
+            # Saving data
+            columns = self.column_info.data
+            if columns:
+                columns = list(columns.keys())
+            _data_path_.columns = columns
+            eKonf.save_data(df, **_data_path_)
 
             if self.summary_info and self.calculate_stats:
                 stats = {

@@ -30,8 +30,8 @@ def test_predict_sentiments():
     ds_cfg = eKonf.compose(config_group="dataset")
     ds_cfg.verbose = True
     ds_cfg.name = "financial_phrasebank"
-    ds_cfg.cache.uri = "https://github.com/entelecheia/ekorpkit-book/raw/main/data/financial_phrasebank.zip"
-    ds_cfg.data_dir = ds_cfg.cache.path
+    ds_cfg.path.cache.uri = "https://github.com/entelecheia/ekorpkit-book/raw/main/data/financial_phrasebank.zip"
+    ds_cfg.data_dir = ds_cfg.path.cached_path
     ds_cfg.use_name_as_subdir = True
 
     cfg = eKonf.compose(config_group="pipeline")
@@ -65,10 +65,10 @@ def test_eval_sentiments():
 def test_eval_fomc_sentiments():
     cfg = eKonf.compose(config_group="corpus")
     cfg.name = "fomc"
-    cfg.cache.uri = (
+    cfg.path.cache.uri = (
         "https://github.com/entelecheia/ekorpkit-book/raw/main/data/fomc.zip"
     )
-    cfg.data_dir = cfg.cache.path
+    cfg.data_dir = cfg.path.cached_path
     cfg.automerge = True
     fomc = eKonf.instantiate(cfg)
 
@@ -90,4 +90,3 @@ def test_eval_fomc_sentiments():
     fomc_sentiments = eKonf.pipe(cfg, fomc_statements)
 
     assert True
-

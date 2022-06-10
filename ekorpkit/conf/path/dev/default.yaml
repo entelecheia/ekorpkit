@@ -3,3 +3,5 @@ base_dir: ${..data_dir}
 filetype: ${..filetype}
 suffix:
 filepath: ${join_paths:${.base_dir},${.filename}}
+columns: ${..columns}
+verbose: ${oc.select:..verbose,false}

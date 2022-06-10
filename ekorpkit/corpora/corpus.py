@@ -1,7 +1,6 @@
+import os
 import logging
-import codecs
 import pandas as pd
-from pathlib import Path
 from ekorpkit import eKonf
 
 
@@ -14,30 +13,29 @@ log = logging.getLogger(__name__)
 
 class Corpus:
     def __init__(self, **args):
-        self.args = eKonf.to_dict(args)
-        self.name = self.args["name"]
+        args = eKonf.to_config(args)
+        self.args = args
+        self.name = self.args.name
         if isinstance(self.name, list):
             self.name = self.name[0]
         self.verbose = self.args.get("verbose", False)
-        self.autoload = self.args.get("autoload", False)
-        self.automerge = self.args.get("automerge", False)
+        self.auto = self.args.auto
+
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
-        self.data_dir = Path(self.args["data_dir"])
+        self.data_dir = self.args["data_dir"]
         if use_name_as_subdir:
-            self.data_dir = self.data_dir / self.name
+            self.data_dir = os.path.join(self.data_dir, self.name)
         self.metadata_dir = self.args.get("metadata_dir", None)
         if self.metadata_dir is None:
             self.metadata_dir = self.data_dir
         else:
-            self.metadata_dir = Path(self.metadata_dir)
             if use_name_as_subdir:
-                self.metadata_dir = self.metadata_dir / self.name
-        self.info_file = self.data_dir / f"info-{self.name}.yaml"
-        self._info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
+                self.metadata_dir = os.path.join(self.metadata_dir, self.name)
+        self.info_file = os.path.join(self.data_dir, f"info-{self.name}.yaml")
+        self._info = eKonf.load(self.info_file) if eKonf.exists(self.info_file) else {}
         if self._info:
-            if self.verbose:
-                log.info(f"Loaded info file: {self.info_file}")
+            log.info(f"Loaded info file: {self.info_file}")
             self.args = eKonf.to_dict(eKonf.update(self.args, self._info))
             self._info = eKonf.to_dict(self._info)
 
@@ -45,7 +43,7 @@ class Corpus:
             log.info(f"Intantiating a corpus {self.name} with a config:")
             eKonf.pprint(self.args)
 
-        self.filetype = self.args.get("filetype", "csv")
+        self.filetype = self.args.get("filetype", "parquet")
         self.data_files = self.args.get("data_files", None)
         self.meta_files = self.args.get("meta_files", None)
         if self.data_files is None:
@@ -68,11 +66,11 @@ class Corpus:
         self._metadata_merged = False
         self._loaded = False
 
-        if self.autoload:
+        if self.auto.load:
             self.load()
             self.load_metadata()
             self.load_timestamp()
-            if self.automerge:
+            if self.auto.merge:
                 self.merge_metadata()
 
     def __str__(self):

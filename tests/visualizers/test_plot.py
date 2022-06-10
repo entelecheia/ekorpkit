@@ -6,8 +6,8 @@ def test_plot():
 
     cfg = eKonf.compose(config_group="dataset=feature")
     cfg.name = "fomc_features_small"
-    cfg.cache.uri = "https://github.com/entelecheia/ekorpkit-book/raw/main/data/fomc_features_small.zip"
-    cfg.data_dir = cfg.cache.path
+    cfg.path.cache.uri = "https://github.com/entelecheia/ekorpkit-book/raw/main/data/fomc_features_small.zip"
+    cfg.data_dir = cfg.path.cached_path
     f_small = eKonf.instantiate(cfg)
 
     cfg = eKonf.compose(config_group="visualize/plot=lineplot")
