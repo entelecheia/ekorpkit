@@ -3,16 +3,14 @@ defaults:
   - /io: _build_corpus
   - /info: _build_corpus
   - /pipeline: _build_corpus
+  - /auto: load
 
 _target_: ekorpkit.corpora.build.DatasetBuilder
 name:
 data_dir: ${dir.corpus}/${.name}
 # data_dir: ${dir.archive}/datasets/lmdata/${.name}
 filetype: .parquet
-segment_separator: \n\n
-sentence_separator: \n
 verbose: ${oc.select:..verbose, true}
-autoload: true
 
 pipeline:
   normalize:

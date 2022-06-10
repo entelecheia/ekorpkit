@@ -2,14 +2,14 @@ defaults:
   - /io: t5
   - /info: _build_t5
   - /pipeline: _build_dataset
+  - /auto: load
 
 _target_: ekorpkit.corpora.build.DatasetBuilder
 name:
 category: general
 data_dir: ${dir.dataset}/t5/${.name}
-filetype: .csv
+filetype: .parquet
 verbose: ${oc.select:..verbose, true}
-autoload: true
 
 normalize:
   preprocessor:

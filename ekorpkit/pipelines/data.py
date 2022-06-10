@@ -1,46 +1,40 @@
-import os
-import pandas as pd
 from ekorpkit import eKonf
 from ekorpkit.corpora.corpus import Corpus
 from ekorpkit.corpora.corpora import Corpora
 from ekorpkit.datasets.dataset import Dataset
 from ekorpkit.datasets.datasets import Datasets
-from ekorpkit.io.file import load_dataframe
 
 
 class Data:
     def __init__(self, data=None, **args):
 
+        args = eKonf.to_config(args)
         self.args = args
         self._data = None
         self._column = None
-        self.verbose = args.get("verbose", False)
+        self._name = None
+        self.verbose = args.get(eKonf.Keys.VERBOSE, False)
 
-        if isinstance(data, pd.DataFrame):
+        if eKonf.is_dataframe(data):
             self._data = data
         elif eKonf.is_config(args):
-            self._load(**args)
+            self.load(**args)
 
-        _data = eKonf.function(args, "concat_dataframes", data=self._data)
-        if _data is not None:
-            self._data = _data
-
-        self._column_info = self.args.get("column_info")
+        self._column_info = self.args.column_info
         if self._column_info is None:
             raise ValueError("Column info can't be None")
         if self._column is None:
             self._column = eKonf.instantiate(self._column_info)
 
-    def _load(self, **args):
-        corpus = args.get(eKonf.Keys.CORPUS) or {}
-        dataset = args.get(eKonf.Keys.DATASET) or {}
-        data_dir = args.get("data_dir")
-        data_file = args.get("data_file")
+    def load(self, **args):
+        _corpus = args.get(eKonf.Keys.CORPUS) or {}
+        _dataset = args.get(eKonf.Keys.DATASET) or {}
+        _path = args.get(eKonf.Keys.PATH) or {}
 
-        if corpus.get("name") and dataset.get("name") is None:
-            args = corpus
-        elif dataset.get("name"):
-            args = dataset
+        if _corpus.get(eKonf.Keys.NAME) and _dataset.get(eKonf.Keys.NAME) is None:
+            args = _corpus
+        elif _dataset.get(eKonf.Keys.NAME):
+            args = _dataset
 
         if eKonf.is_instantiatable(args):
             data = eKonf.instantiate(args)
@@ -54,12 +48,14 @@ class Data:
             elif isinstance(data, (Dataset, Datasets)):
                 self._data = data.splits
                 self._column = data.COLUMN
-        elif data_dir and data_file:
-            self._data = eKonf.function(args, "load_dataframe")
+            self._name = data.name
+        elif _path:
+            self._data = eKonf.load_data(**_path[eKonf.Keys.DATA])
+            self._name = _path[eKonf.Keys.DATA][eKonf.Keys.FILE]
 
     def __str__(self):
         classname = self.__class__.__name__
-        return f"{classname}:\n{self.args}"
+        return f"{classname}: {self._name}{type(self._data)}"
 
     @property
     def COLUMN(self):

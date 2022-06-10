@@ -1,5 +1,6 @@
 defaults:
   - /_func_: save_metadata
+  - /path: output
 
 filepath:
 filetype:

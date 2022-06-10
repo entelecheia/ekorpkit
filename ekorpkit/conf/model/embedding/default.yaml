@@ -1,5 +1,5 @@
 defaults:
-  - /cache: extract_archive
+  - /cache: archive
 
 _target_: ekorpkit.models.embeddings.wordvec.WordVector
 name: glove

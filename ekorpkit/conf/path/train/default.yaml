@@ -1,0 +1,5 @@
+filename: ${..name}-train${.filetype}
+base_dir: ${..data_dir}
+filetype: ${..filetype}
+suffix: 
+filepath: ${join_paths:${.base_dir},${.filename}}

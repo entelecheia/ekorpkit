@@ -1,0 +1,8 @@
+file: ${..data_file}
+filename: ${.file}
+base_dir: ${..data_dir}
+filetype: ${..filetype}
+concatenate: ${..concat_data}
+dype:
+parse_dates:
+columns: ${..columns}

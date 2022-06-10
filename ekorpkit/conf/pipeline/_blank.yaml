@@ -1,5 +1,5 @@
 defaults:
-  - /cache: extract_archive
+  - /path: default
 
 name: ${oc.select:..name, pipeline}
 apply_to: ${oc.select:..apply_to, text}

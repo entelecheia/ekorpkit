@@ -1,0 +1,8 @@
+defaults:
+  - _default
+  - train: default
+  - dev: default
+  - test: default
+
+name: sample-${oc.select:..name, ${name}}
+filetype: .txt

@@ -2,14 +2,14 @@ defaults:
   - /io: _build_simple
   - /info: _build_dataset
   - /pipeline: _build_dataset
+  - /auto: load
 
 _target_: ekorpkit.corpora.build.DatasetBuilder
 name:
 category: general
 data_dir: ${dir.dataset}/simple/${.name}
-filetype: .csv
+filetype: .parquet
 verbose: ${oc.select:..verbose, true}
-autoload: true
 
 normalize:
   preprocessor:

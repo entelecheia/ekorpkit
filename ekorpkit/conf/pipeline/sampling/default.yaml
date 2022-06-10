@@ -1,5 +1,6 @@
 defaults:
   - /_func_: sampling
+  - /path: output
 
 sample_size_per_group: 10
 random_state: 123

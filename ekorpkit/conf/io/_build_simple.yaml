@@ -1,6 +1,9 @@
 defaults:
   - _default
   - loader: dataframe
+  - data: default
+  - meta: default
+  - sample: default
 
 data_dir: ${dir.archive}/datasets/source/simple/${.name}
 calculate_stats: false

@@ -1,8 +1,5 @@
-base_dir:
-filename:
-filetype:
-verbose: ${oc.select:..verbose,false}
-concatenate: false
-dype:
-parse_dates:
-columns:
+defaults:
+  - _default
+  - data: default
+  - output: default
+  - /cache: archive

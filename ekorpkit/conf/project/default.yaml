@@ -1,2 +1,3 @@
 # @package _global_
-project: ${oc.env:EKORPKIT_PROJECT,default}
+project: ${oc.env:EKORPKIT_PROJECT,${about.app.name}}
+name: ${.project}

@@ -15,7 +15,7 @@ def yellowbrick_features(ax=None, x=None, y=None, data=None, **kwargs):
     )
 
     _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
-    _name_ = kwargs.get(eKonf.Keys.NAME)
+    _name_ = kwargs.get(eKonf.Keys.NAME_KEY)
     _method_ = kwargs.get(eKonf.Keys.METHOD)
 
     if ax is None:

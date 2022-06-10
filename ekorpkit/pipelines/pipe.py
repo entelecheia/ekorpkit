@@ -671,7 +671,10 @@ def predict(df, args):
             columns.append(model._to_predict["predicted"])
             args["columns"] = columns
 
-    save_dataframe(df, args)
+    # TODO: take care of suffix argument 
+    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
+    _path[eKonf.Keys.SUFFIX] = args.get(eKonf.Keys.SUFFIX)
+    eKonf.save_data(df, **_path)
 
     return df
 
@@ -823,13 +826,13 @@ def general_function(df, args):
 
     with elapsed_timer(format_time=True) as elapsed:
         if apply_to is None:
-            df = getattr(df, method[eKonf.Keys.NAME])(**method[eKonf.Keys.PARMS])
+            df = getattr(df, method[eKonf.Keys.NAME_KEY])(**method[eKonf.Keys.PARMS])
         else:
             if isinstance(apply_to, str):
                 apply_to = [apply_to]
             for key in apply_to:
                 log.info(f"processing column: {key}")
-                df[key] = getattr(df[key], method[eKonf.Keys.NAME])(
+                df[key] = getattr(df[key], method[eKonf.Keys.NAME_KEY])(
                     **method[eKonf.Keys.PARMS]
                 )
 
@@ -997,6 +1000,7 @@ def save_samples(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
+
     sample_length_to_print = args.get("sample_length_to_print", 1000)
     if apply_to is None:
         if verbose:
@@ -1005,7 +1009,6 @@ def save_samples(df, args):
     if isinstance(apply_to, str):
         apply_to = [apply_to]
     num_samples_to_save = args.get("num_samples_to_save", None)
-    smaple_file_prefix = args.get("sample_file_prefix", "sample")
     if verbose:
         log.info(f"Saving samples: {args}")
 
@@ -1026,7 +1029,9 @@ def save_samples(df, args):
         print_text += sample_separator
     sample_text = sample_text.strip()
     print_text = print_text.strip()
-    sample_file = smaple_file_prefix + ".txt"
+
+    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
+    sample_file = _path.get("filepath") or "sample.txt"
     open(sample_file, "w", encoding="utf-8").write(sample_text)
 
     if verbose:
@@ -1177,8 +1182,8 @@ def merge_dataframe(df=None, args=None):
 def save_metadata(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
-    filepath = args.get("filepath", None)
-    filetype = args.get("filetype", None)
+    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
+    # filetype = args.get("filetype", None)
     column_info = args.get("column_info", None)
     split_name = args.get("split_name", None)
 
@@ -1192,13 +1197,11 @@ def save_metadata(df, args):
         if eKonf.Keys.SPLIT in meta_columns and eKonf.Keys.SPLIT not in df.columns:
             df[eKonf.Keys.SPLIT] = split_name
         df_meta = df[meta_columns]
-        eKonf.save_data(df_meta, filepath, filetype=filetype, verbose=verbose)
+        eKonf.save_data(df_meta, **_path)
 
     data_info = column_info.get("data", None)
     if isinstance(data_info, dict):
         data_keys = list(data_info.keys())
-        # if eKonf.Keys.SPLIT in data_columns and eKonf.Keys.SPLIT not in df.columns:
-        #     df[eKonf.Keys.SPLIT] = split_name
         data_columns = [
             col for col in df.columns if col not in meta_columns or col in data_keys
         ]

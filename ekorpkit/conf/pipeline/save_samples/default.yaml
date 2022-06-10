@@ -1,8 +1,9 @@
 defaults:
   - /_func_: save_samples
+  - /path: output-txt
 
 apply_to: ${oc.select:..apply_to, text}
 num_samples_to_save: 2
-smaple_file_prfix:
+output_file:
 sample_length_to_print: 1000
 verbose: ${oc.select:..verbose, true}

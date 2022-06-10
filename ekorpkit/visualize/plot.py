@@ -174,7 +174,7 @@ def prepare_data(data, **kwargs):
 
 def facetgrid(data=None, **kwargs):
     _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
-    _name_ = kwargs.get(eKonf.Keys.NAME)
+    _name_ = kwargs.get(eKonf.Keys.NAME_KEY)
     _map = kwargs.get(_name_)
     _map_fn = _map.get(eKonf.Keys.FUNC)
     _map_parms = _map.get(eKonf.Keys.PARMS)
@@ -189,7 +189,7 @@ def facetgrid(data=None, **kwargs):
 
 def snsplot(ax=None, x=None, y=None, data=None, **kwargs):
     _parms_ = kwargs.pop(eKonf.Keys.PARMS, {}) or {}
-    _name_ = kwargs.pop(eKonf.Keys.NAME)
+    _name_ = kwargs.pop(eKonf.Keys.NAME_KEY)
     if ax is None:
         ax = plt.gca()
     if isinstance(y, list):
