@@ -3,5 +3,4 @@ defaults:
   - barplot: default
 
 name: BarPlot
-plots:
-  - ${..barplot}
+plot: ${.barplot}

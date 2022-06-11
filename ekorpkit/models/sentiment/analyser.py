@@ -32,10 +32,16 @@ class HIV4SA(BaseSentimentAnalyser):
             polarity = (lxfeat_agg["pos"] - lxfeat_agg["neg"]) / (
                 lxfeat_agg["pos"] + lxfeat_agg["neg"] + self.EPSILON
             )
+            polarity2 = (lxfeat_agg["pos"] - lxfeat_agg["neg"]) / (
+                len(tokens) + self.EPSILON
+            )
             subjectivity = (lxfeat_agg["pos"] + lxfeat_agg["neg"]) / (
                 len(tokens) + self.EPSILON
             )
+            score["positive"] = lxfeat_agg["pos"] / (len(tokens) + self.EPSILON)
+            score["negative"] = lxfeat_agg["neg"] / (len(tokens) + self.EPSILON)
             score["polarity"] = polarity
+            score["polarity2"] = polarity2
             score["subjectivity"] = subjectivity
         elif isinstance(lxfeat_names, str):
             lxfeat[feature] = lxfeat.apply(
@@ -92,6 +98,9 @@ class LMSA(BaseSentimentAnalyser):
             polarity = (lxfeat_agg["pos"] - lxfeat_agg["neg"]) / (
                 lxfeat_agg["pos"] + lxfeat_agg["neg"] + self.EPSILON
             )
+            polarity2 = (lxfeat_agg["pos"] - lxfeat_agg["neg"]) / (
+                len(tokens) + self.EPSILON
+            )
             subjectivity = (lxfeat_agg["pos"] + lxfeat_agg["neg"]) / (
                 len(tokens) + self.EPSILON
             )
@@ -99,6 +108,7 @@ class LMSA(BaseSentimentAnalyser):
             score["negative"] = lxfeat_agg["neg"] / (len(tokens) + self.EPSILON)
             score["num_tokens"] = len(tokens)
             score[feature] = polarity
+            score['polarity2'] = polarity2
             score["subjectivity"] = subjectivity
         elif isinstance(lxfeat_names, str):
             lxfeat[feature] = lxfeat.apply(

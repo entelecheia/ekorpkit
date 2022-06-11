@@ -14,16 +14,15 @@ class FeatureSet:
     SPLITS = eKonf.SPLITS
 
     def __init__(self, **args):
-        self.args = eKonf.to_dict(args)
-        self.name = self.args["name"]
+        self.args = eKonf.to_config(args)
+        self.name = self.args.name
         if self.name is None:
             raise Exception("Feature name is required")
-        if isinstance(self.name, list):
+        if eKonf.is_list(self.name):
             self.name = self.name[0]
         self.verbose = self.args.get("verbose", False)
-        self.autoload = self.args.get("autoload", False)
-        self.autobuild = self.args.get("autobuild", False)
-        self.force_rebuild = self.args.get("force_rebuild", False)
+        self.auto = self.args.auto
+        self.force = self.args.force
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
         self.data_dir = self.args["data_dir"]
@@ -33,7 +32,7 @@ class FeatureSet:
         self._info_cfg = self.args.get("info", None)
 
         self.info_file = os.path.join(self.data_dir, f"info-{self.name}.yaml")
-        self._info = eKonf.load(self.info_file) if self.info_file.is_file() else {}
+        self._info = eKonf.load(self.info_file) if eKonf.exists(self.info_file) else {}
         if self._info:
             log.info(f"Loaded info file: {self.info_file}")
             self.args = eKonf.to_dict(eKonf.merge(self.args, self._info))
@@ -68,12 +67,12 @@ class FeatureSet:
         self._splits = {}
         self._loaded = False
 
-        if self.autobuild:
-            if self.force_rebuild or not eKonf.exists(
+        if self.auto.build:
+            if self.force.rebuild or not eKonf.exists(
                 self.data_dir, self.data_files[self.SPLITS.TRAIN]
             ):
                 self.build()
-        if self.autoload:
+        if self.auto.load:
             self.load()
 
     def __str__(self):

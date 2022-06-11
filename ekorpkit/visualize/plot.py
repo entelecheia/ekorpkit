@@ -190,6 +190,9 @@ def snsplot(ax=None, x=None, y=None, data=None, **kwargs):
         if x is not None and x in data.columns:
             data.set_index(x, inplace=True)
             x = None
+    elif isinstance(y, str):
+        if x is None:
+            x = data.index
     if x is not None:
         _parms_["x"] = x
     if y is not None:

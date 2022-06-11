@@ -1,3 +1,4 @@
+import pandas as pd
 import logging
 import os
 import sklearn
@@ -14,11 +15,11 @@ class AutoML:
     def __init__(self, **args):
         from flaml import AutoML
 
-        args = eKonf.to_dict(args)
+        args = eKonf.to_config(args)
         self.args = args
-        self.name = args["name"]
+        self.name = args.name
         self.verbose = args.get("verbose", True)
-        self._model_cfg = args["config"]
+        self._model_cfg = eKonf.to_dict(args.config)
         self._model_eval = args.get("model", {}).get("eval")
         self._dataset_cfg = args.get(eKonf.Keys.DATASET, None)
         self._to_predict = args["to_predict"]
@@ -94,6 +95,9 @@ class AutoML:
     def get_logs(self, time_budget=240):
         from flaml.data import get_output_from_log
 
+        if not eKonf.exists(self._log_file):
+            log.warning(f"Log file {self._log_file} not found")
+            return None
         (
             time_history,
             best_valid_loss_history,
@@ -204,3 +208,53 @@ class AutoML:
                 print(self._X_test.tail())
             else:
                 log.info("No test data found")
+
+    @property
+    def X_train(self):
+        return self._X_train
+
+    @property
+    def X_dev(self):
+        return self._X_dev
+
+    @property
+    def X_test(self):
+        return self._X_test
+
+    @property
+    def y_train(self):
+        return self._y_train
+
+    @property
+    def y_dev(self):
+        return self._y_dev
+
+    @property
+    def y_test(self):
+        return self._y_test
+
+    def get_feature_importance(self, estimator=None, n_features=None):
+        if estimator is None:
+            estimator = self.best_estimator
+        if self.X_train is None:
+            self.load_dataset()
+        _data = {
+            "columns": self.X_train.columns.tolist(),
+            "importances": estimator.feature_importances_.tolist(),
+        }
+        data = pd.DataFrame(_data)
+        data.sort_values(by="importances", ascending=False, inplace=True)
+        if n_features is not None:
+            data = data.head(n_features)
+
+        return data
+
+    def plot_feature_importance(self, estimator=None, n_features=None):
+        data = self.get_feature_importance(estimator=estimator, n_features=n_features)
+        cfg = eKonf.compose("visualize/plot=barplot")
+        cfg.plot.y = "columns"
+        cfg.plot.x = "importances"
+        cfg.figure.figsize = (10, 5)
+        cfg.figure.fontsize = 10
+        cfg.ax.title = "Feature Importances"
+        eKonf.instantiate(cfg, data=data)

@@ -1,7 +1,6 @@
 defaults:
-  - _default
+  - default
   - scatter: default
 
 name: ScatterPlot
-plots:
-  - ${..scatter}
+plot: ${.scatter}

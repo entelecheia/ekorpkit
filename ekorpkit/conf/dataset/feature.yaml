@@ -1,10 +1,13 @@
 defaults:
   - default
+  - /force: rebuild
   - override /column_info: feature
+  - override /auto: load_build
 
 _target_: ekorpkit.datasets.feature.FeatureSet
 name:
 data_dir: ${dir.dataset}/features
 data_file:
 filetype: .parquet
-autoload: true
+auto:
+  build: false
