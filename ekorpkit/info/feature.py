@@ -133,7 +133,7 @@ class FeatureInfo:
 
     @ID_KEY.setter
     def ID_KEY(self, value):
-        self.KEYs[eKonf.Keys.ID] = value
+        self.KEYs[eKonf.Keys.ID.value] = value
 
     @property
     def INDEX(self):
@@ -141,7 +141,7 @@ class FeatureInfo:
 
     @INDEX.setter
     def INDEX(self, value):
-        self.COLUMNs[eKonf.Keys.INDEX] = value
+        self.COLUMNs[eKonf.Keys.INDEX.value] = value
 
     @property
     def ID(self):
@@ -149,7 +149,7 @@ class FeatureInfo:
 
     @ID.setter
     def ID(self, value):
-        self.COLUMNs[eKonf.Keys.ID] = value
+        self.COLUMNs[eKonf.Keys.ID.value] = value
 
     @property
     def Y(self):
@@ -157,7 +157,7 @@ class FeatureInfo:
 
     @Y.setter
     def Y(self, value):
-        self.COLUMNs[eKonf.Keys.Y] = value
+        self.COLUMNs[eKonf.Keys.Y.value] = value
 
     @property
     def X(self):
@@ -165,7 +165,7 @@ class FeatureInfo:
 
     @X.setter
     def X(self, value):
-        self.COLUMNs[eKonf.Keys.X] = value
+        self.COLUMNs[eKonf.Keys.X.value] = value
 
     @property
     def SPLIT_KEY(self):
@@ -173,7 +173,7 @@ class FeatureInfo:
 
     @SPLIT_KEY.setter
     def SPLIT_KEY(self, value):
-        self.KEYs[eKonf.Keys.SPLIT] = value
+        self.KEYs[eKonf.Keys.SPLIT.value] = value
 
     @property
     def DATASET(self):
@@ -181,7 +181,7 @@ class FeatureInfo:
 
     @DATASET.setter
     def DATASET(self, value):
-        self.KEYs[eKonf.Keys.DATASET] = value
+        self.KEYs[eKonf.Keys.DATASET.value] = value
 
     @property
     def KEYs(self):
@@ -189,7 +189,7 @@ class FeatureInfo:
 
     @KEYs.setter
     def KEYs(self, value):
-        self.INFO[eKonf.Keys.KEYS] = value
+        self.INFO[eKonf.Keys.KEYS.value] = value
 
     @property
     def COLUMNs(self):
@@ -197,7 +197,7 @@ class FeatureInfo:
 
     @COLUMNs.setter
     def COLUMNs(self, value):
-        self.INFO[eKonf.Keys.COLUMNS] = value
+        self.INFO[eKonf.Keys.COLUMNS.value] = value
 
     @property
     def DATA(self):
@@ -211,7 +211,7 @@ class FeatureInfo:
 
     @DATATYPEs.setter
     def DATATYPEs(self, value):
-        self.INFO[eKonf.Keys.DATA] = value
+        self.INFO[eKonf.Keys.DATA.value] = value
 
     @property
     def DATETIME_PARM(self):
@@ -219,4 +219,4 @@ class FeatureInfo:
 
     @DATETIME_PARM.setter
     def DATETIME_PARM(self, value):
-        self.INFO[eKonf.Keys.DATETIME] = value
+        self.INFO[eKonf.Keys.DATETIME.value] = value

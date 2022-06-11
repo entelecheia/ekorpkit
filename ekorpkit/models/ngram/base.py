@@ -263,7 +263,7 @@ class Ngrams:
         if not self._ngram.max_skip:
             self._ngram.max_skip = self._ngram.max_window - self._ngram.max_n
         self.postag_rules = eKonf.ensure_list(self._ngram.postag_rules)
-        self._score_keys = self._scores["keys"]
+        self._score_keys = self._scores[eKonf.Keys.KEYS]
 
         if self._candidates.min_count <= 0:
             self._candidates.min_count = 10
@@ -280,7 +280,6 @@ class Ngrams:
 
         self._tokenizer = args.preprocessor.tokenizer
         if eKonf.is_instantiatable(self._tokenizer):
-            log.info(f"instantiating {self._tokenizer['_target_']}...")
             self._tokenizer = eKonf.instantiate(self._tokenizer)
         self._postag.stop_tags = eKonf.ensure_list(self._postag.stop_tags)
 

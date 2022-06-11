@@ -281,7 +281,7 @@ class _Keys(str, Enum):
     INDEX = "index"
     COLUMNS = "columns"
     KEY = "key"
-    KEYS = "keys"
+    KEYS = "_keys_"
     DATA = "data"
     META = "meta"
     FORMAT = "format"

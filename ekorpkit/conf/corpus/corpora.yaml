@@ -10,5 +10,5 @@ auto:
 verbose: ${oc.select:..verbose, true}
 collapse_ids: false
 column_info:
-  keys:
+  _keys_:
     corpus: corpus

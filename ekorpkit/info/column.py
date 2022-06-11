@@ -178,7 +178,7 @@ class ColumnInfo:
 
     @ID.setter
     def ID(self, value):
-        self.KEYs[eKonf.Keys.ID] = value
+        self.KEYs[eKonf.Keys.ID.value] = value
 
     @property
     def _ID(self):
@@ -186,7 +186,7 @@ class ColumnInfo:
 
     @_ID.setter
     def _ID(self, value):
-        self.KEYs[eKonf.Keys._ID] = value
+        self.KEYs[eKonf.Keys._ID.value] = value
 
     @property
     def ID_SEPARATOR(self):
@@ -198,7 +198,7 @@ class ColumnInfo:
 
     @MERGE_META_ON.setter
     def MERGE_META_ON(self, value):
-        self.COLUMNs[eKonf.Keys.META_MERGE_ON] = value
+        self.COLUMNs[eKonf.Keys.META_MERGE_ON.value] = value
 
     @property
     def IDs(self):
@@ -206,7 +206,7 @@ class ColumnInfo:
 
     @IDs.setter
     def IDs(self, value):
-        self.COLUMNs[eKonf.Keys.ID] = value
+        self.COLUMNs[eKonf.Keys.ID.value] = value
 
     @property
     def TEXT(self):
@@ -214,7 +214,7 @@ class ColumnInfo:
 
     @TEXT.setter
     def TEXT(self, value):
-        self.KEYs[eKonf.Keys.TEXT] = value
+        self.KEYs[eKonf.Keys.TEXT.value] = value
 
     @property
     def TEXTs(self):
@@ -222,7 +222,7 @@ class ColumnInfo:
 
     @TEXTs.setter
     def TEXTs(self, value):
-        self.COLUMNs[eKonf.Keys.TEXT] = value
+        self.COLUMNs[eKonf.Keys.TEXT.value] = value
 
     @property
     def DATA(self):
@@ -242,7 +242,7 @@ class ColumnInfo:
 
     @TIMESTAMP.setter
     def TIMESTAMP(self, value):
-        self.KEYs[eKonf.Keys.TIMESTAMP] = value
+        self.KEYs[eKonf.Keys.TIMESTAMP.value] = value
 
     @property
     def SPLIT(self):
@@ -250,7 +250,7 @@ class ColumnInfo:
 
     @SPLIT.setter
     def SPLIT(self, value):
-        self.KEYs[eKonf.Keys.SPLIT] = value
+        self.KEYs[eKonf.Keys.SPLIT.value] = value
 
     @property
     def CORPUS(self):
@@ -258,7 +258,7 @@ class ColumnInfo:
 
     @CORPUS.setter
     def CORPUS(self, value):
-        self.KEYs[eKonf.Keys.CORPUS] = value
+        self.KEYs[eKonf.Keys.CORPUS.value] = value
 
     @property
     def DATASET(self):
@@ -266,7 +266,7 @@ class ColumnInfo:
 
     @DATASET.setter
     def DATASET(self, value):
-        self.KEYs[eKonf.Keys.DATASET] = value
+        self.KEYs[eKonf.Keys.DATASET.value] = value
 
     @property
     def KEYs(self):
@@ -274,7 +274,7 @@ class ColumnInfo:
 
     @KEYs.setter
     def KEYs(self, value):
-        self.INFO[eKonf.Keys.KEYS] = value
+        self.INFO[eKonf.Keys.KEYS.value] = value
 
     @property
     def COLUMNs(self):
@@ -282,7 +282,7 @@ class ColumnInfo:
 
     @COLUMNs.setter
     def COLUMNs(self, value):
-        self.INFO[eKonf.Keys.COLUMNS] = value
+        self.INFO[eKonf.Keys.COLUMNS.value] = value
 
     @property
     def DATATYPEs(self):
@@ -290,7 +290,7 @@ class ColumnInfo:
 
     @DATATYPEs.setter
     def DATATYPEs(self, value):
-        self.INFO[eKonf.Keys.DATA] = value
+        self.INFO[eKonf.Keys.DATA.value] = value
 
     @property
     def METATYPEs(self):
@@ -298,7 +298,7 @@ class ColumnInfo:
 
     @METATYPEs.setter
     def METATYPEs(self, value):
-        self.INFO[eKonf.Keys.META] = value
+        self.INFO[eKonf.Keys.META.value] = value
 
     @property
     def TIMESTAMP_PARM(self):
@@ -306,7 +306,7 @@ class ColumnInfo:
 
     @TIMESTAMP_PARM.setter
     def TIMESTAMP_PARM(self, value):
-        self.INFO[eKonf.Keys.TIMESTAMP] = value
+        self.INFO[eKonf.Keys.TIMESTAMP.value] = value
 
     @property
     def DATETIME_PARM(self):
@@ -314,7 +314,7 @@ class ColumnInfo:
 
     @DATETIME_PARM.setter
     def DATETIME_PARM(self, value):
-        self.INFO[eKonf.Keys.DATETIME] = value
+        self.INFO[eKonf.Keys.DATETIME.value] = value
 
     @property
     def SEGMENT_SEP(self):

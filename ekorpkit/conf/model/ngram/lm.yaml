@@ -10,7 +10,7 @@ info:
 scores:
   score_path: ${dir.resource}/lexicons/LM.parquet
   lowercase: true
-  keys:
+  _keys_:
     words: Word
     score: Negative
     count: count

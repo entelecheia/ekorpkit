@@ -1,8 +1,6 @@
-keys:
-  id: id
-  text: text
-  timestamp: timestamp
-  split: split
+defaults:
+  - /_keys_: dataset
+
 columns:
   id: ${oc.select:..keys.id,id}
   text: ${oc.select:..keys.text,text}
