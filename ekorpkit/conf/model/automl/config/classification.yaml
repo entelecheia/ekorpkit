@@ -5,7 +5,7 @@ metric: accuracy
 # 'roc_auc_ovo', 'log_loss', 'mape', 'f1', 'ap', 'ndcg', 'micro_f1', 'macro_f1'
 task: classification
 # task type
-log_file_name: ${oc.select:..log_file, automl.log}
+log_file_name: ${oc.select:..path.log.filepath, automl.log}
 # flaml log file
 seed: 7654321
 # random seed

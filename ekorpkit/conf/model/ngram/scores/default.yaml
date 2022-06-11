@@ -3,7 +3,7 @@ defaults:
 
 score_dir: ${dir.project}/outputs/ngrams/
 score_file: ${..name}_${..score_function.name}_scores.parquet
-score_path: ${join_paths:${.score_dir},${.score_file}}
+score_path: ${join_path:${.score_dir},${.score_file}}
 lowercase: true
 features:
   - score

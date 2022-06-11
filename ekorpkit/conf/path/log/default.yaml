@@ -1,4 +1,4 @@
-file: ${..model_file}
+file: ${..log_file}
 filename: ${.file}
-base_dir: ${..model_dir}
+base_dir: ${..log_dir}
 filepath: ${join_path:${.base_dir},${.filename}}

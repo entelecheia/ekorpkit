@@ -4,9 +4,5 @@ defaults:
 name: ${oc.select:..name,''}
 data_dir: ${dir.archive}/datasets/source/${.name}
 filetype: ${oc.select:..filetype,.parquet}
-data_sources:
-  train:
 num_workers: ${oc.select:num_workers,1}
-force_download: false
-overwrite: false
 verbose: ${oc.select:verbose, false}

@@ -1,5 +1,7 @@
 defaults:
   - /_keys_: dataset
+  - datetime: default
+  - timestamp: default
 
 columns:
   id: ${oc.select:..keys.id,id}
@@ -10,13 +12,5 @@ data:
   id: int
   text: str
 meta:
-timestamp:
-  key:
-  format:
-  _parms_:
-datetime:
-  columns:
-  format:
-  _parms_:
 segment_separator: ${oc.select:..segment_separator, '\n\n'}
 sentence_separator: ${oc.select:..sentence_separator, '\n'}

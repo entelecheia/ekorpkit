@@ -32,19 +32,26 @@ def __version__():
     return _version.get_versions()["version"]
 
 
-def check_path(path: str, alt_path: str = None):
-    if os.path.exists(path):
-        return path
+def _check_path(_path: str, alt_path: str = None):
+    if os.path.exists(_path):
+        return _path
     else:
         return alt_path
 
 
+def _mkdir(_path: str):
+    if _path is None:
+        return None
+    Path(_path).mkdir(parents=True, exist_ok=True)
+    return _path
+
+
 def _exists(a, *p):
-    path = os.path.join(a, *p)
-    return os.path.exists(path)
+    _path = os.path.join(a, *p)
+    return os.path.exists(_path)
 
 
-def _join_paths(a, *p):
+def _join_path(a, *p):
     if p and p[0] is not None:
         return os.path.join(a, *p)
     else:
@@ -228,9 +235,11 @@ OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
 OmegaConf.register_new_resolver("exists", _exists)
-OmegaConf.register_new_resolver("join_paths", _join_paths)
+OmegaConf.register_new_resolver("join_path", _join_path)
+OmegaConf.register_new_resolver("mkdir", _mkdir)
 OmegaConf.register_new_resolver("dirname", os.path.dirname)
-OmegaConf.register_new_resolver("check_path", check_path)
+OmegaConf.register_new_resolver("basename", os.path.basename)
+OmegaConf.register_new_resolver("check_path", _check_path)
 OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
@@ -288,6 +297,9 @@ class _Keys(str, Enum):
     VERBOSE = "verbose"
     FILE = "file"
     SUFFIX = "suffix"
+    MODEL = "model"
+    LOG = "log"
+    PRED = "pred"
 
 
 def _methods(cfg: Any, obj: object):
@@ -1026,6 +1038,14 @@ class eKonf:
     @staticmethod
     def exists(a, *p):
         return _exists(a, *p)
+
+    @staticmethod
+    def mkdir(_path: str):
+        return _mkdir(_path)
+
+    @staticmethod
+    def join_path(a, *p):
+        return _join_path(a, *p)
 
     @staticmethod
     def apply(

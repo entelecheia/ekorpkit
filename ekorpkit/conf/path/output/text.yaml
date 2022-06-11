@@ -3,4 +3,4 @@ filename: ${.file}
 base_dir: ${..output_dir}
 filetype: .txt
 suffix: ${..suffix}
-filepath: ${join_paths:${.base_dir},${.filename}}
+filepath: ${join_path:${.base_dir},${.filename}}

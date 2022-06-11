@@ -24,16 +24,12 @@ class AutoML:
         self._dataset_cfg = args.get(eKonf.Keys.DATASET, None)
         self._to_predict = args["to_predict"]
         self._method_ = self.args.get("_method_")
-        self._output_dir = args["output_dir"]
-        self._model_file = os.path.join(self._output_dir, args["model_file"])
-        self._log_file = args["log_file"]
-        self._pred_output_file = args["pred_output_file"]
+        self._keys = args[eKonf.Keys.KEYS]
 
-        os.makedirs(self._output_dir, exist_ok=True)
-
-        self._X_key = "X"
-        self._y_pred_key = "y_preds"
-        self._y_prob_key = "y_probs"
+        self._path = self.args.path
+        self._model_file = self._path[eKonf.Keys.MODEL].filepath
+        self._log_file = self._path[eKonf.Keys.LOG].filepath
+        self._pred_file = self._path[eKonf.Keys.PRED].filepath
 
         self._automl = AutoML()
         self._dataset = None
@@ -118,10 +114,10 @@ class AutoML:
         y_preds = self._automl.predict(X)
         y_probs = self._automl.predict_proba(X)
         y_probs = y_probs.flatten().tolist()
-        return {self._y_pred_key: y_preds, self._y_prob_key: y_probs}
+        return {self._keys._y_preds: y_preds, self._keys.y_probs: y_probs}
 
     def convert_to_X(self, data):
-        X_cols = self._to_predict[self._X_key]
+        X_cols = self._to_predict[self._keys.X]
         if X_cols is None:
             X_cols = list(data.columns)
         X = data[X_cols].values
@@ -130,10 +126,10 @@ class AutoML:
         return X
 
     def append_predictions(self, data, preds):
-        y_pred_column = self._to_predict[self._y_pred_key]
-        y_prob_column = self._to_predict[self._y_prob_key]
-        data[y_pred_column] = preds[self._y_pred_key]
-        data[y_prob_column] = preds[self._y_prob_key]
+        y_pred_column = self._to_predict[self._keys.y_preds]
+        y_prob_column = self._to_predict[self._keys.y_probs]
+        data[y_pred_column] = preds[self._keys.y_preds]
+        data[y_prob_column] = preds[self._keys.y_probs]
         return data
 
     def predict(self, data, _to_predict={}):
@@ -156,7 +152,7 @@ class AutoML:
 
         y_preds, y_probs = self._predict(self._X_test.values())
         self._pred_data = self.append_predictions(self._X_test, y_preds)
-        pred_filepath = os.path.join(self._output_dir, self._pred_output_file)
+        pred_filepath = os.path.join(self._output_dir, self._pred_file)
         eKonf.save_data(self._pred_data, pred_filepath)
         if self.verbose:
             print(self._pred_data.head())

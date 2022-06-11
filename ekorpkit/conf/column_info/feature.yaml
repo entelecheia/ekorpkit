@@ -1,5 +1,6 @@
 defaults:
   - /_keys_: feature
+  - datetime: default
 
 _target_: ekorpkit.info.feature.FeatureInfo
 columns:
@@ -8,7 +9,3 @@ columns:
   x:
   y:
 data:
-datetime:
-  columns:
-  format:
-  _parms_:

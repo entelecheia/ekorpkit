@@ -6,7 +6,7 @@ name: glove
 corpus:
 model_dir:
 model_file:
-model_path: ${join_paths:${.model_dir},${.model_file}}
+model_path: ${join_path:${.model_dir},${.model_file}}
 model_type:
 model_name:
 verbose: ${oc.select:..verbose,false}

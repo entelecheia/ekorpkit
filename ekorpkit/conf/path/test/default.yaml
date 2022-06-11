@@ -2,6 +2,6 @@ filename: ${..name}-test${.filetype}
 base_dir: ${..data_dir}
 filetype: ${..filetype}
 suffix:
-filepath: ${join_paths:${.base_dir},${.filename}}
+filepath: ${join_path:${.base_dir},${.filename}}
 columns: ${..columns}
 verbose: ${oc.select:..verbose,false}
