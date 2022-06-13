@@ -79,7 +79,7 @@ class Dataset(BaseSet):
         return self.splits[self.SPLITS.DEV]
 
     @property
-    def test_test(self):
+    def test_data(self):
         if self.SPLITS.TEST not in self.splits:
             return None
         return self.splits[self.SPLITS.TEST]
@@ -90,14 +90,17 @@ class Dataset(BaseSet):
         for split, data_file in self.data_files.items():
             data_file = os.path.join(self.data_dir, data_file)
             if eKonf.exists(data_file):
-                df = eKonf.load_data(data_file, dtype=self.DATATYPEs)
+                df = eKonf.load_data(
+                    data_file, dtype=self.DATATYPEs, verbose=self.verbose
+                )
                 df = self.COLUMN.init_info(df)
                 df = self.COLUMN.append_split(df, split)
                 if self._pipeline_ and len(self._pipeline_) > 0:
                     df = apply_pipeline(df, self._pipeline_, self._pipeline_cfg)
                 self._splits[split] = df
             else:
-                log.info(f"Dataset {self.name} split {split} is empty")
+                log.warning(f"File {data_file} not found.")
+                # log.info(f"Dataset {self.name} split {split} is empty")
         self._loaded = True
 
     def build(self):

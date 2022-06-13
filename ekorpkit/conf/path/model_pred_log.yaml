@@ -10,4 +10,4 @@ model_file: ${oc.select:..model_file, null}
 log_dir: ${oc.select:..output_dir, ${.root}}
 log_file: ${oc.select:..log_file, null}
 pred_dir: ${oc.select:..output_dir, ${.root}}
-pred_file: ${oc.select:..log_file, null}
+pred_file: ${oc.select:..pred_file, null}

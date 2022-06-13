@@ -1,57 +1,48 @@
 defaults:
-  - _build
-  - /io/fetcher: hfds
+  - _build_classification
+  # - /io/fetcher: hfds
 
 name: financial_phrasebank
 domain: econ
-task: classification
 lang: en
-column_info: 
-  columns:
-    id: id
-    text: text
-  data:
-    id: int
-    labels: str
-    text: str
 
 io:
-  data_sources: 
+  data_sources:
     train: train.csv
     test: test.csv
     dev: dev.csv
-  fetcher:
-    output_file: financial_phrasebank.csv
-    subsets: sentences_allagree
-    splits: train
-    pipeline:
-      _pipeline_:
-        - load_dataframe
-        - rename_columns
-        - drop_duplicates
-        - reset_index
-        - replace
-        - split_sampling
-      rename_columns:
-        new_names:
-          sentence: text
-          label: labels
-      replace:
-        apply_to: labels
-        parameters:
-          to_replace:
-            0: negative
-            1: neutral
-            2: positive
-      split_sampling:
-        stratify_on: labels
-        dev_size: 0.2
-        test_size: 0.2
-        unique_key: id
-        output_dir: ${..data_dir}
-        train_file: train.csv
-        test_file: test.csv
-        dev_file: dev.csv
+  # fetcher:
+  #   output_file: financial_phrasebank.csv
+  #   subsets: sentences_allagree
+  #   splits: train
+  #   pipeline:
+  #     _pipeline_:
+  #       - load_dataframe
+  #       - rename_columns
+  #       - drop_duplicates
+  #       - reset_index
+  #       - replace
+  #       - split_sampling
+  #     rename_columns:
+  #       new_names:
+  #         sentence: text
+  #         label: labels
+  #     replace:
+  #       apply_to: labels
+  #       parameters:
+  #         to_replace:
+  #           0: negative
+  #           1: neutral
+  #           2: positive
+  #     split_sampling:
+  #       stratify_on: labels
+  #       dev_size: 0.2
+  #       test_size: 0.2
+  #       unique_key: id
+  #       output_dir: ${..data_dir}
+  #       train_file: train.csv
+  #       test_file: test.csv
+  #       dev_file: dev.csv
 
 pipeline:
   _transform_:

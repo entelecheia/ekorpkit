@@ -6,7 +6,7 @@ from ekorpkit import eKonf
 def test_setiment_lexicon():
     ngram_cfg = eKonf.compose(config_group="model/ngram=mpko_lex")
     ngram_cfg.verbose = True
-    ngram_cfg.autoload = True
+    ngram_cfg.auto.load = True
     ngram = eKonf.instantiate(ngram_cfg)
 
     sentence = "투기를 억제하기 위해 금리를 인상해야 한다."
@@ -15,7 +15,7 @@ def test_setiment_lexicon():
 
     ngram_cfg = eKonf.compose(config_group="model/ngram=lm")
     ngram_cfg.verbose = True
-    ngram_cfg.autoload = True
+    ngram_cfg.auto.load = True
     ngram = eKonf.instantiate(ngram_cfg)
 
     sentence = "Beyond the improved voice capabilities, customers now have a streamlined way to comply with recalls and other traceability requirements, providing them with a competitive advantage."
@@ -69,7 +69,7 @@ def test_eval_fomc_sentiments():
         "https://github.com/entelecheia/ekorpkit-book/raw/main/data/fomc.zip"
     )
     cfg.data_dir = cfg.path.cached_path
-    cfg.automerge = True
+    cfg.auto.merge = True
     fomc = eKonf.instantiate(cfg)
 
     fomc_statements = fomc.data[fomc.data.content_type == "fomc_statement"]

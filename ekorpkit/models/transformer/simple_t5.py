@@ -14,30 +14,17 @@ class SimpleT5(SimpleTrainer):
     def __init__(self, **args):
         super().__init__(**args)
 
-    def load_datasets(self):
-        super().load_datasets()
-        cols = self.train_data.columns
-        renames = {
-            name: key for key, name in self._train_.items() if name and name in cols
-        }
-        if renames:
-            self.train_data.rename(columns=renames, inplace=True)
-            if self.eval_data is not None:
-                self.eval_data.rename(columns=renames, inplace=True)
-            if self.test_data is not None:
-                self.test_data.rename(columns=renames, inplace=True)
-        task_prefix = self._train_.get(self._keys_.task_prefix)
+    def convert_to_train(self):
+        train_data, dev_data, test_data = super().convert_to_train()
         prefix_col = self._train_[self._keys_.prefix]
-        if prefix_col is None:
-            prefix_col = self._keys_.prefix
-            self.train_data[prefix_col] = task_prefix
-            if self.eval_data is not None:
-                self.eval_data[prefix_col] = task_prefix
-            if self.test_data is not None:
-                self.test_data[prefix_col] = task_prefix
-        if self.verbose:
-            print("Train data for T5:")
-            print(self.train_data.head())
+        task_prefix = self.args.task_prefix._train_
+        if task_prefix is not None:
+            train_data[prefix_col] = task_prefix
+            if dev_data is not None:
+                dev_data[prefix_col] = task_prefix
+            if test_data is not None:
+                test_data[prefix_col] = task_prefix
+        return train_data, dev_data, test_data
 
     def train(self):
         from simpletransformers.t5 import T5Model
@@ -46,7 +33,9 @@ class SimpleT5(SimpleTrainer):
 
         if not self.splits:
             self.load_datasets()
-
+        train_data, dev_data, test_data = self.convert_to_train()
+        if self.verbose:
+            print(train_data.head())
         # Create a Model
         model = T5Model(
             args.model_type,
@@ -57,12 +46,12 @@ class SimpleT5(SimpleTrainer):
 
         # Train the model
         model.train_model(
-            self.train_data,
-            eval_data=self.eval_data,
+            train_data,
+            eval_data=dev_data,
         )
 
         # # Evaluate the model
-        result = model.eval_model(self.test_data)
+        result = model.eval_model(test_data)
         print(result)
 
         # # Check predictions
@@ -90,9 +79,8 @@ class SimpleT5(SimpleTrainer):
     def convert_to_predict(self, data):
         input_col = self._predict_[self._keys_.input]
         prefix_col = self._predict_[self._keys_.prefix]
-        task_prefix = self._predict_[self._keys_.task_prefix]
-        if prefix_col is None:
-            prefix_col = self._keys_.prefix
+        task_prefix = self.args.task_prefix._predict_
+        if task_prefix is not None:
             data[prefix_col] = task_prefix
 
         data_to_predict = [

@@ -6,7 +6,7 @@ from ekorpkit import eKonf
 @pytest.mark.skip(reason="data source not available")
 def test_build_financial_phrasebank():
     cfg = eKonf.compose(config_group="dataset/simple=financial_phrasebank")
-    cfg["data_dir"] = "./data/tmp/financial_phrasebank"
+    cfg.data_dir = "./data/tmp/financial_phrasebank"
     cfg.io.data_dir = cfg.data_dir
     cfg.io.overwrite = True
     cfg.io.calculate_stats = True

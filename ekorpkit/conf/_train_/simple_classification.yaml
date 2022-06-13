@@ -1,2 +1,2 @@
-labels: labels
-text: text
+labels: ${..columns.labels}
+text: ${..columns.text}

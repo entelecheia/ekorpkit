@@ -629,12 +629,11 @@ def predict(df, args):
     use_batcher = args.get("use_batcher", True)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
-        if verbose:
-            log.warning("No columns specified")
+        log.warning("No columns specified")
         return df
-    columns = args["columns"]
+    data_columns = args["data_columns"]
 
-    to_predict = args.get("to_predict", None)
+    _predict_ = args.get("_predict_", None)
     model = args.get("model", None)
     if model is None:
         log.warning("No model specified")
@@ -660,20 +659,19 @@ def predict(df, args):
                 num_workers=num_workers,
             )
             pred_df = pd.DataFrame(predictions.tolist(), index=predictions.index)
-            if columns:
-                columns += pred_df.columns.tolist()
-                args["columns"] = columns
+            if data_columns:
+                data_columns += pred_df.columns.tolist()
             df = df.join(pred_df)
             log.info(" >> elapsed time to predict: {}".format(elapsed()))
     else:
-        df = model.predict(df, to_predict)
-        if columns:
-            columns.append(model._to_predict["predicted"])
-            args["columns"] = columns
+        df = model.predict(df, _predict_)
+        if data_columns:
+            data_columns.append(model._predict_["predicted"])
 
-    # TODO: take care of suffix argument 
     _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
-    _path[eKonf.Keys.SUFFIX] = args.get(eKonf.Keys.SUFFIX)
+    _path[eKonf.Keys.SUFFIX.value] = args.get(eKonf.Keys.SUFFIX)
+    _path["columns"] = data_columns
+    log.info(f"Saving predictions to: {_path}")
     eKonf.save_data(df, **_path)
 
     return df

@@ -40,7 +40,7 @@ def test_corpus_task():
     corpus_cfg = eKonf.compose(config_group="corpus")
     corpus_cfg.verbose = True
     corpus_cfg.name = "bok_minutes"
-    corpus_cfg.automerge = True
+    corpus_cfg.auto.merge = True
     corpus_cfg.data_dir = "./data/tmp"
 
     cfg = eKonf.compose(config_group="pipeline")
@@ -59,7 +59,7 @@ def test_corpora_task():
     corpus_cfg = eKonf.compose(config_group="corpus=corpora")
     corpus_cfg.verbose = True
     corpus_cfg.name = ["bok_minutes", "fomc_minutes"]
-    corpus_cfg.automerge = True
+    corpus_cfg.auto.merge = True
     corpus_cfg.data_dir = "./data/tmp"
 
     cfg = eKonf.compose(config_group="pipeline")

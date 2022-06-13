@@ -1,4 +1,3 @@
-prefix:
-task_prefix: classification
-input_text: text
-target_text: labels
+prefix: ${..columns.prefix}
+input_text: ${..columns.input_text}
+target_text: ${..columns.target_text}

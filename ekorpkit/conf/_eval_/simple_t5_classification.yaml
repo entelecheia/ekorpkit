@@ -1,3 +1,2 @@
-actual: target_text
-predicted: pred_labels
-labels: ${oc.select:..labels, null}
+actual: ${..columns.actual}
+predicted: ${..columns.predicted}

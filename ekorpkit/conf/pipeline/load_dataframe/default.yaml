@@ -5,7 +5,8 @@ filepath:
 filetype:
 data_dir: ${oc.select:..data_dir, ''}
 data_file: ${oc.select:..data_file, ''}
-columns:
+path:
+  columns:
 concatenate: true
 dtype:
 parse_dates:
