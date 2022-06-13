@@ -1,0 +1,15 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.models.transformer.SimpleNER
+model_class: ner
+reprocess_input_data: True
+overwrite_output_dir: True
+sliding_window: True
+max_seq_length: 64
+num_train_epochs: 10
+train_batch_size: 32
+fp16: True
+evaluate_during_training: True
+labels:
+cuda_device: 0

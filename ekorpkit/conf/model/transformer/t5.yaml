@@ -1,0 +1,24 @@
+defaults:
+  - _default
+  - config: t5
+
+_target_: ekorpkit.models.transformer.SimpleT5
+model_class: mixed
+cuda_device: 0
+to_train:
+  labels: labels
+  text: text
+to_predict:
+  prefix:
+  input: input_text
+  target: target_text
+  predicted: pred_text
+  task_prefix:
+    bc2gm_ner: ner
+    bc4chemd_ner: ner
+    bc5cdr_chem_ner: ner
+    bc5cdr_disease_ner: ner
+    jnlpba_ner: ner
+    linnaeus_ner: ner
+    ncbi_disease_ner: ner
+    s800_ner: ner

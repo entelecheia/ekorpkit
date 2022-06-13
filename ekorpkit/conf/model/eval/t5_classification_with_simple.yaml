@@ -1,0 +1,4 @@
+defaults:
+  - classification
+  - override /_eval_: simple_t5_classification
+  - override /columns: model_simple_t5_with_simple
