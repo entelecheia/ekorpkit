@@ -1,7 +1,6 @@
 defaults:
   - feature
   - /pipeline: _build_feature
-  - /info: _build_feature
 
 auto:
   build: true

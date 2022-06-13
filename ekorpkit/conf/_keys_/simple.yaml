@@ -1,6 +1,4 @@
-index: index
 id: id
-x: x
-y: "y"
+text: text
 split: split
 dataset: dataset

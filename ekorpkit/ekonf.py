@@ -51,6 +51,16 @@ def _exists(a, *p):
     return os.path.exists(_path)
 
 
+def _is_file(a, *p):
+    _path = os.path.join(a, *p)
+    return Path(_path).is_file()
+
+
+def _is_dir(a, *p):
+    _path = os.path.join(a, *p)
+    return Path(_path).is_dir()
+
+
 def _join_path(a, *p):
     if p and p[0] is not None:
         return os.path.join(a, *p)
@@ -300,6 +310,9 @@ class _Keys(str, Enum):
     MODEL = "model"
     LOG = "log"
     PRED = "pred"
+    EVAL = "_eval_"
+    TRAIN = "_train_"
+    PREDICT = "_predict_"
 
 
 def _methods(cfg: Any, obj: object):
@@ -1038,6 +1051,14 @@ class eKonf:
     @staticmethod
     def exists(a, *p):
         return _exists(a, *p)
+
+    @staticmethod
+    def is_file(a, *p):
+        return _is_file(a, *p)
+
+    @staticmethod
+    def is_dir(a, *p):
+        return _is_dir(a, *p)
 
     @staticmethod
     def mkdir(_path: str):

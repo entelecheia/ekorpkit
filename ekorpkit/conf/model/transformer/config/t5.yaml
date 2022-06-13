@@ -1,6 +1,6 @@
-output_dir: ${..output_dir}
-best_model_dir: ${..best_model_dir}
-cache_dir: ${..cache_dir}
+output_dir: ${..model_dir}
+best_model_dir: ${.output_dir}/best_model
+cache_dir: ${dir.cache}/models
 max_seq_length: 256
 train_batch_size: 32
 eval_batch_size: 64

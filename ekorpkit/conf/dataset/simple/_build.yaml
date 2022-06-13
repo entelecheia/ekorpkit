@@ -1,4 +1,5 @@
 defaults:
+  - /column_info: _build_simple
   - /io: _build_simple
   - /info: _build_dataset
   - /pipeline: _build_dataset

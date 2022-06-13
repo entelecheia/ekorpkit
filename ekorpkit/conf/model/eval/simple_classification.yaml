@@ -1,0 +1,3 @@
+defaults:
+  - classification
+  - /_eval_: simple_classification

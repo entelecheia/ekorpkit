@@ -1,0 +1,4 @@
+defaults:
+  - _build_simple
+
+_target_: ekorpkit.info.column.DatasetInfo

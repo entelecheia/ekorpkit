@@ -1,0 +1,5 @@
+defaults:
+  - simple_classification
+
+prefix: prefix
+task_prefix: task_prefix

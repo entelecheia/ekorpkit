@@ -1,0 +1,6 @@
+defaults:
+  - dataset_simple_classification
+  
+input: text
+predicted: pred_labels
+model_outputs: raw_preds

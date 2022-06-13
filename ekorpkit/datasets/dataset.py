@@ -2,98 +2,87 @@ import os
 import logging
 from ekorpkit import eKonf
 from ekorpkit.pipelines.pipe import apply_pipeline
+from ekorpkit.corpora.corpus import BaseSet
 
 
 log = logging.getLogger(__name__)
 
 
-class Dataset:
+class Dataset(BaseSet):
     """Dataset class."""
 
     SPLITS = eKonf.SPLITS
 
     def __init__(self, **args):
-        self.args = eKonf.to_dict(args)
-        self.name = self.args["name"]
+        super().__init__(**args)
         if isinstance(self.name, list):
             self.name = self.name[0]
-        self.verbose = self.args.get("verbose", False)
-        self.autoload = self.args.get("autoload", False)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
-
-        self.data_dir = self.args["data_dir"]
         if use_name_as_subdir:
             self.data_dir = os.path.join(self.data_dir, self.name)
-        self.info_file = os.path.join(self.data_dir, f"info-{self.name}.yaml")
-        self._info = eKonf.load(self.info_file) if eKonf.exists(self.info_file) else {}
-        if self._info:
-            log.info(f"Loaded info file: {self.info_file}")
-            self.args = eKonf.to_dict(eKonf.merge(self.args, self._info))
-            self._info = eKonf.to_dict(self._info)
 
-        if self.verbose:
-            print(f"Intantiating a dataset {self.name} with a config:")
-            eKonf.print(self.args)
+        self.load_info()
+        self.load_column_info()
 
-        self.filetype = self.args.get("filetype", "parquet").replace(".", "")
-        self.data_files = self.args.get("data_files", None)
         if self.data_files is None:
             self.data_files = {
-                self.SPLITS.TRAIN.value: f"{self.name}-train.{self.filetype}",
-                self.SPLITS.DEV.value: f"{self.name}-dev.{self.filetype}",
-                self.SPLITS.TEST.value: f"{self.name}-test.{self.filetype}",
+                self.SPLITS.TRAIN.value: f"{self.name}-train{self.filetype}",
+                self.SPLITS.DEV.value: f"{self.name}-dev{self.filetype}",
+                self.SPLITS.TEST.value: f"{self.name}-test{self.filetype}",
             }
-
-        self.description = self.args.get("description", "")
-        self.license = self.args.get("license", "")
-        self._column_info = self.args.get("column_info")
-        if self._column_info is None:
-            raise ValueError("Column info can't be None")
-
-        self._column = eKonf.instantiate(self._column_info)
 
         self._pipeline_cfg = self.args.get("pipeline", {})
         self._pipeline_ = self._pipeline_cfg.get(eKonf.Keys.PIPELINE, [])
         if self._pipeline_ is None:
             self._pipeline_ = []
 
-        self.splits = {}
-        self._loaded = False
+        self._splits = {}
+        self.force = self.args.force
 
-        if self.autoload:
+        if self.auto.build:
+            if self.force.rebuild or not eKonf.exists(
+                self.data_dir, self.data_files[self.SPLITS.TRAIN]
+            ):
+                self.build()
+        if self.auto.load:
             self.load()
 
-    def __str__(self):
-        classname = self.__class__.__name__
-        s = f"{classname} : {self.name}"
-        return s
+    @property
+    def splits(self):
+        return self._splits
 
     def __getitem__(self, split):
-        return self.splits[split]
+        if split in self.splits:
+            return self.splits[split]
+        else:
+            return None
 
     @property
-    def INFO(self):
-        return self._info
+    def data(self):
+        dfs = []
+        for split, _data in self.splits.items():
+            if _data is not None:
+                dfs.append(_data)
+        df = eKonf.concat_data(dfs)
+        return df
 
     @property
-    def COLUMN(self):
-        return self._column
+    def train_data(self):
+        if self.SPLITS.TRAIN not in self.splits:
+            return None
+        return self.splits[self.SPLITS.TRAIN]
 
     @property
-    def ID(self):
-        return self.COLUMN.ID
+    def dev_data(self):
+        if self.SPLITS.DEV not in self.splits:
+            return None
+        return self.splits[self.SPLITS.DEV]
 
     @property
-    def IDs(self):
-        return self.COLUMN.IDs
-
-    @property
-    def DATA(self):
-        return self.COLUMN.DATA
-
-    @property
-    def DATATYPEs(self):
-        return self.COLUMN.DATATYPEs
+    def test_test(self):
+        if self.SPLITS.TEST not in self.splits:
+            return None
+        return self.splits[self.SPLITS.TEST]
 
     def load(self):
         if self._loaded:
@@ -102,10 +91,17 @@ class Dataset:
             data_file = os.path.join(self.data_dir, data_file)
             if eKonf.exists(data_file):
                 df = eKonf.load_data(data_file, dtype=self.DATATYPEs)
+                df = self.COLUMN.init_info(df)
                 df = self.COLUMN.append_split(df, split)
                 if self._pipeline_ and len(self._pipeline_) > 0:
                     df = apply_pipeline(df, self._pipeline_, self._pipeline_cfg)
-                self.splits[split] = df
+                self._splits[split] = df
             else:
                 log.info(f"Dataset {self.name} split {split} is empty")
         self._loaded = True
+
+    def build(self):
+        pass
+
+    def persist(self):
+        pass

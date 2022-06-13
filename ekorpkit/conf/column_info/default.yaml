@@ -1,4 +1,4 @@
 defaults:
-  - _build
+  - _build_corpus
 
 _target_: ekorpkit.info.column.ColumnInfo

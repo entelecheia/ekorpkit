@@ -1,77 +1,58 @@
 import os
 import logging
 import pandas as pd
+from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
 
 
-DESCRIPTION = "Corpus for Language Models"
-LICENSE = "Copyright of the corpus is owned by the authors."
+DESCRIPTION = "ekorpkit datasets"
+LICENSE = "Copyright of the dataset is owned by the authors."
 
 
 log = logging.getLogger(__name__)
 
 
-class Corpus:
+class BaseSet:
+    __metaclass__ = ABCMeta
+
     def __init__(self, **args):
         args = eKonf.to_config(args)
         self.args = args
         self.name = self.args.name
-        if isinstance(self.name, list):
-            self.name = self.name[0]
         self.verbose = self.args.get("verbose", False)
         self.auto = self.args.auto
-
-        use_name_as_subdir = args.get("use_name_as_subdir", True)
-
         self.data_dir = self.args["data_dir"]
-        if use_name_as_subdir:
-            self.data_dir = os.path.join(self.data_dir, self.name)
-        self.metadata_dir = self.args.get("metadata_dir", None)
-        if self.metadata_dir is None:
-            self.metadata_dir = self.data_dir
-        else:
-            if use_name_as_subdir:
-                self.metadata_dir = os.path.join(self.metadata_dir, self.name)
+        self.filetype = self.args.get("filetype") or "parquet"
+        self.filetype = "." + self.filetype.replace(".", "")
+        self.data_files = self.args.get("data_files", None)
+
+        self._info = None
+        self._column = None
+        self._data = None
+        self._loaded = False
+
+    def load_info(self):
+        """Load the info file."""
         self.info_file = os.path.join(self.data_dir, f"info-{self.name}.yaml")
         self._info = eKonf.load(self.info_file) if eKonf.exists(self.info_file) else {}
         if self._info:
             log.info(f"Loaded info file: {self.info_file}")
-            self.args = eKonf.to_dict(eKonf.update(self.args, self._info))
+            self.args = eKonf.merge(self.args, self._info)
             self._info = eKonf.to_dict(self._info)
-
-        if self.verbose:
-            log.info(f"Intantiating a corpus {self.name} with a config:")
-            eKonf.pprint(self.args)
-
-        self.filetype = self.args.get("filetype", "parquet")
-        self.data_files = self.args.get("data_files", None)
-        self.meta_files = self.args.get("meta_files", None)
-        if self.data_files is None:
-            self.data_files = {
-                "train": f"{self.name}*{self.filetype}*",
-            }
-
-        self._collapse_ids = self.args.get("collapse_ids", False)
+        self.filetype = "." + self.filetype.replace(".", "")
         self.description = self.args.get("description", DESCRIPTION)
         self.license = self.args.get("license", LICENSE)
-        self.split_info = self.args.get("splits", None)
-        self._column_info = self.args.get("column_info", None)
+        if self.verbose:
+            log.info(
+                f"Intantiating a {self.__class__.__name__} [{self.name}] with a config:"
+            )
+            eKonf.pprint(self.args)
+
+    def load_column_info(self):
+        self._column_info = self.args.get("column_info")
         if self._column_info is None:
             raise ValueError("Column info can't be None")
-
         self._column = eKonf.instantiate(self._column_info)
-
-        self._data = None
-        self._metadata = None
-        self._metadata_merged = False
-        self._loaded = False
-
-        if self.auto.load:
-            self.load()
-            self.load_metadata()
-            self.load_timestamp()
-            if self.auto.merge:
-                self.merge_metadata()
 
     def __str__(self):
         classname = self.__class__.__name__
@@ -95,12 +76,57 @@ class Corpus:
         return self.COLUMN.IDs
 
     @property
-    def TEXT(self):
-        return self.COLUMN.TEXT
+    def IDs(self):
+        return self.COLUMN.IDs
 
     @property
     def DATA(self):
         return self.COLUMN.DATA
+
+    @property
+    def DATATYPEs(self):
+        return self.COLUMN.DATATYPEs
+
+
+class Corpus(BaseSet):
+    def __init__(self, **args):
+        super().__init__(**args)
+        if isinstance(self.name, list):
+            self.name = self.name[0]
+        use_name_as_subdir = args.get("use_name_as_subdir", True)
+        if use_name_as_subdir:
+            self.data_dir = os.path.join(self.data_dir, self.name)
+        self.metadata_dir = self.args.get("metadata_dir", None)
+        if self.metadata_dir is None:
+            self.metadata_dir = self.data_dir
+        else:
+            if use_name_as_subdir:
+                self.metadata_dir = os.path.join(self.metadata_dir, self.name)
+
+        self.load_info()
+        self.load_column_info()
+
+        self.meta_files = self.args.get("meta_files", None)
+        if self.data_files is None:
+            self.data_files = {
+                "train": f"{self.name}*{self.filetype}*",
+            }
+
+        self._collapse_ids = self.args.get("collapse_ids", False)
+
+        self._metadata = None
+        self._metadata_merged = False
+
+        if self.auto.load:
+            self.load()
+            self.load_metadata()
+            self.load_timestamp()
+            if self.auto.merge:
+                self.merge_metadata()
+
+    @property
+    def TEXT(self):
+        return self.COLUMN.TEXT
 
     @property
     def METADATA(self):

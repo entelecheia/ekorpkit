@@ -18,7 +18,7 @@ class SimpleT5(SimpleTrainer):
         super().load_datasets()
         cols = self.train_data.columns
         renames = {
-            name: key for key, name in self._to_train.items() if name and name in cols
+            name: key for key, name in self._train_.items() if name and name in cols
         }
         if renames:
             self.train_data.rename(columns=renames, inplace=True)
@@ -26,13 +26,15 @@ class SimpleT5(SimpleTrainer):
                 self.eval_data.rename(columns=renames, inplace=True)
             if self.test_data is not None:
                 self.test_data.rename(columns=renames, inplace=True)
-        task_prefix = self._to_train.get("task_prefix")
-        if self._to_train["prefix"] is None:
-            self.train_data["prefix"] = task_prefix
+        task_prefix = self._train_.get(self._keys_.task_prefix)
+        prefix_col = self._train_[self._keys_.prefix]
+        if prefix_col is None:
+            prefix_col = self._keys_.prefix
+            self.train_data[prefix_col] = task_prefix
             if self.eval_data is not None:
-                self.eval_data["prefix"] = task_prefix
+                self.eval_data[prefix_col] = task_prefix
             if self.test_data is not None:
-                self.test_data["prefix"] = task_prefix
+                self.test_data[prefix_col] = task_prefix
         if self.verbose:
             print("Train data for T5:")
             print(self.train_data.head())
@@ -47,9 +49,9 @@ class SimpleT5(SimpleTrainer):
 
         # Create a Model
         model = T5Model(
-            args["model_type"],
-            args["model_uri"],
-            cuda_device=args["cuda_device"],
+            args.model_type,
+            args.model_uri,
+            cuda_device=args.cuda_device,
             args=self._model_cfg,
         )
 
@@ -71,40 +73,44 @@ class SimpleT5(SimpleTrainer):
         from simpletransformers.t5 import T5Model
 
         if model_dir is None:
-            model_dir = self.args["best_model_dir"]
+            model_dir = self.args.config.best_model_dir
         if pred_args is not None:
             self._model_cfg.update(pred_args)
 
-        self.model = T5Model(self.args["model_type"], model_dir, args=self._model_cfg)
+        self.model = T5Model(self.args.model_type, model_dir, args=self._model_cfg)
         log.info(f"Loaded model from {model_dir}")
 
-    def _predict(self, to_predict: list):
+    def _predict(self, data: list):
         if self.model is None:
             self.load_model()
 
-        preds = self.model.predict(to_predict)
+        preds = self.model.predict(data)
         return preds
 
-    def convert_to_predict(self, df):
-        input_key = self._to_predict["input"]
-        task_prefix = self._to_predict["task_prefix"]
-        if self._to_predict["prefix"] is None:
-            df["prefix"] = task_prefix
+    def convert_to_predict(self, data):
+        input_col = self._predict_[self._keys_.input]
+        prefix_col = self._predict_[self._keys_.prefix]
+        task_prefix = self._predict_[self._keys_.task_prefix]
+        if prefix_col is None:
+            prefix_col = self._keys_.prefix
+            data[prefix_col] = task_prefix
 
-        to_predict = [
+        data_to_predict = [
             prefix + ": " + str(input_text)
-            for prefix, input_text in zip(df["prefix"].tolist(), df[input_key].tolist())
+            for prefix, input_text in zip(
+                data[prefix_col].tolist(), data[input_col].tolist()
+            )
         ]
 
         if self.verbose:
-            print(to_predict[:5])
-        return to_predict
+            print(data_to_predict[:5])
+        return data_to_predict
 
     def append_predictions(self, df, preds):
-        predicted_key = self._to_predict["predicted"]
-        if self._model_cfg["num_return_sequences"] > 1:
+        predicted_col = self._predict_[self._keys_.predicted]
+        if self.args.config.num_return_sequences > 1:
             preds = [pred[0] for pred in preds]
-        df[predicted_key] = preds
+        df[predicted_col] = preds
         return df
 
 

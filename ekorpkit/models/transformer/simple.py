@@ -12,28 +12,20 @@ class SimpleTrainer:
     __metaclass__ = ABCMeta
 
     def __init__(self, **args):
-        args = eKonf.to_dict(args)
+        args = eKonf.to_config(args)
         self.args = args
-        self.name = args["name"]
-        self.verbose = args.get("verbose", True)
-        self._model_cfg = args["config"]
-        self._model_eval = args.get("model", {}).get("eval")
-        self._dataset = args.get(eKonf.Keys.DATASET, None)
-        self._to_predict = args["to_predict"]
-        self._to_train = args["to_train"]
-        self._method_ = self.args.get("_method_")
-        self._pred_output_dir = args["pred_output_dir"]
-        self._pred_output_file = args["pred_output_file"]
+        self.name = args.name
+        self.verbose = args.get("verbose", False)
+        self._model_cfg = eKonf.to_dict(args.config)
+        self._dataset = args.get(eKonf.Keys.DATASET)
+        self._train_ = args[eKonf.Keys.TRAIN]
+        self._predict_ = args[eKonf.Keys.PREDICT]
+        self._eval_ = args.model.get(eKonf.Keys.EVAL)
+        self._method_ = self.args.get(eKonf.Keys.METHOD)
+        self._keys_ = args.get(eKonf.Keys.KEYS)
 
-        self._labels_key = self._to_train.get("labels")
-
-        self._predicted_key = "predicted"
-        self._model_outputs_key = "model_outputs"
-
-        os.makedirs(args["output_dir"], exist_ok=True)
-        os.makedirs(args["cache_dir"], exist_ok=True)
-        os.makedirs(args["pred_output_dir"], exist_ok=True)
-        os.makedirs(args["result_dir"], exist_ok=True)
+        self._path = self.args.path
+        self._pred_file = args.path.pred.filepath
 
         self.model = None
         self.dataset = None
@@ -49,7 +41,7 @@ class SimpleTrainer:
         raise NotImplementedError("Must override train")
 
     @abstractmethod
-    def _predict(self, to_predict: list):
+    def _predict(self, data: list):
         raise NotImplementedError("Must override predict")
 
     def load_datasets(self):
@@ -64,7 +56,7 @@ class SimpleTrainer:
             print("Train data:")
             print(self.train_data.info())
             print(self.train_data.tail())
-        if "dev" in self.splits:
+        if self.dataset.SPLITS.DEV in self.splits:
             self.eval_data = self.splits[self.dataset.SPLITS.DEV]
             self._model_cfg["evaluate_during_training"] = True
             if self.verbose:
@@ -80,23 +72,26 @@ class SimpleTrainer:
             print(self.test_data.info())
             print(self.test_data.tail())
 
-    def convert_to_predict(self, df):
-        input_key = self._to_predict["input"]
-        to_predict = df[input_key].tolist()
+    def convert_to_train(self):
+        return self.train_data, self.eval_data
+
+    def convert_to_predict(self, data):
+        input_col = self._predict_[self._keys_.input]
+        data_to_predict = data[input_col].tolist()
         if self.verbose:
-            print(to_predict[:5])
-        return to_predict
+            print(data_to_predict[:5])
+        return data_to_predict
 
     def append_predictions(self, df, preds):
-        predicted_column = self._to_predict[self._predicted_key]
-        model_outputs_column = self._to_predict[self._model_outputs_key]
-        df[predicted_column] = preds[self._predicted_key]
-        df[model_outputs_column] = preds[self._model_outputs_key]
+        predicted_column = self._predict_[self._keys_.predicted]
+        model_outputs_column = self._predict_[self._keys_.model_outputs]
+        df[predicted_column] = preds[self._keys_.predicted]
+        df[model_outputs_column] = preds[self._keys_.model_outputs]
         return df
 
     def predict(self, df, _to_predict={}):
         if _to_predict:
-            self._to_predict = _to_predict
+            self._predict_ = _to_predict
         to_predict = self.convert_to_predict(df)
         preds = self._predict(to_predict)
         df = self.append_predictions(df, preds)
@@ -110,15 +105,14 @@ class SimpleTrainer:
             log.warning("No test data found")
             return
 
-        to_predict = self.convert_to_predict(self.test_data)
-        preds = self._predict(to_predict)
+        data = self.convert_to_predict(self.test_data)
+        preds = self._predict(data)
         self.pred_data = self.append_predictions(self.test_data, preds)
-        pred_filepath = os.path.join(self._pred_output_dir, self._pred_output_file)
-        eKonf.save_data(self.pred_data, pred_filepath)
+        eKonf.save_data(self.pred_data, self._pred_file)
         if self.verbose:
             print(self.pred_data.head())
-        if self._model_eval:
-            eKonf.instantiate(self._model_eval, data=self.pred_data)
+        if self._eval_:
+            eKonf.instantiate(self._eval_, data=self.pred_data)
 
 
 class SimpleNER(SimpleTrainer):
@@ -130,7 +124,7 @@ class SimpleNER(SimpleTrainer):
 
         args = self.args
         if args.labels is None:
-            labels = list(self.train_data[self._labels_key].unique())
+            labels = list(self.train_data[self._keys_.labels].unique())
 
         # Create a NERModel
         model = NERModel(
@@ -191,7 +185,7 @@ class SimpleClassification(SimpleTrainer):
             self.load_datasets()
 
         self._model_cfg["labels_list"] = (
-            self.train_data[self._labels_key].unique().tolist()
+            self.train_data[self._keys_.labels].unique().tolist()
         )
         args["num_labels"] = len(self._model_cfg["labels_list"])
 
@@ -231,15 +225,15 @@ class SimpleClassification(SimpleTrainer):
         )
         log.info(f"Loaded model from {model_dir}")
 
-    def _predict(self, to_predict: list):
+    def _predict(self, data: list):
         if self.model is None:
             self.load_model()
 
-        predictions, raw_outputs = self.model.predict(to_predict)
+        predictions, raw_outputs = self.model.predict(data)
         log.info(f"type of raw_outputs: {type(raw_outputs)}")
-        raw_outputs= [output.flatten().tolist() for output in raw_outputs]
+        raw_outputs = [output.flatten().tolist() for output in raw_outputs]
         log.info(f"raw_output: {raw_outputs[0]}")
         return {
-            self._predicted_key: predictions,
-            self._model_outputs_key: raw_outputs,
+            self._keys_.predicted: predictions,
+            self._keys_.model_outputs: raw_outputs,
         }

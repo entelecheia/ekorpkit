@@ -1,0 +1,2 @@
+id: ${oc.select:.._keys_.id,id}
+text: ${oc.select:.._keys_.text,text}

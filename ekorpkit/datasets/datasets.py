@@ -4,43 +4,36 @@ import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from .dataset import Dataset
-
+from ekorpkit.corpora.corpus import BaseSet
 
 log = logging.getLogger(__name__)
 
 
-class Datasets:
+class Datasets(BaseSet):
 
     SPLITS = eKonf.SPLITS
 
     def __init__(self, **args):
-        args = eKonf.to_dict(args)
-        self.args = args
-        self.name = args["name"]
+        super().__init__(**args)
         self.datasets = args.get("datasets", None)
         if self.datasets is None:
             self.datasets = self.name
         if isinstance(self.datasets, str):
             self.datasets = {self.datasets: None}
-        elif isinstance(self.datasets, list):
+        elif eKonf.is_list(self.datasets):
             self.datasets = {name: None for name in self.datasets}
-        if self.name is None and isinstance(self.datasets, dict):
+        if self.name is None and eKonf.is_config(self.datasets):
             self.name = "-".join(self.datasets.keys())
+
         self._info = args.copy()
         self._info["name"] = self.name
         self._info["datasets"] = self.datasets
+        self._info_cfg = self.args.get("info", None)
 
-        self.verbose = args.get("verbose", False)
-        self.data_dir = args["data_dir"]
-        self.data_files = self.args.get("data_files", None)
-        self.filetype = self.args.get("filetype", "csv")
         self._method_ = self.args.get("_method_", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
-        self._info_cfg = self.args.get("info", None)
-
-        self._column_info = self.args.get("column_info", {})
-        self._column = eKonf.instantiate(self._column_info)
+        self.load_column_info()
 
         self.splits = None
         self._datasets_concatenated = False
@@ -84,26 +77,6 @@ class Datasets:
     def __len__(self):
         return len(self.datasets)
 
-    @property
-    def INFO(self):
-        return self._info
-
-    @property
-    def COLUMN(self):
-        return self._column
-
-    @property
-    def ID(self):
-        return self.COLUMN.ID
-
-    @property
-    def IDs(self):
-        return self.COLUMN.IDs
-
-    @property
-    def DATA(self):
-        return self.COLUMN.DATA
-
     def load(self):
         for _name in self.datasets:
             self.datasets[_name].load()
@@ -123,12 +96,15 @@ class Datasets:
             dfs = []
             for name in self.datasets:
                 df = self.datasets[name][split]
+                if df is None:
+                    continue
                 if common_columns:
                     df = df[common_columns].copy()
                 if append_dataset_name:
                     df = self.COLUMN.append_dataset(df, name)
                 dfs.append(df)
-            self.splits[split] = pd.concat(dfs, ignore_index=True)
+            if len(dfs) > 1:
+                self.splits[split] = pd.concat(dfs, ignore_index=True)
         if self.verbose:
             log.info(f"concatenated {len(self.datasets)} dataset(s)")
         self._datasets_concatenated = True
@@ -141,8 +117,7 @@ class Datasets:
             log.warning(f"datasets not concatenated yet, calling concatenate()")
             self.concatenate()
 
-        data_dir = f"{self.data_dir}/{self.name}"
-        os.makedirs(data_dir, exist_ok=True)
+        data_dir = os.path.join(self.data_dir, self.name)
 
         summary_info = None
         if self._info_cfg:
@@ -154,12 +129,11 @@ class Datasets:
             summary_info.load(self._info)
 
         for split, df in self.splits.items():
-            data_file = f"{self.name}-{split}.{self.filetype}"
-            data_path = f"{data_dir}/{data_file}"
+            if df is None:
+                continue
+            data_file = f"{self.name}-{split}{self.filetype}"
             df = self.COLUMN.reset_id(df)
-            eKonf.save_data(df, data_path)
-            if self.verbose:
-                log.info(f"saved {data_path}")
+            eKonf.save_data(df, data_file, data_dir)
             if summary_info:
                 stats = {"data_file": data_file}
                 summary_info.init_stats(split_name=split, stats=stats)

@@ -1,0 +1,4 @@
+prefix:
+input: input_text
+predicted: ${..model.eval._eval_.predicted}
+task_prefix: classification

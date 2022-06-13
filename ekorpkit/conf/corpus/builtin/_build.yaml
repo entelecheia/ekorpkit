@@ -1,5 +1,5 @@
 defaults:
-  - /column_info: _build
+  - /column_info: _build_corpus
   - /io: _build_corpus
   - /info: _build_corpus
   - /pipeline: _build_corpus

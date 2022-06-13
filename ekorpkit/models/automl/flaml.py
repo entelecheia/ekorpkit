@@ -24,12 +24,12 @@ class AutoML:
         self._dataset_cfg = args.get(eKonf.Keys.DATASET, None)
         self._to_predict = args["to_predict"]
         self._method_ = self.args.get("_method_")
-        self._keys = args[eKonf.Keys.KEYS]
+        self._keys_ = args[eKonf.Keys.KEYS]
 
         self._path = self.args.path
-        self._model_file = self._path[eKonf.Keys.MODEL].filepath
-        self._log_file = self._path[eKonf.Keys.LOG].filepath
-        self._pred_file = self._path[eKonf.Keys.PRED].filepath
+        self._model_file = self._path.model.filepath
+        self._log_file = self._path.log.filepath
+        self._pred_file = self._path.pred.filepath
 
         self._automl = AutoML()
         self._dataset = None
@@ -114,10 +114,10 @@ class AutoML:
         y_preds = self._automl.predict(X)
         y_probs = self._automl.predict_proba(X)
         y_probs = y_probs.flatten().tolist()
-        return {self._keys._y_preds: y_preds, self._keys.y_probs: y_probs}
+        return {self._keys_.y_preds.value: y_preds, self._keys_.y_probs.value: y_probs}
 
     def convert_to_X(self, data):
-        X_cols = self._to_predict[self._keys.X]
+        X_cols = self._to_predict[self._keys_.X]
         if X_cols is None:
             X_cols = list(data.columns)
         X = data[X_cols].values
@@ -126,10 +126,10 @@ class AutoML:
         return X
 
     def append_predictions(self, data, preds):
-        y_pred_column = self._to_predict[self._keys.y_preds]
-        y_prob_column = self._to_predict[self._keys.y_probs]
-        data[y_pred_column] = preds[self._keys.y_preds]
-        data[y_prob_column] = preds[self._keys.y_probs]
+        y_pred_column = self._to_predict[self._keys_.y_preds]
+        y_prob_column = self._to_predict[self._keys_.y_probs]
+        data[y_pred_column] = preds[self._keys_.y_preds]
+        data[y_prob_column] = preds[self._keys_.y_probs]
         return data
 
     def predict(self, data, _to_predict={}):

@@ -1,0 +1,4 @@
+defaults:
+  - dataset_simple
+  
+labels: ${oc.select:.._keys_.labels,labels}

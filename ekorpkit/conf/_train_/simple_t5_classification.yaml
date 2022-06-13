@@ -1,0 +1,4 @@
+prefix:
+task_prefix: classification
+input_text: text
+target_text: labels

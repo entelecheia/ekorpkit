@@ -1,0 +1,7 @@
+defaults:
+  - simple
+
+input: input
+predicted: predicted
+model_outputs: model_outputs
+labels: labels

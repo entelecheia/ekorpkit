@@ -2,17 +2,15 @@ import pandas as pd
 import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
-from .corpus import Corpus
+from .corpus import BaseSet, Corpus
 
 
 log = logging.getLogger(__name__)
 
 
-class Corpora:
+class Corpora(BaseSet):
     def __init__(self, **args):
-        args = eKonf.to_config(args)
-        self.args = args
-        self.name = args.name
+        super().__init__(**args)
         self.corpora = args.get("corpora")
         if self.corpora is None:
             self.corpora = self.name
@@ -20,25 +18,20 @@ class Corpora:
             self.corpora = {self.corpora: None}
         elif eKonf.is_list(self.corpora):
             self.corpora = {name: None for name in self.corpora}
-        if eKonf.is_list(self.name):
-            self.name = "-".join(self.name)
+        # if eKonf.is_list(self.name):
+        #     self.name = "-".join(self.name)
+        if self.name is None and eKonf.is_config(self.corpora):
+            self.name = "-".join(self.corpora.keys())
 
-        self.data_dir = args["data_dir"]
         self.metadata_dir = self.args.get("metadata_dir", None)
         if self.metadata_dir is None:
             self.metadata_dir = self.data_dir
-        self.data_files = self.args.get("data_files", None)
         self.meta_files = self.args.get("meta_files", None)
-        auto = self.args.auto
         use_name_as_subdir = args.get("use_name_as_subdir", True)
-        self.verbose = args.get("verbose", False)
 
-        self._column_info = self.args.get("column_info", {})
-        self._column = eKonf.instantiate(self._column_info)
+        self.load_column_info()
 
-        self._data = None
         self._metadata = None
-        self._loaded = False
 
         with elapsed_timer(format_time=True) as elapsed:
             for name in self.corpora:
@@ -46,7 +39,7 @@ class Corpora:
                 args["name"] = name
                 args["data_dir"] = self.data_dir
                 args["metadata_dir"] = self.metadata_dir
-                args["auto"] = auto
+                args["auto"] = self.auto
                 args["use_name_as_subdir"] = use_name_as_subdir
                 if self.data_files is not None:
                     if name in self.data_files:
@@ -73,24 +66,8 @@ class Corpora:
         return self.corpora[name]
 
     @property
-    def COLUMN(self):
-        return self._column
-
-    @property
-    def ID(self):
-        return self.COLUMN.ID
-
-    @property
-    def IDs(self):
-        return self.COLUMN.IDs
-
-    @property
     def TEXT(self):
         return self.COLUMN.TEXT
-
-    @property
-    def DATA(self):
-        return self.COLUMN.DATA
 
     @property
     def data(self):
