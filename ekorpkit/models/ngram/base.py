@@ -251,8 +251,8 @@ class Ngrams:
         self._scores = args.scores
         self._info = args.info
         self.score_function = eKonf.partial(args.score_function)
-        self.autoload = args.autoload
-        self.force_train = args.force_train
+        self.auto = args.auto
+        self.force = args.force
 
         assert type(self._ngram.max_n) == int
 
@@ -289,7 +289,7 @@ class Ngrams:
         self._surface_to_tuples = {}
         self.total_words = 0
 
-        if self.autoload:
+        if self.auto.load:
             eKonf.methods(args._method_, self)
 
     def __len__(self):
@@ -315,7 +315,7 @@ class Ngrams:
 
     def initialize(self):
         self.load_candidates()
-        if not self.candidates or self.force_train:
+        if not self.candidates or self.force.train:
             self.train()
             self.save_candidates()
 
