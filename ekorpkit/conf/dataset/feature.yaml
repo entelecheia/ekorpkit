@@ -2,6 +2,7 @@ defaults:
   - default
   - override /column_info: feature
   - override /auto: load_build
+  - override /info: _build_feature
 
 _target_: ekorpkit.datasets.feature.FeatureSet
 name:

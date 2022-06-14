@@ -1,9 +1,10 @@
 defaults:
-  - /column_info: default
+  - /column_info: corpus
   - /path: cache
   - /auto: load_merge
+  - /force: rebuild
 
-_target_: ekorpkit.corpora.corpus.Corpus
+_target_: ekorpkit.datasets.corpus.Corpus
 name: ${oc.select:.builtin.name, null}
 data_dir: ${oc.select:.builtin.data_dir, ${dir.corpus}}
 metadata_dir:

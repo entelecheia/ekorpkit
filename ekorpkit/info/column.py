@@ -66,6 +66,19 @@ class BaseInfo:
             data = self.reset_index(data, rename_old_index=self.ID)
         return data
 
+    def combine_ids(self, data):
+        if self.IDs is None:
+            return data
+
+        if isinstance(data, pd.DataFrame):
+            if len(self.IDS) > 1:
+                data[self.ID] = data[self.IDs].apply(
+                    lambda row: self.ID_SEPARATOR.join(row.values.astype(str)),
+                    axis=1,
+                )
+
+        return data
+
     def common_columns(self, dataframes):
         """
         Find common columns between dataframes
@@ -79,12 +92,12 @@ class BaseInfo:
         return common_columns
 
     def to_datetime(self, data):
-        if self.DATETIME_PARM is None:
+        if self.DATETIME_INFO is None:
             return data
 
-        _columns = eKonf.ensure_list(self.DATETIME_PARM.get(eKonf.Keys.COLUMNS))
-        _format = self.DATETIME_PARM.get(eKonf.Keys.FORMAT, None)
-        rcParams = self.DATETIME_PARM.get(eKonf.Keys.rcPARAMS) or {}
+        _columns = eKonf.ensure_list(self.DATETIME_INFO.get(eKonf.Keys.COLUMNS))
+        _format = self.DATETIME_INFO.get(eKonf.Keys.FORMAT, None)
+        rcParams = self.DATETIME_INFO.get(eKonf.Keys.rcPARAMS) or {}
         if _columns is None:
             log.info("No datetime column found")
             return data
@@ -166,11 +179,11 @@ class BaseInfo:
     #     self.INFO[eKonf.Keys.KEYS.value] = value
 
     @property
-    def DATETIME_PARM(self):
+    def DATETIME_INFO(self):
         return self.INFO.get(eKonf.Keys.DATETIME)
 
-    @DATETIME_PARM.setter
-    def DATETIME_PARM(self, value):
+    @DATETIME_INFO.setter
+    def DATETIME_INFO(self, value):
         self.INFO[eKonf.Keys.DATETIME.value] = value
 
     @property
@@ -236,17 +249,17 @@ class BaseInfo:
     #     self.KEYs[eKonf.Keys.SPLIT.value] = value
 
 
-class ColumnInfo(BaseInfo):
+class CorpusInfo(BaseInfo):
     def __init__(self, **args):
         super().__init__(**args)
 
     def to_timestamp(self, data, metadata=None):
-        if self.TIMESTAMP_PARM is None:
+        if self.TIMESTAMP_INFO is None:
             return data, metadata
 
-        _key = self.TIMESTAMP_PARM.get(eKonf.Keys.KEY)
-        _format = self.TIMESTAMP_PARM.get(eKonf.Keys.FORMAT)
-        rcParams = self.TIMESTAMP_PARM.get(eKonf.Keys.rcPARAMS) or {}
+        _key = self.TIMESTAMP_INFO.get(eKonf.Keys.KEY)
+        _format = self.TIMESTAMP_INFO.get(eKonf.Keys.FORMAT)
+        rcParams = self.TIMESTAMP_INFO.get(eKonf.Keys.rcPARAMS) or {}
         if _key is None:
             log.info("No timestamp key found")
             return data, metadata
@@ -262,7 +275,7 @@ class ColumnInfo(BaseInfo):
                 )
                 df_dt = metadata[self.MERGE_META_ON + [self.TIMESTAMP]].copy()
                 data = data.merge(df_dt, on=self.MERGE_META_ON, how="left")
-                metadata.drop(self.TIMESTAMP, axis=1, inplace=True)
+                # metadata.drop(self.TIMESTAMP, axis=1, inplace=True)
                 log.info(f"Timestamp column {self.TIMESTAMP} added to data")
         return data, metadata
 
@@ -284,45 +297,26 @@ class ColumnInfo(BaseInfo):
 
         return data
 
-    def combine_ids(self, data):
-        if self.IDs is None:
-            return data
-
-        if isinstance(data, pd.DataFrame):
-            if len(self.IDS) > 1:
-                data[self.ID] = data[self.IDs].apply(
-                    lambda row: self.ID_SEPARATOR.join(row.values.astype(str)),
-                    axis=1,
-                )
-
-        return data
-
     def merge_metadata(self, data, metadata):
         if metadata is None:
             return data
-        data = data.merge(
-            metadata,
-            on=self.MERGE_META_ON,
-            how="left",
-        )
+        meta_cols = [col for col in metadata.columns if col not in data.columns]
+        meta_cols += self.MERGE_META_ON
+        data = data.merge(metadata[meta_cols], on=self.MERGE_META_ON, how="left")
         return data
 
-    def append_split(self, data, _split):
+    def append_split_to_meta(self, metadata, _split):
         if _split is None:
-            return data
+            return metadata
 
-        if isinstance(data, pd.DataFrame):
-            data[self.SPLIT] = _split
-            if self.SPLIT not in self.IDs:
-                self.IDs.append(self.SPLIT)
-            if self.DATA and self.SPLIT not in self.DATA:
-                self.DATATYPEs[self.SPLIT] = "str"
+        if isinstance(metadata, pd.DataFrame):
+            metadata[self.SPLIT] = _split
             if self.METADATA and self.SPLIT not in self.METADATA:
                 self.METATYPEs[self.SPLIT] = "str"
 
             log.info(f"Added a column [{self.SPLIT}] with value [{_split}]")
 
-        return data
+        return metadata
 
     def append_corpus(self, data, _corpus):
         if _corpus is None:
@@ -396,12 +390,12 @@ class ColumnInfo(BaseInfo):
         self.INFO[eKonf.Keys.META.value] = value
 
     @property
-    def TIMESTAMP_PARM(self):
-        return self.INFO.get(eKonf.Keys.TIMESTAMP)
+    def TIMESTAMP_INFO(self):
+        return self.INFO.get(self.TIMESTAMP)
 
-    @TIMESTAMP_PARM.setter
-    def TIMESTAMP_PARM(self, value):
-        self.INFO[eKonf.Keys.TIMESTAMP.value] = value
+    @TIMESTAMP_INFO.setter
+    def TIMESTAMP_INFO(self, value):
+        self.INFO[self.TIMESTAMP] = value
 
     @property
     def SEGMENT_SEP(self):

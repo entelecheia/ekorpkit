@@ -1,6 +1,6 @@
 from ekorpkit import eKonf
-from ekorpkit.corpora.corpus import Corpus
-from ekorpkit.corpora.corpora import Corpora
+from ekorpkit.datasets.corpus import Corpus
+from ekorpkit.datasets.corpora import Corpora
 from ekorpkit.datasets.dataset import Dataset
 from ekorpkit.datasets.datasets import Datasets
 

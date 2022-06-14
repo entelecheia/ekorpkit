@@ -4,7 +4,8 @@ import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from .dataset import Dataset
-from ekorpkit.corpora.corpus import BaseSet
+from .base import BaseSet
+
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +36,6 @@ class Datasets(BaseSet):
 
         self.load_column_info()
 
-        self.splits = None
         self._datasets_concatenated = False
 
         with elapsed_timer(format_time=True) as elapsed:
@@ -82,10 +82,13 @@ class Datasets(BaseSet):
             self.datasets[_name].load()
         self._loaded = True
 
-    def concatenate(self, append_dataset_name=True):
-        self.concat_datasets(append_dataset_name=append_dataset_name)
-
     def concat_datasets(self, append_dataset_name=True):
+        self.concatenate(append_name=append_dataset_name)
+
+    def concatenate(self, append_name=True):
+        if not self._loaded:
+            self.load()
+
         dfs = []
         for name in self.datasets:
             df = self.datasets[name][self.SPLITS.TRAIN]
@@ -100,11 +103,11 @@ class Datasets(BaseSet):
                     continue
                 if common_columns:
                     df = df[common_columns].copy()
-                if append_dataset_name:
+                if append_name:
                     df = self.COLUMN.append_dataset(df, name)
                 dfs.append(df)
             if len(dfs) > 1:
-                self.splits[split] = pd.concat(dfs, ignore_index=True)
+                self._splits[split] = pd.concat(dfs, ignore_index=True)
         if self.verbose:
             log.info(f"concatenated {len(self.datasets)} dataset(s)")
         self._datasets_concatenated = True
@@ -128,15 +131,15 @@ class Datasets(BaseSet):
         if summary_info:
             summary_info.load(self._info)
 
-        for split, df in self.splits.items():
-            if df is None:
+        for split, data in self.splits.items():
+            if data is None:
                 continue
             data_file = f"{self.name}-{split}{self.filetype}"
-            df = self.COLUMN.reset_id(df)
-            eKonf.save_data(df, data_file, data_dir)
+            data = self.COLUMN.reset_id(data)
+            eKonf.save_data(data, data_file, data_dir)
             if summary_info:
                 stats = {"data_file": data_file}
                 summary_info.init_stats(split_name=split, stats=stats)
-                summary_info.calculate_stats(df, split)
-        if summary_info and df is not None:
+                summary_info.calculate_stats(data, split)
+        if summary_info:
             summary_info.save(info={"column_info": self.COLUMN.INFO})

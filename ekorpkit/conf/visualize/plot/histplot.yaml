@@ -3,5 +3,4 @@ defaults:
   - histplot: default
 
 name: HistPlot
-plots:
-  - ${..histplot}
+plot: ${.histplot}

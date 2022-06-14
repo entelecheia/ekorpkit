@@ -1,6 +1,7 @@
 _func_: snsplot
 _name_: histplot
 axno: 0
+datano: 0
 x:
 y:
 query:
@@ -9,5 +10,3 @@ secondary_to: 0
 bins: 50
 kde: false
 rcParams:
-  bins: ${oc.select:..bins, 50}
-  kde: ${oc.select:..kde, false}

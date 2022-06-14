@@ -3,6 +3,7 @@ defaults:
   - /path: cache
   - /auto: load_build
   - /force: rebuild
+  - /info: _build_dataset
 
 _target_: ekorpkit.datasets.dataset.Dataset
 name: ${oc.select:.builtin.name, null}

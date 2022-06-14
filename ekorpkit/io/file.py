@@ -92,10 +92,16 @@ def concat_data(
             if add_key_as_name:
                 df_each[name_column] = df_name
             dfs.append(df_each)
-        return pd.concat(dfs, **concat)
+        if len(dfs) > 0:
+            return pd.concat(dfs, **concat)
+        else:
+            return None
     elif isinstance(data, list):
         log.info(f"Concatenating {len(data)} dataframes")
-        return pd.concat(data, **concat)
+        if len(data) > 0:
+            return pd.concat(data, **concat)
+        else:
+            return None
     else:
         log.warning("Warning: data is not a dict")
         return data

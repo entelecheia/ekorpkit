@@ -1,0 +1,4 @@
+defaults:
+  - _build_corpus
+
+_target_: ekorpkit.info.column.CorpusInfo

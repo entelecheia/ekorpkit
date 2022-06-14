@@ -2,8 +2,8 @@ import pandas as pd
 import logging
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
-from .corpus import BaseSet, Corpus
-
+from .corpus import Corpus
+from .base import BaseSet
 
 log = logging.getLogger(__name__)
 
@@ -82,25 +82,25 @@ class Corpora(BaseSet):
             self.corpora[_name].load()
         self._loaded = True
 
-    def concatenate(self, append_corpus_name=True):
-        self.concat_corpora(append_corpus_name=append_corpus_name)
-
     def concat_corpora(self, append_corpus_name=True):
+        self.concatenate(append_name=append_corpus_name)
+
+    def concatenate(self, append_name=True):
         if not self._loaded:
             self.load()
 
         dfs, df_metas = [], []
 
         for name in self.corpora:
-            df = self.corpora[name]._data
+            df = self.corpora[name].data
             if df is None:
                 self.load()
-            if append_corpus_name:
+            if append_name:
                 df = self.COLUMN.append_corpus(df, name)
             dfs.append(df)
             df_meta = self.corpora[name]._metadata
             if df_meta is not None:
-                if append_corpus_name:
+                if append_name:
                     df_meta = self.COLUMN.append_corpus(df_meta, name)
                 df_metas.append(df_meta)
         self._data = pd.concat(dfs, ignore_index=True)

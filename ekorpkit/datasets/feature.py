@@ -4,6 +4,7 @@ from ekorpkit import eKonf
 from ekorpkit.pipelines.pipe import apply_pipeline
 from .dataset import Dataset
 
+
 log = logging.getLogger(__name__)
 
 
@@ -87,12 +88,11 @@ class FeatureSet(Dataset):
             log.info(f"Dataset {self.name} is empty")
 
     def persist(self):
-        summary_info = None
-        if self._info_cfg:
-            summary_info = eKonf.instantiate(self._info_cfg)
-        if summary_info:
-            summary_info.load(self.INFO)
-
+        if not self._loaded:
+            log.info(f"Dataset {self.name} is not loaded")
+            return
+        if self._sumamry_info is None:
+            self.summarize()
         for split, data in self._splits.items():
             if data is None:
                 continue
@@ -103,9 +103,5 @@ class FeatureSet(Dataset):
                 base_dir=self.data_dir,
                 verbose=self.verbose,
             )
-            if summary_info:
-                stats = {"data_file": data_file}
-                summary_info.init_stats(split_name=split, stats=stats)
-                summary_info.calculate_stats(data, split)
-        if summary_info and data is not None:
-            summary_info.save(info={"column_info": self.COLUMN.INFO})
+        if self._summary_info is not None:
+            self._summary_info.save(info={"column_info": self.COLUMN.INFO})

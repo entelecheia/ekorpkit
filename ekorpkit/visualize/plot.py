@@ -62,26 +62,28 @@ def plot(data, verbose=False, **kwargs):
         _func_ = eval(_plot_cfg_.pop(eKonf.Keys.FUNC))
         _x = _plot_cfg_.pop("x", None)
         _y = _plot_cfg_.pop("y", None)
-        secondary_y = _plot_cfg_.pop("secondary_y", False)
-        secondary_to = _plot_cfg_.pop("secondary_to", 0)
-        axno = _plot_cfg_.pop("axno", 0)
-        datano = _plot_cfg_.pop("datano", 0)
+        _secondary_y = _plot_cfg_.pop("secondary_y", False)
+        _secondary_to = _plot_cfg_.pop("secondary_to", 0)
+        _axno = _plot_cfg_.pop("axno", 0)
+        _datano = _plot_cfg_.pop("datano", 0)
+        _query = _plot_cfg_.pop("query", None)
+        _set_index = _plot_cfg_.pop("set_index", None)
 
-        if secondary_y:
-            if secondary_to in sencondary_axes:
-                ax = sencondary_axes[secondary_to]
+        if _secondary_y:
+            if _secondary_to in sencondary_axes:
+                ax = sencondary_axes[_secondary_to]
             else:
-                ax = axes[secondary_to].twinx()
-                log.info(f"Creating secondary axis to axis[{secondary_to}]")
-                sencondary_axes[secondary_to] = ax
+                ax = axes[_secondary_to].twinx()
+                log.info(f"Creating secondary axis to axis[{_secondary_to}]")
+                sencondary_axes[_secondary_to] = ax
         else:
-            ax = axes[axno]
+            ax = axes[_axno]
         if isinstance(data, list):
-            _data = data[datano]
-            log.debug(f"Plotting data[{datano}]")
+            _data = data[_datano]
+            log.debug(f"Plotting data[{_datano}]")
         else:
             _data = data
-        _data = prepare_data(_data, **_plot_cfg_)
+        _data = prepare_data(_data, _query, _set_index)
         _func_(ax, _x, _y, _data, **_plot_cfg_)
 
     if _axes is None:
@@ -91,16 +93,16 @@ def plot(data, verbose=False, **kwargs):
     elif isinstance(_axes, dict):
         _axes = [_axes]
     for _ax_cfg_ in _axes:
-        secondary_y = _ax_cfg_.get("secondary_y", False)
-        if secondary_y:
-            secondary_to = _ax_cfg_.get("secondary_to", 0)
-            if secondary_to in sencondary_axes:
-                ax = sencondary_axes[secondary_to]
+        _secondary_y = _ax_cfg_.get("secondary_y", False)
+        if _secondary_y:
+            _secondary_to = _ax_cfg_.get("secondary_to", 0)
+            if _secondary_to in sencondary_axes:
+                ax = sencondary_axes[_secondary_to]
             else:
                 ax = None
         else:
-            axno = _ax_cfg_.get("axno", 0)
-            ax = axes[axno]
+            _axno = _ax_cfg_.get("axno", 0)
+            ax = axes[_axno]
         add_decorations(ax, **_ax_cfg_)
         set_figure(ax, **_ax_cfg_)
 
@@ -140,16 +142,16 @@ def grid(data, verbose=False, **kwargs):
     _gridspec["nrows"] = _subplots.pop("nrows", 1)
     _gridspec["ncols"] = _subplots.pop("ncols", 1)
 
+    _query = _grid.pop("query", None)
+    _set_index = _grid.pop("set_index", None)
     _func_ = eval(_grid.get(eKonf.Keys.FUNC))
-    _data = prepare_data(data, **_grid)
+    _data = prepare_data(data, _query, _set_index)
     g = _func_(_data, **_grid)
 
     save_figure(plt, **_savefig)
 
 
-def prepare_data(data, **kwargs):
-    _query = kwargs.get("query", None)
-    _set_index = kwargs.get("set_index", None)
+def prepare_data(data, _query=None, _set_index=None, **kwargs):
     if _query is not None:
         if isinstance(data, pd.DataFrame):
             data = data.copy().query(_query, engine="python")

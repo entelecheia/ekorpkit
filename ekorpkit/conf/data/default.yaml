@@ -1,5 +1,5 @@
 defaults:
-  - /column_info: default
+  - /column_info: corpus
   - /path: default
 
 _target_: ekorpkit.pipelines.data.Data

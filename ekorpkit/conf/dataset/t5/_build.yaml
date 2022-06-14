@@ -4,7 +4,7 @@ defaults:
   - /pipeline: _build_dataset
   - /auto: load
 
-_target_: ekorpkit.corpora.build.DatasetBuilder
+_target_: ekorpkit.datasets.build.DatasetBuilder
 name:
 category: general
 data_dir: ${dir.dataset}/t5/${.name}
