@@ -279,7 +279,7 @@ class _Keys(str, Enum):
     TASK = "_task_"
     CALL = "_call_"
     EXEC = "_exec_"
-    PARMS = "_parms_"
+    rcPARAMS = "rcParams"
     METHOD = "_method_"
     FUNC = "_func_"
     NAME_KEY = "_name_"
@@ -335,7 +335,7 @@ def _methods(cfg: Any, obj: object):
         else:
             _call_ = True
         if _call_:
-            return getattr(obj, _method_[_Keys.NAME_KEY])(**_method_[_Keys.PARMS])
+            return getattr(obj, _method_[_Keys.NAME_KEY])(**_method_[_Keys.rcPARAMS])
         else:
             log.info(f"Skipping call to {_method_}")
     elif isinstance(_method_, list):
@@ -350,7 +350,7 @@ def _methods(cfg: Any, obj: object):
                     _call_ = True
                 if _call_:
                     getattr(obj, _each_method[_Keys.NAME_KEY])(
-                        **_each_method[_Keys.PARMS]
+                        **_each_method[_Keys.rcPARAMS]
                     )
                 else:
                     log.info(f"Skipping call to {_each_method}")

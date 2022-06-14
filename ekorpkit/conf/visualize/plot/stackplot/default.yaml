@@ -7,6 +7,6 @@ x:
 y:
 secondary_y: false
 secondary_to: 0
-_parms_:
+rcParams:
   colors:
   baseline: zero

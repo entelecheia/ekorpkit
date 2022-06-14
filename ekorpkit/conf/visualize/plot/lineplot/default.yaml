@@ -28,4 +28,4 @@ sort: true
 err_style: band
 err_kws:
 legend: auto
-_parms_:
+rcParams:

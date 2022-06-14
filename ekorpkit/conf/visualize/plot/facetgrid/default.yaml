@@ -10,10 +10,10 @@ secondary_to: 0
 add_legend: false
 map:
   _func_:
-  _parms_:
+  rcParams:
 map_dataframe:
   _func_:
-  _parms_:
+  rcParams:
 row:
 col:
 hue:
@@ -24,7 +24,7 @@ aspect: 1
 col_wrap:
 gridspec_kws:
 subplot_kws:
-_parms_:
+rcParams:
   row: ${oc.select:..row, null}
   col: ${oc.select:..col, null}
   hue: ${oc.select:..hue, null}

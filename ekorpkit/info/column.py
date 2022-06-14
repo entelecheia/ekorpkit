@@ -84,14 +84,14 @@ class BaseInfo:
 
         _columns = eKonf.ensure_list(self.DATETIME_PARM.get(eKonf.Keys.COLUMNS))
         _format = self.DATETIME_PARM.get(eKonf.Keys.FORMAT, None)
-        _parms_ = self.DATETIME_PARM.get(eKonf.Keys.PARMS) or {}
+        rcParams = self.DATETIME_PARM.get(eKonf.Keys.rcPARAMS) or {}
         if _columns is None:
             log.info("No datetime column found")
             return data
         if isinstance(data, pd.DataFrame):
             for _col in _columns:
                 if _col in data.columns:
-                    data[_col] = pd.to_datetime(data[_col], format=_format, **_parms_)
+                    data[_col] = pd.to_datetime(data[_col], format=_format, **rcParams)
                     log.info(f"converted datetime column {_col}")
         return data
 
@@ -246,19 +246,19 @@ class ColumnInfo(BaseInfo):
 
         _key = self.TIMESTAMP_PARM.get(eKonf.Keys.KEY)
         _format = self.TIMESTAMP_PARM.get(eKonf.Keys.FORMAT)
-        _parms_ = self.TIMESTAMP_PARM.get(eKonf.Keys.PARMS) or {}
+        rcParams = self.TIMESTAMP_PARM.get(eKonf.Keys.rcPARAMS) or {}
         if _key is None:
             log.info("No timestamp key found")
             return data, metadata
         if isinstance(data, pd.DataFrame):
             if _key in data.columns:
                 data[self.TIMESTAMP] = pd.to_datetime(
-                    data[_key], format=_format, **_parms_
+                    data[_key], format=_format, **rcParams
                 )
                 log.info(f"Loaded timestamp column {self.TIMESTAMP}")
             elif metadata is not None and _key in metadata.columns:
                 metadata[self.TIMESTAMP] = pd.to_datetime(
-                    metadata[_key], format=_format, **_parms_
+                    metadata[_key], format=_format, **rcParams
                 )
                 df_dt = metadata[self.MERGE_META_ON + [self.TIMESTAMP]].copy()
                 data = data.merge(df_dt, on=self.MERGE_META_ON, how="left")

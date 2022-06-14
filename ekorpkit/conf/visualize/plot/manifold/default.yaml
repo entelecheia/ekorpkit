@@ -13,7 +13,7 @@ classes:
 features:
 manifold: tsne
 n_neighbors:
-_parms_:
+rcParams:
   classes: ${oc.select:..classes, null}
   features: ${oc.select:..features, null}
   manifold: ${oc.select:..manifold, tsne}

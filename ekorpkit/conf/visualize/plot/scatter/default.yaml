@@ -8,7 +8,7 @@ secondary_y: false
 secondary_to: 0
 hue:
 palette:
-_parms_:
+rcParams:
   hue: ${oc.select:..hue, null}
   # vector or key in data
   # Grouping variable that will produce points with different colors. Can be either categorical or numeric, although color mapping will behave differently in latter case.

@@ -11,6 +11,6 @@ secondary_y: false
 secondary_to: 0
 classes:
 features:
-_parms_:
+rcParams:
   classes: ${oc.select:..classes, null}
   features: ${oc.select:..features, null}

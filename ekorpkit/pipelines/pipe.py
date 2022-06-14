@@ -824,14 +824,14 @@ def general_function(df, args):
 
     with elapsed_timer(format_time=True) as elapsed:
         if apply_to is None:
-            df = getattr(df, method[eKonf.Keys.NAME_KEY])(**method[eKonf.Keys.PARMS])
+            df = getattr(df, method[eKonf.Keys.NAME_KEY])(**method[eKonf.Keys.rcPARAMS])
         else:
             if isinstance(apply_to, str):
                 apply_to = [apply_to]
             for key in apply_to:
                 log.info(f"processing column: {key}")
                 df[key] = getattr(df[key], method[eKonf.Keys.NAME_KEY])(
-                    **method[eKonf.Keys.PARMS]
+                    **method[eKonf.Keys.rcPARAMS]
                 )
 
         log.info(" >> elapsed time to replace: {}".format(elapsed()))

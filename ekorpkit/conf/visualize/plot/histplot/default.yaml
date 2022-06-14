@@ -8,6 +8,6 @@ secondary_y: false
 secondary_to: 0
 bins: 50
 kde: false
-_parms_:
+rcParams:
   bins: ${oc.select:..bins, 50}
   kde: ${oc.select:..kde, false}

@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 def confusion_matrix(ax=None, x=None, y=None, data=None, **kwargs):
-    _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
+    rcParams = {} or kwargs.get(eKonf.Keys.rcPARAMS)
     _ax_cfg_ = {} or kwargs.get("_ax_")
     if ax is None:
         ax = plt.gca()
@@ -75,7 +75,7 @@ def confusion_matrix(ax=None, x=None, y=None, data=None, **kwargs):
         xticklabels=display_labels,
         yticklabels=display_labels,
         ax=ax,
-        **_parms_,
+        **rcParams,
     )
 
     xlabel = _ax_cfg_.get("xlabel")
