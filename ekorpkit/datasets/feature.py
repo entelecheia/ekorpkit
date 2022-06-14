@@ -42,6 +42,10 @@ class FeatureSet(Dataset):
         else:
             return None
 
+    @y_train.setter
+    def y_train(self, data):
+        self.train_data[self.COLUMN.Y] = data
+
     @property
     def y_dev(self):
         if self.dev_data is not None:
@@ -49,12 +53,22 @@ class FeatureSet(Dataset):
         else:
             return None
 
+    @y_dev.setter
+    def y_dev(self, data):
+        if self.dev_data is not None:
+            self.dev_data[self.COLUMN.Y] = data
+
     @property
     def y_test(self):
         if self.test_data is not None:
             return self.test_data[self.COLUMN.Y]
         else:
             return None
+
+    @y_test.setter
+    def y_test(self, data):
+        if self.test_data is not None:
+            self.test_data[self.COLUMN.Y] = data
 
     @property
     def X(self):

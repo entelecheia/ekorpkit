@@ -211,6 +211,9 @@ class BaseSet:
         if not self._loaded:
             log.info(f"Dataset {self.name} is not loaded")
             return data
+        if data is None:
+            log.info(f"Data is None")
+            return data
         if self._le is None:
             log.info(f"Label encoder is not fitted")
             self.fit_labelencoder(data)
@@ -220,6 +223,9 @@ class BaseSet:
     def inverse_transform_labels(self, data):
         if not self._loaded:
             log.info(f"Dataset {self.name} is not loaded")
+            return data
+        if data is None:
+            log.info(f"Data is None")
             return data
         if self._le is None:
             log.info(f"Label encoder is not fitted")

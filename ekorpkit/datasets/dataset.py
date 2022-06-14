@@ -35,14 +35,26 @@ class Dataset(BaseSet):
             return None
         return self.splits[self.SPLITS.TRAIN]
 
+    @train_data.setter
+    def train_data(self, data):
+        self.splits[self.SPLITS.TRAIN.value] = data
+
     @property
     def dev_data(self):
         if self.SPLITS.DEV not in self.splits:
             return None
         return self.splits[self.SPLITS.DEV]
 
+    @dev_data.setter
+    def dev_data(self, data):
+        self.splits[self.SPLITS.DEV.value] = data
+
     @property
     def test_data(self):
         if self.SPLITS.TEST not in self.splits:
             return None
         return self.splits[self.SPLITS.TEST]
+
+    @test_data.setter
+    def test_data(self, data):
+        self.splits[self.SPLITS.TEST.value] = data
