@@ -28,4 +28,5 @@ sort: true
 err_style: band
 err_kws:
 legend: auto
+drawstyle:
 rcParams:

@@ -20,11 +20,13 @@ class AutoML:
         self.name = args.name
         self.verbose = args.get("verbose", True)
         self._model_cfg = eKonf.to_dict(args.config)
-        self._model_eval = args.get("model", {}).get("eval")
         self._dataset_cfg = args.get(eKonf.Keys.DATASET, None)
-        self._to_predict = args["to_predict"]
-        self._method_ = self.args.get("_method_")
-        self._keys_ = args[eKonf.Keys.KEYS]
+        self._keys_ = args.get(eKonf.Keys.KEYS)
+        self._columns = args.get(eKonf.Keys.COLUMNS)
+        self._train_ = args[eKonf.Keys.TRAIN]
+        self._predict_ = args[eKonf.Keys.PREDICT]
+        self._method_ = self.args.get(eKonf.Keys.METHOD)
+        self._eval_cfg = args.model.eval
 
         self._path = self.args.path
         self._model_file = self._path.model.filepath
@@ -39,18 +41,20 @@ class AutoML:
         self._y_train = None
         self._y_dev = None
         self._y_test = None
+        self._classes = None
+        self.pred_data = None
 
         eKonf.methods(self._method_, self)
 
     def fit(self):
-        if self._X_train is None:
+        if self.X_train is None:
             self.load_dataset()
 
-        self._automl.fit(
-            X_train=self._X_train.values,
-            y_train=self._y_train.values,
-            **self._model_cfg,
-        )
+        X_train = self.X_train.values
+        y_train = self.dataset.transform_labels(self.y_train.values)
+        log.info(f"types of X_train: {type(X_train)}, y_train: {type(y_train)}")
+        log.info(f"fitting a model with {self._model_cfg}")
+        self._automl.fit(X_train=X_train, y_train=y_train, **self._model_cfg)
         # Print the results
         self.show_results()
 
@@ -68,6 +72,14 @@ class AutoML:
         with open(self._model_file, "rb") as f:
             self._automl = pickle.load(f)
         log.info(f"Loaded model from {self._model_file}")
+
+    @property
+    def dataset(self):
+        return self._dataset
+
+    @property
+    def classes(self):
+        return self._classes
 
     @property
     def best_estimator(self):
@@ -111,13 +123,12 @@ class AutoML:
 
     def _predict(self, X):
         """compute predictions of testing dataset"""
-        y_preds = self._automl.predict(X)
-        y_probs = self._automl.predict_proba(X)
-        y_probs = y_probs.flatten().tolist()
-        return {self._keys_.y_preds.value: y_preds, self._keys_.y_probs.value: y_probs}
+        y_pred = self._automl.predict(X)
+        y_pred = self.dataset.inverse_transform_labels(y_pred)
+        return {self._keys_.predicted: y_pred}
 
     def convert_to_X(self, data):
-        X_cols = self._to_predict[self._keys_.X]
+        X_cols = self._predict_[self._keys_.X]
         if X_cols is None:
             X_cols = list(data.columns)
         X = data[X_cols].values
@@ -126,60 +137,54 @@ class AutoML:
         return X
 
     def append_predictions(self, data, preds):
-        y_pred_column = self._to_predict[self._keys_.y_preds]
-        y_prob_column = self._to_predict[self._keys_.y_probs]
-        data[y_pred_column] = preds[self._keys_.y_preds]
-        data[y_prob_column] = preds[self._keys_.y_probs]
+        predicted_column = self._predict_[self._keys_.predicted]
+        data = data.copy()
+        data[predicted_column] = preds[self._keys_.predicted]
         return data
 
-    def predict(self, data, _to_predict={}):
-        if _to_predict:
-            self._to_predict = _to_predict
+    def predict(self, data, _predict_={}):
+        if _predict_:
+            self._predict_ = _predict_
         X = self.convert_to_X(data)
         preds = self._predict(X)
-        data = self.append_predictions(data, preds)
-        return data
+        return self.append_predictions(data, preds)
 
     def eval(self):
         from flaml.ml import sklearn_metric_loss_score
 
-        if self._X_test is None:
+        if self.X_test is None:
             self.load_dataset()
 
-        if self._X_test is None:
+        if self.X_test is None:
             log.warning("No test data found")
             return
 
-        y_preds, y_probs = self._predict(self._X_test.values())
-        self._pred_data = self.append_predictions(self._X_test, y_preds)
-        pred_filepath = os.path.join(self._output_dir, self._pred_file)
-        eKonf.save_data(self._pred_data, pred_filepath)
+        y_preds = self._predict(self.X_test.values)
+        pred_data = self.append_predictions(self.X_test, y_preds)
+        actual_column = self._eval_cfg._eval_[self._keys_.actual]
+        if actual_column:
+            pred_data[actual_column] = self.y_test
+        eKonf.save_data(pred_data, self._pred_file)
         if self.verbose:
-            print(self._pred_data.head())
-        if self._model_eval:
-            eKonf.instantiate(self._model_eval, data=self._pred_data)
-        """ compute different metric values on testing dataset"""
-        print(
-            "accuracy",
-            "=",
-            1 - sklearn_metric_loss_score("accuracy", y_preds, self._y_test),
-        )
-        print(
-            "roc_auc",
-            "=",
-            1 - sklearn_metric_loss_score("roc_auc", y_probs, self._y_test),
-        )
-        print(
-            "log_loss",
-            "=",
-            sklearn_metric_loss_score("log_loss", y_probs, self._y_test),
-        )
+            print(pred_data.head())
+
+        y_pred = self.dataset.transform_labels(y_preds[self._keys_.predicted])
+        y_test = self.dataset.transform_labels(self.y_test)
+        print("r2", "=", 1 - sklearn_metric_loss_score("r2", y_pred, y_test))
+        print("mse", "=", sklearn_metric_loss_score("mse", y_pred, y_test))
+        print("mae", "=", sklearn_metric_loss_score("mae", y_pred, y_test))
+
+        self._eval_cfg.visualize.plot.plots[0].display_labels = self.classes
+        eKonf.instantiate(self._eval_cfg, data=pred_data)
+        self.pred_data = pred_data
 
     def load_dataset(self):
         if self._dataset_cfg is None:
             log.warning("No dataset config found")
             return
         self._dataset = eKonf.instantiate(self._dataset_cfg)
+        self._dataset.fit_labelencoder(self._dataset.y_train)
+        self._classes = self._dataset.classes
 
         self._X_train = self._dataset.X_train
         self._X_dev = self._dataset.X_dev
@@ -190,17 +195,14 @@ class AutoML:
 
         if self.verbose:
             print("Train data:")
-            print(self._X_train.info())
             print(self._X_train.tail())
             if self._X_dev is not None:
                 print("Eval data:")
-                print(self._X_dev.info())
                 print(self._X_dev.tail())
             else:
                 log.info("No eval data found")
             if self._X_test is not None:
                 print("Test data:")
-                print(self._X_test.info())
                 print(self._X_test.tail())
             else:
                 log.info("No test data found")
@@ -253,4 +255,30 @@ class AutoML:
         cfg.figure.figsize = (10, 5)
         cfg.figure.fontsize = 10
         cfg.ax.title = "Feature Importances"
+        eKonf.instantiate(cfg, data=data)
+
+    def get_log_data(self):
+        train_logs = self.get_logs()
+
+        data = pd.DataFrame(train_logs)
+        data["acc_history"] = 1 - data["valid_loss_history"]
+        data["best_acc_history"] = 1 - data["best_valid_loss_history"]
+        return data
+
+    def plot_learning_curve(self):
+        data = self.get_log_data()
+        scatter = eKonf.compose("visualize/plot/scatterplot")
+        cfg = eKonf.compose("visualize/plot=lineplot")
+        cfg.plot.y = "best_acc_history"
+        cfg.plot.x = "time_history"
+        cfg.plot.drawstyle = "steps-post"
+        scatter.x = "time_history"
+        scatter.y = "acc_history"
+        cfg.plots.append(scatter)
+        cfg.figure.figsize = (10, 5)
+        cfg.figure.fontsize = 10
+        cfg.ax.title = "Learning Curve"
+        cfg.ax.xlabel = "Wall Clock Time (s)"
+        cfg.ax.ylabel = "Validation Accuracy"
+
         eKonf.instantiate(cfg, data=data)

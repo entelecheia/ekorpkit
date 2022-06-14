@@ -91,7 +91,7 @@ class FeatureSet(Dataset):
         if not self._loaded:
             log.info(f"Dataset {self.name} is not loaded")
             return
-        if self._sumamry_info is None:
+        if self.summary_info is None:
             self.summarize()
         for split, data in self._splits.items():
             if data is None:
@@ -103,5 +103,5 @@ class FeatureSet(Dataset):
                 base_dir=self.data_dir,
                 verbose=self.verbose,
             )
-        if self._summary_info is not None:
-            self._summary_info.save(info={"column_info": self.COLUMN.INFO})
+        if self.summary_info is not None:
+            self.summary_info.save(info={"column_info": self.COLUMN.INFO})

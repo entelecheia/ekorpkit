@@ -29,7 +29,6 @@ class Datasets(BaseSet):
         self._info = args.copy()
         self._info["name"] = self.name
         self._info["datasets"] = self.datasets
-        self._info_cfg = self.args.get("info", None)
 
         self._method_ = self.args.get("_method_", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)

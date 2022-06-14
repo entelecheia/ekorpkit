@@ -1,10 +1,10 @@
 defaults:
   - _default
   - config: classification
-  - /_keys_: automl
+  - /_keys_: automl_classification
+  - /columns: model_automl_classification
+  - /_train_: automl_classification
+  - /_predict_: automl_classification
+  - /model/eval: automl_classification
 
 _target_: ekorpkit.models.automl.flaml.AutoML
-to_predict:
-  X:
-  y_preds: y_preds
-  y_probs: y_probs

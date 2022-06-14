@@ -1,0 +1,6 @@
+defaults:
+  - default
+  - scatterplot: default
+
+name: ScatterPlot
+plot: ${.scatterplot}

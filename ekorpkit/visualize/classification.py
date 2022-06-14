@@ -83,5 +83,5 @@ def confusion_matrix(ax=None, x=None, y=None, data=None, **kwargs):
         _ax_cfg_["xlabel"] = xlabel + stats_text
     else:
         _ax_cfg_["xlabel"] = stats_text
-
+    print(_ax_cfg_)
     set_figure(ax, **_ax_cfg_)

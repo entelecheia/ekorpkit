@@ -2,6 +2,7 @@ import os
 import logging
 import pandas as pd
 from abc import ABCMeta, abstractmethod
+from sklearn import preprocessing
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit import eKonf
 
@@ -28,6 +29,7 @@ class BaseSet:
         self.data_dir = self.args["data_dir"]
         self._collapse_ids = self.args.get("collapse_ids", False)
 
+        self._info_cfg = self.args.get("info", None)
         self._pipeline_cfg = self.args.get("pipeline") or {}
         self._pipeline_ = self._pipeline_cfg.get(eKonf.Keys.PIPELINE, [])
         if self._pipeline_ is None:
@@ -41,6 +43,8 @@ class BaseSet:
         self._splits = {}
         self._data = None
         self._loaded = False
+        self._classes = None
+        self._le = None
 
     def load_info(self):
         """Load the info file."""
@@ -135,6 +139,17 @@ class BaseSet:
     def splits(self):
         return self._splits
 
+    @property
+    def summary_info(self):
+        return self._summary_info
+
+    @property
+    def classes(self):
+        if self._classes is None:
+            log.info("LabelEncoder is not fitted")
+            return None
+        return self._classes.tolist()
+
     def build(self):
         pass
 
@@ -184,4 +199,30 @@ class BaseSet:
                 stats = {"data_file": data_file}
                 summary_info.init_stats(split_name=split, stats=stats)
                 summary_info.calculate_stats(data, split)
-        self._sumamry_info = summary_info
+        self._summary_info = summary_info
+
+    def fit_labelencoder(self, data):
+        self._le = preprocessing.LabelEncoder()
+        self._le.fit(data)
+        self._classes = self._le.classes_
+        log.info(f"LabelEncoder classes: {self._classes}")
+
+    def transform_labels(self, data):
+        if not self._loaded:
+            log.info(f"Dataset {self.name} is not loaded")
+            return data
+        if self._le is None:
+            log.info(f"Label encoder is not fitted")
+            self.fit_labelencoder(data)
+        _data = self._le.transform(data)
+        return _data
+
+    def inverse_transform_labels(self, data):
+        if not self._loaded:
+            log.info(f"Dataset {self.name} is not loaded")
+            return data
+        if self._le is None:
+            log.info(f"Label encoder is not fitted")
+            self.fit_labelencoder(data)
+        _data = self._le.inverse_transform(data)
+        return _data
