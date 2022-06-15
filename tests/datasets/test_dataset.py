@@ -35,7 +35,7 @@ def test_build_datasets():
 def test_datafame_pipeline():
     cfg = eKonf.compose("pipeline")
     cfg.data_dir = "./data/tmp/sst2"
-    cfg.data_file = "sst2-train.csv"
+    cfg.data_file = "sst2-train.parquet"
     cfg._pipeline_ = ["summary_stats"]
     cfg.summary_stats.output_file = "stats.yaml"
     eKonf.instantiate(cfg)

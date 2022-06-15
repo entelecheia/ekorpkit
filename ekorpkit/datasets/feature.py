@@ -78,20 +78,6 @@ class FeatureSet(Dataset):
     def y(self):
         return self.data[self.COLUMN.Y]
 
-    def load(self):
-        if self._loaded:
-            return
-        for split, data_file in self.data_files.items():
-            data_file = os.path.join(self.data_dir, data_file)
-            if eKonf.exists(data_file):
-                df = eKonf.load_data(data_file, dtype=self.DATATYPEs)
-                df = self.COLUMN.init_info(df)
-                df = self.COLUMN.append_split(df, split)
-                self._splits[split] = df
-            else:
-                log.info(f"Dataset {self.name} split {split} is empty")
-        self._loaded = True
-
     def build(self):
         data = None
         if self._pipeline_ and len(self._pipeline_) > 0:

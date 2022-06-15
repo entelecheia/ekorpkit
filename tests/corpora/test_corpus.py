@@ -54,7 +54,6 @@ def test_corpora_task():
     corpus_cfg.data_dir = "./data/tmp"
 
     cfg = eKonf.compose(config_group="pipeline")
-    cfg.verbose = True
     cfg.data.corpus = corpus_cfg
     cfg._pipeline_ = ["filter_query", "save_dataframe"]
     cfg.filter_query.query = "id == 0"

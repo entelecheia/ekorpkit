@@ -77,7 +77,7 @@ def concat_data(
     columns=None,
     add_key_as_name=False,
     name_column="_name_",
-    concat={},
+    ignore_index=True,
     verbose=False,
     **kwargs,
 ):
@@ -93,13 +93,13 @@ def concat_data(
                 df_each[name_column] = df_name
             dfs.append(df_each)
         if len(dfs) > 0:
-            return pd.concat(dfs, **concat)
+            return pd.concat(dfs, ignore_index=ignore_index)
         else:
             return None
     elif isinstance(data, list):
         log.info(f"Concatenating {len(data)} dataframes")
         if len(data) > 0:
-            return pd.concat(data, **concat)
+            return pd.concat(data, ignore_index=ignore_index)
         else:
             return None
     else:

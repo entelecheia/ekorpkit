@@ -1152,6 +1152,7 @@ class eKonf:
         columns=None,
         add_key_as_name=False,
         name_column=Keys.NAME_KEY.value,
+        ignore_index=True,
         verbose=False,
         **kwargs,
     ):
@@ -1162,6 +1163,7 @@ class eKonf:
             columns=columns,
             add_key_as_name=add_key_as_name,
             name_column=name_column,
+            ignore_index=ignore_index,
             verbose=verbose,
             **kwargs,
         )

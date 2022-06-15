@@ -112,7 +112,7 @@ class DatasetBuilder:
             self._pipeline_[pipe].path.output = _sample_path_
 
         df = None
-        if eKonf.exists(_data_path_.filepath) or self.force.build:
+        if not eKonf.exists(_data_path_.filepath) or self.force.build:
             with elapsed_timer(format_time=True) as elapsed:
                 df = eKonf.instantiate(self.loader, split_name=split_name)
                 log.info(f" >> elapsed time to load and parse data: {elapsed()}")

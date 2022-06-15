@@ -20,6 +20,9 @@ class BaseInfo:
         if self._initialized:
             return data
         if isinstance(data, pd.DataFrame):
+            log.info(
+                f"index: {self.INDEX}, index of data: {data.index.name}, columns: {list(data.columns)}, id: {self.IDs}"
+            )
             if data.index.name is None:
                 data.index.name = self.INDEX
             elif self.INDEX is None:

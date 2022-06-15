@@ -152,17 +152,18 @@ def grid(data, verbose=False, **kwargs):
 
 
 def prepare_data(data, _query=None, _set_index=None, **kwargs):
+    data = data.copy()
     if _query is not None:
         if isinstance(data, pd.DataFrame):
-            data = data.copy().query(_query, engine="python")
+            data = data.query(_query, engine="python")
         else:
             data = [d for d in data if eval(_query)]
     if _set_index is not None:
         if isinstance(data, pd.DataFrame):
             if _set_index == "reset":
-                data = data.copy().reset_index()
+                data = data.reset_index()
             else:
-                data = data.copy().set_index(_set_index)
+                data = data.set_index(_set_index)
     return data
 
 
@@ -186,10 +187,10 @@ def snsplot(ax=None, x=None, y=None, data=None, **kwargs):
     _name_ = kwargs.pop(eKonf.Keys.NAME_KEY)
     if ax is None:
         ax = plt.gca()
-    if x is not None and x in data.columns:
-        data.set_index(x, inplace=True)
-        x = None
     if isinstance(y, list):
+        if x is not None and x in data.columns:
+            data.set_index(x, inplace=True)
+            x = None
         data = data[y]
         y = None
     if x is not None:
