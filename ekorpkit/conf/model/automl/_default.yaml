@@ -9,5 +9,3 @@ log_file: ${.name}.log
 model_file: ${.name}.mdl
 pred_file: ${.name}_test_predictions.parquet
 verbose: ${oc.select:..verbose, false}
-model:
-  output_dir: ${..output_dir}
