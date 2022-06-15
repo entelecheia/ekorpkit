@@ -1,0 +1,9 @@
+defaults:
+  - /_keys_: dataset
+  - /columns: corpus
+  - datetime: default
+  - timestamp: default
+
+data:
+  id: int
+  text: str

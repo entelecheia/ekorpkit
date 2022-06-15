@@ -1,0 +1,3 @@
+prefix: ${..columns.prefix}
+input: ${..columns.input_text}
+predicted: ${..columns.predicted}

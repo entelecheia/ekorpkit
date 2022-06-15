@@ -1,17 +1,7 @@
-_target_: ekorpkit.info.feature.FeatureInfo
-keys:
-  index: index
-  id: id
-  x: x
-  y: "y"
-  split: split
-columns:
-  index:
-  id:
-  x: 
-  y: 
+defaults:
+  - /_keys_: feature
+  - /columns: feature
+  - datetime: default
+
+_target_: ekorpkit.info.column.FeatureInfo
 data:
-datetime:
-  columns:
-  format:
-  _parms_:

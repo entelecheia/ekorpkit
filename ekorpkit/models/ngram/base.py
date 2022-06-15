@@ -4,7 +4,6 @@ import pandas as pd
 from collections import namedtuple
 from tqdm import tqdm
 from .score import get_process_memory, prune_vocab, NEG_INF
-from ekorpkit.io.file import save_dataframe, load_dataframe
 from ekorpkit import eKonf
 
 # from inspect import getfullargspec as getargspec
@@ -252,8 +251,8 @@ class Ngrams:
         self._scores = args.scores
         self._info = args.info
         self.score_function = eKonf.partial(args.score_function)
-        self.autoload = args.autoload
-        self.force_train = args.force_train
+        self.auto = args.auto
+        self.force = args.force
 
         assert type(self._ngram.max_n) == int
 
@@ -264,7 +263,7 @@ class Ngrams:
         if not self._ngram.max_skip:
             self._ngram.max_skip = self._ngram.max_window - self._ngram.max_n
         self.postag_rules = eKonf.ensure_list(self._ngram.postag_rules)
-        self._score_keys = self._scores["keys"]
+        self._score_keys = self._scores[eKonf.Keys.KEYS]
 
         if self._candidates.min_count <= 0:
             self._candidates.min_count = 10
@@ -281,7 +280,6 @@ class Ngrams:
 
         self._tokenizer = args.preprocessor.tokenizer
         if eKonf.is_instantiatable(self._tokenizer):
-            log.info(f"instantiating {self._tokenizer['_target_']}...")
             self._tokenizer = eKonf.instantiate(self._tokenizer)
         self._postag.stop_tags = eKonf.ensure_list(self._postag.stop_tags)
 
@@ -291,7 +289,7 @@ class Ngrams:
         self._surface_to_tuples = {}
         self.total_words = 0
 
-        if self.autoload:
+        if self.auto.load:
             eKonf.methods(args._method_, self)
 
     def __len__(self):
@@ -317,7 +315,7 @@ class Ngrams:
 
     def initialize(self):
         self.load_candidates()
-        if not self.candidates or self.force_train:
+        if not self.candidates or self.force.train:
             self.train()
             self.save_candidates()
 
@@ -338,7 +336,7 @@ class Ngrams:
             _features = self._scores.features
             _lowercase = self._scores.lowercase
 
-            df = load_dataframe(self.score_path, verbose=self.verbose)
+            df = eKonf.load_data(self.score_path, verbose=self.verbose)
             df = df.dropna(subset=[_words])
             columns = [_words] + _features
             Score = namedtuple("score", columns)
@@ -380,7 +378,7 @@ class Ngrams:
         """Save the candidates to a file"""
         if len(self.candidates) > 0:
             df = pd.DataFrame(self.candidates.values())
-            save_dataframe(df, self.score_path, verbose=self.verbose)
+            eKonf.save_data(df, self.score_path, verbose=self.verbose)
         else:
             log.info("no candidates to save")
 

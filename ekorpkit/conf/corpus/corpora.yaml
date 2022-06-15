@@ -1,13 +1,14 @@
 defaults:
   - default
 
-_target_: ekorpkit.corpora.corpora.Corpora
+_target_: ekorpkit.datasets.corpora.Corpora
 corpora:
 data_dir: ${dir.corpus}
 use_name_as_subdir: true
-autoload: false
+auto:
+  load: false
 verbose: ${oc.select:..verbose, true}
 collapse_ids: false
 column_info:
-  keys:
+  _keys_:
     corpus: corpus

@@ -1,0 +1,4 @@
+file: ${..pred_file}
+filename: ${.file}
+base_dir: ${..pred_dir}
+filepath: ${join_path:${.base_dir},${.filename}}

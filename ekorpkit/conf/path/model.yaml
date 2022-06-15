@@ -1,0 +1,4 @@
+defaults:
+  - _default
+  - model: default
+  - /cache: archive

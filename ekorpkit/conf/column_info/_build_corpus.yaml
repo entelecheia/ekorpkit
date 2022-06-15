@@ -1,0 +1,12 @@
+defaults:
+  - /_keys_: dataset
+  - /columns: corpus
+  - datetime: default
+  - timestamp: default
+
+data:
+  id: int
+  text: str
+meta:
+segment_separator: ${oc.select:..segment_separator, '\n\n'}
+sentence_separator: ${oc.select:..sentence_separator, '\n'}

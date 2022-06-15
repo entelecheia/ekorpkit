@@ -2,49 +2,36 @@ import logging
 import os
 import pandas as pd
 from ekorpkit import eKonf
+from ekorpkit.io.fetch.loader.base import BaseFetcher
 
 
 log = logging.getLogger(__name__)
 
 
-class DummyCorpus:
+class DummyCorpus(BaseFetcher):
     def __init__(self, **args):
-        self.args = eKonf.to_config(args)
-        self.autoload = self.args.get("autoload", True)
-        self.name = self.args.get("name", None)
-        self.verbose = self.args.get("verbose", True)
+        super().__init__(**args)
 
-        self.output_dir = self.args.output_dir
-        os.makedirs(self.output_dir, exist_ok=True)
-        self.output_file = os.path.join(self.output_dir, self.args.output_file)
-        self.force_download = self.args.force_download
+        if self.auto.load:
+            self.fetch()
 
-        if self.autoload:
-            self.build()
-
-    def build(self):
-        if not os.path.exists(self.output_file) or self.force_download:
-            self.build_corpus()
-        else:
-            log.info(f"{self.output_file} already exists. skipping..")
-
-    def build_corpus(self):
+    def _fetch(self):
 
         docs = _dummy_data[self.name]
 
-        df = pd.DataFrame(docs)
-        df = df.dropna()
+        data = pd.DataFrame(docs)
+        data = data.dropna()
 
-        if not self.force_download:
+        if not self.force.download:
             if os.path.isfile(self.output_file):
                 log.info("file already exists. combining with the existing file..")
-                existing_df = pd.read_csv(self.output_file, index_col=None)
-                df = existing_df.combine_first(df)
-                df = df.drop_duplicates(subset=["id"])
+                existing_data = eKonf.load_data(self.output_file)
+                data = existing_data.combine_first(data)
+                data = data.drop_duplicates(subset=["id"])
 
-        df.to_csv(self.output_file, encoding="utf-8", index=False)
+        eKonf.save_data(data, self.output_file, verbose=self.verbose)
         if self.verbose:
-            print(df.tail())
+            print(data.tail())
         log.info(f"Saved {len(docs)} documents to {self.output_file}")
 
 

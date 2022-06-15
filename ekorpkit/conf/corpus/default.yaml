@@ -1,13 +1,16 @@
 defaults:
-  - /column_info: default
-  - /cache: extract_archive
+  - /column_info: corpus
+  - /path: cache
+  - /auto: load_merge
+  - /force: rebuild
 
-_target_: ekorpkit.corpora.corpus.Corpus
+_target_: ekorpkit.datasets.corpus.Corpus
 name: ${oc.select:.builtin.name, null}
 data_dir: ${oc.select:.builtin.data_dir, ${dir.corpus}}
 metadata_dir:
 filetype: ${oc.select:.builtin.filetype, null}
-autoload: true
-automerge: false
+auto:
+  load: true
+  merge: false
 verbose: ${oc.select:..verbose, true}
 use_name_as_subdir: true

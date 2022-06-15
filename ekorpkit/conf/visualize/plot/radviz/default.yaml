@@ -1,5 +1,5 @@
 defaults:
-  - /_method_: fittransform_show
+  - /_method_: fit_transform_show
 
 _func_: yellowbrick_features
 _name_: RadViz
@@ -11,6 +11,6 @@ secondary_y: false
 secondary_to: 0
 classes:
 features:
-_parms_:
+rcParams:
   classes: ${oc.select:..classes, null}
   features: ${oc.select:..features, null}

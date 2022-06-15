@@ -6,26 +6,27 @@ x:
 y:
 secondary_y: false
 secondary_to: 0
-_parms_:
-  linewidth: 2
-  hue:
-  size:
-  style:
-  palette:
-  hue_order:
-  hue_norm:
-  sizes:
-  size_order:
-  size_norm:
-  dashes: true
-  markers:
-  style_order:
-  units:
-  estimator: mean
-  ci: 95
-  n_boot: 1000
-  seed:
-  sort: true
-  err_style: band
-  err_kws:
-  legend: auto
+linewidth: 2
+palette:
+hue:
+size:
+style:
+hue_order:
+hue_norm:
+sizes:
+size_order:
+size_norm:
+dashes: true
+markers:
+style_order:
+units:
+estimator: mean
+ci: 95
+n_boot: 1000
+seed:
+sort: true
+err_style: band
+err_kws:
+legend: auto
+drawstyle:
+rcParams:

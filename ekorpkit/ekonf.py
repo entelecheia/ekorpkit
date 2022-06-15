@@ -1,16 +1,17 @@
 import logging
 import os
 import random
-from tabnanny import verbose
 import hydra
 import dotenv
 import ekorpkit.utils.batch.batcher as batcher
 from enum import Enum
+from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
+from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
-from ekorpkit.utils.func import lower_case_with_underscores
+from ekorpkit.utils.func import lower_case_with_underscores, elapsed_timer
 from . import _version
 
 
@@ -31,16 +32,40 @@ def __version__():
     return _version.get_versions()["version"]
 
 
-def check_path(path: str, alt_path: str = None):
-    if os.path.exists(path):
-        return path
+def _check_path(_path: str, alt_path: str = None):
+    if os.path.exists(_path):
+        return _path
     else:
         return alt_path
 
 
+def _mkdir(_path: str):
+    if _path is None:
+        return None
+    Path(_path).mkdir(parents=True, exist_ok=True)
+    return _path
+
+
 def _exists(a, *p):
-    path = os.path.join(a, *p)
-    return os.path.exists(path)
+    _path = os.path.join(a, *p)
+    return os.path.exists(_path)
+
+
+def _is_file(a, *p):
+    _path = os.path.join(a, *p)
+    return Path(_path).is_file()
+
+
+def _is_dir(a, *p):
+    _path = os.path.join(a, *p)
+    return Path(_path).is_dir()
+
+
+def _join_path(a, *p):
+    if p and p[0] is not None:
+        return os.path.join(a, *p)
+    else:
+        return a
 
 
 def _today(_format="%Y-%m-%d"):
@@ -97,8 +122,8 @@ def _path(
 
 
 def _compose(
-    overrides: List[str] = [],
     config_group: str = None,
+    overrides: List[str] = [],
     *,
     return_as_dict: bool = False,
     throw_on_resolution_failure: bool = True,
@@ -220,9 +245,11 @@ OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
 OmegaConf.register_new_resolver("exists", _exists)
-OmegaConf.register_new_resolver("join_paths", os.path.join)
+OmegaConf.register_new_resolver("join_path", _join_path)
+OmegaConf.register_new_resolver("mkdir", _mkdir)
 OmegaConf.register_new_resolver("dirname", os.path.dirname)
-OmegaConf.register_new_resolver("check_path", check_path)
+OmegaConf.register_new_resolver("basename", os.path.basename)
+OmegaConf.register_new_resolver("check_path", _check_path)
 OmegaConf.register_new_resolver("cached_path", _path)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
@@ -252,13 +279,16 @@ class _Keys(str, Enum):
     TASK = "_task_"
     CALL = "_call_"
     EXEC = "_exec_"
-    PARMS = "_parms_"
+    rcPARAMS = "rcParams"
     METHOD = "_method_"
     FUNC = "_func_"
-    NAME = "_name_"
+    NAME_KEY = "_name_"
+    NAME = "name"
     SPLIT = "split"
     CORPUS = "corpus"
     DATASET = "dataset"
+    PATH = "path"
+    OUTPUT = "output"
     ID = "id"
     _ID = "_id_"
     META_MERGE_ON = "meta_merge_on"
@@ -270,11 +300,19 @@ class _Keys(str, Enum):
     INDEX = "index"
     COLUMNS = "columns"
     KEY = "key"
-    KEYS = "keys"
+    KEYS = "_keys_"
     DATA = "data"
     META = "meta"
     FORMAT = "format"
     VERBOSE = "verbose"
+    FILE = "file"
+    SUFFIX = "suffix"
+    MODEL = "model"
+    LOG = "log"
+    PRED = "pred"
+    EVAL = "_eval_"
+    TRAIN = "_train_"
+    PREDICT = "_predict_"
 
 
 def _methods(cfg: Any, obj: object):
@@ -297,7 +335,7 @@ def _methods(cfg: Any, obj: object):
         else:
             _call_ = True
         if _call_:
-            return getattr(obj, _method_[_Keys.NAME])(**_method_[_Keys.PARMS])
+            return getattr(obj, _method_[_Keys.NAME_KEY])(**_method_[_Keys.rcPARAMS])
         else:
             log.info(f"Skipping call to {_method_}")
     elif isinstance(_method_, list):
@@ -311,7 +349,9 @@ def _methods(cfg: Any, obj: object):
                 else:
                     _call_ = True
                 if _call_:
-                    getattr(obj, _each_method[_Keys.NAME])(**_each_method[_Keys.PARMS])
+                    getattr(obj, _each_method[_Keys.NAME_KEY])(
+                        **_each_method[_Keys.rcPARAMS]
+                    )
                 else:
                     log.info(f"Skipping call to {_each_method}")
 
@@ -388,6 +428,12 @@ def _is_config(
     return isinstance(cfg, (DictConfig, dict))
 
 
+def _is_list(
+    cfg: Any,
+):
+    return isinstance(cfg, (ListConfig, list))
+
+
 def _is_instantiatable(cfg: Any):
     return _is_config(cfg) and _Keys.TARGET in cfg
 
@@ -397,6 +443,7 @@ def _load(file_: Union[str, Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
 
 
 def _save(config: Any, f: Union[str, Path, IO[Any]], resolve: bool = False) -> None:
+    os.makedirs(os.path.dirname(f), exist_ok=True)
     OmegaConf.save(config, f, resolve=resolve)
 
 
@@ -513,7 +560,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
         return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
-        kwargs[_Keys.RECURSIVE] = _recursive_
+        kwargs[_Keys.RECURSIVE.value] = _recursive_
     if verbose:
         log.info(f"instantiating {config.get(_Keys.TARGET)}...")
     return hydra.utils.instantiate(config, *args, **kwargs)
@@ -609,7 +656,7 @@ def apply_pipe(df, pipe):
                 log.info(
                     f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
                 )
-                pipe[_Keys.NAME] = df_name
+                pipe[_Keys.SUFFIX.value] = df_name
                 dfs[df_name] = fn(df_each, pipe)
             return dfs
     else:
@@ -658,6 +705,60 @@ def _ensure_list(value):
     return _to_dict(value)
 
 
+def _ensure_kwargs(_kwargs, _fn):
+    from inspect import getfullargspec as getargspec
+
+    if callable(_fn):
+        kwargs = {}
+        args = getargspec(_fn).args
+        log.info(f"args of {_fn}: {args}")
+        for k, v in _kwargs.items():
+            if k in args:
+                kwargs[k] = v
+        return kwargs
+    return _kwargs
+
+
+def _apply(
+    func,
+    series,
+    description=None,
+    use_batcher=True,
+    minibatch_size=None,
+    num_workers=None,
+    verbose=False,
+    **kwargs,
+):
+    batcher_instance = batcher.batcher_instance
+    if use_batcher and batcher_instance is not None:
+        if batcher_instance is not None:
+            batcher_minibatch_size = batcher_instance.minibatch_size
+        else:
+            batcher_minibatch_size = 1000
+        if minibatch_size is None:
+            minibatch_size = batcher_minibatch_size
+        if num_workers is not None:
+            batcher_instance.procs = num_workers
+        if batcher_instance.procs > 1:
+            batcher_instance.minibatch_size = min(
+                int(len(series) / batcher_instance.procs) + 1, minibatch_size
+            )
+            log.info(
+                f"Using batcher with minibatch size: {batcher_instance.minibatch_size}"
+            )
+            results = decorator_apply(func, batcher_instance, description=description)(
+                series
+            )
+            if batcher_instance is not None:
+                batcher_instance.minibatch_size = batcher_minibatch_size
+            return results
+
+    if batcher_instance is None:
+        log.warning("Warning: batcher not initialized")
+    tqdm.pandas(desc=description)
+    return series.progress_apply(func)
+
+
 class eKonf:
     """ekorpkit config primary class"""
 
@@ -673,8 +774,8 @@ class eKonf:
 
     @staticmethod
     def compose(
-        overrides: List[str] = [],
         config_group: str = None,
+        overrides: List[str] = [],
         *,
         return_as_dict: bool = False,
         throw_on_resolution_failure: bool = True,
@@ -683,8 +784,8 @@ class eKonf:
         verbose: bool = False,
     ):
         return _compose(
-            overrides,
             config_group=config_group,
+            overrides=overrides,
             return_as_dict=return_as_dict,
             throw_on_resolution_failure=throw_on_resolution_failure,
             throw_on_missing=throw_on_missing,
@@ -759,6 +860,12 @@ class eKonf:
         cfg: Any,
     ):
         return _is_config(cfg)
+
+    @staticmethod
+    def is_list(
+        cfg: Any,
+    ):
+        return _is_list(cfg)
 
     @staticmethod
     def is_instantiatable(cfg: Any):
@@ -944,3 +1051,125 @@ class eKonf:
     @staticmethod
     def exists(a, *p):
         return _exists(a, *p)
+
+    @staticmethod
+    def is_file(a, *p):
+        return _is_file(a, *p)
+
+    @staticmethod
+    def is_dir(a, *p):
+        return _is_dir(a, *p)
+
+    @staticmethod
+    def mkdir(_path: str):
+        return _mkdir(_path)
+
+    @staticmethod
+    def join_path(a, *p):
+        return _join_path(a, *p)
+
+    @staticmethod
+    def apply(
+        func,
+        series,
+        description=None,
+        use_batcher=True,
+        minibatch_size=None,
+        num_workers=None,
+        verbose=False,
+        **kwargs,
+    ):
+        return _apply(
+            func,
+            series,
+            description=description,
+            use_batcher=use_batcher,
+            minibatch_size=minibatch_size,
+            num_workers=num_workers,
+            verbose=verbose,
+            **kwargs,
+        )
+
+    @staticmethod
+    def ensure_kwargs(_kwargs, _fn):
+        return _ensure_kwargs(_kwargs, _fn)
+
+    @staticmethod
+    def save_data(
+        data,
+        filename=None,
+        base_dir=None,
+        columns=None,
+        index=False,
+        filetype="parquet",
+        suffix=None,
+        verbose=False,
+        **kwargs,
+    ):
+        from ekorpkit.io.file import save_data
+
+        if filename is None:
+            raise ValueError("filename must be specified")
+        save_data(
+            data,
+            filename,
+            base_dir=base_dir,
+            columns=columns,
+            index=index,
+            filetype=filetype,
+            suffix=suffix,
+            verbose=verbose,
+            **kwargs,
+        )
+
+    @staticmethod
+    def load_data(filename=None, base_dir=None, verbose=False, **kwargs):
+        from ekorpkit.io.file import load_data
+
+        if filename is None:
+            raise ValueError("filename must be specified")
+        return load_data(filename, base_dir=base_dir, verbose=verbose, **kwargs)
+
+    @staticmethod
+    def get_filepaths(
+        filename_patterns=None, base_dir=None, recursive=True, verbose=True, **kwargs
+    ):
+        from ekorpkit.io.file import get_filepaths
+
+        if filename_patterns is None:
+            raise ValueError("filename must be specified")
+        return get_filepaths(
+            filename_patterns,
+            base_dir=base_dir,
+            recursive=recursive,
+            verbose=verbose,
+            **kwargs,
+        )
+
+    @staticmethod
+    def concat_data(
+        data,
+        columns=None,
+        add_key_as_name=False,
+        name_column=Keys.NAME_KEY.value,
+        ignore_index=True,
+        verbose=False,
+        **kwargs,
+    ):
+        from ekorpkit.io.file import concat_data
+
+        return concat_data(
+            data,
+            columns=columns,
+            add_key_as_name=add_key_as_name,
+            name_column=name_column,
+            ignore_index=ignore_index,
+            verbose=verbose,
+            **kwargs,
+        )
+
+    @staticmethod
+    def is_dataframe(data):
+        from ekorpkit.io.file import is_dataframe
+
+        return is_dataframe(data)

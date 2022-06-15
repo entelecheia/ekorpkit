@@ -1,0 +1,4 @@
+defaults:
+  - classification
+  - override /_eval_: automl_classification
+  - override /columns: model_automl_classification

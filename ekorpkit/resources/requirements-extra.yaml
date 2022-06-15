@@ -38,11 +38,11 @@ tensorflow: all, transformers, model
 # tf-nightly: transformers, model
 google-api-python-client: all, transformers, model
 google-cloud-storage>=2.0.0: all, transformers, model, dataset
-flaml: automl, model
-yellowbrick: automl, model
+flaml: automl, model, all
+yellowbrick: automl, model, all
 
-modin: pandas
-ray: pandas
+modin: ddbackend
+ray: ddbackend
 # dask: pandas
 # swifter: pandas
 

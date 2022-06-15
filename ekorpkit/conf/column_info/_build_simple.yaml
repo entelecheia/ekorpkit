@@ -1,0 +1,8 @@
+defaults:
+  - /_keys_: simple
+  - /columns: dataset_simple
+  - datetime: default
+
+data:
+  id: int
+  text: str

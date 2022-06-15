@@ -3,7 +3,7 @@ import logging
 import os
 import pandas as pd
 from ekorpkit import eKonf
-from ekorpkit.io.file import save_dataframe
+
 
 log = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class HFDS:
                 dfs.append(df)
 
         df = pd.concat(dfs, ignore_index=True)
-        save_dataframe(df, self.output_file)
+        eKonf.save_data(df, self.output_file)
         if self.verbose:
             print(df.tail())
-        print(f"Saved {len(df.index)} documents to {self.output_file}")
+        log.info(f"Saved {len(df.index)} documents to {self.output_file}")

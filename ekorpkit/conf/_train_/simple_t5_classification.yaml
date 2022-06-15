@@ -1,0 +1,3 @@
+prefix: ${..columns.prefix}
+input_text: ${..columns.input_text}
+target_text: ${..columns.target_text}

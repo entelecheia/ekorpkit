@@ -10,7 +10,7 @@ secondary_to: 0
 shade: true
 hue:
 palette:
-_parms_:
+rcParams:
   shade: ${oc.select:..shade, true}
   hue: ${oc.select:..hue, null}
   palette: ${oc.select:..palette, null}

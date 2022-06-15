@@ -1,9 +1,10 @@
 defaults:
   - /_func_: save_dataframe
+  - /path: output
 
 name: ${oc.select:..name, pipeline}
-columns:
-filepath:
+path:
+  columns:
 filetype:
 output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
 output_file: ${oc.select:..output_file, ${.name}.${.filetype}}

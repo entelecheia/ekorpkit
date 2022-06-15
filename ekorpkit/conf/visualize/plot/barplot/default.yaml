@@ -1,0 +1,10 @@
+_func_: snsplot
+_name_: barplot
+axno: 0
+datano: 0
+x:
+y:
+secondary_y: false
+secondary_to: 0
+hue:
+rcParams:

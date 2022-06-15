@@ -19,4 +19,3 @@ def test_dependencies():
     deps = eKonf.dependencies("all")
 
     assert type(deps) == set
-    assert len(deps) == 41

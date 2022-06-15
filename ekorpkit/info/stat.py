@@ -3,7 +3,6 @@ import time
 from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.utils.func import humanbytes, get_modified_time
-from ekorpkit.pipelines.pipe import apply
 from ekorpkit.utils.func import elapsed_timer
 
 
@@ -188,7 +187,7 @@ def summary_stats(
 
     for col, _func_name_ in num_columns.items():
         len_func = eKonf.partial(_func_[_func_name_])
-        df[col] = apply(
+        df[col] = eKonf.apply(
             len_func, df[text_key], description=f"apply {_func_name_} to {col}"
         )
 

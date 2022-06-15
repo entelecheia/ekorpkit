@@ -1,10 +1,9 @@
 defaults:
   - feature
   - /pipeline: _build_feature
-  - /info: _build_feature
 
-autobuild: true
-force_rebuild: false
+auto:
+  build: true
 info:
   data_dir: ${iif:${..use_name_as_subdir},${..data_dir}/${.name},${..data_dir}}
 pipeline:

@@ -10,5 +10,5 @@ y:
 secondary_y: false
 secondary_to: 0
 columns:
-_parms_:
+rcParams:
   columns: ${oc.select:..columns, null}

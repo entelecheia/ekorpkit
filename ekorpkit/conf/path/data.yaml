@@ -1,0 +1,4 @@
+defaults:
+  - _default
+  - data: default
+  - /cache: archive

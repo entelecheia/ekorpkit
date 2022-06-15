@@ -1,2 +1,2 @@
 _partial_: true
-_target_: ekorpkit.io.file.save_dataframe
+_target_: ekorpkit.io.file.save_data

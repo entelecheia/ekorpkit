@@ -11,7 +11,7 @@ annot: true
 fmt: .1f
 vmin:
 vmax:
-_parms_:
+rcParams:
   cmap: ${oc.select:..cmap, null}
   annot: ${oc.select:..annot, true}
   fmt: ${oc.select:..fmt, .1f}

@@ -14,8 +14,8 @@ def yellowbrick_features(ax=None, x=None, y=None, data=None, **kwargs):
         Manifold,
     )
 
-    _parms_ = {} or kwargs.get(eKonf.Keys.PARMS)
-    _name_ = kwargs.get(eKonf.Keys.NAME)
+    rcParams = {} or kwargs.get(eKonf.Keys.rcPARAMS)
+    _name_ = kwargs.get(eKonf.Keys.NAME_KEY)
     _method_ = kwargs.get(eKonf.Keys.METHOD)
 
     if ax is None:
@@ -24,7 +24,7 @@ def yellowbrick_features(ax=None, x=None, y=None, data=None, **kwargs):
         x = data[x]
     if y is not None:
         y = data[y]
-    viz = locals()[_name_](ax=ax, **_parms_)
+    viz = locals()[_name_](ax=ax, **rcParams)
     for _m in _method_:
         _fn = getattr(viz, _m)
         _fn_args = getargspec(_fn).args

@@ -1,0 +1,10 @@
+defaults:
+  - _default
+  - data: default
+  - meta: default
+  - sample: default
+  - /force: build_dataset
+
+data_sources:
+  train:
+parent_dir: ${oc.select:..data_dir, ${.data_dir}}

@@ -1,9 +1,7 @@
 import logging
-import os
 import sklearn
 from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
-from ekorpkit.io.file import save_dataframe
 
 
 log = logging.getLogger(__name__)
@@ -13,34 +11,27 @@ class SimpleTrainer:
     __metaclass__ = ABCMeta
 
     def __init__(self, **args):
-        args = eKonf.to_dict(args)
+        args = eKonf.to_config(args)
         self.args = args
-        self.name = args["name"]
-        self.verbose = args.get("verbose", True)
-        self._model_cfg = args["config"]
-        self._model_eval = args.get("model", {}).get("eval")
-        self._dataset = args.get(eKonf.Keys.DATASET, None)
-        self._to_predict = args["to_predict"]
-        self._to_train = args["to_train"]
-        self._method_ = self.args.get("_method_")
-        self._pred_output_dir = args["pred_output_dir"]
-        self._pred_output_file = args["pred_output_file"]
+        self.name = args.name
+        self.verbose = args.get("verbose", False)
+        self._model_cfg = eKonf.to_dict(args.config)
+        self._dataset = args.get(eKonf.Keys.DATASET)
+        self._keys_ = args.get(eKonf.Keys.KEYS)
+        self._columns = args.get(eKonf.Keys.COLUMNS)
+        self._train_ = args[eKonf.Keys.TRAIN]
+        self._predict_ = args[eKonf.Keys.PREDICT]
+        self._method_ = self.args.get(eKonf.Keys.METHOD)
+        self._eval_cfg = args.model.eval
 
-        self._labels_key = self._to_train.get("labels")
-
-        self._predicted_key = "predicted"
-        self._model_outputs_key = "model_outputs"
-
-        os.makedirs(args["output_dir"], exist_ok=True)
-        os.makedirs(args["cache_dir"], exist_ok=True)
-        os.makedirs(args["pred_output_dir"], exist_ok=True)
-        os.makedirs(args["result_dir"], exist_ok=True)
+        self._path = self.args.path
+        self._pred_file = args.path.pred.filepath
 
         self.model = None
         self.dataset = None
         self.splits = {}
         self.train_data = None
-        self.eval_data = None
+        self.dev_data = None
         self.test_data = None
 
         eKonf.methods(self._method_, self)
@@ -50,7 +41,7 @@ class SimpleTrainer:
         raise NotImplementedError("Must override train")
 
     @abstractmethod
-    def _predict(self, to_predict: list):
+    def _predict(self, data: list):
         raise NotImplementedError("Must override predict")
 
     def load_datasets(self):
@@ -60,48 +51,68 @@ class SimpleTrainer:
         self.dataset = eKonf.instantiate(self._dataset)
         self.splits = self.dataset.splits
 
-        self.train_data = self.splits[self.dataset.SPLITS.TRAIN]
+        self.train_data = self.dataset.train_data
+        self.dev_data = self.dataset.dev_data
+        self.test_data = self.dataset.test_data
+
         if self.verbose:
             print("Train data:")
-            print(self.train_data.info())
             print(self.train_data.tail())
-        if "dev" in self.splits:
-            self.eval_data = self.splits[self.dataset.SPLITS.DEV]
+        if self.dev_data is not None:
             self._model_cfg["evaluate_during_training"] = True
             if self.verbose:
                 print("Eval data:")
-                print(self.eval_data.info())
-                print(self.eval_data.tail())
+                print(self.dev_data.tail())
         else:
-            self.eval_data = None
             self._model_cfg["evaluate_during_training"] = False
-        self.test_data = self.splits[self.dataset.SPLITS.TEST]
-        if self.verbose:
+        if self.test_data is not None and self.verbose:
             print("Test data:")
-            print(self.test_data.info())
             print(self.test_data.tail())
 
-    def convert_to_predict(self, df):
-        input_key = self._to_predict["input"]
-        to_predict = df[input_key].tolist()
+    def convert_to_train(self):
+        return (
+            self.rename_columns(self.train_data, self._train_),
+            self.rename_columns(self.dev_data, self._train_),
+            self.rename_columns(self.test_data, self._train_),
+        )
+
+    def rename_columns(self, data, columns):
+        if not columns or data is None:
+            log.info("No columns or data to rename")
+            return data
+        renames = {
+            name: key
+            for key, name in columns.items()
+            if name and name != key and name in data.columns
+        }
+        log.info(f"Renaming columns: {renames}")
+        if renames:
+            data = data.copy().rename(columns=renames)
         if self.verbose:
-            print(to_predict[:5])
-        return to_predict
+            print(data.head())
+        return data
 
-    def append_predictions(self, df, preds):
-        predicted_column = self._to_predict[self._predicted_key]
-        model_outputs_column = self._to_predict[self._model_outputs_key]
-        df[predicted_column] = preds[self._predicted_key]
-        df[model_outputs_column] = preds[self._model_outputs_key]
-        return df
+    def convert_to_predict(self, data):
+        input_col = self._predict_[self._keys_.input]
+        data_to_predict = data[input_col].tolist()
+        if self.verbose:
+            print(data_to_predict[:5])
+        return data_to_predict
 
-    def predict(self, df, _to_predict={}):
-        if _to_predict:
-            self._to_predict = _to_predict
-        to_predict = self.convert_to_predict(df)
-        preds = self._predict(to_predict)
-        df = self.append_predictions(df, preds)
-        return df
+    def append_predictions(self, data, preds):
+        predicted_column = self._predict_[self._keys_.predicted]
+        model_outputs_column = self._predict_[self._keys_.model_outputs]
+        data[predicted_column] = preds[self._keys_.predicted]
+        data[model_outputs_column] = preds[self._keys_.model_outputs]
+        return data
+
+    def predict(self, data, _predict_={}):
+        if _predict_:
+            self._predict_ = _predict_
+        data_to_predict = self.convert_to_predict(data)
+        preds = self._predict(data_to_predict)
+        data = self.append_predictions(data, preds)
+        return data
 
     def eval(self):
         if not self.splits:
@@ -111,15 +122,14 @@ class SimpleTrainer:
             log.warning("No test data found")
             return
 
-        to_predict = self.convert_to_predict(self.test_data)
-        preds = self._predict(to_predict)
+        data_to_predict = self.convert_to_predict(self.test_data)
+        preds = self._predict(data_to_predict)
         self.pred_data = self.append_predictions(self.test_data, preds)
-        pred_filepath = os.path.join(self._pred_output_dir, self._pred_output_file)
-        save_dataframe(self.pred_data, pred_filepath)
+        eKonf.save_data(self.pred_data, self._pred_file)
         if self.verbose:
             print(self.pred_data.head())
-        if self._model_eval:
-            eKonf.instantiate(self._model_eval, data=self.pred_data)
+        if self._eval_cfg:
+            eKonf.instantiate(self._eval_cfg, data=self.pred_data)
 
 
 class SimpleNER(SimpleTrainer):
@@ -131,7 +141,7 @@ class SimpleNER(SimpleTrainer):
 
         args = self.args
         if args.labels is None:
-            labels = list(self.train_data[self._labels_key].unique())
+            labels = list(self.train_data[self._keys_.labels].unique())
 
         # Create a NERModel
         model = NERModel(
@@ -143,7 +153,7 @@ class SimpleNER(SimpleTrainer):
         )
 
         # Train the model
-        model.train_model(self.train_data, eval_data=self.eval_data)
+        model.train_model(self.train_data, eval_data=self.dev_data)
 
         # Evaluate the model
         result, model_outputs, predictions = model.eval_model(self.test_data)
@@ -170,7 +180,7 @@ class SimpleMultiLabel(SimpleTrainer):
         )
 
         # Train the model
-        model.train_model(self.train_data, eval_df=self.eval_data)
+        model.train_model(self.train_data, eval_df=self.dev_data)
 
         # Evaluate the model
         result, model_outputs, predictions = model.eval_model(self.test_data)
@@ -190,34 +200,34 @@ class SimpleClassification(SimpleTrainer):
         args = self.args
         if not self.splits:
             self.load_datasets()
+        train_data, dev_data, test_data = self.convert_to_train()
 
         self._model_cfg["labels_list"] = (
-            self.train_data[self._labels_key].unique().tolist()
+            train_data[self._keys_.labels].unique().tolist()
         )
-        args["num_labels"] = len(self._model_cfg["labels_list"])
+        args.num_labels = len(self._model_cfg["labels_list"])
 
         # Create a NERModel
         model = ClassificationModel(
-            args["model_type"],
-            args["model_uri"],
-            num_labels=args["num_labels"],
-            cuda_device=args["cuda_device"],
+            args.model_type,
+            args.model_uri,
+            num_labels=args.num_labels,
+            cuda_device=args.cuda_device,
             args=self._model_cfg,
         )
 
         # Train the model
         model.train_model(
-            self.train_data, eval_df=self.eval_data, acc=sklearn.metrics.accuracy_score
+            train_data, eval_df=dev_data, acc=sklearn.metrics.accuracy_score
         )
 
         # Evaluate the model
         result, model_outputs, wrong_predictions = model.eval_model(
-            self.test_data, acc=sklearn.metrics.accuracy_score
+            test_data, acc=sklearn.metrics.accuracy_score
         )
         if self.verbose:
             print(f"Evaluation result: {result}")
             print(f"Wrong predictions: {wrong_predictions[:5]}")
-            # print(f"Model outputs: {model_outputs[:5]}")
             print(f"num_outputs: {len(model_outputs)}")
             print(f"num_wrong_predictions: {len(wrong_predictions)}")
 
@@ -225,22 +235,22 @@ class SimpleClassification(SimpleTrainer):
         from simpletransformers.classification import ClassificationModel
 
         if model_dir is None:
-            model_dir = self.args["best_model_dir"]
+            model_dir = self.args.config.best_model_dir
 
         self.model = ClassificationModel(
-            self.args["model_type"], model_dir, args=self._model_cfg
+            self.args.model_type, model_dir, args=self._model_cfg
         )
         log.info(f"Loaded model from {model_dir}")
 
-    def _predict(self, to_predict: list):
+    def _predict(self, data: list):
         if self.model is None:
             self.load_model()
 
-        predictions, raw_outputs = self.model.predict(to_predict)
+        predictions, raw_outputs = self.model.predict(data)
         log.info(f"type of raw_outputs: {type(raw_outputs)}")
-        raw_outputs= [output.flatten().tolist() for output in raw_outputs]
+        raw_outputs = [output.flatten().tolist() for output in raw_outputs]
         log.info(f"raw_output: {raw_outputs[0]}")
         return {
-            self._predicted_key: predictions,
-            self._model_outputs_key: raw_outputs,
+            self._keys_.predicted: predictions,
+            self._keys_.model_outputs: raw_outputs,
         }

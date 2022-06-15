@@ -119,8 +119,6 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
 
 
 def load_dataframe(split_name, **loader_cfg):
-    from ekorpkit.io.file import load_dataframe
-
     data_dir = loader_cfg["data_dir"]
     data_files = loader_cfg["data_souces"][split_name]
     filepaths = get_filepaths(data_files, data_dir)
@@ -136,7 +134,7 @@ def load_dataframe(split_name, **loader_cfg):
                         content = zfo.read().decode(errors="ignore")
             df = pd.read_csv(StringIO(content), index_col=None)
         else:
-            df = load_dataframe(filepath=filepath, index_col=None)
+            df = eKonf.load_data(filepath, index_col=None)
         documents.append(df)
     df = pd.concat(documents, ignore_index=True)
     return df

@@ -1,0 +1,4 @@
+id: ${oc.select:.._keys_.id,id}
+prefix: ${oc.select:.._keys_.prefix,prefix}
+input_text: ${oc.select:.._keys_.input_text,input_text}
+target_text: ${oc.select:.._keys_.target_text,target_text}

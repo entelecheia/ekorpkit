@@ -3,5 +3,4 @@ defaults:
   - lineplot: default
 
 name: LinePlot
-plots:
-  - ${..lineplot}
+plot: ${.lineplot}

@@ -13,7 +13,7 @@ classes:
 features:
 scale: true
 proj_features: true
-_parms_:
+rcParams:
   classes: ${oc.select:..classes, null}
   features: ${oc.select:..features, null}
   scale: ${oc.select:..scale, true}

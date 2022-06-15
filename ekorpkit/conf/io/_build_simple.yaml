@@ -1,7 +1,5 @@
 defaults:
-  - _default
+  - _build
   - loader: dataframe
 
 data_dir: ${dir.archive}/datasets/source/simple/${.name}
-calculate_stats: false
-preprocess_text: false

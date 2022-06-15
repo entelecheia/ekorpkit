@@ -6,7 +6,7 @@ from ekorpkit import eKonf
 def test_setiment_lexicon():
     ngram_cfg = eKonf.compose(config_group="model/ngram=mpko_lex")
     ngram_cfg.verbose = True
-    ngram_cfg.autoload = True
+    ngram_cfg.auto.load = True
     ngram = eKonf.instantiate(ngram_cfg)
 
     sentence = "투기를 억제하기 위해 금리를 인상해야 한다."
@@ -15,7 +15,7 @@ def test_setiment_lexicon():
 
     ngram_cfg = eKonf.compose(config_group="model/ngram=lm")
     ngram_cfg.verbose = True
-    ngram_cfg.autoload = True
+    ngram_cfg.auto.load = True
     ngram = eKonf.instantiate(ngram_cfg)
 
     sentence = "Beyond the improved voice capabilities, customers now have a streamlined way to comply with recalls and other traceability requirements, providing them with a competitive advantage."
@@ -30,8 +30,8 @@ def test_predict_sentiments():
     ds_cfg = eKonf.compose(config_group="dataset")
     ds_cfg.verbose = True
     ds_cfg.name = "financial_phrasebank"
-    ds_cfg.cache.uri = "https://github.com/entelecheia/ekorpkit-book/raw/main/data/financial_phrasebank.zip"
-    ds_cfg.data_dir = ds_cfg.cache.path
+    ds_cfg.path.cache.uri = "https://github.com/entelecheia/ekorpkit-book/raw/main/data/financial_phrasebank.zip"
+    ds_cfg.data_dir = ds_cfg.path.cached_path
     ds_cfg.use_name_as_subdir = True
 
     cfg = eKonf.compose(config_group="pipeline")
@@ -51,8 +51,8 @@ def test_predict_sentiments():
 def test_eval_sentiments():
     eval_cfg = eKonf.compose(config_group="model/eval=classification")
     eval_cfg.verbose = True
-    eval_cfg.to_eval.actual = "labels"
-    eval_cfg.to_eval.predicted = "polarity_label"
+    eval_cfg._eval_.actual = "labels"
+    eval_cfg._eval_.predicted = "polarity_label"
     eval_cfg.data_dir = "./data/tmp/predict"
     eval_cfg.data_file = "financial_phrasebank*.parquet"
     eval_cfg.output_dir = "./data/tmp/eval"
@@ -65,11 +65,11 @@ def test_eval_sentiments():
 def test_eval_fomc_sentiments():
     cfg = eKonf.compose(config_group="corpus")
     cfg.name = "fomc"
-    cfg.cache.uri = (
+    cfg.path.cache.uri = (
         "https://github.com/entelecheia/ekorpkit-book/raw/main/data/fomc.zip"
     )
-    cfg.data_dir = cfg.cache.path
-    cfg.automerge = True
+    cfg.data_dir = cfg.path.cached_path
+    cfg.auto.merge = True
     fomc = eKonf.instantiate(cfg)
 
     fomc_statements = fomc.data[fomc.data.content_type == "fomc_statement"]
@@ -90,4 +90,3 @@ def test_eval_fomc_sentiments():
     fomc_sentiments = eKonf.pipe(cfg, fomc_statements)
 
     assert True
-

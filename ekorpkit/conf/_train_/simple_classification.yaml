@@ -1,0 +1,2 @@
+labels: ${..columns.labels}
+text: ${..columns.text}

@@ -1,17 +1,14 @@
 defaults:
   - /_func_: predict
+  - /path: output
+  - /columns: model_simple_classification
+  - /_predict_: simple_classification
 
 name: predict
 model:
-columns:
+data_columns:
 output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
 output_file: ${oc.select:..output_file, null}
 num_workers: ${oc.select:..num_workers,1}
 use_batcher: ${oc.select:..use_batcher, true}
 verbose: ${oc.select:..verbose, true}
-to_predict:
-  prefix:
-  input: ${oc.select:..apply_to, text}
-  predicted: pred_labels
-  model_outputs: raw_preds
-  task_prefix: ${oc.select:..model.model_class, null}

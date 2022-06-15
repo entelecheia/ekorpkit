@@ -1,0 +1,21 @@
+defaults:
+  - _default
+  - config: classification
+  - /_keys_: simple_classification
+  - /columns: model_simple_classification
+  - /_train_: simple_classification
+  - /_predict_: simple_classification
+  - /model/eval: simple_classification
+
+_target_: ekorpkit.models.transformer.SimpleClassification
+model_class: classification
+labels: ${oc.select:dataset.labels, null}
+num_labels:
+use_cuda: true
+cuda_device: -1
+model:
+  output_dir: ${..output_dir}
+  labels: ${..labels}
+  columns: ${..columns}
+  eval:
+    columns: ${..columns}

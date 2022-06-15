@@ -1,0 +1,4 @@
+id: ${oc.select:.._keys_.id,id}
+text: ${oc.select:.._keys_.text,text}
+merge_meta_on: ${oc.select:.id}
+timestamp: ${oc.select:..timestamp.key,timestamp}

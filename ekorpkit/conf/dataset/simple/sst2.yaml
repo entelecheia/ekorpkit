@@ -1,22 +1,13 @@
 defaults:
-  - _build
+  - _build_classification
   - override /io/loader: hfds
 
 name: sst2
 domain: general
-task: classification
 lang: en
-column_info: 
-  columns:
-    id: id
-    text: text
-  data:
-    id: int
-    labels: str
-    text: str
 
 io:
-  data_sources: 
+  data_sources:
     train: train
     test: test
     dev: validation
@@ -39,3 +30,4 @@ pipeline:
       to_replace:
         0: negative
         1: positive
+        -1: null

@@ -1,0 +1,5 @@
+defaults:
+  - _build
+  - override /column_info: _build_simple_classification
+
+task: classification

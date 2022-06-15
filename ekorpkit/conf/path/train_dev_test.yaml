@@ -1,0 +1,7 @@
+defaults:
+  - _default
+  - train: default
+  - dev: default
+  - test: default
+
+name: ${oc.select:..name, ${name}}

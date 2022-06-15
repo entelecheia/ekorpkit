@@ -1,11 +1,13 @@
 defaults:
   - /_func_: sampling
+  - /path: output
 
 sample_size_per_group: 10
 random_state: 123
-groupby: 
+groupby:
 value_var:
-columns:
-output_dir: 
+path:
+  columns:
+output_dir:
 output_file:
 verbose: ${oc.select:..verbose, true}

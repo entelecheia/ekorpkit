@@ -1,3 +1,6 @@
+defaults:
+  - /path: model_pred
+
 _method_:
 name: ${oc.select:..name, ${.model_name}-${.model_class}}
 dataset: ${dataset}
@@ -6,11 +9,8 @@ model_type: ${.pretrained.model_type}
 model_name: ${.pretrained.model_name}
 model_uri: ${.pretrained.model_uri}
 output_dir: ${dir.project}/outputs/${.wandb_project}/${.model_name}
-best_model_dir: ${.output_dir}/best_model
-pred_output_dir: ${.output_dir}/predictions
-pred_output_file: ${.name}_test_predictions.parquet
-result_dir: ${.output_dir}/results
-cache_dir: ${dir.cache}/models
+model_dir: ${.output_dir}
+pred_file: ${.name}_test_predictions.parquet
 wandb_project: ${project}-${.name}
 wandb_kwargs:
   group: ${..model_name}

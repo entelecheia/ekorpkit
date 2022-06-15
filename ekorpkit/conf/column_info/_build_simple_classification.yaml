@@ -1,0 +1,7 @@
+defaults:
+  - _build_simple
+  - override /_keys_: simple_classification
+  - override /columns: dataset_simple_classification
+
+data:
+  labels: str

@@ -1,0 +1,10 @@
+defaults:
+  - _default
+  - model: default
+  - pred: default
+
+name: ${oc.select:..name, ${name}}
+model_dir: ${oc.select:..output_dir, ${.root}}
+model_file: ${oc.select:..model_file, null}
+pred_dir: ${oc.select:..output_dir, ${.root}}
+pred_file: ${oc.select:..pred_file, null}

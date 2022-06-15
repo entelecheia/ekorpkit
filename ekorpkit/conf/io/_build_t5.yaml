@@ -1,7 +1,5 @@
 defaults:
-  - _default
+  - _build
   - loader: tsv
 
 data_dir: ${dir.archive}/datasets/t5/source/${.name}
-calculate_stats: false
-preprocess_text: false

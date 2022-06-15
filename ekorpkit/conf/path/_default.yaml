@@ -1,0 +1,14 @@
+root: ${dir.data}/${.name}
+name: ${oc.select:..name, ${name}}
+cached_path: ${oc.select:.cache.path,null}
+filetype: ${oc.select:..filetype,''}
+verbose: ${oc.select:..verbose,false}
+
+data_dir: ${oc.select:..data_dir, ${.root}}
+data_file: ${oc.select:..data_file, null}
+concat_data: ${oc.select:..concat_data, false}
+data_columns: ${oc.select:..data_columns, null}
+columns: ${.data_columns}
+output_dir: ${mkdir:${oc.select:..output_dir, null}}
+output_file: ${oc.select:..output_file, null}
+suffix: ${oc.select:..suffix, null}

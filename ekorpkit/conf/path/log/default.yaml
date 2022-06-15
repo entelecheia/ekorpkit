@@ -1,0 +1,4 @@
+file: ${..log_file}
+filename: ${.file}
+base_dir: ${..log_dir}
+filepath: ${join_path:${.base_dir},${.filename}}

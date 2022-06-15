@@ -3,59 +3,15 @@ import codecs
 import os
 import numpy as np
 import pandas as pd
-import ekorpkit.utils.batch.batcher as batcher
 from collections import OrderedDict
-from functools import partial, reduce
+from functools import reduce
 from ekorpkit.utils import print_status
-from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.utils.func import elapsed_timer
-from ekorpkit.io.file import save_dataframe as save_dataframe_
 from ekorpkit import eKonf
 from ekorpkit.ekonf import apply_pipe
-from tqdm.auto import tqdm
 
 
 log = logging.getLogger(__name__)
-
-
-def apply(
-    func,
-    series,
-    description=None,
-    verbose=False,
-    use_batcher=True,
-    minibatch_size=None,
-    num_workers=None,
-    **kwargs,
-):
-    batcher_instance = batcher.batcher_instance
-    if use_batcher and batcher_instance is not None:
-        if batcher_instance is not None:
-            batcher_minibatch_size = batcher_instance.minibatch_size
-        else:
-            batcher_minibatch_size = 1000
-        if minibatch_size is None:
-            minibatch_size = batcher_minibatch_size
-        if num_workers is not None:
-            batcher_instance.procs = num_workers
-        if batcher_instance.procs > 1:
-            batcher_instance.minibatch_size = min(
-                int(len(series) / batcher_instance.procs) + 1, minibatch_size
-            )
-            log.info(
-                f"Using batcher with minibatch size: {batcher_instance.minibatch_size}"
-            )
-            results = decorator_apply(func, batcher_instance, description=description)(
-                series
-            )
-            if batcher_instance is not None:
-                batcher_instance.minibatch_size = batcher_minibatch_size
-            return results
-
-    if batcher_instance is None:
-        log.warning("Warning: batcher not initialized")
-    tqdm.pandas(desc=description)
-    return series.progress_apply(func)
 
 
 def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
@@ -380,17 +336,11 @@ def split_sampling(df, args):
     test_file = args.get("test_file", None)
     dev_file = args.get("dev_file", None)
     if train_file and train is not None:
-        save_dataframe_(
-            train, output_dir=output_dir, output_file=train_file, verbose=verbose
-        )
+        eKonf.save_data(train, train_file, base_dir=output_dir, verbose=verbose)
     if test_file and test is not None:
-        save_dataframe_(
-            test, output_dir=output_dir, output_file=test_file, verbose=verbose
-        )
+        eKonf.save_data(test, test_file, base_dir=output_dir, verbose=verbose)
     if dev_file and dev is not None:
-        save_dataframe_(
-            dev, output_dir=output_dir, output_file=dev_file, verbose=verbose
-        )
+        eKonf.save_data(dev, dev_file, base_dir=output_dir, verbose=verbose)
 
     return df
 
@@ -416,7 +366,7 @@ def top_values(df, args):
 
     if value_label is not None and value_name is not None:
         # df[value_name] = df.apply(label, axis=1)
-        df[value_name] = apply(
+        df[value_name] = eKonf.apply(
             label,
             df,
             description="labeling",
@@ -644,7 +594,7 @@ def normalize(df, args):
     normalizer = eKonf.instantiate(normalizer)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 normalizer.normalize,
                 df[key],
                 description=f"Normalizing column: {key}",
@@ -679,12 +629,11 @@ def predict(df, args):
     use_batcher = args.get("use_batcher", True)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
-        if verbose:
-            log.warning("No columns specified")
+        log.warning("No columns specified")
         return df
-    columns = args["columns"]
+    data_columns = args["data_columns"]
 
-    to_predict = args.get("to_predict", None)
+    _predict_ = args.get("_predict_", None)
     model = args.get("model", None)
     if model is None:
         log.warning("No model specified")
@@ -701,7 +650,7 @@ def predict(df, args):
     if "sentiment.analyser" in _target_:
         key = apply_to
         with elapsed_timer(format_time=True) as elapsed:
-            predictions = apply(
+            predictions = eKonf.apply(
                 model.predict,
                 df[key],
                 description=f"Predicting [{key}]",
@@ -710,18 +659,20 @@ def predict(df, args):
                 num_workers=num_workers,
             )
             pred_df = pd.DataFrame(predictions.tolist(), index=predictions.index)
-            if columns:
-                columns += pred_df.columns.tolist()
-                args["columns"] = columns
+            if data_columns:
+                data_columns += pred_df.columns.tolist()
             df = df.join(pred_df)
             log.info(" >> elapsed time to predict: {}".format(elapsed()))
     else:
-        df = model.predict(df, to_predict)
-        if columns:
-            columns.append(model._to_predict["predicted"])
-            args["columns"] = columns
+        df = model.predict(df, _predict_)
+        if data_columns:
+            data_columns.append(model._predict_["predicted"])
 
-    save_dataframe(df, args)
+    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
+    _path[eKonf.Keys.SUFFIX.value] = args.get(eKonf.Keys.SUFFIX)
+    _path["columns"] = data_columns
+    log.info(f"Saving predictions to: {_path}")
+    eKonf.save_data(df, **_path)
 
     return df
 
@@ -747,7 +698,7 @@ def segment(df, args):
     segmenter = eKonf.instantiate(segmenter)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 segmenter.segment_article,
                 df[key],
                 description=f"Splitting column: {key}",
@@ -779,7 +730,7 @@ def tokenize(df, args):
     tokenizer = eKonf.instantiate(tokenizer)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 tokenizer.tokenize_article,
                 df[key],
                 description=f"Tokenizing column: {key}",
@@ -820,7 +771,7 @@ def extract_tokens(df, args):
 
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 extract_func,
                 df[key],
                 description=f"Extracting column: {key}",
@@ -851,7 +802,7 @@ def chunk(df, args):
     segmenter = eKonf.instantiate(segmenter)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
-            df[key] = apply(
+            df[key] = eKonf.apply(
                 segmenter.chunk_article,
                 df[key],
                 description=f"Chunking column: {key}",
@@ -873,14 +824,14 @@ def general_function(df, args):
 
     with elapsed_timer(format_time=True) as elapsed:
         if apply_to is None:
-            df = getattr(df, method[eKonf.Keys.NAME])(**method[eKonf.Keys.PARMS])
+            df = getattr(df, method[eKonf.Keys.NAME_KEY])(**method[eKonf.Keys.rcPARAMS])
         else:
             if isinstance(apply_to, str):
                 apply_to = [apply_to]
             for key in apply_to:
                 log.info(f"processing column: {key}")
-                df[key] = getattr(df[key], method[eKonf.Keys.NAME])(
-                    **method[eKonf.Keys.PARMS]
+                df[key] = getattr(df[key], method[eKonf.Keys.NAME_KEY])(
+                    **method[eKonf.Keys.rcPARAMS]
                 )
 
         log.info(" >> elapsed time to replace: {}".format(elapsed()))
@@ -972,7 +923,7 @@ def filter_length(df, args, **kwargs):
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
             _len_column = f"{key}_{len_column}"
-            df[_len_column] = apply(
+            df[_len_column] = eKonf.apply(
                 len_func, df[key], description=f"Calculating length"
             )
             if min_length and min_length > 0:
@@ -1047,6 +998,7 @@ def save_samples(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
+
     sample_length_to_print = args.get("sample_length_to_print", 1000)
     if apply_to is None:
         if verbose:
@@ -1055,7 +1007,6 @@ def save_samples(df, args):
     if isinstance(apply_to, str):
         apply_to = [apply_to]
     num_samples_to_save = args.get("num_samples_to_save", None)
-    smaple_file_prefix = args.get("sample_file_prefix", "sample")
     if verbose:
         log.info(f"Saving samples: {args}")
 
@@ -1076,7 +1027,9 @@ def save_samples(df, args):
         print_text += sample_separator
     sample_text = sample_text.strip()
     print_text = print_text.strip()
-    sample_file = smaple_file_prefix + ".txt"
+
+    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
+    sample_file = _path.get("filepath") or "sample.txt"
     open(sample_file, "w", encoding="utf-8").write(sample_text)
 
     if verbose:
@@ -1191,11 +1144,9 @@ def split_dataframe(df, args):
 
 
 def concat_dataframes(dataframes, args):
-    from ekorpkit.io.file import concat_dataframes as concat_dataframes_
-
     args = eKonf.to_dict(args)
 
-    return concat_dataframes_(data=dataframes, **args)
+    return eKonf.concat_data(data=dataframes, **args)
 
 
 def merge_dataframe(df=None, args=None):
@@ -1229,8 +1180,8 @@ def merge_dataframe(df=None, args=None):
 def save_metadata(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
-    filepath = args.get("filepath", None)
-    filetype = args.get("filetype", None)
+    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
+    # filetype = args.get("filetype", None)
     column_info = args.get("column_info", None)
     split_name = args.get("split_name", None)
 
@@ -1244,13 +1195,11 @@ def save_metadata(df, args):
         if eKonf.Keys.SPLIT in meta_columns and eKonf.Keys.SPLIT not in df.columns:
             df[eKonf.Keys.SPLIT] = split_name
         df_meta = df[meta_columns]
-        save_dataframe_(df_meta, filepath, filetype, verbose)
+        eKonf.save_data(df_meta, **_path)
 
     data_info = column_info.get("data", None)
     if isinstance(data_info, dict):
         data_keys = list(data_info.keys())
-        # if eKonf.Keys.SPLIT in data_columns and eKonf.Keys.SPLIT not in df.columns:
-        #     df[eKonf.Keys.SPLIT] = split_name
         data_columns = [
             col for col in df.columns if col not in meta_columns or col in data_keys
         ]
@@ -1265,72 +1214,34 @@ def save_dataframe(df, args):
     if df is None:
         log.warning("Dataframe is None")
         return df
+    filepath = args.pop("filepath", None)
+    output_dir = args.pop("output_dir", None)
+    output_file = args.pop("output_file", None)
 
-    save_dataframe_(df, **args)
+    if filepath:
+        filename = filepath
+        output_dir = None
+    else:
+        filename = output_file
+    eKonf.save_data(df, filename, output_dir, **args)
     return df
 
 
 def load_dataframe(df=None, args=None):
-    from ekorpkit.io.file import get_filepaths, load_dataframe as _load_dataframe
-
     if args is None:
         raise ValueError("args must be specified")
 
     args = eKonf.to_dict(args)
-    verbose = args.get("verbose", False)
-    concatenate = args.get("concatenate", True)
-    filepath = args.get("filepath", None)
-    data_dir = args.get("data_dir", None)
-    data_file = args.get("data_file", None)
-    dtype = args.get("dtype", None)
-    if isinstance(dtype, list):
-        dtype = {k: "str" for k in dtype}
-    parse_dates = args.get("parse_dates", False)
-    columns = args.get("columns", None)
+    filepath = args.pop("filepath", None)
+    data_dir = args.pop("data_dir", None)
+    data_file = args.pop("data_file", None)
 
-    if filepath:
-        filepaths = get_filepaths(filepath)
+    if data_file:
+        filename = data_file
     else:
-        filepaths = get_filepaths(data_file, data_dir)
-    log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
-    if len(filepaths) == 1:
-        df = _load_dataframe(
-            filepaths[0],
-            verbose=verbose,
-            dtype=dtype,
-            parse_dates=parse_dates,
-            columns=columns,
-        )
-        return df
-    else:
-        if concatenate:
-            df = pd.concat(
-                [
-                    _load_dataframe(
-                        f,
-                        verbose=verbose,
-                        dtype=dtype,
-                        parse_dates=parse_dates,
-                        columns=columns,
-                    )
-                    for f in filepaths
-                ]
-            )
-            return df
-        else:
-            df_dict = {}
-
-            for f in filepaths:
-                df = _load_dataframe(
-                    f,
-                    verbose=verbose,
-                    dtype=dtype,
-                    parse_dates=parse_dates,
-                    columns=columns,
-                )
-                df_name = os.path.basename(f)
-                df_dict[df_name] = df
-            return df_dict
+        filename = filepath
+        data_dir = None
+    return eKonf.load_data(filename, data_dir, **args)
 
 
 def summary_stats(df, args):

@@ -1,0 +1,7 @@
+filename: ${..name}-train${.filetype}
+base_dir: ${..data_dir}
+filetype: ${..filetype}
+suffix: 
+filepath: ${join_path:${.base_dir},${.filename}}
+columns: ${..columns}
+verbose: ${oc.select:..verbose,false}

@@ -12,7 +12,7 @@ secondary_to: 0
 algorithm: pearson
 classes:
 features:
-_parms_:
+rcParams:
   algorithm: ${oc.select:..algorithm, pearson}
   classes: ${oc.select:..classes, null}
   features: ${oc.select:..features, null}

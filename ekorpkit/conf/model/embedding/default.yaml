@@ -1,0 +1,33 @@
+defaults:
+  - /cache: archive
+
+_target_: ekorpkit.models.embeddings.wordvec.WordVector
+name: glove
+corpus:
+model_dir:
+model_file:
+model_path: ${join_path:${.model_dir},${.model_file}}
+model_type:
+model_name:
+verbose: ${oc.select:..verbose,false}
+
+benchmarks:
+  analogies:
+    google: ${cached_path:https://raw.githubusercontent.com/RaRe-Technologies/gensim/develop/gensim/test/test_data/questions-words.txt}
+  categories:
+    google:
+      capital-common-countries: Capitals
+      capital-world: Capitals RoW
+      city-in-state: City-State
+      currency: Currency
+      family: Famliy
+      gram1-adjective-to-adverb: Adj-Adverb
+      gram2-opposite: Opposite
+      gram3-comparative: Comparative
+      gram4-superlative: Superlative
+      gram5-present-participle: Pres. Part.
+      gram6-nationality-adjective: Nationality
+      gram7-past-tense: Past Tense
+      gram8-plural: Plural
+      gram9-plural-verbs: Plural Verbs
+      total: Total

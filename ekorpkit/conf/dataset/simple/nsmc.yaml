@@ -1,19 +1,10 @@
 defaults:
-  - _build
+  - _build_classification
   - override /io/loader: hfds
 
 name: nsmc
 domain: general
-task: classification
 lang: ko
-column_info: 
-  columns:
-    id: id
-    text: text
-  data:
-    id: int
-    labels: str
-    text: str
 
 io:
   data_sources: 

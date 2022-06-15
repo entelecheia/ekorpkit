@@ -9,6 +9,13 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 
+def save_figure(fig, fname=None, **kwargs):
+    if fname:
+        Path(fname).parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(fname=fname, **kwargs)
+        log.info(f"Saved figure to {fname}")
+
+
 def add_decorations(ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()

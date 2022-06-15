@@ -10,7 +10,7 @@ info:
 scores:
   score_path: ${dir.resource}/lexicons/HIV-4.parquet
   lowercase: true
-  keys:
+  _keys_:
     words: Entry
     score: Positiv
     count: count

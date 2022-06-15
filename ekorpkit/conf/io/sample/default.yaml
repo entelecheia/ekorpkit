@@ -1,0 +1,7 @@
+defaults:
+  - /path: train_dev_test-sample
+
+name: ${oc.select:..name,''}
+data_dir: ${oc.select:..parent_dir,${dir.archive}/datasets/source/${.name}}
+filetype: ${oc.select:..filetype,.parquet}
+verbose: ${oc.select:..verbose,false}
