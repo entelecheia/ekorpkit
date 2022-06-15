@@ -6,3 +6,4 @@ concatenate: ${..concat_data}
 dype:
 parse_dates:
 columns: ${..columns}
+filepath: ${join_path:${.base_dir},${.filename}}

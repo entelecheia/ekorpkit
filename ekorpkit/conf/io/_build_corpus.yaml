@@ -3,5 +3,6 @@ defaults:
   - loader: parser
 
 data_dir: ${dir.archive}/datasets/source/${.name}
-calculate_stats: true
-preprocess_text: true
+force:
+  summarize: true
+  preprocess: true

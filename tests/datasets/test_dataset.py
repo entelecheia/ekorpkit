@@ -5,27 +5,25 @@ from ekorpkit import eKonf
 
 @pytest.mark.skip(reason="data source not available")
 def test_build_financial_phrasebank():
-    cfg = eKonf.compose(config_group="dataset/simple=financial_phrasebank")
+    cfg = eKonf.compose("dataset/simple=financial_phrasebank")
     cfg.data_dir = "./data/tmp/financial_phrasebank"
     cfg.io.data_dir = cfg.data_dir
-    cfg.io.overwrite = True
-    cfg.io.calculate_stats = True
+    cfg.io.force.build = True
+    cfg.io.force.summarize = True
     db = eKonf.instantiate(cfg)
     assert True
 
 
 def test_build_datasets():
 
-    cfg = eKonf.compose(config_group="dataset/simple=sst2")
-    cfg.verbose = True
+    cfg = eKonf.compose("dataset/simple=sst2")
     cfg.data_dir = "./data/tmp/sst2"
     cfg.io.data_dir = cfg.data_dir
-    cfg.io.overwrite = True
-    cfg.io.calculate_stats = True
-    db = eKonf.instantiate(cfg)
+    cfg.io.force.build = True
+    cfg.io.force.summarize = True
+    eKonf.instantiate(cfg)
 
-    cfg = eKonf.compose(config_group="dataset=datasets")
-    cfg.verbose = True
+    cfg = eKonf.compose("dataset=datasets")
     cfg.name = ["sst2"]
     cfg.data_dir = "./data/tmp"
     ds = eKonf.instantiate(cfg)
@@ -35,8 +33,7 @@ def test_build_datasets():
 
 
 def test_datafame_pipeline():
-    cfg = eKonf.compose(config_group="pipeline")
-    cfg.verbose = True
+    cfg = eKonf.compose("pipeline")
     cfg.data_dir = "./data/tmp/sst2"
     cfg.data_file = "sst2-train.csv"
     cfg._pipeline_ = ["summary_stats"]

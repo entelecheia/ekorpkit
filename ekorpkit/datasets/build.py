@@ -48,9 +48,7 @@ class DatasetBuilder:
         if isinstance(self.fetch_sources, list):
             self.fetch_sources = {"train": self.fetch_sources}
         self.num_workers = self._io_.get("num_workers", None)
-        self.overwrite = self._io_.get("overwrite", False)
-        self.calculate_stats = self._io_.get("calculate_stats", False)
-        self.preprocess_text = self._io_.get("preprocess_text", False)
+        self.force = self._io_.force
 
         self.fetcher = self._io_.get("fetcher", None)
         self.loader = self._io_.get("loader", None)
@@ -114,7 +112,7 @@ class DatasetBuilder:
             self._pipeline_[pipe].path.output = _sample_path_
 
         df = None
-        if eKonf.exists(_data_path_.filepath) or self.overwrite:
+        if eKonf.exists(_data_path_.filepath) or self.force.build:
             with elapsed_timer(format_time=True) as elapsed:
                 df = eKonf.instantiate(self.loader, split_name=split_name)
                 log.info(f" >> elapsed time to load and parse data: {elapsed()}")
@@ -139,7 +137,7 @@ class DatasetBuilder:
             _data_path_.columns = columns
             eKonf.save_data(df, **_data_path_)
 
-            if self.summary_info and self.calculate_stats:
+            if self.summary_info and self.force.summarize:
                 stats = {
                     "name": split_name,
                     "dataset_name": self.name,
@@ -151,7 +149,7 @@ class DatasetBuilder:
 
         else:
             log.info(f"{_data_path_.filepath} already exists")
-            if self.calculate_stats or self.preprocess_text:
+            if self.force.summarize or self.force.preprocess:
                 df = eKonf.load_data(**_data_path_)
 
         if df is None:
@@ -162,5 +160,5 @@ class DatasetBuilder:
             log.info(f"\nProcessing dataframe with pipeline: {self.process_pipeline}")
             df = apply_pipeline(df, self.process_pipeline, self._pipeline_)
 
-        if self.calculate_stats and self.summary_info:
+        if self.force.summarize and self.summary_info:
             self.summary_info.calculate_stats(df, split_name)

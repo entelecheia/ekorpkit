@@ -3,31 +3,25 @@ from ekorpkit import eKonf
 
 
 def test_dummy_corpus():
-    cfg = eKonf.compose(config_group="io/fetcher=_dummy")
-    cfg.verbose = True
+    cfg = eKonf.compose("io/fetcher=_dummy")
     cfg.name = "fomc_minutes"
     eKonf.instantiate(cfg)
-    output_file = cfg.output_file
+    output_file = cfg.path.output.filepath
     assert os.path.exists(output_file)
     os.remove(output_file)
     assert not os.path.exists(output_file)
 
 
 def test_build_corpora():
-    cfg = eKonf.compose(config_group="corpus/builtin=_dummy_fomc_minutes")
-    cfg.verbose = True
+    cfg = eKonf.compose("corpus/builtin=_dummy_fomc_minutes")
     cfg.data_dir = "./data/tmp/fomc_minutes"
-    db = eKonf.instantiate(cfg)
-    db.build()
+    eKonf.instantiate(cfg)
 
-    cfg = eKonf.compose(config_group="corpus/builtin=_dummy_bok_minutes")
-    cfg.verbose = True
+    cfg = eKonf.compose("corpus/builtin=_dummy_bok_minutes")
     cfg.data_dir = "./data/tmp/bok_minutes"
-    db = eKonf.instantiate(cfg)
-    db.build()
+    eKonf.instantiate(cfg)
 
-    cfg = eKonf.compose(config_group="corpus=corpora")
-    cfg.verbose = True
+    cfg = eKonf.compose("corpus=corpora")
     cfg.name = ["bok_minutes", "fomc_minutes"]
     cfg.data_dir = "./data/tmp"
     crps = eKonf.instantiate(cfg)
@@ -37,14 +31,12 @@ def test_build_corpora():
 
 
 def test_corpus_task():
-    corpus_cfg = eKonf.compose(config_group="corpus")
-    corpus_cfg.verbose = True
+    corpus_cfg = eKonf.compose("corpus")
     corpus_cfg.name = "bok_minutes"
     corpus_cfg.auto.merge = True
     corpus_cfg.data_dir = "./data/tmp"
 
-    cfg = eKonf.compose(config_group="pipeline")
-    cfg.verbose = True
+    cfg = eKonf.compose("pipeline")
     cfg.data.corpus = corpus_cfg
     cfg._pipeline_ = ["filter_query", "save_dataframe"]
     cfg.filter_query.query = "filename in ['BOK_20181130_20181218']"
@@ -56,8 +48,7 @@ def test_corpus_task():
 
 
 def test_corpora_task():
-    corpus_cfg = eKonf.compose(config_group="corpus=corpora")
-    corpus_cfg.verbose = True
+    corpus_cfg = eKonf.compose("corpus=corpora")
     corpus_cfg.name = ["bok_minutes", "fomc_minutes"]
     corpus_cfg.auto.merge = True
     corpus_cfg.data_dir = "./data/tmp"

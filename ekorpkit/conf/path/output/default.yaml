@@ -4,3 +4,4 @@ base_dir: ${..output_dir}
 filetype: ${..filetype}
 columns: ${..columns}
 suffix: ${..suffix}
+filepath: ${join_path:${.base_dir},${.filename}}
