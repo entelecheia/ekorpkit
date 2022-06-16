@@ -27,6 +27,8 @@ class AutoML:
         self._predict_ = args[eKonf.Keys.PREDICT]
         self._method_ = self.args.get(eKonf.Keys.METHOD)
         self._eval_cfg = args.model.eval
+        self._learning_curve = args.learning_curve.visualize.plot
+        self._feature_importance = args.feature_importance.visualize.plot
 
         self._path = self.args.path
         self._model_file = self._path.model.filepath
@@ -170,9 +172,9 @@ class AutoML:
 
         y_pred = self.dataset.transform_labels(y_preds[self.Keys.PREDICTED])
         y_test = self.dataset.transform_labels(self.y_test)
-        print("r2", "=", 1 - sklearn_metric_loss_score("r2", y_pred, y_test))
-        print("mse", "=", sklearn_metric_loss_score("mse", y_pred, y_test))
-        print("mae", "=", sklearn_metric_loss_score("mae", y_pred, y_test))
+        print("r2:", 1 - sklearn_metric_loss_score("r2", y_pred, y_test))
+        print("mse:", sklearn_metric_loss_score("mse", y_pred, y_test))
+        print("mae:", sklearn_metric_loss_score("mae", y_pred, y_test))
 
         self._eval_cfg.visualize.plot.plots[0].display_labels = self.classes
         eKonf.instantiate(self._eval_cfg, data=pred_data)
@@ -249,13 +251,14 @@ class AutoML:
 
     def plot_feature_importance(self, estimator=None, n_features=None):
         data = self.get_feature_importance(estimator=estimator, n_features=n_features)
-        cfg = eKonf.compose("visualize/plot=barplot")
-        cfg.plot.y = "columns"
-        cfg.plot.x = "importances"
-        cfg.figure.figsize = (10, 5)
-        cfg.figure.fontsize = 10
-        cfg.ax.title = "Feature Importances"
-        eKonf.instantiate(cfg, data=data)
+        # cfg = eKonf.compose("visualize/plot=barplot")
+        # cfg.plot.y = "columns"
+        # cfg.plot.x = "importances"
+        # cfg.figure.figsize = (10, 5)
+        # cfg.figure.fontsize = 10
+        # cfg.ax.title = "Feature Importances"
+        # eKonf.instantiate(cfg, data=data)
+        eKonf.instantiate(self._feature_importance, data=data)
 
     def get_log_data(self):
         train_logs = self.get_logs()
@@ -267,18 +270,19 @@ class AutoML:
 
     def plot_learning_curve(self):
         data = self.get_log_data()
-        scatter = eKonf.compose("visualize/plot/scatterplot")
-        cfg = eKonf.compose("visualize/plot=lineplot")
-        cfg.plot.y = "best_acc_history"
-        cfg.plot.x = "time_history"
-        cfg.plot.drawstyle = "steps-post"
-        scatter.x = "time_history"
-        scatter.y = "acc_history"
-        cfg.plots.append(scatter)
-        cfg.figure.figsize = (10, 5)
-        cfg.figure.fontsize = 10
-        cfg.ax.title = "Learning Curve"
-        cfg.ax.xlabel = "Wall Clock Time (s)"
-        cfg.ax.ylabel = "Validation Accuracy"
+        # scatter = eKonf.compose("visualize/plot/scatterplot")
+        # cfg = eKonf.compose("visualize/plot=lineplot")
+        # cfg.plot.y = "best_acc_history"
+        # cfg.plot.x = "time_history"
+        # cfg.plot.drawstyle = "steps-post"
+        # scatter.x = "time_history"
+        # scatter.y = "acc_history"
+        # cfg.plots.append(scatter)
+        # cfg.figure.figsize = (10, 5)
+        # cfg.figure.fontsize = 10
+        # cfg.ax.title = "Learning Curve"
+        # cfg.ax.xlabel = "Wall Clock Time (s)"
+        # cfg.ax.ylabel = "Validation Accuracy"
 
-        eKonf.instantiate(cfg, data=data)
+        # eKonf.instantiate(cfg, data=data)
+        eKonf.instantiate(self._learning_curve, data=data)

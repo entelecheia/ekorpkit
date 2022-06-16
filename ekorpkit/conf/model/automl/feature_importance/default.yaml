@@ -1,0 +1,13 @@
+defaults:
+  - /visualize/plot: barplot
+
+output_dir: ${..output_dir}
+name: ${oc.select:..name,''}
+visualize:
+  output_dir: ${..output_dir}
+  name: ${oc.select:..name,''}
+  plot:
+    name: ${oc.select:..name,''}_feature_importance
+    barplot:
+      y: columns
+      x: importances

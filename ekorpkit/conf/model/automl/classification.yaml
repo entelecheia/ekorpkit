@@ -5,6 +5,8 @@ defaults:
   - /_train_: automl_classification
   - /_predict_: automl_classification
   - /model/eval: automl_classification
+  - feature_importance: default
+  - learning_curve: default
 
 _target_: ekorpkit.models.automl.flaml.AutoML
 labels: ${oc.select:dataset.labels, null}

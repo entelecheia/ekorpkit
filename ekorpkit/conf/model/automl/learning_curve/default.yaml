@@ -1,0 +1,21 @@
+defaults:
+  - /visualize/plot: lineplot
+  - /visualize/plot/scatterplot: default
+
+output_dir: ${..output_dir}
+name: ${oc.select:..name,''}
+visualize:
+  output_dir: ${..output_dir}
+  name: ${oc.select:..name,''}
+  plot:
+    name: ${oc.select:..name,''}_learning_curve
+    lineplot:
+      y: best_acc_history
+      x: time_history
+      drawstyle: steps-post
+    scatterplot:
+      x: time_history
+      y: acc_history
+    plots:
+      - ${..lineplot}
+      - ${..scatterplot}

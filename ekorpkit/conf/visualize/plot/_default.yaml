@@ -5,9 +5,9 @@ defaults:
   - ax: default
   - savefig: default
 
-name: 1
+name: ${oc.select:..name,'1'}
 output_dir: ${oc.select:..output_dir, ./figs}
-output_file: ${oc.select:..output_file, fig_${.name}.png}
+output_file: ${oc.select:..output_file, ${.name}.png}
 verbose: ${oc.select:verbose, true}
 axes:
   - ${..ax}
