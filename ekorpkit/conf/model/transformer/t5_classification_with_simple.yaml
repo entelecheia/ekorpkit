@@ -1,7 +1,6 @@
 defaults:
   - _default
   - config: t5
-  - /_keys_: simple_t5_classification
   - /columns: model_simple_t5_with_simple
   - /_train_: simple_t5_classification
   - /_predict_: simple_t5_classification

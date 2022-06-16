@@ -263,7 +263,6 @@ class Ngrams:
         if not self._ngram.max_skip:
             self._ngram.max_skip = self._ngram.max_window - self._ngram.max_n
         self.postag_rules = eKonf.ensure_list(self._ngram.postag_rules)
-        self._score_keys = self._scores[eKonf.Keys.KEYS]
 
         if self._candidates.min_count <= 0:
             self._candidates.min_count = 10
@@ -332,7 +331,7 @@ class Ngrams:
     def load_candidates(self):
         """Load a previously saved model"""
         if os.path.exists(self.score_path):
-            _words = self._score_keys.words
+            _words = self._scores.columns.words
             _features = self._scores.features
             _lowercase = self._scores.lowercase
 
@@ -477,8 +476,8 @@ class Ngrams:
         postag_length=None,
         features=None,
     ):
-        _count = self._score_keys.count
-        _score = self._score_keys.score
+        _count = self._scores.columns.count
+        _score = self._scores.columns.score
         features = features or [_score]
 
         results = {}
@@ -610,7 +609,7 @@ class Ngrams:
     ):
         """Score a ngram"""
 
-        _score = self._score_keys.score
+        _score = self._scores.columns.score
 
         if use_surfaces_to_score:
             surface_str = self.to_ngram_str(
@@ -641,7 +640,7 @@ class Ngrams:
             Mapping between phrases and their scores.
         """
         result = {}
-        _score = self._score_keys.score
+        _score = self._scores.columns.score
         for ngram, score in self.candidates.items():
             if len(ngram) < 2:
                 continue  # no phrases here

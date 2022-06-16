@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 class AutoML:
     __metaclass__ = ABCMeta
+    Keys = eKonf.Keys
 
     def __init__(self, **args):
         from flaml import AutoML
@@ -21,7 +22,6 @@ class AutoML:
         self.verbose = args.get("verbose", True)
         self._model_cfg = eKonf.to_dict(args.config)
         self._dataset_cfg = args.get(eKonf.Keys.DATASET, None)
-        self._keys_ = args.get(eKonf.Keys.KEYS)
         self._columns = args.get(eKonf.Keys.COLUMNS)
         self._train_ = args[eKonf.Keys.TRAIN]
         self._predict_ = args[eKonf.Keys.PREDICT]
@@ -125,10 +125,10 @@ class AutoML:
         """compute predictions of testing dataset"""
         y_pred = self._automl.predict(X)
         y_pred = self.dataset.inverse_transform_labels(y_pred)
-        return {self._keys_.predicted: y_pred}
+        return {self.Keys.PREDICTED: y_pred}
 
     def convert_to_X(self, data):
-        X_cols = self._predict_[self._keys_.X]
+        X_cols = self._predict_[self.Keys.X]
         if X_cols is None:
             X_cols = list(data.columns)
         X = data[X_cols].values
@@ -137,9 +137,9 @@ class AutoML:
         return X
 
     def append_predictions(self, data, preds):
-        predicted_column = self._predict_[self._keys_.predicted]
+        predicted_column = self._predict_[self.Keys.PREDICTED]
         data = data.copy()
-        data[predicted_column] = preds[self._keys_.predicted]
+        data[predicted_column] = preds[self.Keys.PREDICTED]
         return data
 
     def predict(self, data, _predict_={}):
@@ -161,14 +161,14 @@ class AutoML:
 
         y_preds = self._predict(self.X_test.values)
         pred_data = self.append_predictions(self.X_test, y_preds)
-        actual_column = self._eval_cfg._eval_[self._keys_.actual]
+        actual_column = self._eval_cfg._eval_[self.Keys.ACTUAL]
         if actual_column:
             pred_data[actual_column] = self.y_test
         eKonf.save_data(pred_data, self._pred_file)
         if self.verbose:
             print(pred_data.head())
 
-        y_pred = self.dataset.transform_labels(y_preds[self._keys_.predicted])
+        y_pred = self.dataset.transform_labels(y_preds[self.Keys.PREDICTED])
         y_test = self.dataset.transform_labels(self.y_test)
         print("r2", "=", 1 - sklearn_metric_loss_score("r2", y_pred, y_test))
         print("mse", "=", sklearn_metric_loss_score("mse", y_pred, y_test))

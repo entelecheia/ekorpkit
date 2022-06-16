@@ -313,6 +313,13 @@ class _Keys(str, Enum):
     EVAL = "_eval_"
     TRAIN = "_train_"
     PREDICT = "_predict_"
+    PREDICTED = "predicted"
+    ACTUAL = "actual"
+    INPUT = "input"
+    MODEL_OUTPUTS = "model_outputs"
+    LABELS = "labels"
+    PREFIX = "prefix"
+    ID_SEPARATOR = "_"
 
 
 def _methods(cfg: Any, obj: object):

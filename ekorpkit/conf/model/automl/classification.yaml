@@ -1,7 +1,6 @@
 defaults:
   - _default
   - config: classification
-  - /_keys_: automl_classification
   - /columns: model_automl_classification
   - /_train_: automl_classification
   - /_predict_: automl_classification

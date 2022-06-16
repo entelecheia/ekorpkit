@@ -1,7 +1,6 @@
 defaults:
   - _default
   - config: classification
-  - /_keys_: simple_classification
   - /columns: model_simple_classification
   - /_train_: simple_classification
   - /_predict_: simple_classification

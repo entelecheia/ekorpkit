@@ -1,7 +1,7 @@
 defaults:
   - dataset_simple_classification
 
-prefix: ${oc.select:.._keys_.prefix,prefix}
+prefix: prefix
 input_text: ${.text}
 target_text: ${.labels}
 input: ${.input_text}

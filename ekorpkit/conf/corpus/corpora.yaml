@@ -9,6 +9,3 @@ auto:
   load: false
 verbose: ${oc.select:..verbose, true}
 collapse_ids: false
-column_info:
-  _keys_:
-    corpus: corpus

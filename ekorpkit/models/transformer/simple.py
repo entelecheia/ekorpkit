@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 
 class SimpleTrainer:
     __metaclass__ = ABCMeta
+    Keys = eKonf.Keys
 
     def __init__(self, **args):
         args = eKonf.to_config(args)
@@ -17,7 +18,6 @@ class SimpleTrainer:
         self.verbose = args.get("verbose", False)
         self._model_cfg = eKonf.to_dict(args.config)
         self._dataset = args.get(eKonf.Keys.DATASET)
-        self._keys_ = args.get(eKonf.Keys.KEYS)
         self._columns = args.get(eKonf.Keys.COLUMNS)
         self._train_ = args[eKonf.Keys.TRAIN]
         self._predict_ = args[eKonf.Keys.PREDICT]
@@ -93,17 +93,17 @@ class SimpleTrainer:
         return data
 
     def convert_to_predict(self, data):
-        input_col = self._predict_[self._keys_.input]
+        input_col = self._predict_[self.Keys.INPUT]
         data_to_predict = data[input_col].tolist()
         if self.verbose:
             print(data_to_predict[:5])
         return data_to_predict
 
     def append_predictions(self, data, preds):
-        predicted_column = self._predict_[self._keys_.predicted]
-        model_outputs_column = self._predict_[self._keys_.model_outputs]
-        data[predicted_column] = preds[self._keys_.predicted]
-        data[model_outputs_column] = preds[self._keys_.model_outputs]
+        predicted_column = self._predict_[self.Keys.PREDICTED]
+        model_outputs_column = self._predict_[self.Keys.MODEL_OUTPUTS]
+        data[predicted_column] = preds[self.Keys.PREDICTED]
+        data[model_outputs_column] = preds[self.Keys.MODEL_OUTPUTS]
         return data
 
     def predict(self, data, _predict_={}):
@@ -141,7 +141,7 @@ class SimpleNER(SimpleTrainer):
 
         args = self.args
         if args.labels is None:
-            labels = list(self.train_data[self._keys_.labels].unique())
+            labels = list(self.train_data[self.Keys.LABELS].unique())
 
         # Create a NERModel
         model = NERModel(
@@ -202,9 +202,7 @@ class SimpleClassification(SimpleTrainer):
             self.load_datasets()
         train_data, dev_data, test_data = self.convert_to_train()
 
-        self._model_cfg["labels_list"] = (
-            train_data[self._keys_.labels].unique().tolist()
-        )
+        self._model_cfg["labels_list"] = train_data[self.Keys.LABELS].unique().tolist()
         args.num_labels = len(self._model_cfg["labels_list"])
 
         # Create a NERModel
@@ -251,6 +249,6 @@ class SimpleClassification(SimpleTrainer):
         raw_outputs = [output.flatten().tolist() for output in raw_outputs]
         log.info(f"raw_output: {raw_outputs[0]}")
         return {
-            self._keys_.predicted: predictions,
-            self._keys_.model_outputs: raw_outputs,
+            self.Keys.PREDICTED.value: predictions,
+            self.Keys.MODEL_OUTPUTS.value: raw_outputs,
         }

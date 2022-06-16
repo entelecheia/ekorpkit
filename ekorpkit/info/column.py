@@ -7,6 +7,9 @@ log = logging.getLogger(__name__)
 
 
 class BaseInfo:
+
+    Keys = eKonf.Keys
+
     def __init__(self, **args):
         self.args = eKonf.to_config(args)
         self._initialized = False
@@ -32,7 +35,7 @@ class BaseInfo:
             elif self.INDEX != data.index.name and self.INDEX not in data.columns:
                 log.warning(f"{self.INDEX} not in dataframe")
 
-            if not self.IDs or self.IDs[0] == eKonf.Keys.INDEX:
+            if not self.IDs or self.IDs[0] == self.Keys.INDEX.value:
                 self.IDs = [self.INDEX]
             self.set_dtypes(data)
             self._initialized = True
@@ -59,7 +62,7 @@ class BaseInfo:
             data = data.reset_index(drop=drop)
             if not drop and rename_old_index is not None and self.INDEX in data.columns:
                 data = data.rename(columns={self.INDEX: rename_old_index})
-            self.INDEX = eKonf.Keys.INDEX.value
+            self.INDEX = self.Keys.INDEX.value
             self.set_dtypes(data)
         return data
 
@@ -159,31 +162,19 @@ class BaseInfo:
 
     @property
     def _ID(self):
-        return self.KEYs.get(eKonf.Keys._ID) or eKonf.Keys._ID.value
-
-    # @_ID.setter
-    # def _ID(self, value):
-    #     self.KEYs[eKonf.Keys._ID.value] = value
+        return self.Keys._ID.value
 
     @property
     def ID_SEPARATOR(self):
-        return "_"
+        return self.Keys.ID_SEPARATOR.value
 
     @property
     def INFO(self):
         return self.args
 
     @property
-    def KEYs(self):
-        return self.INFO[eKonf.Keys.KEYS]
-
-    # @KEYs.setter
-    # def KEYs(self, value):
-    #     self.INFO[eKonf.Keys.KEYS.value] = value
-
-    @property
     def DATETIME_INFO(self):
-        return self.INFO.get(eKonf.Keys.DATETIME)
+        return self.INFO.get(self.Keys.DATETIME)
 
     @DATETIME_INFO.setter
     def DATETIME_INFO(self, value):
@@ -213,11 +204,7 @@ class BaseInfo:
 
     @property
     def DATASET(self):
-        return self.KEYs.get(eKonf.Keys.DATASET) or eKonf.Keys.DATASET.value
-
-    # @DATASET.setter
-    # def DATASET(self, value):
-    #     self.KEYs[eKonf.Keys.DATASET.value] = value
+        return eKonf.Keys.DATASET.value
 
     @property
     def INDEX(self):
@@ -231,25 +218,17 @@ class BaseInfo:
     def ID(self):
         return eKonf.Keys.ID.value
 
-    # @ID.setter
-    # def ID(self, value):
-    #     self.KEYs[eKonf.Keys.ID.value] = value
-
     @property
     def IDs(self):
-        return eKonf.ensure_list(self.COLUMNs.get(eKonf.Keys.ID))
+        return eKonf.ensure_list(self.COLUMNs.get(self.ID))
 
     @IDs.setter
     def IDs(self, value):
-        self.COLUMNs[eKonf.Keys.ID.value] = value
+        self.COLUMNs[self.ID] = value
 
     @property
     def SPLIT(self):
-        return self.KEYs.get(eKonf.Keys.SPLIT) or eKonf.Keys.SPLIT.value
-
-    # @SPLIT.setter
-    # def SPLIT(self, value):
-    #     self.KEYs[eKonf.Keys.SPLIT.value] = value
+        return eKonf.Keys.SPLIT.value
 
 
 class CorpusInfo(BaseInfo):
@@ -350,17 +329,13 @@ class CorpusInfo(BaseInfo):
     def TEXT(self):
         return eKonf.Keys.TEXT.value
 
-    # @TEXT.setter
-    # def TEXT(self, value):
-    #     self.KEYs[eKonf.Keys.TEXT.value] = value
-
     @property
     def TEXTs(self):
-        return eKonf.ensure_list(self.COLUMNs.get(eKonf.Keys.TEXT))
+        return eKonf.ensure_list(self.COLUMNs.get(self.TEXT))
 
     @TEXTs.setter
     def TEXTs(self, value):
-        self.COLUMNs[eKonf.Keys.TEXT.value] = value
+        self.COLUMNs[self.TEXT] = value
 
     @property
     def METADATA(self):
@@ -372,17 +347,9 @@ class CorpusInfo(BaseInfo):
     def TIMESTAMP(self):
         return eKonf.Keys.TIMESTAMP.value
 
-    # @TIMESTAMP.setter
-    # def TIMESTAMP(self, value):
-    #     self.KEYs[eKonf.Keys.TIMESTAMP.value] = value
-
     @property
     def CORPUS(self):
-        return self.KEYs.get(eKonf.Keys.CORPUS) or eKonf.Keys.CORPUS.value
-
-    # @CORPUS.setter
-    # def CORPUS(self, value):
-    #     self.KEYs[eKonf.Keys.CORPUS.value] = value
+        return eKonf.Keys.CORPUS.value
 
     @property
     def METATYPEs(self):
