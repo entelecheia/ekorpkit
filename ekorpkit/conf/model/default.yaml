@@ -1,4 +1,4 @@
-name: model
+name: ${oc.select:..name, model}
 data_dir: ${oc.select:..data_dir, ${dir.project}/data}
 output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
 num_workers: ${oc.select:num_workers,1}

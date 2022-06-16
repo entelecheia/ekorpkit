@@ -17,6 +17,5 @@ _method_:
 name: ngram
 auto:
   load: true
-force_train: false
 progress_per: 1000
 verbose: ${oc.select:..verbose,false}
