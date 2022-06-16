@@ -251,13 +251,7 @@ class AutoML:
 
     def plot_feature_importance(self, estimator=None, n_features=None):
         data = self.get_feature_importance(estimator=estimator, n_features=n_features)
-        # cfg = eKonf.compose("visualize/plot=barplot")
-        # cfg.plot.y = "columns"
-        # cfg.plot.x = "importances"
-        # cfg.figure.figsize = (10, 5)
-        # cfg.figure.fontsize = 10
-        # cfg.ax.title = "Feature Importances"
-        # eKonf.instantiate(cfg, data=data)
+
         eKonf.instantiate(self._feature_importance, data=data)
 
     def get_log_data(self):
@@ -270,19 +264,5 @@ class AutoML:
 
     def plot_learning_curve(self):
         data = self.get_log_data()
-        # scatter = eKonf.compose("visualize/plot/scatterplot")
-        # cfg = eKonf.compose("visualize/plot=lineplot")
-        # cfg.plot.y = "best_acc_history"
-        # cfg.plot.x = "time_history"
-        # cfg.plot.drawstyle = "steps-post"
-        # scatter.x = "time_history"
-        # scatter.y = "acc_history"
-        # cfg.plots.append(scatter)
-        # cfg.figure.figsize = (10, 5)
-        # cfg.figure.fontsize = 10
-        # cfg.ax.title = "Learning Curve"
-        # cfg.ax.xlabel = "Wall Clock Time (s)"
-        # cfg.ax.ylabel = "Validation Accuracy"
 
-        # eKonf.instantiate(cfg, data=data)
         eKonf.instantiate(self._learning_curve, data=data)
