@@ -9,15 +9,43 @@ from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple, Optional
+from pydantic import (
+    BaseModel,
+    BaseSettings,
+    SecretStr,
+    Field,
+    PositiveInt,
+    conint,
+    constr,
+    schema,
+    validator,
+)
+from pydantic.dataclasses import dataclass
+from pydantic.env_settings import SettingsSourceCallable
+from typing_extensions import Annotated
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
-from ekorpkit.utils.func import lower_case_with_underscores, elapsed_timer
+from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
 
 log = logging.getLogger(__name__)
 
 __hydra_version_base__ = "1.2"
+
+
+class Environments(BaseSettings):
+    wandb_api_key: Optional[str] = SecretStr
+    fred_api_key: Optional[str] = SecretStr
+    nasdaq_api_key: Optional[str] = SecretStr
+    cached_path_cache_root: Optional[str]
+    num_workers: Optional[int]
+
+    class Config:
+        env_prefix = ""
+        case_sentive = False
+        env_file = ".env"
+        env_file_encoding = "utf-8"
 
 
 def __ekorpkit_path__():
@@ -775,6 +803,7 @@ class eKonf:
     config = _config
     Keys = _Keys
     SPLITS = _SPLITS
+    env = Environments()
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
@@ -929,7 +958,7 @@ class eKonf:
         _run(config, **kwargs)
 
     @staticmethod
-    def _load_dotenv(verbose: bool = False):
+    def load_dotenv(verbose: bool = False):
         _load_dotenv(verbose)
 
     @staticmethod

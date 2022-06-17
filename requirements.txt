@@ -4,6 +4,7 @@ openpyxl
 pandas
 hydra-core>=1.2.0
 hydra-colorlog
+pydantic
 python-dotenv
 gdown
 chardet
