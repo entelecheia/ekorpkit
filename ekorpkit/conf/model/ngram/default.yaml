@@ -1,7 +1,7 @@
 defaults:
   - /info: default
   - ngram: default
-  - score_function: npmi
+  - score_function: null
   - scores: default
   - candidates: default
   - postag: default
@@ -11,7 +11,7 @@ defaults:
   - /auto: load
   - /force: train
 
-_target_: ekorpkit.models.ngram.base.Ngrams
+_target_: ekorpkit.models.ngram.ngram.Ngrams
 _method_:
   - initialize
 name: ngram

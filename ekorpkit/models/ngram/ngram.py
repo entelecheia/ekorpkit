@@ -8,6 +8,7 @@ from .base import (
     _remove_overlaps,
     _get_ngram_tuple,
     _get_ngram_str,
+    _KEEP,
 )
 from ekorpkit import eKonf
 
@@ -55,12 +56,12 @@ class Ngrams:
             self._tokenizer = eKonf.instantiate(self._tokenizer)
         self._postag.stop_tags = eKonf.ensure_list(self._postag.stop_tags)
 
-        self.sentences = []
+        self._sentences = []
         self.candidates = {}
         self._surface_to_tuples = {}
 
-        # if self.auto.load:
-        #     eKonf.methods(args._method_, self)
+        if self.auto.load:
+            eKonf.methods(args._method_, self)
 
     def __len__(self):
         return len(self.candidates)
@@ -147,6 +148,12 @@ class Ngrams:
     def save_candidates(self):
         raise NotImplementedError
 
+    @property
+    def sentences(self):
+        if len(self._sentences) == 0:
+            self.load_data()
+        return self._sentences
+
     def load_data(self):
         """Load data"""
         if self._data is None:
@@ -154,9 +161,9 @@ class Ngrams:
             return
         data = eKonf.instantiate(self._data)
         docs = data.data[data.COLUMN.TEXT]
-        self.sentences = []
+        self._sentences = []
         for doc in docs:
-            self.sentences.extend(doc.split("\n"))
+            self._sentences.extend(doc.split("\n"))
 
     def train(self):
         """Train the model"""
@@ -190,18 +197,45 @@ class Ngrams:
     def find_ngrams(
         self,
         words,
-        exclude_overlaps=True,
-        overlaps_to_keep=None,
+        exclude_overlaps=None,
+        overlaps_to_keep: _KEEP = None,
         threshold=None,
-        ignore_scores=False,
-        apply_postag_rules=True,
-        use_surfaces_to_score=False,
-        strip_pos=True,
-        surface_delim=";",
-        postag_delim="/",
+        ignore_scores=None,
+        apply_postag_rules=None,
+        use_surfaces_to_score=None,
+        strip_pos=None,
+        surface_delim=None,
+        postag_delim=None,
         postag_length=None,
         features=None,
     ):
+        exclude_overlaps = (
+            exclude_overlaps
+            if exclude_overlaps is not None
+            else self._ngramize.exclude_overlaps
+        )
+        overlaps_to_keep = overlaps_to_keep or _KEEP(self._ngramize.overlaps_to_keep)
+        threshold = threshold or self._ngramize.threshold
+        ignore_scores = (
+            ignore_scores if ignore_scores is not None else self._ngramize.ignore_scores
+        )
+        apply_postag_rules = (
+            apply_postag_rules
+            if apply_postag_rules is not None
+            else self._ngramize.apply_postag_rules
+        )
+        use_surfaces_to_score = (
+            use_surfaces_to_score
+            if use_surfaces_to_score is not None
+            else self._ngramize.use_surfaces_to_score
+        )
+        surface_delim = surface_delim or self._ngramize.delimiter
+        postag_delim = postag_delim or self._postag.delimiter
+        strip_pos = strip_pos if strip_pos is not None else self._ngramize.strip_pos
+        postag_length = postag_length or self._postag.max_len
+
+        postag_rules = self.postag_rules if apply_postag_rules else []
+
         _count = self._scores.columns.count
         _score = self._scores.columns.score
         features = features or [_score]
@@ -213,8 +247,8 @@ class Ngrams:
             overlaps_to_keep=overlaps_to_keep,
             threshold=threshold,
             ignore_scores=ignore_scores,
-            apply_postag_rules=apply_postag_rules,
             use_surfaces_to_score=use_surfaces_to_score,
+            postag_rules=postag_rules,
         ):
             ngram_str = self.to_ngram_str(
                 ngram,
@@ -249,24 +283,55 @@ class Ngrams:
     def __getitem__(self, words):
         return self.ngramize_sentence(words)
 
-    def ngramize_sentence(self, words, **kwargs):
+    def ngramize_sentence(
+        self,
+        words,
+        exclude_overlaps=None,
+        overlaps_to_keep: _KEEP = None,
+        threshold=None,
+        ignore_scores=None,
+        apply_postag_rules=None,
+        use_surfaces_to_score=None,
+        strip_pos=None,
+        surface_delim=None,
+        postag_delim=None,
+        postag_length=None,
+        **kwargs,
+    ):
         """
         Return a list of ngrams of the sentence
         """
-        exclude_overlaps = self._ngramize.exclude_overlaps
-        overlaps_to_keep = self._ngramize.overlaps_to_keep
-        threshold = self._ngramize.threshold
-        ignore_scores = self._ngramize.ignore_scores
-        apply_postag_rules = self._ngramize.apply_postag_rules
-        use_surfaces_to_score = self._ngramize.use_surfaces_to_score
-        strip_pos = self._ngramize.strip_pos
-        suface_delim = self._ngramize.delimiter
-        postag_delim = self._postag.delimiter
-        postag_length = self._postag.max_len
+        exclude_overlaps = (
+            exclude_overlaps
+            if exclude_overlaps is not None
+            else self._ngramize.exclude_overlaps
+        )
+        overlaps_to_keep = overlaps_to_keep or _KEEP(self._ngramize.overlaps_to_keep)
+        threshold = threshold or self._ngramize.threshold
+        ignore_scores = (
+            ignore_scores if ignore_scores is not None else self._ngramize.ignore_scores
+        )
+        apply_postag_rules = (
+            apply_postag_rules
+            if apply_postag_rules is not None
+            else self._ngramize.apply_postag_rules
+        )
+        use_surfaces_to_score = (
+            use_surfaces_to_score
+            if use_surfaces_to_score is not None
+            else self._ngramize.use_surfaces_to_score
+        )
+        surface_delim = surface_delim or self._ngramize.delimiter
+        postag_delim = postag_delim or self._postag.delimiter
+        strip_pos = strip_pos if strip_pos is not None else self._ngramize.strip_pos
+        postag_length = postag_length or self._postag.max_len
+
+        postag_rules = self.postag_rules if apply_postag_rules else []
+
         return [
             self.to_ngram_str(
                 ngram,
-                ngram_delim=suface_delim,
+                ngram_delim=surface_delim,
                 postag_delim=postag_delim,
                 strip_pos=strip_pos,
                 postag_length=postag_length,
@@ -277,8 +342,8 @@ class Ngrams:
                 overlaps_to_keep=overlaps_to_keep,
                 threshold=threshold,
                 ignore_scores=ignore_scores,
-                apply_postag_rules=apply_postag_rules,
                 use_surfaces_to_score=use_surfaces_to_score,
+                postag_rules=postag_rules,
             )
         ]
 
@@ -286,11 +351,11 @@ class Ngrams:
         self,
         words,
         exclude_overlaps=True,
-        overlaps_to_keep=None,
+        overlaps_to_keep: _KEEP = _KEEP.HIGHEST_SCORE,
         threshold=None,
         ignore_scores=False,
-        apply_postag_rules=True,
         use_surfaces_to_score=False,
+        postag_rules=[],
         **kwargs,
     ):
         """Analyze a sentence, concatenating any detected ngrams into a single token.
@@ -301,8 +366,6 @@ class Ngrams:
             Token sequence representing the sentence to be analyzed.
         """
 
-        postag_rules = self.postag_rules if apply_postag_rules else []
-        overlaps_to_keep = overlaps_to_keep or self._ngramize.overlaps_to_keep
         words = self.tokenize(words) if isinstance(words, str) else words
         ngram_with_positions = self.prepare_ngram_tuples(
             words,
@@ -358,20 +421,24 @@ class Ngrams:
             return unigram_score
         return None
 
-    def export_ngrams(self, threshold=None, apply_postag_rules=False):
+    def export_ngrams(
+        self, threshold=None, postag_rules=None
+    ):
         """Extract all found ngrams.
         Returns
         ------
         dict(str, float)
             Mapping between phrases and their scores.
         """
+        postag_rules = postag_rules or self.postag_rules
+
         result = {}
         _score = self._scores.columns.score
         for ngram, score in self.candidates.items():
             if len(ngram) < 2:
                 continue  # no phrases here
-            if apply_postag_rules and not self.match_any_rules(
-                ngram, self.postag_rules, self._postag.delimiter
+            if postag_rules and not self.match_any_rules(
+                ngram, postag_rules, self._postag.delimiter
             ):
                 continue
             if threshold is None or getattr(score, _score) > threshold:

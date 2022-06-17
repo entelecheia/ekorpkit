@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 
 # from inspect import getfullargspec as getargspec
 
@@ -28,7 +29,16 @@ def _exist_ordered_overlap(list_s, list_l):
     return True
 
 
-def _remove_overlaps(ngram_pos_scores, keep="highest_score"):
+class _KEEP(str, Enum):
+    """Split keys in configs used by Dataset."""
+
+    HIGHEST_SCORE = "highest_score"
+    HIGHEST_ABS_SCORE = "highest_abs_score"
+    SHORTEST_WITH_SCORE = "shortest_with_score"
+    LONGEST_WITH_SCORE = "longest_with_score"
+
+
+def _remove_overlaps(ngram_pos_scores, keep: _KEEP = _KEEP.HIGHEST_SCORE):
     """Remove overlapping ngrams by score"""
     result = []
     unigram_pos_scores = []
@@ -45,7 +55,7 @@ def _remove_overlaps(ngram_pos_scores, keep="highest_score"):
             if min(_pos) > max(pos) or max(_pos) < min(pos):
                 continue
             if _exist_ordered_overlap(pos, _pos):
-                if keep == "highest_score" and score and _score:
+                if keep == _KEEP.HIGHEST_SCORE and score and _score:
                     if score < _score:
                         exist_overlap = True
                         break
@@ -57,7 +67,7 @@ def _remove_overlaps(ngram_pos_scores, keep="highest_score"):
                             if ngram < _ngram:
                                 exist_overlap = True
                                 break
-                elif keep == "highest_abs_score" and score and _score:
+                elif keep == _KEEP.HIGHEST_ABS_SCORE and score and _score:
                     if abs(score) < abs(_score):
                         exist_overlap = True
                         break
@@ -69,7 +79,7 @@ def _remove_overlaps(ngram_pos_scores, keep="highest_score"):
                             if ngram < _ngram:
                                 exist_overlap = True
                                 break
-                elif keep == "shortest_with_score":
+                elif keep == _KEEP.SHORTEST_WITH_SCORE:
                     if len(ngram) > len(_ngram):
                         exist_overlap = True
                         break

@@ -2,7 +2,7 @@ import logging
 import pandas as pd
 from tqdm import tqdm
 from ekorpkit import eKonf
-from .base import Ngrams
+from .ngram import Ngrams
 from .score import get_process_memory, prune_vocab
 
 
@@ -14,7 +14,7 @@ class NgramTrainer(Ngrams):
         self,
         **args,
     ):
-        super().__init__(**args)
+        args = eKonf.to_config(args)
         self._candidates = args.candidates
         if self._candidates.min_count <= 0:
             self._candidates.min_count = 10
@@ -25,8 +25,7 @@ class NgramTrainer(Ngrams):
         self._ngrams = {}
         self._total_words = 0
 
-        if self.auto.load:
-            eKonf.methods(args._method_, self)
+        super().__init__(**args)
 
     def save_candidates(self):
         """Save the candidates to a file"""
@@ -38,7 +37,7 @@ class NgramTrainer(Ngrams):
 
     def train(self):
         """Train the model"""
-        if not self.sentences:
+        if not self._sentences:
             self.load_data()
         self.learn_ngrams()
         self.score_ngrams()
@@ -53,7 +52,7 @@ class NgramTrainer(Ngrams):
 
         self._ngrams = {}
         sentence_no, total_words = -1, 0
-        for sentence_no, sentence in tqdm(enumerate(self.sentences)):
+        for sentence_no, sentence in tqdm(enumerate(self._sentences)):
             words = self.tokenize(sentence)
             total_words += len(words)
 

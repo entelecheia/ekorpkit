@@ -1,0 +1,5 @@
+defaults:
+  - default
+
+
+_target_: ekorpkit.models.ngram.train.NgramTrainer
