@@ -1,4 +1,5 @@
 defaults:
+  - article_features: default
   - /_predict_: sentiment
 
 _target_: ekorpkit.models.sentiment.base.SentimentAnalyser

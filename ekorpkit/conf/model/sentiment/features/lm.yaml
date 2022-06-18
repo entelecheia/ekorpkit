@@ -4,7 +4,7 @@ _default_:
     _feat: feature > 0
   agg:
     _feat: sum
-  score: _feat / @num_tokens + @eps
+  score: _feat / @num_examples + @eps
 polarity:
   lexicon_features:
     - Negative
