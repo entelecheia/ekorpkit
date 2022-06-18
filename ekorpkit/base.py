@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+from unittest.mock import DEFAULT
 import hydra
 import dotenv
 import ekorpkit.utils.batch.batcher as batcher
@@ -338,6 +339,7 @@ class _Keys(str, Enum):
     MODEL = "model"
     LOG = "log"
     PRED = "pred"
+    DEFAULT = "_default_"
     EVAL = "_eval_"
     TRAIN = "_train_"
     PREDICT = "_predict_"
@@ -347,7 +349,16 @@ class _Keys(str, Enum):
     MODEL_OUTPUTS = "model_outputs"
     LABELS = "labels"
     PREFIX = "prefix"
-    ID_SEPARATOR = "_"
+    FEATURES = "features"
+    COUNT = "count"
+
+
+class _Defaults(str, Enum):
+    ID_SEP = "_"
+    SENT_SEP = "\n"
+    SEG_SEP = "\n\n"
+    POS_DELIM = "\\"
+    NGRAM_DELIM = ";"
 
 
 def _methods(cfg: Any, obj: object):

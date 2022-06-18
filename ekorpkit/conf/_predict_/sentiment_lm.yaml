@@ -1,0 +1,4 @@
+lexicon_features:
+features:
+  - polarity
+  - uncertainty

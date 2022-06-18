@@ -3,13 +3,16 @@ from pathlib import Path
 from omegaconf import SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple
 from .base import (
+    DictKeyType,
+    Environments,
+    apply_pipe,
     __version__,
     __ekorpkit_path__,
     __home_path__,
     _config,
     _Keys,
+    _Defaults,
     _SPLITS,
-    Environments,
     _compose,
     _select,
     _to_dict,
@@ -23,7 +26,6 @@ from .base import (
     _is_instantiatable,
     _load,
     _update,
-    DictKeyType,
     _merge,
     _save,
     _print,
@@ -34,7 +36,6 @@ from .base import (
     _init_env_,
     _stop_env_,
     _path,
-    apply_pipe,
     _dependencies,
     _ensure_list,
     _to_dateparm,
@@ -58,6 +59,7 @@ class eKonf:
     __home_path__ = __home_path__()
     config = _config
     Keys = _Keys
+    Defaults = _Defaults
     SPLITS = _SPLITS
     env = Environments()
 

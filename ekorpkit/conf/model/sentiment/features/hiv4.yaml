@@ -1,0 +1,25 @@
+_default_:
+  count: count
+  eval:
+    _feat: feature.notnull()
+  agg:
+    _feat: sum
+  score: _feat / @num_tokens + @eps
+polarity:
+  lexicon_features:
+    - Positiv
+    - Negativ
+  count: count
+  eval:
+    _pos: Positiv.notnull()
+    _neg: Negativ.notnull()
+  agg:
+    _pos: sum
+    _neg: sum
+  score: (_pos - _neg) / (_pos + _neg + @eps)
+  labels:
+    negative: (-1, -0.2)
+    neutral: (-0.2, 0.2)
+    positive: (0.2, 1)
+legal:
+  lexicon_features: Legal

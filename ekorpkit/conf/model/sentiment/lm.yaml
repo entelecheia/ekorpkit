@@ -1,31 +1,11 @@
 defaults:
   - _default
   - /model/ngram: lm
+  - features: lm
+  - override /_predict_: sentiment_lm
 
-_target_: ekorpkit.models.sentiment.analyser.LMSA
 name: lmsa
-features:
-  polarity:
-    labels:
-      negative: (-1, -0.2)
-      neutral: (-0.2, 0.2)
-      positive: (0.2, 1)
-    lexicon_features:
-      - Negative
-      - Positive
-  uncertainty:
-    lexicon_features: Uncertainty
-  litigious:
-    lexicon_features: Litigious
-  constraining:
-    lexicon_features: Constraining
-  superfluous:
-    lexicon_features: Superfluous
-  interesting:
-    lexicon_features: Interesting
-  modal:
-    lexicon_features: Modal
-predict:
+_predict_:
   lexicon_features:
   features:
     - polarity

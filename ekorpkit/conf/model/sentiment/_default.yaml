@@ -1,2 +1,6 @@
+defaults:
+  - /_predict_: sentiment
+
+_target_: ekorpkit.models.sentiment.base.SentimentAnalyser
 name:
 verbose: ${oc.select:..verbose, true}

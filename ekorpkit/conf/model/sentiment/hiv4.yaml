@@ -1,21 +1,11 @@
 defaults:
   - _default
   - /model/ngram: hiv4
+  - features: hiv4
+  - override /_predict_: sentiment_hiv4
 
-_target_: ekorpkit.models.sentiment.analyser.HIV4SA
 name: hiv4sa
-features:
-  polarity:
-    labels:
-      negative: (-1, -0.2)
-      neutral: (-0.2, 0.2)
-      positive: (0.2, 1)
-    lexicon_features:
-      - Positiv
-      - Negativ
-  legal:
-    lexicon_features: Legal
-predict:
+_predict_:
   lexicon_features:
   features:
     - polarity

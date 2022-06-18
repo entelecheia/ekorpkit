@@ -1,7 +1,7 @@
 defaults:
   - /info: default
   - ngram: default
-  - score_function: null
+  - score_function: _na
   - scores: default
   - candidates: default
   - postag: default

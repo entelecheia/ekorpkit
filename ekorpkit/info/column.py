@@ -166,7 +166,7 @@ class BaseInfo:
 
     @property
     def ID_SEPARATOR(self):
-        return self.Keys.ID_SEPARATOR.value
+        return eKonf.Defaults.ID_SEP.value
 
     @property
     def INFO(self):
