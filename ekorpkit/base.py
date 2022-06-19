@@ -4,6 +4,7 @@ import random
 from unittest.mock import DEFAULT
 import hydra
 import dotenv
+import functools
 import ekorpkit.utils.batch.batcher as batcher
 from enum import Enum
 from tqdm.auto import tqdm
@@ -310,8 +311,8 @@ class _Keys(str, Enum):
     EXEC = "_exec_"
     rcPARAMS = "rcParams"
     METHOD = "_method_"
+    METHOD_NAME = "_name_"
     FUNC = "_func_"
-    NAME_KEY = "_name_"
     NAME = "name"
     SPLIT = "split"
     CORPUS = "corpus"
@@ -361,7 +362,7 @@ class _Defaults(str, Enum):
     NGRAM_DELIM = ";"
 
 
-def _methods(cfg: Any, obj: object):
+def _methods(cfg: Any, obj: object, return_function=False):
     cfg = _to_dict(cfg)
     if not cfg:
         log.info("No method defined to call")
@@ -372,16 +373,28 @@ def _methods(cfg: Any, obj: object):
     else:
         _method_ = cfg
     if isinstance(_method_, str):
+        _fn = getattr(obj, _method_)
+        if return_function:
+            log.info(f"Returning function {_fn}")
+            return _fn
         log.info(f"Calling {_method_}")
-        return getattr(obj, _method_)()
+        return _fn(**cfg)
     elif isinstance(_method_, dict):
-        log.info(f"Calling {_method_}")
         if _Keys.CALL in _method_:
             _call_ = _method_.pop(_Keys.CALL)
         else:
             _call_ = True
         if _call_:
-            return getattr(obj, _method_[_Keys.NAME_KEY])(**_method_[_Keys.rcPARAMS])
+            _fn =  getattr(obj, _method_[_Keys.METHOD_NAME])
+            _parms = _method_.pop(_Keys.rcPARAMS, {})
+            if return_function:
+                if not _parms:
+                    log.info(f"Returning function {_fn}")
+                    return _fn
+                log.info(f"Returning function {_fn} with params {_parms}")
+                return functools.partial(_fn, **_parms)
+            log.info(f"Calling {_method_}")
+            return _fn(**_parms)
         else:
             log.info(f"Skipping call to {_method_}")
     elif isinstance(_method_, list):
@@ -395,7 +408,7 @@ def _methods(cfg: Any, obj: object):
                 else:
                     _call_ = True
                 if _call_:
-                    getattr(obj, _each_method[_Keys.NAME_KEY])(
+                    getattr(obj, _each_method[_Keys.METHOD_NAME])(
                         **_each_method[_Keys.rcPARAMS]
                     )
                 else:

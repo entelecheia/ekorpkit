@@ -633,8 +633,9 @@ def predict(df, args):
         return df
     data_columns = args["data_columns"]
 
-    _predict_ = args.get("_predict_", None)
-    model = args.get("model", None)
+    _predict_ = args.get(eKonf.Keys.PREDICT)
+    _method_ = args.get(eKonf.Keys.METHOD)
+    model = args.get(eKonf.Keys.MODEL)
     if model is None:
         log.warning("No model specified")
         return df
@@ -647,11 +648,12 @@ def predict(df, args):
     _target_ = model[eKonf.Keys.TARGET]
     model = eKonf.instantiate(model)
 
-    if "sentiment.analyser" in _target_:
+    if "SentimentAnalyser" in _target_:
         key = apply_to
+        _fn = lambda doc: getattr(model, _method_.get(eKonf.Keys.METHOD_NAME))(doc)
         with elapsed_timer(format_time=True) as elapsed:
             predictions = eKonf.apply(
-                model.predict,
+                _fn,
                 df[key],
                 description=f"Predicting [{key}]",
                 verbose=verbose,
@@ -824,13 +826,15 @@ def general_function(df, args):
 
     with elapsed_timer(format_time=True) as elapsed:
         if apply_to is None:
-            df = getattr(df, method[eKonf.Keys.NAME_KEY])(**method[eKonf.Keys.rcPARAMS])
+            df = getattr(df, method[eKonf.Keys.METHOD_NAME])(
+                **method[eKonf.Keys.rcPARAMS]
+            )
         else:
             if isinstance(apply_to, str):
                 apply_to = [apply_to]
             for key in apply_to:
                 log.info(f"processing column: {key}")
-                df[key] = getattr(df[key], method[eKonf.Keys.NAME_KEY])(
+                df[key] = getattr(df[key], method[eKonf.Keys.METHOD_NAME])(
                     **method[eKonf.Keys.rcPARAMS]
                 )
 

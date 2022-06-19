@@ -204,8 +204,8 @@ class eKonf:
         _print(cfg, resolve=resolve, **kwargs)
 
     @staticmethod
-    def methods(cfg: Any, obj: object):
-        _methods(cfg, obj)
+    def methods(cfg: Any, obj: object, return_function=False):
+        _methods(cfg, obj, return_function)
 
     @staticmethod
     def function(cfg: Any, _name_, return_function=False, **parms):
@@ -445,7 +445,7 @@ class eKonf:
         data,
         columns=None,
         add_key_as_name=False,
-        name_column=Keys.NAME_KEY.value,
+        name_column=Keys.METHOD_NAME.value,
         ignore_index=True,
         verbose=False,
         **kwargs,

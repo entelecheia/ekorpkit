@@ -1,23 +1,13 @@
 _default_:
-  count: count
   num_examples: num_examples
-  eval:
-    _feat: feature > 0
   agg:
-    _feat: sum
-  score: _feat / @num_examples + @eps
+    feature: mean
+  score: feature
 polarity:
-  lexicon_features:
-    - polarity_label
-  count: 
   num_examples: num_examples
-  eval:
-    _pos: polarity_label == 'positive'
-    _neg: polarity_label == 'negative'
   agg:
-    _pos: sum
-    _neg: sum
-  score: (_pos - _neg) / (@num_examples + @eps)
+    polarity: mean
+  score: polarity
   labels:
     negative: (-1, -0.2)
     neutral: (-0.2, 0.2)
