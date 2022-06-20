@@ -2,3 +2,4 @@ lexicon_features:
 features:
   - polarity
   - uncertainty
+agg_method: mean

@@ -82,6 +82,8 @@ def set_figure(
     yticklabels=None,
     xtickmajorformatterfunc=None,
     ytickmajorformatterfunc=None,
+    xtick_params=None,
+    ytick_params=None,
     **kwargs,
 ):
     if xlabel is not None:
@@ -143,6 +145,10 @@ def set_figure(
         ax.xaxis.set_major_formatter(eval(xtickmajorformatterfunc))
     if ytickmajorformatterfunc is not None:
         ax.yaxis.set_major_formatter(eval(ytickmajorformatterfunc))
+    if xtick_params is not None:
+        ax.tick_params(axis="x", **xtick_params)
+    if ytick_params is not None:
+        ax.tick_params(axis="y", **ytick_params)
 
 
 def set_style(style, rcParams, fontpath=None, language=None, **kwargs):

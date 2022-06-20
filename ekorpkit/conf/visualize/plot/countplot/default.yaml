@@ -9,4 +9,3 @@ secondary_y: false
 secondary_to: 0
 hue:
 rcParams:
-  hue: ${oc.select:..hues, null}

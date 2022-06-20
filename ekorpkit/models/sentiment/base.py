@@ -2,6 +2,8 @@ import logging
 import pandas as pd
 import numpy as np
 from enum import Enum
+
+from zmq import RADIO
 from ekorpkit import eKonf
 
 log = logging.getLogger(__name__)
@@ -21,6 +23,14 @@ class _Keys(str, Enum):
     AGG = "agg"
     SCORE = "score"
     LABELS = "labels"
+
+
+class _AggMethods(str, Enum):
+    MEAN = "mean"
+    MEDIAN = "median"
+    DIFFUSION = "diffusion"
+    RATIO = "ratio"
+    STD = "std"
 
 
 class SentimentAnalyser:
@@ -183,7 +193,9 @@ class SentimentAnalyser:
                     score[_label_key] = _label
         return score
 
-    def _get_aggregate_scores(self, scores, feature="polarity", _features=None):
+    def _get_aggregate_scores(
+        self, scores, feature="polarity", agg_method="mean", _features=None
+    ):
         """Get aggreagate score for features.
 
         :returns: dict

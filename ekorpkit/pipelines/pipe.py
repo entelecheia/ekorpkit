@@ -650,7 +650,9 @@ def predict(df, args):
 
     if "SentimentAnalyser" in _target_:
         key = apply_to
-        _fn = lambda doc: getattr(model, _method_.get(eKonf.Keys.METHOD_NAME))(doc)
+        _meth_name_ = _method_.get(eKonf.Keys.METHOD_NAME)
+        _meth_args = _method_.get(eKonf.Keys.rcPARAMS)
+        _fn = lambda doc: getattr(model, _meth_name_)(doc, **_meth_args)
         with elapsed_timer(format_time=True) as elapsed:
             predictions = eKonf.apply(
                 _fn,
@@ -668,7 +670,7 @@ def predict(df, args):
     else:
         df = model.predict(df, _predict_)
         if data_columns:
-            data_columns.append(model._predict_["predicted"])
+            data_columns.append(model._predict_[eKonf.Keys.PREDICTED])
 
     _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
     _path[eKonf.Keys.SUFFIX.value] = args.get(eKonf.Keys.SUFFIX)

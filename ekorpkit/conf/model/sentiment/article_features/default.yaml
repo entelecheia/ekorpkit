@@ -1,14 +1,29 @@
-_default_:
-  num_examples: num_examples
-  agg:
-    feature: mean
-  score: feature
+agg_method:
+  mean:
+    num_examples: num_examples
+    agg:
+      feature: mean
+    score: feature
+  median:
+    num_examples: num_examples
+    agg:
+      feature: median
+    score: feature
+  diffusion:
+    num_examples: num_examples
+    eval:
+      _pos: feature == 'positive'
+      _neg: feature == 'negative'
+    agg:
+      _pos: sum
+      _neg: sum
+    score: (_pos - _neg) / (_pos + _neg + @eps)
 polarity:
   num_examples: num_examples
   agg:
     polarity: mean
   score: polarity
-  labels:
-    negative: (-1, -0.2)
-    neutral: (-0.2, 0.2)
-    positive: (0.2, 1)
+labels:
+  negative: (-1, -0.2)
+  neutral: (-0.2, 0.2)
+  positive: (0.2, 1)

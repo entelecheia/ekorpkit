@@ -445,7 +445,7 @@ class eKonf:
         data,
         columns=None,
         add_key_as_name=False,
-        name_column=Keys.METHOD_NAME.value,
+        name_column="_name_",
         ignore_index=True,
         verbose=False,
         **kwargs,
