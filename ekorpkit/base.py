@@ -863,3 +863,12 @@ def _is_notebook():
     else:
         log.info("IPython not detected.")
     return is_notebook
+
+
+def _nvidia_smi():
+    import subprocess
+
+    nvidiasmi_output = subprocess.run(
+        ["nvidia-smi", "-L"], stdout=subprocess.PIPE
+    ).stdout.decode("utf-8")
+    return nvidiasmi_output

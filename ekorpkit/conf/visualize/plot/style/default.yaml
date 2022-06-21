@@ -1,4 +1,4 @@
-fontsize: 10
+fontsize: ${oc.select:${..figure.fontsize},10}
 fontfamily: NanumGothic
 fontpath:
 language:

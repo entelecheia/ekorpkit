@@ -31,6 +31,7 @@ from .base import (
     _merge,
     _methods,
     _mkdir,
+    _nvidia_smi,
     _osenv,
     _env_set,
     _partial,
@@ -491,3 +492,7 @@ class eKonf:
     @staticmethod
     def env_set(key, value):
         return _env_set(key, value)
+
+    @staticmethod
+    def nvidia_smi():
+        return _nvidia_smi()
