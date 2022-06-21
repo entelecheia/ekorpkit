@@ -1,7 +1,8 @@
 archive: ${.data}/archive
 cache: ${.workspace}/.cache
 corpus: ${.dataset}/corpus
-data: ${.workspace}/data
+# data:
+data: ${alt:${oc.env:EKORPKIT_DATA_DIR,null},${.workspace}/data}
 dataset: ${.data}/datasets
 ekorpkit: ${__ekorpkit_path__:}
 home: ${__home_path__:}
@@ -12,4 +13,4 @@ project: ${.workspace}/projects/${project}
 resource: ${.ekorpkit}/resources
 runtime: ${get_original_cwd:}
 tmp: ${.workspace}/.tmp
-workspace: ${oc.env:EKORPKIT_WORKSPACE_ROOT,${.home}/.ekorpkit}
+workspace: ${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.home}/.ekorpkit}

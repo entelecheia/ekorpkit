@@ -3,49 +3,53 @@ from pathlib import Path
 from omegaconf import SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple
 from .base import (
-    DictKeyType,
-    Environments,
-    apply_pipe,
-    __version__,
     __ekorpkit_path__,
     __home_path__,
-    _config,
-    _Keys,
-    _Defaults,
-    _SPLITS,
-    _compose,
-    _select,
-    _to_dict,
-    _to_config,
-    _to_yaml,
-    _to_container,
-    _partial,
-    _instantiate,
-    _is_config,
-    _is_list,
-    _is_instantiatable,
-    _load,
-    _update,
-    _merge,
-    _save,
-    _print,
-    _methods,
-    _function,
-    _run,
-    _load_dotenv,
-    _init_env_,
-    _stop_env_,
-    _path,
-    _dependencies,
-    _ensure_list,
-    _to_dateparm,
-    _exists,
-    _is_file,
-    _is_dir,
-    _mkdir,
-    _join_path,
+    __version__,
     _apply,
+    _compose,
+    _config,
+    _Defaults,
+    _dependencies,
     _ensure_kwargs,
+    _ensure_list,
+    _exists,
+    _function,
+    _init_env_,
+    _instantiate,
+    _is_colab,
+    _is_config,
+    _is_dir,
+    _is_file,
+    _is_instantiatable,
+    _is_list,
+    _is_notebook,
+    _join_path,
+    _Keys,
+    _load_dotenv,
+    _load,
+    _merge,
+    _methods,
+    _mkdir,
+    _osenv,
+    _env_set,
+    _partial,
+    _path,
+    _print,
+    _run,
+    _save,
+    _select,
+    _SPLITS,
+    _stop_env_,
+    _to_config,
+    _to_container,
+    _to_dateparm,
+    _to_dict,
+    _to_yaml,
+    _update,
+    apply_pipe,
+    DictKeyType,
+    Environments,
 )
 
 log = logging.getLogger(__name__)
@@ -61,10 +65,14 @@ class eKonf:
     Keys = _Keys
     Defaults = _Defaults
     SPLITS = _SPLITS
-    env = Environments()
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
+
+    @staticmethod
+    def env() -> Environments:
+        """Return the current environments"""
+        return Environments()
 
     @staticmethod
     def compose(
@@ -467,3 +475,19 @@ class eKonf:
         from ekorpkit.io.file import is_dataframe
 
         return is_dataframe(data)
+
+    @staticmethod
+    def is_colab():
+        return _is_colab()
+
+    @staticmethod
+    def is_notebook():
+        return _is_notebook()
+
+    @staticmethod
+    def osenv(key):
+        return _osenv(key)
+
+    @staticmethod
+    def env_set(key, value):
+        return _env_set(key, value)

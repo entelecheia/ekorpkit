@@ -1,11 +1,17 @@
 import logging
-import omegaconf
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from cmath import isinf
 from pathlib import Path
-from .base import set_style, set_figure, set_super, add_decorations, save_figure
+from .base import (
+    set_style,
+    set_figure,
+    set_super,
+    add_decorations,
+    save_figure,
+    prepare_plot_args,
+    prepare_data,
+)
 from .classification import confusion_matrix
 from .yellowbrick import yellowbrick_features
 from ekorpkit import eKonf
@@ -15,35 +21,29 @@ log = logging.getLogger(__name__)
 
 
 def plot(data, verbose=False, **kwargs):
-    kwargs = eKonf.to_dict(kwargs)
-    _plots = kwargs.get("plots")
-    _axes = kwargs.get("axes")
-    # _series = {} or kwargs.get("series")
-    _figure = {} or kwargs.get("figure")
-    _gridspec = {} or kwargs.get("gridspec")
-    _subplots = {} or kwargs.get("subplots")
-    _savefig = {} or kwargs.get("savefig")
+    (
+        _axes,
+        _fig_super,
+        _,
+        _gridspec,
+        _plots,
+        _savefig,
+        _style,
+        _subplots,
+        _,
+        data,
+        figsize,
+        tight_layout,
+    ) = prepare_plot_args(data, verbose, **kwargs)
 
-    if data is None:
-        log.info("No data to plot")
-    if isinstance(data, omegaconf.listconfig.ListConfig):
-        data = list(data)
-    if verbose:
-        log.info(f"type of data: {type(data)}")
-
-    set_style(**_figure)
-    figsize = _figure.get("figsize", None)
-    if figsize is not None and isinstance(figsize, str):
-        figsize = eval(figsize)
+    set_style(**_style)
 
     if verbose and isinstance(_plots, list) and len(_plots) > 1:
         log.info("Plotting multiple plots'")
 
     sencondary_axes = {}
-    fig = plt.figure(figsize=figsize, tight_layout=_figure["tight_layout"])
+    fig = plt.figure(figsize=figsize, tight_layout=tight_layout)
 
-    _gridspec["nrows"] = _subplots.pop("nrows", 1)
-    _gridspec["ncols"] = _subplots.pop("ncols", 1)
     gs = fig.add_gridspec(**_gridspec)
     axes = gs.subplots(**_subplots)
     if _gridspec["nrows"] > 1 or _gridspec["ncols"] > 1:
@@ -106,41 +106,34 @@ def plot(data, verbose=False, **kwargs):
         add_decorations(ax, **_ax_cfg_)
         set_figure(ax, **_ax_cfg_)
 
-    set_super(fig, **_figure["super"])
+    set_super(fig, **_fig_super)
 
     save_figure(fig, **_savefig)
 
 
 def grid(data, verbose=False, **kwargs):
-    kwargs = eKonf.to_dict(kwargs)
-    _theme = kwargs.get("theme")
-    _figure = {} or kwargs.get("figure")
-    _grid = {} or kwargs.get("grid")
-    _gridspec = {} or kwargs.get("gridspec")
-    _subplots = {} or kwargs.get("subplots")
-    _savefig = {} or kwargs.get("savefig")
+    (
+        _,
+        _,
+        _grid,
+        _,
+        _,
+        _savefig,
+        _style,
+        _,
+        _theme,
+        data,
+        figsize,
+        _,
+    ) = prepare_plot_args(data, verbose, **kwargs)
 
-    if data is None:
-        log.warning("No data to plot")
-        return
-    if isinstance(data, omegaconf.listconfig.ListConfig):
-        data = list(data)
-    if verbose:
-        log.info(f"type of data: {type(data)}")
-
-    set_style(**_figure)
-    figsize = _figure.get("figsize", None)
-    if figsize is not None and isinstance(figsize, str):
-        figsize = eval(figsize)
+    set_style(**_style)
 
     if isinstance(_theme["rc"], dict):
         _theme["rc"]["figure.figsize"] = figsize
     else:
         _theme["rc"] = {"figure.figsize": figsize}
     sns.set_theme(**_theme)
-
-    _gridspec["nrows"] = _subplots.pop("nrows", 1)
-    _gridspec["ncols"] = _subplots.pop("ncols", 1)
 
     _query = _grid.pop("query", None)
     _set_index = _grid.pop("set_index", None)
@@ -149,22 +142,6 @@ def grid(data, verbose=False, **kwargs):
     g = _func_(_data, **_grid)
 
     save_figure(plt, **_savefig)
-
-
-def prepare_data(data, _query=None, _set_index=None, **kwargs):
-    data = data.copy()
-    if _query is not None:
-        if isinstance(data, pd.DataFrame):
-            data = data.query(_query, engine="python")
-        else:
-            data = [d for d in data if eval(_query)]
-    if _set_index is not None:
-        if isinstance(data, pd.DataFrame):
-            if _set_index == "reset":
-                data = data.reset_index()
-            else:
-                data = data.set_index(_set_index)
-    return data
 
 
 def facetgrid(data=None, **kwargs):
@@ -209,42 +186,3 @@ def heatmap(ax=None, x=None, y=None, data=None, **kwargs):
     if ax is None:
         ax = plt.gca()
     sns.heatmap(data=data, ax=ax, **rcParams)
-
-
-def lineplot(ax=None, x=None, y=None, data=None, **kwargs):
-    rcParams = {} or kwargs.get(eKonf.Keys.rcPARAMS)
-    if ax is None:
-        ax = plt.gca()
-    sns.lineplot(x=x, y=y, data=data, ax=ax, **rcParams)
-
-
-def countplot(ax=None, x=None, y=None, data=None, **kwargs):
-    rcParams = {} or kwargs.get(eKonf.Keys.rcPARAMS)
-    if ax is None:
-        ax = plt.gca()
-    sns.countplot(x=x, y=y, data=data, ax=ax, **rcParams)
-
-
-def histplot(ax=None, x=None, y=None, data=None, **kwargs):
-    rcParams = {} or kwargs.get(eKonf.Keys.rcPARAMS)
-    if ax is None:
-        ax = plt.gca()
-    sns.histplot(x=x, y=y, data=data, ax=ax, **rcParams)
-
-
-def stackplot(ax=None, x=None, y=None, data=None, **kwargs):
-    rcParams = {} or kwargs.get(eKonf.Keys.rcPARAMS)
-    if ax is None:
-        ax = plt.gca()
-    if x is None or x not in data.columns:
-        x = data.index
-    elif isinstance(x, str):
-        x = data[x]
-    plt.stackplot(x, data[y].T, **rcParams)
-
-
-def scatter(ax=None, x=None, y=None, data=None, **kwargs):
-    rcParams = {} or kwargs.get(eKonf.Keys.rcPARAMS)
-    if ax is None:
-        ax = plt.gca()
-    sns.scatterplot(x=x, y=y, data=data, ax=ax, **rcParams)

@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import random
 from unittest.mock import DEFAULT
 import hydra
@@ -37,17 +38,29 @@ __hydra_version_base__ = "1.2"
 
 
 class Environments(BaseSettings):
-    wandb_api_key: Optional[str] = SecretStr
-    fred_api_key: Optional[str] = SecretStr
-    nasdaq_api_key: Optional[str] = SecretStr
-    cached_path_cache_root: Optional[str]
-    num_workers: Optional[int]
+    EKORPKIT_CONFIG_DIR: Optional[str]
+    EKORPKIT_DATA_DIR: Optional[str]
+    EKORPKIT_PROJECT: Optional[str]
+    EKORPKIT_WORKSPACE_ROOT: Optional[str]
+    FRED_API_KEY: Optional[str] = SecretStr
+    NASDAQ_API_KEY: Optional[str] = SecretStr
+    WANDB_API_KEY: Optional[str] = SecretStr
+    NUM_WORKERS: Optional[int]
 
     class Config:
         env_prefix = ""
         case_sentive = False
         env_file = ".env"
         env_file_encoding = "utf-8"
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> Tuple[SettingsSourceCallable, ...]:
+            return env_settings, file_secret_settings
 
 
 def __ekorpkit_path__():
@@ -271,6 +284,7 @@ OmegaConf.register_new_resolver("__version__", __version__)
 OmegaConf.register_new_resolver("today", _today)
 OmegaConf.register_new_resolver("to_datetime", _strptime)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
+OmegaConf.register_new_resolver("alt", lambda val, alt: val if val else alt)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
@@ -385,7 +399,7 @@ def _methods(cfg: Any, obj: object, return_function=False):
         else:
             _call_ = True
         if _call_:
-            _fn =  getattr(obj, _method_[_Keys.METHOD_NAME])
+            _fn = getattr(obj, _method_[_Keys.METHOD_NAME])
             _parms = _method_.pop(_Keys.rcPARAMS, {})
             if return_function:
                 if not _parms:
@@ -631,6 +645,18 @@ def _load_dotenv(verbose=False):
     dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
 
 
+def _osenv(key: str = None) -> Any:
+    if key:
+        return os.environ.get(key)
+    return os.environ
+
+
+def _env_set(key: str, value: Any) -> None:
+    if _is_dir(value):
+        value = os.path.abspath(value)
+    os.environ[key] = value
+
+
 def _init_env_(cfg=None, verbose=False):
     global _env_initialized_
 
@@ -816,3 +842,24 @@ def _apply(
         log.warning("Warning: batcher not initialized")
     tqdm.pandas(desc=description)
     return series.progress_apply(func)
+
+
+def _is_colab():
+    is_colab = "google.colab" in sys.modules
+    if is_colab:
+        log.info("Google Colab detected.")
+    else:
+        log.info("Google Colab not detected.")
+    return is_colab
+
+
+def _is_notebook():
+    is_notebook = "ipykernel" in sys.modules
+    if is_notebook:
+        ip = sys.modules["ipykernel"]
+        ip_version = ip.version_info
+        ip_client = ip.write_connection_file.__module__.split(".")[0]
+        log.info(f"IPython version: {ip_version}, client: {ip_client}")
+    else:
+        log.info("IPython not detected.")
+    return is_notebook

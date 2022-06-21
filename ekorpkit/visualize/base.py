@@ -1,12 +1,78 @@
+import pandas as pd
+import omegaconf
 import logging
 import platform
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import font_manager, rc
 from pathlib import Path
+from ekorpkit import eKonf
 
 
 log = logging.getLogger(__name__)
+
+
+def prepare_data(data, _query=None, _set_index=None, **kwargs):
+    data = data.copy()
+    if _query is not None:
+        if isinstance(data, pd.DataFrame):
+            data = data.query(_query, engine="python")
+        else:
+            data = [d for d in data if eval(_query)]
+    if _set_index is not None:
+        if isinstance(data, pd.DataFrame):
+            if _set_index == "reset":
+                data = data.reset_index()
+            else:
+                data = data.set_index(_set_index)
+    return data
+
+
+def prepare_plot_args(data, verbose=False, **kwargs):
+    kwargs = eKonf.to_dict(kwargs)
+    _plots = kwargs.get("plots")
+    _axes = kwargs.get("axes")
+    _figure = kwargs.get("figure") or {}
+    _style = kwargs.get("style") or {}
+    _gridspec = kwargs.get("gridspec") or {}
+    _subplots = kwargs.get("subplots") or {}
+    _savefig = kwargs.get("savefig") or {}
+    _theme = kwargs.get("theme") or {}
+    _grid = kwargs.get("grid") or {}
+    _fig_super = _figure.pop("super", None) or {}
+    _fig_rcParams = _figure.pop("rcParams", None) or {}
+
+    _style["rcParams"] = _style.get("rcParams") or {}
+    _style["rcParams"].update(_fig_rcParams)
+    _gridspec["nrows"] = _subplots.pop("nrows", 1)
+    _gridspec["ncols"] = _subplots.pop("ncols", 1)
+
+    if data is None:
+        log.info("No data to plot")
+    if isinstance(data, omegaconf.listconfig.ListConfig):
+        data = list(data)
+    if verbose:
+        log.info(f"type of data: {type(data)}")
+
+    tight_layout = _figure.pop("tight_layout", True)
+    figsize = _figure.pop("figsize", None)
+    if figsize is not None and isinstance(figsize, str):
+        figsize = eval(figsize)
+
+    return (
+        _axes,
+        _fig_super,
+        _grid,
+        _gridspec,
+        _plots,
+        _savefig,
+        _style,
+        _subplots,
+        _theme,
+        data,
+        figsize,
+        tight_layout,
+    )
 
 
 def save_figure(fig, fname=None, **kwargs):
