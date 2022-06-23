@@ -1,7 +1,6 @@
 archive: ${.data}/archive
 cache: ${.workspace}/.cache
 corpus: ${.dataset}/corpus
-# data:
 data: ${alt:${oc.env:EKORPKIT_DATA_DIR,null},${.workspace}/data}
 dataset: ${.data}/datasets
 ekorpkit: ${__ekorpkit_path__:}

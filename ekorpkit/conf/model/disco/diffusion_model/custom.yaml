@@ -1,0 +1,10 @@
+defaults:
+  - default
+
+attention_resolutions: 16
+timestep_respacing: ddim100
+image_size: 256
+num_channels: 128
+num_heads: 1
+num_res_blocks: 2
+use_scale_shift_norm: false

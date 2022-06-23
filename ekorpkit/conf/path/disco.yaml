@@ -1,0 +1,10 @@
+name: disco-imagen
+root: ${join_path:${dir.project},${.name}}
+verbose: ${oc.select:..verbose,false}
+library_dir: ${mkdir:${join_path:${.root},libs}}
+archive_dir: ${mkdir:${join_path:${dir.archive},${.name}}}
+model_dir: ${mkdir:${join_path:${.root},models}}
+pretrained_dir: ${mkdir:${join_path:${.root},pretrained}}
+init_dir: ${mkdir:${join_path:${.root},init_images}}
+output_dir: ${mkdir:${join_path:${.root},outputs}}
+tmp_dir: ${mkdir:${join_path:${.root},tmp}}

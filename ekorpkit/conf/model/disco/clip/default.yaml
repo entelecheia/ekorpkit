@@ -1,0 +1,11 @@
+# CLIP settings
+use_checkpoint: true #@param {type: 'boolean'}
+ViTB32: true #@param{type:"boolean"}
+ViTB16: true #@param{type:"boolean"}
+ViTL14: false #@param{type:"boolean"}
+ViTL14_336px: false #@param{type:"boolean"}
+RN101: false #@param{type:"boolean"}
+RN50: true #@param{type:"boolean"}
+RN50x4: false #@param{type:"boolean"}
+RN50x16: false #@param{type:"boolean"}
+RN50x64: false #@param{type:"boolean"}

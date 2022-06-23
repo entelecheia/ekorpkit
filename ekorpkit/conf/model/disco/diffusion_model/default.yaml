@@ -1,0 +1,15 @@
+attention_resolutions: "32, 16, 8"
+class_cond: false
+diffusion_steps: 1000
+rescale_timesteps: true
+timestep_respacing: 250
+image_size: 512
+learn_sigma: true
+noise_schedule: linear
+num_channels: 256
+num_head_channels: 64
+num_res_blocks: 2
+resblock_updown: true
+use_checkpoint: ${..clip.use_checkpoint}
+use_fp16: ${iif:${..use_cpu},false,true}
+use_scale_shift_norm: true

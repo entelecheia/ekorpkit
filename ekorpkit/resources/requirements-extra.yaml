@@ -80,3 +80,7 @@ numba: numba
 
 fredapi: all, fred, fomc
 nasdaq-data-link: all, nasdaq, fomc
+
+lpips: disco
+timm: disco
+einops: disco

@@ -1,0 +1,5 @@
+defaults:
+  - default
+
+attention_resolutions: "32, 16, 8"
+image_size: 512

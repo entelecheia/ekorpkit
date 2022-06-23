@@ -496,3 +496,9 @@ class eKonf:
     @staticmethod
     def nvidia_smi():
         return _nvidia_smi()
+
+    @staticmethod
+    def ensure_import_module(name, libpath, liburi, specname=None, syspath=None):
+        from ekorpkit.utils.lib import ensure_import_module
+
+        return ensure_import_module(name, libpath, liburi, specname, syspath)
