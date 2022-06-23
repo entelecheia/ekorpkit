@@ -502,3 +502,29 @@ class eKonf:
         from ekorpkit.utils.lib import ensure_import_module
 
         return ensure_import_module(name, libpath, liburi, specname, syspath)
+
+    @staticmethod
+    def collage(
+        image_filepaths=None,
+        filename_patterns=None,
+        base_dir=None,
+        output_filepath=None,
+        ncols=7,
+        num_images=None,
+        figsize=(30, 20),
+        dpi=300,
+        **kwargs,
+    ):
+        from ekorpkit.visualize.collage import collage
+
+        collage(
+            image_filepaths=image_filepaths,
+            filename_patterns=filename_patterns,
+            base_dir=base_dir,
+            output_filepath=output_filepath,
+            ncols=ncols,
+            num_images=num_images,
+            figsize=figsize,
+            dpi=dpi,
+            **kwargs,
+        )
