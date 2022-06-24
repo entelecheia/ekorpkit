@@ -2,9 +2,9 @@ import logging
 import pandas as pd
 import numpy as np
 from enum import Enum
-
-from zmq import RADIO
 from ekorpkit import eKonf
+from ekorpkit.utils.func import elapsed_timer
+
 
 log = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ class _Keys(str, Enum):
     AGG = "agg"
     SCORE = "score"
     LABELS = "labels"
+    AGG_METHOD = "agg_method"
 
 
 class _AggMethods(str, Enum):
@@ -51,6 +52,8 @@ class SentimentAnalyser:
         self._eval_ = args.get(eKonf.Keys.EVAL)
         self._features = args.get(_Keys.FEATURES)
         self._article_features = args.get(_Keys.ARTICLE_FEATURES)
+        self.num_workers = args.num_workers
+        self.use_batcher = args.use_batcher
         self.verbose = args.get("verbose", False)
 
         self._ngram = eKonf.instantiate(args.model.ngram)
@@ -71,7 +74,31 @@ class SentimentAnalyser:
         """
         return self._ngram.tokenize(text)
 
-    def predict(self, text, features=None, num_examples=5):
+    def predict(self, data, _predict_={}):
+        if _predict_:
+            self._predict_ = _predict_
+
+        input_col = self._predict_[eKonf.Keys.INPUT]
+        _method_ = self._predict_._method_
+        _meth_name_ = _method_.get(eKonf.Keys.METHOD_NAME)
+        _meth_args = _method_.get(eKonf.Keys.rcPARAMS)
+        _fn = lambda doc: getattr(self, _meth_name_)(doc, **_meth_args)
+        with elapsed_timer(format_time=True) as elapsed:
+            predictions = eKonf.apply(
+                _fn,
+                data[input_col],
+                description=f"Predicting [{input_col}]",
+                verbose=self.verbose,
+                use_batcher=self.use_batcher,
+                num_workers=self.num_workers,
+            )
+            pred_df = pd.DataFrame(predictions.tolist(), index=predictions.index)
+            data = data.join(pred_df)
+            log.info(" >> elapsed time to predict: {}".format(elapsed()))
+
+        return data
+
+    def predict_sentence(self, text, features=None, min_examples=5):
         """Get score for a list of terms.
 
         :returns: dict
@@ -82,42 +109,15 @@ class SentimentAnalyser:
         features = eKonf.ensure_list(features)
         tokens = self._ngram.tokenize(text)
         num_examples = len(tokens)
-        if num_examples < num_examples:
-            return scores
         _lex_feats = self._predict_.get(_Keys.LEXICON_FEATURES)
         lexicon_features = self._ngram.find_features(tokens, features=_lex_feats)
         for feather in features:
-            score = self._get_score(
-                lexicon_features, feature=feather, num_examples=num_examples
-            )
-            score = self._assign_class(score, feature=feather)
-            scores.update(score)
-
-        return scores
-
-    def predict_article(self, article, features=["polarity"], num_examples=2):
-        scores = {}
-        if article is None:
-            return scores
-
-        features = features or self._predict_.features
-        features = eKonf.ensure_list(features)
-        article_scores = {}
-        sents = article.split(self._sentence_separator)
-        if len(sents) < num_examples:
-            return scores
-        for sent_no, sent in enumerate(article.split(self._sentence_separator)):
-            sent = sent.strip()
-            if sent:
-                _scores = self.predict(sent, features=features)
-                if _scores:
-                    article_scores[sent_no] = _scores
-        if len(article_scores) < num_examples:
-            return scores
-        for feather in features:
-            score = self._get_aggregate_scores(
-                article_scores, feature=feather, _features=self._article_features
-            )
+            if num_examples < min_examples:
+                score = {feather: np.nan}
+            else:
+                score = self._get_score(
+                    lexicon_features, feature=feather, num_examples=num_examples
+                )
             score = self._assign_class(score, feature=feather)
             scores.update(score)
 
@@ -134,12 +134,13 @@ class SentimentAnalyser:
         _feature = _features[feature]
         _default_feature = self._features[_Keys.DEFAULT]
         _lex_feats = _feature.get(_Keys.LEXICON_FEATURES)
+        _num_examples = _feature.get(_Keys.NUM_EXAMPLES) or _Keys.NUM_TOKENS.value
+
         lxfeat = pd.DataFrame.from_dict(lexicon_features, orient="index")
 
-        score = {}
+        score = {_num_examples: np.nan, feature: np.nan}
         if lxfeat.empty:
             return score
-        _num_examples = _feature.get(_Keys.NUM_EXAMPLES) or _Keys.NUM_TOKENS.value
         if num_examples is None:
             num_examples = lxfeat.shape[0]
         score[_num_examples] = num_examples
@@ -193,38 +194,73 @@ class SentimentAnalyser:
                     score[_label_key] = _label
         return score
 
+    def predict_article(
+        self,
+        article,
+        features=["polarity"],
+        agg_method="mean",
+        min_examples=2,
+        **kwargs,
+    ):
+        scores = {}
+
+        agg_method = agg_method or self._predict_.agg_method
+        features = features or self._predict_.features
+        features = eKonf.ensure_list(features)
+
+        article_scores = {}
+        if isinstance(article, str):
+            sents = article.split(self._sentence_separator)
+            # if len(sents) < min_examples:
+            #     return scores
+            for sent_no, sent in enumerate(sents):
+                sent = sent.strip()
+                if sent:
+                    _scores = self.predict_sentence(sent, features=features)
+                    if _scores:
+                        article_scores[sent_no] = _scores
+        for feather in features:
+            if len(article_scores) < min_examples:
+                score = {feather: np.nan}
+            else:
+                score = self._get_aggregate_scores(
+                    article_scores,
+                    feature=feather,
+                    agg_method=agg_method,
+                    article_features=self._article_features,
+                )
+            score = self._assign_class(score, feature=feather)
+            scores.update(score)
+
+        return scores
+
     def _get_aggregate_scores(
-        self, scores, feature="polarity", agg_method="mean", _features=None
+        self, scores, feature="polarity", agg_method="mean", article_features=None
     ):
         """Get aggreagate score for features.
 
         :returns: dict
         """
-        _features = _features or self._features
-        _feature = _features[feature]
-        _default_feature = self._features[_Keys.DEFAULT]
+        article_features = article_features or self._article_features
+        _feature = article_features[feature]
+        _agg_method = article_features.agg_method[agg_method]
+        _num_examples = _feature.get(_Keys.NUM_EXAMPLES) or _Keys.NUM_TOKENS.value
+
         scores_df = pd.DataFrame.from_dict(scores, orient="index")
         scores_df.dropna(subset=[feature], inplace=True)
 
-        score = {}
+        score = {_num_examples: np.nan, feature: np.nan}
         if scores_df.empty:
             return score
-        _num_examples = _feature.get(_Keys.NUM_EXAMPLES) or _Keys.NUM_TOKENS.value
         num_examples = scores_df.shape[0]
         score[_num_examples] = num_examples
 
         eps = self.EPSILON
-        if _Keys.AGG in _feature:
-            _evals = _feature.get(_Keys.EVAL)
-            _count = _feature.get(_Keys.COUNT)
-            _agg = eKonf.to_dict(_feature.get(_Keys.AGG))
-            _score = _feature.get(_Keys.SCORE) or feature
-        else:
-            _evals = _default_feature.get(_Keys.EVAL)
-            _count = _default_feature.get(_Keys.COUNT)
-            _agg = eKonf.to_dict(_default_feature.get(_Keys.AGG))
-            _score = _default_feature.get(_Keys.SCORE) or _Keys.FEATURE.value
-            scores_df.rename(columns={feature: _Keys.FEATURE.value}, inplace=True)
+        _evals = _agg_method.get(_Keys.EVAL)
+        _count = _agg_method.get(_Keys.COUNT)
+        _agg = eKonf.to_dict(_agg_method.get(_Keys.AGG))
+        _score = _agg_method.get(_Keys.SCORE) or _Keys.FEATURE.value
+        scores_df.rename(columns={feature: _Keys.FEATURE.value}, inplace=True)
         if self.verbose > 5:
             log.info("Evaluating %s", feature)
             print(scores_df)

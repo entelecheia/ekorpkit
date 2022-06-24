@@ -1,2 +1,10 @@
+defaults:
+  - /_method_: predict_article
+
+input: ${oc.select:..apply_to, text}
 lexicon_features:
 features:
+agg_method: mean
+parameters:
+  features:
+    - polarity

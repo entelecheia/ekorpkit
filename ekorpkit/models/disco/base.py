@@ -9,7 +9,7 @@ import gc
 import matplotlib.pyplot as plt
 import shutil
 from datetime import datetime
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 from glob import glob
 from pathlib import Path
 from ekorpkit import eKonf
@@ -20,6 +20,8 @@ from .utils import (
     parse_key_frames,
     get_inbetweens,
 )
+
+# from tqdm import tqdm
 
 log = logging.getLogger(__name__)
 
@@ -212,9 +214,10 @@ class DiscoDiffusion:
         self._diffuse.max_frames = (
             self._anim.max_frames if self.animation_mode != "None" else 1
         )
-        self._extra.cut_overview = eval(self._extra.cut_overview)
-        self._extra.cut_innercut = eval(self._extra.cut_innercut)
-        self._extra.cut_icgray_p = eval(self._extra.cut_icgray_p)
+        if isinstance(self._extra.cut_overview, str):
+            self._extra.cut_overview = eval(self._extra.cut_overview)
+            self._extra.cut_innercut = eval(self._extra.cut_innercut)
+            self._extra.cut_icgray_p = eval(self._extra.cut_icgray_p)
 
         if self.animation_mode == "Video Input":
             # This isn't great in terms of what will get saved to the settings.. but it should work.
@@ -1333,17 +1336,17 @@ class DiscoDiffusion:
                 # display.clear_output(wait=True)
                 for j, sample in enumerate(samples):
                     cur_t -= 1
-                    intermediateStep = False
+                    intermediate_step = False
                     if _extra.steps_per_checkpoint is not None:
                         if j % _extra.steps_per_checkpoint == 0 and j > 0:
-                            intermediateStep = True
+                            intermediate_step = True
                     elif j in _extra.intermediate_saves:
-                        intermediateStep = True
+                        intermediate_step = True
                     with image_display:
                         if (
                             j % _diffuse.display_rate == 0
                             or cur_t == -1
-                            or intermediateStep == True
+                            or intermediate_step == True
                         ):
                             for k, image in enumerate(sample["pred_xstart"]):
                                 # tqdm.write(f'Batch {i}, step {j}, output {k}:')
@@ -1355,21 +1358,21 @@ class DiscoDiffusion:
                                     # if intermediates are saved to the subfolder, don't append a step or percentage to the name
                                     if (
                                         cur_t == -1
-                                        and _diffuse.intermediates_in_subfolder is True
+                                        and _extra.intermediates_in_subfolder is True
                                     ):
                                         save_num = (
                                             f"{frame_num:04}"
-                                            if _diffuse.animation_mode != "None"
+                                            if self.animation_mode != "None"
                                             else i
                                         )
-                                        filename = f"{_diffuse.batch_name}({_diffuse.batch_num})_{save_num}.png"
+                                        filename = f"{_basic.batch_name}({_diffuse.batch_num})_{save_num}.png"
                                     else:
                                         # If we're working with percentages, append it
                                         if _extra.steps_per_checkpoint is not None:
-                                            filename = f"{_diffuse.batch_name}({_diffuse.batch_num})_{i:04}-{percent:02}%.png"
+                                            filename = f"{_basic.batch_name}({_diffuse.batch_num})_{i:04}-{percent:02}%.png"
                                         # Or else, iIf we're working with specific steps, append those
                                         else:
-                                            filename = f"{_diffuse.batch_name}({_diffuse.batch_num})_{i:04}-{j:03}.png"
+                                            filename = f"{_basic.batch_name}({_diffuse.batch_num})_{i:04}-{j:03}.png"
                                 image = TF.to_pil_image(image.add(1).div(2).clamp(0, 1))
                                 if j % _diffuse.display_rate == 0 or cur_t == -1:
                                     image.save("progress.png")
@@ -1377,33 +1380,32 @@ class DiscoDiffusion:
                                     display.display(display.Image("progress.png"))
                                 if _extra.steps_per_checkpoint is not None:
                                     if j % _extra.steps_per_checkpoint == 0 and j > 0:
-                                        if _diffuse.intermediates_in_subfolder is True:
+                                        if _extra.intermediates_in_subfolder is True:
                                             image.save(
-                                                f"{_diffuse.partialFolder}/{filename}"
+                                                f"{_extra.partial_dir}/{filename}"
                                             )
                                         else:
                                             image.save(f"{_basic.batch_dir}/{filename}")
                                 else:
-                                    if j in _diffuse.intermediate_saves:
-                                        if _diffuse.intermediates_in_subfolder is True:
+                                    if j in _extra.intermediate_saves:
+                                        if _extra.intermediates_in_subfolder is True:
                                             image.save(
-                                                f"{_diffuse.partialFolder}/{filename}"
+                                                f"{_extra.partial_dir}/{filename}"
                                             )
                                         else:
                                             image.save(f"{_basic.batch_dir}/{filename}")
                                 if cur_t == -1:
                                     # if frame_num == 0:
                                     #     save_settings()
-                                    if _diffuse.animation_mode != "None":
+                                    if self.animation_mode != "None":
                                         image.save("prevFrame.png")
                                     image.save(f"{_basic.batch_dir}/{filename}")
-                                    if _diffuse.animation_mode == "3D":
+                                    log.info(f"Saved {filename}")
+                                    if self.animation_mode == "3D":
                                         # If turbo, save a blended image
-                                        if _diffuse.turbo_mode and frame_num > 0:
+                                        if _anim.turbo_mode and frame_num > 0:
                                             # Mix new image with prevFrameScaled
-                                            blend_factor = (1) / int(
-                                                _diffuse.turbo_steps
-                                            )
+                                            blend_factor = (1) / int(_anim.turbo_steps)
                                             newFrame = cv2.imread(
                                                 "prevFrame.png"
                                             )  # This is already updated..
@@ -1424,7 +1426,7 @@ class DiscoDiffusion:
                                         else:
                                             image.save(f"{_basic.batch_dir}/{filename}")
 
-                                        if _diffuse.vr_mode:
+                                        if _anim.vr_mode:
                                             generate_eye_views(
                                                 self.TRANSLATION_SCALE,
                                                 _basic.batch_dir,

@@ -509,11 +509,10 @@ class eKonf:
         filename_patterns=None,
         base_dir=None,
         output_filepath=None,
-        ncols=7,
+        ncols=2,
         num_images=None,
         figsize=(30, 20),
         dpi=300,
-        **kwargs,
     ):
         from ekorpkit.visualize.collage import collage
 
@@ -526,5 +525,4 @@ class eKonf:
             num_images=num_images,
             figsize=figsize,
             dpi=dpi,
-            **kwargs,
         )
