@@ -4,6 +4,7 @@ import hashlib
 import shutil
 import pandas as pd
 import numpy as np
+from pathlib import Path
 from ekorpkit.utils.lib import wget
 
 
@@ -53,11 +54,13 @@ def _download_models(
             _download_models(name, path, archive_path, link, link_fb)
     elif os.path.exists(archive_path):
         log.info(f"Copying {name} File to {path} from {archive_path}")
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(archive_path, path)
     else:
         wget(link, archive_path)
         if os.path.exists(archive_path):
             log.info(f"Copying {name} File to {path} from {archive_path}")
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(archive_path, path)
         elif not os.path.exists(archive_path) and link_fb:
             log.info("First URL Failed using FallBack")

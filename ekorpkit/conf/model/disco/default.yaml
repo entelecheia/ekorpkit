@@ -9,7 +9,7 @@ defaults:
 _target_: ekorpkit.models.disco.base.DiscoDiffusion
 name: disco-diffusion
 verbose: ${oc.select:..verbose, false}
-cuda_device: 6
+cuda_device: 0
 use_cpu: false
 text_prompts:
   0:
