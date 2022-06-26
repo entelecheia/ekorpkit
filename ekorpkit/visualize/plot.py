@@ -164,12 +164,20 @@ def snsplot(ax=None, x=None, y=None, data=None, **kwargs):
     _name_ = kwargs.pop(eKonf.Keys.METHOD_NAME)
     if ax is None:
         ax = plt.gca()
+    if isinstance(y, list) and len(y) == 1:
+        y = y[0]
     if isinstance(y, list):
         if x is not None and x in data.columns:
             data.set_index(x, inplace=True)
-            x = None
         data = data[y]
+        x = None
         y = None
+    elif isinstance(y, str):
+        if x is None:
+            if data.index.name is not None:
+                x = data.index.name
+            else:
+                x = data.index
     if x is not None:
         rcParams["x"] = x
     if y is not None:

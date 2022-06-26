@@ -823,7 +823,7 @@ def _apply(
         if minibatch_size is None:
             minibatch_size = batcher_minibatch_size
         if num_workers is not None:
-            batcher_instance.procs = num_workers
+            batcher_instance.procs = int(num_workers)
         if batcher_instance.procs > 1:
             batcher_instance.minibatch_size = min(
                 int(len(series) / batcher_instance.procs) + 1, minibatch_size

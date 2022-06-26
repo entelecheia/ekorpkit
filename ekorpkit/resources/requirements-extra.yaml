@@ -61,6 +61,7 @@ kaleido: all, doc, visualize
 rich: all, doc, visualize
 matplotlib: all, doc, visualize
 seaborn: all, doc, visualize
+Pillow>=9.1.0: all, doc, visualize
 
 tensorflow-datasets: dataset
 # tensorflow-io: dataset

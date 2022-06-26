@@ -4,7 +4,7 @@ defaults:
 input: ${oc.select:..apply_to, text}
 lexicon_features:
 features:
+  - polarity
 agg_method: mean
-parameters:
-  features:
-    - polarity
+min_tokens:
+min_sentences:

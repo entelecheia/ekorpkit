@@ -81,8 +81,7 @@ class SentimentAnalyser:
         input_col = self._predict_[eKonf.Keys.INPUT]
         _method_ = self._predict_._method_
         _meth_name_ = _method_.get(eKonf.Keys.METHOD_NAME)
-        _meth_args = _method_.get(eKonf.Keys.rcPARAMS)
-        _fn = lambda doc: getattr(self, _meth_name_)(doc, **_meth_args)
+        _fn = lambda doc: getattr(self, _meth_name_)(doc)
         with elapsed_timer(format_time=True) as elapsed:
             predictions = eKonf.apply(
                 _fn,
@@ -98,18 +97,20 @@ class SentimentAnalyser:
 
         return data
 
-    def predict_sentence(self, text, features=None, min_examples=5):
+    def predict_sentence(self, text, features='polarity', min_examples=5):
         """Get score for a list of terms.
 
         :returns: dict
         """
         scores = {}
 
-        features = features or self._predict_.features
+        features =  self._predict_.features or features
         features = eKonf.ensure_list(features)
+        _lex_feats = self._predict_.get(_Keys.LEXICON_FEATURES)
+        min_examples = self._predict_.min_tokens or min_examples
+
         tokens = self._ngram.tokenize(text)
         num_examples = len(tokens)
-        _lex_feats = self._predict_.get(_Keys.LEXICON_FEATURES)
         lexicon_features = self._ngram.find_features(tokens, features=_lex_feats)
         for feather in features:
             if num_examples < min_examples:
@@ -204,9 +205,10 @@ class SentimentAnalyser:
     ):
         scores = {}
 
-        agg_method = agg_method or self._predict_.agg_method
-        features = features or self._predict_.features
+        agg_method =  self._predict_.agg_method or agg_method
+        features =  self._predict_.features or features
         features = eKonf.ensure_list(features)
+        min_examples = self._predict_.min_sentences or min_examples
 
         article_scores = {}
         if isinstance(article, str):
@@ -242,9 +244,8 @@ class SentimentAnalyser:
         :returns: dict
         """
         article_features = article_features or self._article_features
-        _feature = article_features[feature]
         _agg_method = article_features.agg_method[agg_method]
-        _num_examples = _feature.get(_Keys.NUM_EXAMPLES) or _Keys.NUM_TOKENS.value
+        _num_examples = _agg_method.get(_Keys.NUM_EXAMPLES) or _Keys.NUM_TOKENS.value
 
         scores_df = pd.DataFrame.from_dict(scores, orient="index")
         scores_df.dropna(subset=[feature], inplace=True)

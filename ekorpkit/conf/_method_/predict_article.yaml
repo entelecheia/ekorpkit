@@ -1,2 +1,2 @@
 _name_:  predict_article
-rcParams: ${oc.select:..parameters,null}
+rcParams: 

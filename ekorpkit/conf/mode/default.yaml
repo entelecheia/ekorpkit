@@ -4,7 +4,7 @@ name: ${.project}
 debug_mode: false
 print_config: false
 print_resolved_config: true
-num_workers: 1
+num_workers: ${alt:${oc.env:NUM_WORKERS,null},1}
 verbose: false
 ignore_warnings: true
 
