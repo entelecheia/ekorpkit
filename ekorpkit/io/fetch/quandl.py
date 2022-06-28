@@ -180,7 +180,7 @@ class Quandl:
                 if series_name is None:
                     series_name = df.columns[0]
                 df.columns = [self.value_column]
-            df = eKonf.pipe(self.eval_columns, df)
+            df = eKonf.pipe(df, self.eval_columns)
             if len(series_ids) > 1:
                 df["series_id"] = series_id
             if series_name:

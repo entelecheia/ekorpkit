@@ -1,15 +1,11 @@
 defaults:
   - /_func_: predict
   - /path: output
-  - /columns: model_simple_classification
-  - /_predict_: simple_classification
-  - /_method_: predict_article
+  # - /columns: model_simple_classification
+  # - /_predict_: simple_classification
 
 name: predict
 model:
-parameters:
-  features:
-    - polarity
 data_columns:
 output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
 output_file: ${oc.select:..output_file, null}

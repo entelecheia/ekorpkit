@@ -48,7 +48,7 @@ from .base import (
     _to_dict,
     _to_yaml,
     _update,
-    apply_pipe,
+    _pipe,
     DictKeyType,
     Environments,
 )
@@ -336,8 +336,8 @@ class eKonf:
         )
 
     @staticmethod
-    def pipe(cfg, data=None):
-        return apply_pipe(data, cfg)
+    def pipe(data=None, cfg=None):
+        return _pipe(data, cfg)
 
     @staticmethod
     def dependencies(_key=None, path=None):

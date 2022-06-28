@@ -87,6 +87,6 @@ def test_eval_fomc_sentiments():
     cfg.output_dir = "./data/tmp/predict"
     cfg.output_file = f"{cfg.name}-lm.parquet"
     cfg.num_workers = 100
-    fomc_sentiments = eKonf.pipe(cfg, fomc_statements)
+    fomc_sentiments = eKonf.pipe(fomc_statements, cfg)
 
     assert True

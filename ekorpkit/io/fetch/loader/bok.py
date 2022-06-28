@@ -7,17 +7,17 @@ import subprocess
 import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+from ekorpkit.io.fetch.loader.base import BaseFetcher
 from ekorpkit import eKonf
 
 
 log = logging.getLogger(__name__)
 
 
-class BOKMniutes:
+class BOKMniutes(BaseFetcher):
     def __init__(self, **args):
         self.args = eKonf.to_config(args)
-        # print(self.args)
-        self.autoload = self.args.get('autoload', True)
+        super().__init__(**args)
         self.from_date = str(self.args.scrap.from_date)
         self.base_url = self.args.scrap.base_url
         self.url = self.args.scrap.url
@@ -27,27 +27,20 @@ class BOKMniutes:
         os.makedirs(self.raw_txt_dir, exist_ok=True)
         self.file_prefix = self.args.scrap.file_prefix
 
-        self.output_dir = self.args.output_dir
-        self.output_file = os.path.join(self.output_dir, self.args.output_file)
-        self.force_download = self.args.force_download
-
         user_agent = "Mozilla/5.0"
         self.headers = {"User-Agent": user_agent}
         self.minutes_urls = []
         self.minutes_hwp_files = []
         self.minutes_txt_files = []
 
-        if self.autoload:
-            self.build()
+        if self.auto.load:
+            self.fetch()
 
-    def build(self):
-        if not os.path.exists(self.output_file) or self.force_download:
-            self.get_minutes_list()
-            self.get_minutes_files()
-            self.convert_hwp_to_txt()
-            self.build_minutes()
-        else:
-            log.info(f"{self.output_file} already exists. skipping..")
+    def _fetch(self):
+        self.get_minutes_list()
+        self.get_minutes_files()
+        self.convert_hwp_to_txt()
+        self.build_minutes()
 
     def build_minutes(self):
 
@@ -56,20 +49,23 @@ class BOKMniutes:
             doc = preprocess_minutes(filepath, self.file_prefix)
             docs += doc
 
-        df = pd.DataFrame(
+        data = pd.DataFrame(
             docs, columns=["id", "filename", "mdate", "rdate", "section", "text"]
         )
-        df = df.dropna()
+        data = data.dropna()
 
-        if not self.force_download:
+        if not self.force.download:
             if os.path.isfile(self.output_file):
-                log.info("minutes file already exists. combining with the existing file..")
+                log.info(
+                    "minutes file already exists. combining with the existing file.."
+                )
                 minutes_df = pd.read_csv(self.output_file, index_col=None)
-                df = minutes_df.combine_first(df)
-                df = df.drop_duplicates(subset=["id"])
+                data = minutes_df.combine_first(data)
+                data = data.drop_duplicates(subset=["id"])
 
-        df.to_csv(self.output_file, encoding="utf-8", index=False)
-        print(df.tail())
+        eKonf.save_data(data, self.output_file, verbose=self.verbose)
+        if self.verbose:
+            print(data.tail())
         log.info(f"Saved {len(docs)} documents to {self.output_file}")
 
     def convert_hwp_to_txt(self):

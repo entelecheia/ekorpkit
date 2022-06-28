@@ -79,8 +79,9 @@ class SentimentAnalyser:
             self._predict_ = _predict_
 
         input_col = self._predict_[eKonf.Keys.INPUT]
-        _method_ = self._predict_._method_
+        _method_ = self._predict_[eKonf.Keys.METHOD]
         _meth_name_ = _method_.get(eKonf.Keys.METHOD_NAME)
+        log.info(f"Predicting sentiments of the column [{input_col}] using {_meth_name_}")
         _fn = lambda doc: getattr(self, _meth_name_)(doc)
         with elapsed_timer(format_time=True) as elapsed:
             predictions = eKonf.apply(
@@ -97,14 +98,14 @@ class SentimentAnalyser:
 
         return data
 
-    def predict_sentence(self, text, features='polarity', min_examples=5):
+    def predict_sentence(self, text, features="polarity", min_examples=5):
         """Get score for a list of terms.
 
         :returns: dict
         """
         scores = {}
 
-        features =  self._predict_.features or features
+        features = self._predict_.features or features
         features = eKonf.ensure_list(features)
         _lex_feats = self._predict_.get(_Keys.LEXICON_FEATURES)
         min_examples = self._predict_.min_tokens or min_examples
@@ -139,7 +140,7 @@ class SentimentAnalyser:
 
         lxfeat = pd.DataFrame.from_dict(lexicon_features, orient="index")
 
-        score = {_num_examples: np.nan, feature: np.nan}
+        score = {_num_examples: num_examples, feature: np.nan}
         if lxfeat.empty:
             return score
         if num_examples is None:
@@ -205,16 +206,15 @@ class SentimentAnalyser:
     ):
         scores = {}
 
-        agg_method =  self._predict_.agg_method or agg_method
-        features =  self._predict_.features or features
+        agg_method = self._predict_.agg_method or agg_method
+        features = self._predict_.features or features
         features = eKonf.ensure_list(features)
         min_examples = self._predict_.min_sentences or min_examples
 
         article_scores = {}
         if isinstance(article, str):
             sents = article.split(self._sentence_separator)
-            # if len(sents) < min_examples:
-            #     return scores
+            nun_examples = len(sents)
             for sent_no, sent in enumerate(sents):
                 sent = sent.strip()
                 if sent:
@@ -237,7 +237,12 @@ class SentimentAnalyser:
         return scores
 
     def _get_aggregate_scores(
-        self, scores, feature="polarity", agg_method="mean", article_features=None
+        self,
+        scores,
+        feature="polarity",
+        agg_method="mean",
+        article_features=None,
+        num_examples=None,
     ):
         """Get aggreagate score for features.
 

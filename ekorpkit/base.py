@@ -727,25 +727,25 @@ def _stop_env_(cfg, verbose=False):
         #         log.info(f'shutting down dask client')
 
 
-def apply_pipe(df, pipe):
+def _pipe(data, pipe):
     _func_ = pipe.get(_Keys.FUNC)
     fn = _partial(_func_)
     log.info(f"Applying pipe: {fn}")
-    if isinstance(df, dict):
+    if isinstance(data, dict):
         if "concat_dataframes" in str(fn):
-            return fn(df, pipe)
+            return fn(data, pipe)
         else:
             dfs = {}
-            for df_no, df_name in enumerate(df):
-                df_each = df[df_name]
+            for df_no, df_name in enumerate(data):
+                df_each = data[df_name]
                 log.info(
-                    f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(df)}"
+                    f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(data)}"
                 )
                 pipe[_Keys.SUFFIX.value] = df_name
                 dfs[df_name] = fn(df_each, pipe)
             return dfs
     else:
-        return fn(df, pipe)
+        return fn(data, pipe)
 
 
 def _dependencies(_key=None, _path=None):

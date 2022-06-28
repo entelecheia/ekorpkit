@@ -8,7 +8,7 @@ home: ${__home_path__:}
 log: ${.project}/logs
 model: ${.data}/models
 output: ${.project}/outputs
-project: ${.workspace}/projects/${project}
+project: ${.workspace}/projects/${project.name}
 resource: ${.ekorpkit}/resources
 runtime: ${get_original_cwd:}
 tmp: ${.workspace}/.tmp

@@ -23,9 +23,8 @@ column_info:
     rdate: str
     filename: str
 
-
 io:
-  data_sources: 
+  data_sources:
     train: ${..fetcher.output_file}
 
 pipeline:

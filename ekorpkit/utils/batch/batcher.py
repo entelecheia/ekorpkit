@@ -67,6 +67,8 @@ class Batcher(object):
         task_num_gpus=0,
         verbose=0,
     ):
+        if isinstance(procs, str):
+            procs = int(procs)
         if procs == 0 or procs is None:
             procs = multiprocessing.cpu_count()
         self.procs = procs

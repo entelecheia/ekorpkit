@@ -1,6 +1,5 @@
 import logging
 from ekorpkit import eKonf
-from ekorpkit.pipelines.pipe import apply_pipe
 
 
 log = logging.getLogger(__name__)

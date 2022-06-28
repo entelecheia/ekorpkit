@@ -8,7 +8,6 @@ from functools import reduce
 from ekorpkit.utils import print_status
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit import eKonf
-from ekorpkit.ekonf import apply_pipe
 
 
 log = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
             args.update(update_args)
             pipeline_targets.append(args)
 
-    return reduce(apply_pipe, pipeline_targets, df)
+    return reduce(eKonf.pipe, pipeline_targets, df)
 
 
 def split_column(df, args):
@@ -623,58 +622,27 @@ def fillna(df, args):
 
 
 def predict(df, args):
-    args = eKonf.to_dict(args)
-    verbose = args.get("verbose", False)
-    num_workers = args.get("num_workers", 1)
-    use_batcher = args.get("use_batcher", True)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
         log.warning("No columns specified")
         return df
+    if isinstance(apply_to, list):
+        apply_to = apply_to[0]
     data_columns = args["data_columns"]
+    if data_columns:
+        df = df.copy()[data_columns]
 
-    _predict_ = args.get(eKonf.Keys.PREDICT)
-    _method_ = args.get(eKonf.Keys.METHOD)
     model = args.get(eKonf.Keys.MODEL)
     if model is None:
         log.warning("No model specified")
         return df
-
-    if isinstance(apply_to, list):
-        apply_to = apply_to[0]
-
-    log.info("instantiating model")
-
-    _target_ = model[eKonf.Keys.TARGET]
+    model[eKonf.Keys.PREDICT][eKonf.Keys.INPUT] = apply_to
     model = eKonf.instantiate(model)
 
-    if "SentimentAnalyser" in _target_:
-        key = apply_to
-        _meth_name_ = _method_.get(eKonf.Keys.METHOD_NAME)
-        _meth_args = _method_.get(eKonf.Keys.rcPARAMS)
-        _fn = lambda doc: getattr(model, _meth_name_)(doc, **_meth_args)
-        with elapsed_timer(format_time=True) as elapsed:
-            predictions = eKonf.apply(
-                _fn,
-                df[key],
-                description=f"Predicting [{key}]",
-                verbose=verbose,
-                use_batcher=use_batcher,
-                num_workers=num_workers,
-            )
-            pred_df = pd.DataFrame(predictions.tolist(), index=predictions.index)
-            if data_columns:
-                data_columns += pred_df.columns.tolist()
-            df = df.join(pred_df)
-            log.info(" >> elapsed time to predict: {}".format(elapsed()))
-    else:
-        df = model.predict(df, _predict_)
-        if data_columns:
-            data_columns.append(model._predict_[eKonf.Keys.PREDICTED])
+    df = model.predict(df)
 
     _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
     _path[eKonf.Keys.SUFFIX.value] = args.get(eKonf.Keys.SUFFIX)
-    _path["columns"] = data_columns
     log.info(f"Saving predictions to: {_path}")
     eKonf.save_data(df, **_path)
 
