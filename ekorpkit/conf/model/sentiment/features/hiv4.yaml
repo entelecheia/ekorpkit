@@ -1,9 +1,9 @@
 _default_:
   count: count
   num_examples: num_tokens
-  eval:
+  bins:
     _feat: feature.notnull()
-  agg:
+  aggs:
     _feat: sum
   score: _feat / @num_examples + @eps
 polarity:
@@ -12,10 +12,10 @@ polarity:
     - Negativ
   count: count
   num_examples: num_tokens
-  eval:
+  bins:
     _pos: Positiv.notnull()
     _neg: Negativ.notnull()
-  agg:
+  aggs:
     _pos: sum
     _neg: sum
   score: (_pos - _neg) / (_pos + _neg + @eps)

@@ -5,4 +5,3 @@ lexicon_features:
 features:
   - polarity
   - legal
-agg_method: mean

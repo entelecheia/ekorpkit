@@ -2,7 +2,6 @@ import logging
 import os
 import sys
 import random
-from unittest.mock import DEFAULT
 import hydra
 import dotenv
 import functools

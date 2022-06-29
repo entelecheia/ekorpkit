@@ -1,8 +1,8 @@
 _default_:
   count: count
-  eval:
+  bins:
     _feat: feature > 0
-  agg:
+  aggs:
     _feat: sum
   score: _feat / @num_examples + @eps
 polarity:
@@ -10,10 +10,10 @@ polarity:
     - Negative
     - Positive
   count: count
-  eval:
+  bins:
     _pos: Positive > 0
     _neg: Negative > 0
-  agg:
+  aggs:
     _pos: sum
     _neg: sum
   score: (_pos - _neg) / (_pos + _neg + @eps)
