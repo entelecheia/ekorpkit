@@ -516,6 +516,13 @@ class FOMC:
             else None,
             axis=1,
         )
+        df["recent_meeting"] = df["date"].map(
+            lambda x: self._get_recent_meeting_date(x)
+        )
+        df["recent_decision"] = df["recent_meeting"].map(
+            lambda x: self._get_rate_change(x)
+        )
+        df["recent_rate"] = df["recent_meeting"].map(lambda x: self._get_rate(x))
         df["next_meeting"] = df["date"].map(lambda x: self._get_next_meeting_date(x))
         df["next_decision"] = df["next_meeting"].map(lambda x: self._get_rate_change(x))
         df["next_rate"] = df["next_meeting"].map(lambda x: self._get_rate(x))
@@ -568,6 +575,31 @@ class FOMC:
             return None
         else:
             dt_ix = cal[cal.index > article_date].index.min()
+            if not pd.isnull(dt_ix):
+                return dt_ix
+            else:
+                return None
+
+    def _get_recent_meeting_date(self, article_date):
+        """
+        Returns the most recent fomc meeting date for the given date x, referring to fomc_calendar DataFrame.
+        Usually FOMC Meetings takes two days, so it starts searching from x+2.
+        x should be of datetime type or yyyy-mm-dd format string.
+        """
+        import datetime as dt
+
+        if isinstance(article_date, str):
+            article_date = datetime.strptime(article_date, "%Y-%m-%d")
+
+        # Add two days to get the day after next
+        article_date += dt.timedelta(days=2)
+
+        cal = self.calendar.copy()
+        if cal.index.min() > article_date:
+            # If the date is older than the first FOMC Meeting, do not return any date.
+            return None
+        else:
+            dt_ix = cal[cal.index < article_date].index.max()
             if not pd.isnull(dt_ix):
                 return dt_ix
             else:

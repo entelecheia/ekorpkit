@@ -194,3 +194,14 @@ def heatmap(ax=None, x=None, y=None, data=None, **kwargs):
     if ax is None:
         ax = plt.gca()
     sns.heatmap(data=data, ax=ax, **rcParams)
+
+
+def stackplot(ax=None, x=None, y=None, data=None, **kwargs):
+    rcParams = {} or kwargs.get(eKonf.Keys.rcPARAMS)
+    if ax is None:
+        ax = plt.gca()
+    if x is None or x not in data.columns:
+        x = data.index
+    elif isinstance(x, str):
+        x = data[x]
+    plt.stackplot(x, data[y].T, **rcParams)

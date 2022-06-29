@@ -41,8 +41,8 @@ polarity:
   num_examples: num_examples
   count:
   bins:
-    _pos: feature > 0.2
-    _neg: feature < -0.2
+    _pos: feature > 0.1
+    _neg: feature < -0.1
   aggs:
     _pos: sum
     _neg: sum
@@ -59,7 +59,6 @@ polarity:
     negative: _neg_sum
   scores:
     - feature_mean
-    - feature_median
     - feature_diffusion
     - positive
     - negative
