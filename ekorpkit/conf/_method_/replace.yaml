@@ -1,2 +1,2 @@
 _name_: replace
-rcParams: ${oc.select:..parameters,null}
+rcParams: ${oc.select:..rcParams,null}

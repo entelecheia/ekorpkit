@@ -3,10 +3,10 @@ defaults:
   - /_method_: replace
 
 apply_to: ${oc.select:..apply_to, ''}
-parameters:
+rcParams:
   to_replace:
   value:
   limit:
   regex: false
   method:
-verbose: ${oc.select:..verbose, true}
+verbose: ${oc.select:..verbose, false}

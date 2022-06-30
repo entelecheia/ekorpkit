@@ -6,4 +6,4 @@ columns:
 values:
 reset_index: true
 fillna:
-verbose: ${oc.select:..verbose, true}
+verbose: ${oc.select:..verbose, false}

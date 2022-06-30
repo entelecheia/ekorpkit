@@ -1,6 +1,7 @@
 defaults:
   - _blank
   - aggregate_columns: default
+  - aggregate_scores: default
   - chunk: default
   - combine_columns: default
   - concat_dataframes: default

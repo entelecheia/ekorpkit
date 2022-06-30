@@ -1,6 +1,6 @@
 _default_:
   count: count
-  bins:
+  conditions:
     _feat: feature > 0
   aggs:
     _feat: sum
@@ -10,7 +10,7 @@ polarity:
     - Negative
     - Positive
   count: count
-  bins:
+  conditions:
     _pos: Positive > 0
     _neg: Negative > 0
   aggs:

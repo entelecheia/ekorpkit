@@ -641,12 +641,43 @@ def predict(df, args):
 
     df = model.predict(df)
 
-    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
-    _path[eKonf.Keys.SUFFIX.value] = args.get(eKonf.Keys.SUFFIX)
-    log.info(f"Saving predictions to: {_path}")
-    eKonf.save_data(df, **_path)
+    _save_data(df, args)
 
     return df
+
+
+def aggregate_scores(df, args):
+    groupby = args["groupby"]
+    feature = args["feature"]
+    min_examples = args["min_examples"]
+    if groupby is None:
+        log.warning("No groupby columns specified")
+        return df
+
+    model = args[eKonf.Keys.MODEL].get("sentiment")
+    if model is None:
+        log.warning("No model specified")
+        return df
+    model = eKonf.instantiate(model)
+
+    df = model.aggregate_scores(df, groupby, feature, min_examples)
+
+    _save_data(df, args)
+
+    return df
+
+
+def _save_data(df, args):
+    if df is None:
+        log.info("No data to save")
+        return
+    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
+    _path[eKonf.Keys.SUFFIX.value] = args.get(eKonf.Keys.SUFFIX)
+    if _path[eKonf.Keys.FILENAME]:
+        log.info(f"Saving data to: {_path}")
+        eKonf.save_data(df, **_path)
+    else:
+        log.info("filename not specified")
 
 
 def segment(df, args):

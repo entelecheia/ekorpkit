@@ -1,7 +1,7 @@
 _default_:
   count: count
   num_examples: num_tokens
-  bins:
+  conditions:
     _feat: feature.notnull()
   aggs:
     _feat: sum
@@ -12,7 +12,7 @@ polarity:
     - Negativ
   count: count
   num_examples: num_tokens
-  bins:
+  conditions:
     _pos: Positiv.notnull()
     _neg: Negativ.notnull()
   aggs:

@@ -25,7 +25,7 @@ pipeline:
       id: idx
   replace:
     apply_to: labels
-    parameters:
+    rcParams:
       to_replace:
         0: negative
         1: positive

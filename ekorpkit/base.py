@@ -6,6 +6,8 @@ import hydra
 import dotenv
 import functools
 import ekorpkit.utils.batch.batcher as batcher
+import pandas as pd
+from pandas import DataFrame
 from enum import Enum
 from tqdm.auto import tqdm
 from pathlib import Path
@@ -143,6 +145,26 @@ def _to_dateparm(_date, _format="%Y-%m-%d"):
     _dtstr = datetime.strftime(_date, _format)
     _dtstr = "${to_datetime:" + _dtstr + "," + _format + "}"
     return _dtstr
+
+
+def _to_datetime(data, _format=None, _columns=None, **kwargs):
+    from datetime import datetime
+
+    if isinstance(data, datetime):
+        return data
+    elif isinstance(data, str):
+        if _format is None:
+            _format = "%Y-%m-%d"
+        return datetime.strptime(data, _format)
+    elif isinstance(data, int):
+        return datetime.fromtimestamp(data)
+    elif isinstance(data, DataFrame):
+        if _columns:
+            if isinstance(_columns, str):
+                _columns = [_columns]
+            for _col in _columns:
+                data[_col] = pd.to_datetime(data[_col], format=_format, **kwargs)
+        return data
 
 
 def _path(
@@ -349,6 +371,7 @@ class _Keys(str, Enum):
     FORMAT = "format"
     VERBOSE = "verbose"
     FILE = "file"
+    FILENAME = "filename"
     SUFFIX = "suffix"
     MODEL = "model"
     LOG = "log"

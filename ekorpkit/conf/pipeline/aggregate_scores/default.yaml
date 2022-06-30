@@ -1,0 +1,10 @@
+defaults:
+  - /_func_: aggregate_scores
+  - /model/sentiment: default
+  - /path: output
+
+name: aggregate_scores
+groupby:
+feature: polarity
+min_examples: 2
+verbose: ${oc.select:..verbose, true}

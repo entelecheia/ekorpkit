@@ -46,6 +46,7 @@ from .base import (
     _to_config,
     _to_container,
     _to_dateparm,
+    _to_datetime,
     _to_dict,
     _to_yaml,
     _update,
@@ -526,3 +527,7 @@ class eKonf:
             figsize=figsize,
             dpi=dpi,
         )
+
+    @staticmethod
+    def to_datetime(data, _format=None, _columns=None, **kwargs):
+        return _to_datetime(data, _format, _columns, **kwargs)
