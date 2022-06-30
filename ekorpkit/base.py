@@ -381,6 +381,7 @@ class _Keys(str, Enum):
     TRAIN = "_train_"
     PREDICT = "_predict_"
     PREDICTED = "predicted"
+    PRED_PROBS = "pred_probs"
     ACTUAL = "actual"
     INPUT = "input"
     MODEL_OUTPUTS = "model_outputs"

@@ -1,3 +1,4 @@
 input: ${..columns.input}
 predicted: ${..columns.predicted}
+pred_probs: ${..columns.pred_probs}
 model_outputs: ${..columns.model_outputs}

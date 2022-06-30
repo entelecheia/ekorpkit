@@ -1,5 +1,6 @@
 import logging
 import sklearn
+from scipy.special import softmax
 from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
 
@@ -104,6 +105,9 @@ class SimpleTrainer:
         model_outputs_column = self._predict_[self.Keys.MODEL_OUTPUTS]
         data[predicted_column] = preds[self.Keys.PREDICTED]
         data[model_outputs_column] = preds[self.Keys.MODEL_OUTPUTS]
+        pred_probs_column = self._predict_.get(self.Keys.PRED_PROBS)
+        if pred_probs_column:
+            data[pred_probs_column] = preds[self.Keys.PRED_PROBS]
         return data
 
     def predict(self, data, _predict_={}):
@@ -247,8 +251,10 @@ class SimpleClassification(SimpleTrainer):
         predictions, raw_outputs = self.model.predict(data)
         log.info(f"type of raw_outputs: {type(raw_outputs)}")
         raw_outputs = [output.flatten().tolist() for output in raw_outputs]
+        pred_probs = [softmax(output).max() for output in raw_outputs]
         log.info(f"raw_output: {raw_outputs[0]}")
         return {
             self.Keys.PREDICTED.value: predictions,
+            self.Keys.PRED_PROBS.value: pred_probs,
             self.Keys.MODEL_OUTPUTS.value: raw_outputs,
         }
