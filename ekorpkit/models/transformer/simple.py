@@ -133,6 +133,7 @@ class SimpleTrainer:
         if self.verbose:
             print(self.pred_data.head())
         if self._eval_cfg:
+            self._eval_cfg.labels = self.labels_list
             eKonf.instantiate(self._eval_cfg, data=self.pred_data)
 
 
@@ -217,6 +218,8 @@ class SimpleClassification(SimpleTrainer):
             cuda_device=args.cuda_device,
             args=self._model_cfg,
         )
+        self.label_list = model.args.labels_list
+        self.labels_map = model.args.labels_map
 
         # Train the model
         model.train_model(
@@ -239,9 +242,10 @@ class SimpleClassification(SimpleTrainer):
         if model_dir is None:
             model_dir = self.args.config.best_model_dir
 
-        self.model = ClassificationModel(
-            self.args.model_type, model_dir, args=self._model_cfg
-        )
+        self.model = ClassificationModel(self.args.model_type, model_dir)
+        # , args=self._model_cfg
+        self.labels_list = self.model.args.labels_list
+        self.labels_map = self.model.args.labels_map
         log.info(f"Loaded model from {model_dir}")
 
     def _predict(self, data: list):

@@ -18,6 +18,39 @@ _default_:
     - num_tokens_mean
     - num_tokens_median
     - num_examples
+classification:
+  conditions:
+    _pos: feature > 0.1
+    _neg: feature < -0.1
+  aggs:
+    _pos: sum
+    _neg: sum
+    feature:
+      - mean
+      - median
+    num_tokens:
+      - mean
+      - median
+      - sum
+      - count
+  evals:
+    feature_diffusion: (_pos_sum - _neg_sum) / num_tokens_count
+    positive: _pos_sum
+    negative: _neg_sum
+    num_examples: num_tokens_count
+  scores:
+    - feature_mean
+    - feature_diffusion
+    - positive
+    - negative
+    - num_tokens_sum
+    - num_tokens_mean
+    - num_tokens_median
+    - num_examples
+  labels:
+    negative: (-1, -0.15)
+    neutral: (-0.15, 0.15)
+    positive: (0.15, 1)
 polarity:
   conditions:
     _pos: feature > 0.1

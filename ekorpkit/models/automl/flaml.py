@@ -176,7 +176,7 @@ class AutoML:
         print("mse:", sklearn_metric_loss_score("mse", y_pred, y_test))
         print("mae:", sklearn_metric_loss_score("mae", y_pred, y_test))
 
-        self._eval_cfg.visualize.plot.plots[0].display_labels = self.classes
+        self._eval_cfg.labels = self.classes
         eKonf.instantiate(self._eval_cfg, data=pred_data)
         self.pred_data = pred_data
 

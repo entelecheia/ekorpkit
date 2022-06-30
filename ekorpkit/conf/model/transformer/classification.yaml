@@ -14,7 +14,6 @@ use_cuda: true
 cuda_device: -1
 model:
   output_dir: ${..output_dir}
-  labels: ${..labels}
   columns: ${..columns}
   eval:
     columns: ${..columns}

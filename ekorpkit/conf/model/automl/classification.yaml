@@ -12,7 +12,6 @@ _target_: ekorpkit.models.automl.flaml.AutoML
 labels: ${oc.select:dataset.labels, null}
 model:
   output_dir: ${..output_dir}
-  labels: ${..labels}
   columns: ${..columns}
   eval:
     columns: ${..columns}
