@@ -650,6 +650,7 @@ def aggregate_scores(df, args):
     groupby = args["groupby"]
     feature = args["feature"]
     min_examples = args["min_examples"]
+    _method_ = args[eKonf.Keys.METHOD]
     if groupby is None:
         log.warning("No groupby columns specified")
         return df
@@ -660,7 +661,7 @@ def aggregate_scores(df, args):
         return df
     model = eKonf.instantiate(model)
 
-    df = model.aggregate_scores(df, groupby, feature, min_examples)
+    df = model.aggregate_scores(df, groupby, feature, min_examples, _method_=_method_)
 
     _save_data(df, args)
 

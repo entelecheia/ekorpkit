@@ -22,6 +22,7 @@ class _Keys(str, Enum):
     NUM_EXAMPLES = "num_examples"
     COUNT = "count"
     CONDITIONS = "conditions"
+    APPLY = "apply"
     AGGS = "aggs"
     EVALS = "evals"
     SCORE = "score"
@@ -120,21 +121,28 @@ class BaseSentimentAnalyser:
         groupby,
         feature="polarity",
         min_examples=2,
+        _method_=None,
     ):
         """Get aggreagate score for features.
 
         :returns: dataframe
         """
         _aggregate_scores = self._aggregate_scores
-        _agg_method = _aggregate_scores.get(feature) or _aggregate_scores[_Keys.DEFAULT]
+        _method_ = _method_ or feature
+        _agg_method = (
+            _aggregate_scores.get(_method_) or _aggregate_scores[_Keys.DEFAULT]
+        )
         _num_examples = _Keys.NUM_EXAMPLES.value
 
         groupby = eKonf.ensure_list(groupby)
-        data = data.copy().dropna(subset=[feature])
+        if feature in data.columns:
+            data = data.copy().dropna(subset=[feature])
+        else:
+            data = data.copy()
 
         eps = self.EPSILON
         _conditions = _agg_method.get(_Keys.CONDITIONS)
-        _count = _agg_method.get(_Keys.COUNT)
+        _apply = _agg_method.get(_Keys.APPLY)
         _aggs = eKonf.to_dict(_agg_method.get(_Keys.AGGS))
         _evals = _agg_method.get(_Keys.EVALS)
         _scores = _agg_method.get(_Keys.SCORES)
@@ -148,11 +156,13 @@ class BaseSentimentAnalyser:
         if self.verbose > 5:
             log.info("Evaluating %s", feature)
             print(data.head())
+        if _apply is not None:
+            for _name, _expr in _apply.items():
+                data[_name] = data.apply(lambda x: eval(_expr), axis=1)
         if _conditions is not None:
             for _name, _expr in _conditions.items():
-                data[_name] = np.where(
-                    data.eval(_expr), data[_count] if _count else 1, 0
-                )
+                data[_name] = np.where(data.eval(_expr), 1, 0)
+
         _aggs = {k: v for k, v in _aggs.items() if k in data.columns}
         agg_scores = data.groupby(groupby).agg(_aggs)
         agg_scores.columns = agg_scores.columns.to_flat_index().str.join("_")

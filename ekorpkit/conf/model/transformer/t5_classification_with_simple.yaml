@@ -15,7 +15,6 @@ task_prefix:
 cuda_device: 0
 model:
   output_dir: ${..output_dir}
-  labels: ${..labels}
   columns: ${..columns}
   eval:
     columns: ${..columns}

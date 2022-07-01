@@ -48,6 +48,7 @@ from .base import (
     _to_dateparm,
     _to_datetime,
     _to_dict,
+    _to_numeric,
     _to_yaml,
     _update,
     DictKeyType,
@@ -531,3 +532,7 @@ class eKonf:
     @staticmethod
     def to_datetime(data, _format=None, _columns=None, **kwargs):
         return _to_datetime(data, _format, _columns, **kwargs)
+
+    @staticmethod
+    def to_numeric(data, _columns=None, errors="coerce", downcast=None, **kwargs):
+        return _to_numeric(data, _columns, errors, downcast, **kwargs)

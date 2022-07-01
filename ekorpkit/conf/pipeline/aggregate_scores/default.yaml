@@ -7,4 +7,5 @@ name: aggregate_scores
 groupby:
 feature: polarity
 min_examples: 2
+_method_:
 verbose: ${oc.select:..verbose, true}

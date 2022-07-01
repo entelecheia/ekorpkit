@@ -165,6 +165,26 @@ def _to_datetime(data, _format=None, _columns=None, **kwargs):
             for _col in _columns:
                 data[_col] = pd.to_datetime(data[_col], format=_format, **kwargs)
         return data
+    else:
+        return data
+
+
+def _to_numeric(data, _columns=None, errors="coerce", downcast=None, **kwargs):
+    if isinstance(data, str):
+        return float(data)
+    elif isinstance(data, int):
+        return data
+    elif isinstance(data, float):
+        return data
+    elif isinstance(data, DataFrame):
+        if _columns:
+            if isinstance(_columns, str):
+                _columns = [_columns]
+            for _col in _columns:
+                data[_col] = pd.to_numeric(data[_col], errors=errors, downcast=downcast)
+        return data
+    else:
+        return data
 
 
 def _path(
@@ -384,11 +404,13 @@ class _Keys(str, Enum):
     PRED_PROBS = "pred_probs"
     ACTUAL = "actual"
     INPUT = "input"
+    TARGET_TEXT = "target_text"
     MODEL_OUTPUTS = "model_outputs"
     LABELS = "labels"
     PREFIX = "prefix"
     FEATURES = "features"
     COUNT = "count"
+    CLASSIFICATION = "classification"
 
 
 class _Defaults(str, Enum):

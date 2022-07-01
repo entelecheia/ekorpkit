@@ -14,6 +14,14 @@ class SimpleT5(SimpleTrainer):
     def __init__(self, **args):
         super().__init__(**args)
 
+    def load_datasets(self):
+        super().load_datasets()
+        task_prefix = self.args.task_prefix._train_
+        if task_prefix == self.Keys.CLASSIFICATION:
+            train_data, _, _ = self.convert_to_train()
+            self.labels_list = train_data[self.Keys.TARGET_TEXT].unique().tolist()
+            log.info(f"Label list: {self.labels_list}")
+
     def convert_to_train(self):
         train_data, dev_data, test_data = super().convert_to_train()
         prefix_col = self._train_[self.Keys.PREFIX]

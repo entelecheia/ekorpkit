@@ -34,6 +34,8 @@ class SimpleTrainer:
         self.train_data = None
         self.dev_data = None
         self.test_data = None
+        self.label_list = None
+        self.labels_map = None
 
         eKonf.methods(self._method_, self)
 
