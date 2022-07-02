@@ -16,12 +16,13 @@ class AutoML:
     def __init__(self, **args):
         from flaml import AutoML
 
+        self._dataset_cfg = args.pop(eKonf.Keys.DATASET, None)
+
         args = eKonf.to_config(args)
         self.args = args
         self.name = args.name
         self.verbose = args.get("verbose", True)
         self._model_cfg = eKonf.to_dict(args.config)
-        self._dataset_cfg = args.get(eKonf.Keys.DATASET, None)
         self._columns = args.get(eKonf.Keys.COLUMNS)
         self._train_ = args[eKonf.Keys.TRAIN]
         self._predict_ = args[eKonf.Keys.PREDICT]
@@ -184,7 +185,10 @@ class AutoML:
         if self._dataset_cfg is None:
             log.warning("No dataset config found")
             return
-        self._dataset = eKonf.instantiate(self._dataset_cfg)
+        if eKonf.is_instantiatable(self._dataset_cfg):
+            self._dataset = eKonf.instantiate(self._dataset_cfg)
+        else:
+            self._dataset = self._dataset_cfg
         self._dataset.fit_labelencoder(self._dataset.y_train)
         self._classes = self._dataset.classes
 
