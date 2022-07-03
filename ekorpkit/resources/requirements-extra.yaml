@@ -81,6 +81,7 @@ numba: numba
 
 fredapi: all, fred, fomc
 nasdaq-data-link: all, nasdaq, fomc
+statsmodels: all, fomc, stats
 
 lpips: disco
 timm: disco

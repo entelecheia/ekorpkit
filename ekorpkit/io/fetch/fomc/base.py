@@ -2,6 +2,7 @@ import logging
 import re
 import threading
 import os
+import numpy as np
 import pandas as pd
 import codecs
 import requests
@@ -604,3 +605,78 @@ class FOMC:
                 return dt_ix
             else:
                 return None
+
+    @staticmethod
+    def get_irf(data, nlags=4, nirf=20):
+        import statsmodels.api as sm
+
+        # Dimensions
+        nobs = data.shape[0] - nlags
+        neqs = data.shape[1]
+
+        # Estimate via statsmodels VAR
+        mod = sm.tsa.VAR(data)
+        res = mod.fit(maxlags=nlags, ic=None, trend="n")
+
+        # Variance / Covariance matrix
+        omega = res.sigma_u
+
+        # Take LDL decomposition of the variance / covariance matrix
+        L = np.linalg.cholesky(omega)
+        D = np.diag(L.diagonal() ** 2)
+        L[np.diag_indices(L.shape[0])] = 1
+
+        # Storage
+        irf_tilde = np.zeros((nirf + nlags + 1, neqs, neqs))
+        irf = np.zeros((nirf, neqs, neqs))
+
+        # Initial values
+        irf_tilde[nlags] = np.eye(neqs)
+        irf[0] = L
+
+        # Iteratively create IRFs
+        for i in range(nirf):
+            for j in range(nlags):
+                irf_tilde[i + nlags + 1] += np.dot(
+                    res.params.iloc[j * neqs : (j + 1) * neqs, :].T,
+                    irf_tilde[i + nlags - j],
+                )
+            irf[i] = np.dot(irf_tilde[i + nlags], L)
+
+        irfs = {}
+        for col in data.columns:
+            ix = data.columns.get_loc(col)
+            irf_df = pd.DataFrame(-irf[:, :, ix])
+            irf_df.columns = data.columns
+            irfs[col] = irf_df
+
+        return irfs
+
+    @staticmethod
+    def plot_irf(irfs, impulse_name, ncols=2, figsize=(16, 12)):
+        irf = irfs[impulse_name]
+
+        names = irf.columns.tolist()
+        neqs = len(names)
+
+        cfg = eKonf.compose("visualize/plot=lineplot")
+
+        cfg.figure.figsize = figsize
+        cfg.subplots.ncols = ncols
+        cfg.subplots.nrows = int(np.ceil(neqs / ncols))
+        lineplot = cfg.lineplot.copy()
+        ax = cfg.ax.copy()
+        cfg.plots = []
+        cfg.axes = []
+
+        for i, name in enumerate(names):
+            plot = lineplot.copy()
+            plot.y = name
+            plot.axno = i
+            cfg.plots.append(plot)
+            _ax = ax.copy()
+            _ax.title = name
+            _ax.axno = i
+            cfg.axes.append(_ax)
+
+        eKonf.instantiate(cfg, data=irf)
