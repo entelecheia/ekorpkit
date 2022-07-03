@@ -24,7 +24,7 @@ class Datasets(BaseSet):
         elif eKonf.is_list(self.datasets):
             self.datasets = {name: None for name in self.datasets}
         if self.name is None and eKonf.is_config(self.datasets):
-            self.name = "-".join(self.datasets.keys())
+            self.name = "-".join(list(self.datasets.keys()))
 
         self._info = args.copy()
         self._info["name"] = self.name

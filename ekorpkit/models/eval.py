@@ -15,6 +15,7 @@ def eval_classification(data=None, **args):
     if data is None:
         data = eKonf.load_data(**args.path.data)
     eval_metrics = eKonf.partial(eval_metrics)
+    data = data.dropna(subset=[_eval_.actual, _eval_.predicted])
     cm = eval_metrics(data[_eval_.actual], data[_eval_.predicted], labels=labels)
     plot = args.visualize.plot
     plot.plots[0].display_labels = labels

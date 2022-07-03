@@ -21,7 +21,7 @@ class Corpora(BaseSet):
         # if eKonf.is_list(self.name):
         #     self.name = "-".join(self.name)
         if self.name is None and eKonf.is_config(self.corpora):
-            self.name = "-".join(self.corpora.keys())
+            self.name = "-".join(list(self.corpora.keys()))
 
         self.metadata_dir = self.args.get("metadata_dir", None)
         if self.metadata_dir is None:
