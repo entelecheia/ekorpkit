@@ -263,21 +263,22 @@ class Segmenter(BaseSegmenter):
             return True
         return False
 
+    # TODO: implement this
+    # refer to: https://huggingface.co/huggingface/CodeBERTa-language-id
     def _skip_programming_language(self, text):
-        from ekorpkit.models.guesslang import Guess
-
-        if self._guess is None:
-            self._guess = Guess()
-
-        # Guess the language from code
-        lang = self._guess.language_name(text)
-        if lang is not None:
-            if self.verbose > 5:
-                log.info(f"===> Programming language: {lang}")
-            if self.verbose > 10:
-                log.info(text)
-            return True
         return False
+        # if self._guess is None:
+        #     self._guess = Guess()
+
+        # # Guess the language from code
+        # lang = self._guess.language_name(text)
+        # if lang is not None:
+        #     if self.verbose > 5:
+        #         log.info(f"===> Programming language: {lang}")
+        #     if self.verbose > 10:
+        #         log.info(text)
+        #     return True
+        # return False
 
     def _split_sentences(self, text):
         text = text.strip()

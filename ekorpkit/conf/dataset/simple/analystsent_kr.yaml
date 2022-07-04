@@ -39,7 +39,7 @@ io:
           TAG: labels
       replace:
         apply_to: labels
-        parameters:
+        rcParams:
           to_replace:
             0: neutral
             1: positive

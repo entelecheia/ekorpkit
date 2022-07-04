@@ -49,7 +49,11 @@ class BaseSet:
     def load_info(self):
         """Load the info file."""
         self.info_file = os.path.join(self.data_dir, f"info-{self.name}.yaml")
-        self._info = eKonf.load(self.info_file) if eKonf.exists(self.info_file) else {}
+        self._info = (
+            eKonf.load(self.info_file)
+            if eKonf.exists(self.info_file) and not self.force.build
+            else {}
+        )
         if self._info:
             log.info(f"Loaded info file: {self.info_file}")
             self.args = eKonf.merge(self.args, self._info)

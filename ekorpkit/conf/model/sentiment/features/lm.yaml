@@ -1,0 +1,35 @@
+_default_:
+  count: count
+  conditions:
+    _feat: feature > 0
+  aggs:
+    _feat: sum
+  score: _feat / @num_examples + @eps
+polarity:
+  lexicon_features:
+    - Negative
+    - Positive
+  count: count
+  conditions:
+    _pos: Positive > 0
+    _neg: Negative > 0
+  aggs:
+    _pos: sum
+    _neg: sum
+  score: (_pos - _neg) / (_pos + _neg + @eps)
+  labels:
+    negative: (-1, -0.2)
+    neutral: (-0.2, 0.2)
+    positive: (0.2, 1)
+uncertainty:
+  lexicon_features: Uncertainty
+litigious:
+  lexicon_features: Litigious
+constraining:
+  lexicon_features: Constraining
+superfluous:
+  lexicon_features: Superfluous
+interesting:
+  lexicon_features: Interesting
+modal:
+  lexicon_features: Modal

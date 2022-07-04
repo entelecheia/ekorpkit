@@ -1,0 +1,9 @@
+defaults:
+  - /_method_: predict_sentence
+
+input: ${oc.select:..apply_to, text}
+lexicon_features:
+features:
+  - polarity
+min_tokens:
+min_sentences:

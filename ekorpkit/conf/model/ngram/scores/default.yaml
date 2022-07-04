@@ -1,5 +1,5 @@
 defaults:
-  - /_keys_: scores
+  - /columns: scores
 
 score_dir: ${dir.project}/outputs/ngrams/
 score_file: ${..name}_${..score_function.name}_scores.parquet

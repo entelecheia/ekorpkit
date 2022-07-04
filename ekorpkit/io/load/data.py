@@ -124,7 +124,7 @@ def load_dataframe(split_name, **loader_cfg):
     filepaths = get_filepaths(data_files, data_dir)
 
     documents = []
-    log.info(f"Loading [{split_name}] documents from {len(filepaths)} csv files")
+    log.info(f"Loading [{split_name}] documents from {len(filepaths)} files")
     for filepath in filepaths:
         log.info("==> processing {}".format(filepath))
         if filepath.endswith(".zip"):

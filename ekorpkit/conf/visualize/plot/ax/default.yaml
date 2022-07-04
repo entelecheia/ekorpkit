@@ -31,8 +31,10 @@ ylim:
 #   labels:
 xtickmajorformatterfunc:
 ytickmajorformatterfunc:
-# xticklabels:
-# yticklabels:
+xticklabels:
+yticklabels:
+xtick_params:
+ytick_params:
 # xticklabelsize:
 # yticklabelsize:
 # xticklabelrotation:

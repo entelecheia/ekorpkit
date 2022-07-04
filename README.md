@@ -38,7 +38,7 @@ Tutorials for [ekorpkit](https://github.com/entelecheia/ekorpkit) package can be
 
 ## [Installation](https://entelecheia.github.io/ekorpkit-book/docs/basics/install.html)
 
-Install the latest version of ekorpit:
+Install the latest version of ekorpkit:
 
 ```bash
 pip install ekorpkit

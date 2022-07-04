@@ -1,0 +1,5 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.models.sentiment.base.BaseSentimentAnalyser
+name: base

@@ -3,7 +3,7 @@ defaults:
   - data: default
   - meta: default
   - sample: default
-  - /force: build_dataset
+  - /force: _build_dataset
 
 data_sources:
   train:

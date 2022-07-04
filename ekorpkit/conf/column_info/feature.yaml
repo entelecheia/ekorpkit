@@ -1,5 +1,4 @@
 defaults:
-  - /_keys_: feature
   - /columns: feature
   - datetime: default
 

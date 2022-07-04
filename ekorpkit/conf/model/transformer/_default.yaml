@@ -8,10 +8,10 @@ model_class:
 model_type: ${.pretrained.model_type}
 model_name: ${.pretrained.model_name}
 model_uri: ${.pretrained.model_uri}
-output_dir: ${dir.project}/outputs/${.wandb_project}/${.model_name}
+output_dir: ${dir.project}/outputs/${.name}/${.model_name}
 model_dir: ${.output_dir}
 pred_file: ${.name}_test_predictions.parquet
-wandb_project: ${project}-${.name}
+wandb_project: ${project.name}-${.name}
 wandb_kwargs:
   group: ${..model_name}
   dir: ${..output_dir}

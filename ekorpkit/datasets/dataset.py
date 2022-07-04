@@ -22,7 +22,7 @@ class Dataset(BaseSet):
         self.load_column_info()
 
         if self.auto.build:
-            if self.force.rebuild or not eKonf.exists(
+            if self.force.build or not eKonf.exists(
                 self.data_dir, self.data_files[self.SPLITS.TRAIN]
             ):
                 self.build()

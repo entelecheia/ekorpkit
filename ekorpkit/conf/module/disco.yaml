@@ -1,0 +1,45 @@
+library_dir: ${oc.select:..path.library_dir, libs}
+modules:
+  - name: clip
+    libname: CLIP
+    liburi: https://github.com/openai/CLIP
+    specname:
+  - name: guided_diffusion.script_util
+    libname: guided-diffusion
+    liburi: https://github.com/kostarion/guided-diffusion
+    specname:
+  - name: resize_right
+    libname: ResizeRight
+    liburi: https://github.com/assafshocher/ResizeRight.git
+    specname:
+  - name: py3d_tools
+    libname: pytorch3d-lite
+    liburi: https://github.com/MSFTserver/pytorch3d-lite.git
+    specname:
+  - name: midas.dpt_depth
+    libname: MiDaS
+    liburi: https://github.com/isl-org/MiDaS.git
+    specname:
+  - name: utils
+    libname: MiDaS
+    liburi: https://github.com/isl-org/MiDaS.git
+    specname: midas_utils
+  - name: infer
+    libname: AdaBins
+    liburi: https://github.com/shariqfarooq123/AdaBins.git
+    specname:
+  - name: utils.flow_viz
+    libname: RAFT
+    liburi: https://github.com/princeton-vl/RAFT
+    specname: flow_viz
+    syspath: RAFT/core
+  - name: utils.utils
+    libname: RAFT
+    liburi: https://github.com/princeton-vl/RAFT
+    specname: utils.utils
+    syspath: RAFT/core
+  - name: raft
+    libname: RAFT
+    liburi: https://github.com/princeton-vl/RAFT
+    specname: raft
+    syspath: RAFT/core

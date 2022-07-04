@@ -29,7 +29,7 @@ io:
   #         label: labels
   #     replace:
   #       apply_to: labels
-  #       parameters:
+  #       rcParams:
   #         to_replace:
   #           0: negative
   #           1: neutral

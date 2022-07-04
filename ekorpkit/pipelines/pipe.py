@@ -8,7 +8,6 @@ from functools import reduce
 from ekorpkit.utils import print_status
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit import eKonf
-from ekorpkit.ekonf import apply_pipe
 
 
 log = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ def apply_pipeline(df, pipeline, pipeline_args, update_args={}, verbose=True):
             args.update(update_args)
             pipeline_targets.append(args)
 
-    return reduce(apply_pipe, pipeline_targets, df)
+    return reduce(eKonf.pipe, pipeline_targets, df)
 
 
 def split_column(df, args):
@@ -623,58 +622,63 @@ def fillna(df, args):
 
 
 def predict(df, args):
-    args = eKonf.to_dict(args)
-    verbose = args.get("verbose", False)
-    num_workers = args.get("num_workers", 1)
-    use_batcher = args.get("use_batcher", True)
     apply_to = args.get("apply_to", "text")
     if apply_to is None:
         log.warning("No columns specified")
         return df
+    if isinstance(apply_to, list):
+        apply_to = apply_to[0]
     data_columns = args["data_columns"]
+    if data_columns:
+        df = df.copy()[data_columns]
 
-    _predict_ = args.get("_predict_", None)
-    model = args.get("model", None)
+    model = args.get(eKonf.Keys.MODEL)
     if model is None:
         log.warning("No model specified")
         return df
-
-    if isinstance(apply_to, list):
-        apply_to = apply_to[0]
-
-    log.info("instantiating model")
-
-    _target_ = model[eKonf.Keys.TARGET]
+    model[eKonf.Keys.PREDICT][eKonf.Keys.INPUT] = apply_to
     model = eKonf.instantiate(model)
 
-    if "sentiment.analyser" in _target_:
-        key = apply_to
-        with elapsed_timer(format_time=True) as elapsed:
-            predictions = eKonf.apply(
-                model.predict,
-                df[key],
-                description=f"Predicting [{key}]",
-                verbose=verbose,
-                use_batcher=use_batcher,
-                num_workers=num_workers,
-            )
-            pred_df = pd.DataFrame(predictions.tolist(), index=predictions.index)
-            if data_columns:
-                data_columns += pred_df.columns.tolist()
-            df = df.join(pred_df)
-            log.info(" >> elapsed time to predict: {}".format(elapsed()))
-    else:
-        df = model.predict(df, _predict_)
-        if data_columns:
-            data_columns.append(model._predict_["predicted"])
+    df = model.predict(df)
 
-    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
-    _path[eKonf.Keys.SUFFIX.value] = args.get(eKonf.Keys.SUFFIX)
-    _path["columns"] = data_columns
-    log.info(f"Saving predictions to: {_path}")
-    eKonf.save_data(df, **_path)
+    _save_data(df, args)
 
     return df
+
+
+def aggregate_scores(df, args):
+    groupby = args["groupby"]
+    feature = args["feature"]
+    min_examples = args["min_examples"]
+    _method_ = args[eKonf.Keys.METHOD]
+    if groupby is None:
+        log.warning("No groupby columns specified")
+        return df
+
+    model = args[eKonf.Keys.MODEL].get("sentiment")
+    if model is None:
+        log.warning("No model specified")
+        return df
+    model = eKonf.instantiate(model)
+
+    df = model.aggregate_scores(df, groupby, feature, min_examples, _method_=_method_)
+
+    _save_data(df, args)
+
+    return df
+
+
+def _save_data(df, args):
+    if df is None:
+        log.info("No data to save")
+        return
+    _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
+    _path[eKonf.Keys.SUFFIX.value] = args.get(eKonf.Keys.SUFFIX)
+    if _path[eKonf.Keys.FILENAME]:
+        log.info(f"Saving data to: {_path}")
+        eKonf.save_data(df, **_path)
+    else:
+        log.info("filename not specified")
 
 
 def segment(df, args):
@@ -824,13 +828,15 @@ def general_function(df, args):
 
     with elapsed_timer(format_time=True) as elapsed:
         if apply_to is None:
-            df = getattr(df, method[eKonf.Keys.NAME_KEY])(**method[eKonf.Keys.rcPARAMS])
+            df = getattr(df, method[eKonf.Keys.METHOD_NAME])(
+                **method[eKonf.Keys.rcPARAMS]
+            )
         else:
             if isinstance(apply_to, str):
                 apply_to = [apply_to]
             for key in apply_to:
                 log.info(f"processing column: {key}")
-                df[key] = getattr(df[key], method[eKonf.Keys.NAME_KEY])(
+                df[key] = getattr(df[key], method[eKonf.Keys.METHOD_NAME])(
                     **method[eKonf.Keys.rcPARAMS]
                 )
 

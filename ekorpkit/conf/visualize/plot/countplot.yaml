@@ -3,5 +3,4 @@ defaults:
   - countplot: default
 
 name: CountPlot
-plots:
-  - ${..countplot}
+plot: ${.countplot}

@@ -14,9 +14,17 @@ class SimpleT5(SimpleTrainer):
     def __init__(self, **args):
         super().__init__(**args)
 
+    def load_datasets(self):
+        super().load_datasets()
+        task_prefix = self.args.task_prefix._train_
+        if task_prefix == self.Keys.CLASSIFICATION:
+            train_data, _, _ = self.convert_to_train()
+            self.labels_list = train_data[self.Keys.TARGET_TEXT].unique().tolist()
+            log.info(f"Label list: {self.labels_list}")
+
     def convert_to_train(self):
         train_data, dev_data, test_data = super().convert_to_train()
-        prefix_col = self._train_[self._keys_.prefix]
+        prefix_col = self._train_[self.Keys.PREFIX]
         task_prefix = self.args.task_prefix._train_
         if task_prefix is not None:
             train_data[prefix_col] = task_prefix
@@ -77,8 +85,8 @@ class SimpleT5(SimpleTrainer):
         return preds
 
     def convert_to_predict(self, data):
-        input_col = self._predict_[self._keys_.input]
-        prefix_col = self._predict_[self._keys_.prefix]
+        input_col = self._predict_[self.Keys.INPUT]
+        prefix_col = self._predict_[self.Keys.PREFIX]
         task_prefix = self.args.task_prefix._predict_
         if task_prefix is not None:
             data[prefix_col] = task_prefix
@@ -95,7 +103,7 @@ class SimpleT5(SimpleTrainer):
         return data_to_predict
 
     def append_predictions(self, df, preds):
-        predicted_col = self._predict_[self._keys_.predicted]
+        predicted_col = self._predict_[self.Keys.PREDICTED]
         if self.args.config.num_return_sequences > 1:
             preds = [pred[0] for pred in preds]
         df[predicted_col] = preds

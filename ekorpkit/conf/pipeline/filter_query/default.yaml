@@ -1,5 +1,5 @@
 defaults:
   - /_func_: filter_query
 
-query: 
-verbose: ${oc.select:..verbose, true}
+query:
+verbose: ${oc.select:..verbose, false}

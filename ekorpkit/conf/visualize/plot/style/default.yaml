@@ -1,0 +1,13 @@
+fontsize: ${oc.select:..figure.fontsize,10}
+fontfamily: NanumGothic
+fontpath:
+language:
+style: fivethirtyeight
+unicode_minus: false
+textcolor: dimgrey
+rcParams:
+  axes.unicode_minus: ${..unicode_minus}
+  axes.labelsize: ${..fontsize}
+  text.color: ${..textcolor}
+  font.family: ${..fontfamily}
+  font.size: ${..fontsize}

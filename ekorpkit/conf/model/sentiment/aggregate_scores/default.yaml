@@ -1,0 +1,104 @@
+_default_:
+  conditions:
+  aggs:
+    feature:
+      - mean
+      - median
+    num_tokens:
+      - mean
+      - median
+      - sum
+      - count
+  evals:
+    num_examples: num_tokens_count
+  scores:
+    - feature_mean
+    - feature_median
+    - num_tokens_sum
+    - num_tokens_mean
+    - num_tokens_median
+    - num_examples
+classification:
+  apply:
+    polarity: 'x["pred_probs"] if x["pred_labels"] == "positive" else x["pred_probs"] * -1 if x["pred_labels"] == "negative" else 0'
+  conditions:
+    _pos: pred_labels == 'positive'
+    _neg: pred_labels == 'negative'
+  aggs:
+    _pos: sum
+    _neg: sum
+    polarity:
+      - mean
+      - median
+      - count
+  evals:
+    polarity_diffusion: (_pos_sum - _neg_sum) / polarity_count
+    positive: _pos_sum
+    negative: _neg_sum
+    num_examples: polarity_count
+  scores:
+    - polarity_mean
+    - polarity_diffusion
+    - positive
+    - negative
+    - num_examples
+  labels:
+    negative: (-1, -0.15)
+    neutral: (-0.15, 0.15)
+    positive: (0.15, 1)
+classification_t5:
+  conditions:
+    _pos: pred_labels == 'positive'
+    _neg: pred_labels == 'negative'
+  aggs:
+    _pos: sum
+    _neg: sum
+    pred_labels:
+      - count
+  evals:
+    polarity_diffusion: (_pos_sum - _neg_sum) / pred_labels_count
+    positive: _pos_sum
+    negative: _neg_sum
+    num_examples: pred_labels_count
+  scores:
+    - polarity_diffusion
+    - positive
+    - negative
+    - num_examples
+  labels:
+    negative: (-1, -0.15)
+    neutral: (-0.15, 0.15)
+    positive: (0.15, 1)
+polarity:
+  conditions:
+    _pos: feature > 0.1
+    _neg: feature < -0.1
+  aggs:
+    _pos: sum
+    _neg: sum
+    feature:
+      - mean
+      - median
+    num_tokens:
+      - mean
+      - median
+      - sum
+      - count
+  evals:
+    feature_diffusion: (_pos_sum - _neg_sum) / num_tokens_count
+    positive: _pos_sum
+    negative: _neg_sum
+    num_examples: num_tokens_count
+  scores:
+    - feature_mean
+    - feature_diffusion
+    - positive
+    - negative
+    - num_tokens_sum
+    - num_tokens_mean
+    - num_tokens_median
+    - num_examples
+  labels:
+    negative: (-1, -0.15)
+    neutral: (-0.15, 0.15)
+    positive: (0.15, 1)

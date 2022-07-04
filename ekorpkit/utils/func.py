@@ -129,7 +129,9 @@ def len_bytes(x):
 
 
 def len_words(x):
-    return len(x.split())
+    if isinstance(x, str):
+        return len(x.split())
+    return 0
 
 
 def len_sents(x, sep):

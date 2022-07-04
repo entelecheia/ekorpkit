@@ -1,8 +1,8 @@
 defaults:
   - /_func_: predict
   - /path: output
-  - /columns: model_simple_classification
-  - /_predict_: simple_classification
+  # - /columns: model_simple_classification
+  # - /_predict_: simple_classification
 
 name: predict
 model:

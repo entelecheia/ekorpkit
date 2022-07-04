@@ -1,4 +1,4 @@
 defaults:
-  - default
+  - _train
   - override score_function: cohesion_score
   - override scores: cohesion_score

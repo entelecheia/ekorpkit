@@ -2,7 +2,7 @@ defaults:
   - /column_info: corpus
   - /path: cache
   - /auto: load_merge
-  - /force: rebuild
+  - /force: _build
 
 _target_: ekorpkit.datasets.corpus.Corpus
 name: ${oc.select:.builtin.name, null}

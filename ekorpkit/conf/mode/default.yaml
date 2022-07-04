@@ -1,16 +1,16 @@
 # @package _global_
 app_name: ${about.app.name}
-name: ${.project}
+name: ${project.name}
 debug_mode: false
 print_config: false
 print_resolved_config: true
-num_workers: 1
+num_workers: ${alt:${oc.env:NUM_WORKERS,null},1}
 verbose: false
 ignore_warnings: true
 
 hydra:
   job:
-    name: ${project}
+    name: ${project.name}
     chdir: true
   run:
     dir: ${dir.log}/hydra/${hydra.job.name}/${now:%Y-%m-%d}/${now:%Y-%m-%d_%H-%M-%S}

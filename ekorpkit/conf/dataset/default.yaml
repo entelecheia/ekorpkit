@@ -2,7 +2,7 @@ defaults:
   - /column_info: simple
   - /path: cache
   - /auto: load_build
-  - /force: rebuild
+  - /force: _build
   - /info: _build_dataset
 
 _target_: ekorpkit.datasets.dataset.Dataset

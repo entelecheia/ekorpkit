@@ -1,5 +1,4 @@
 import subprocess
-import os
 import logging
 import hydra
 from ekorpkit import eKonf, __hydra_version_base__
@@ -43,7 +42,7 @@ def main(cfg) -> None:
 
     if verbose:
         log.info("## eKorpkit-flow Command Line Interface##")
-    eKonf._load_dotenv(verbose)
+    eKonf.load_dotenv(verbose)
 
     if cfg.get("verbose"):
         log.info("## hydra configuration resolved ##")

@@ -3,7 +3,8 @@ defaults:
   - default
   - override /mode: debug
 
-project: _test_
+project:
+  name: _test_
 dir:
   workspace: ./data/tmp/.ekorpkit
 env:

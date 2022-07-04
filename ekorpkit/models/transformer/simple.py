@@ -1,5 +1,6 @@
 import logging
 import sklearn
+from scipy.special import softmax
 from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
 
@@ -9,6 +10,7 @@ log = logging.getLogger(__name__)
 
 class SimpleTrainer:
     __metaclass__ = ABCMeta
+    Keys = eKonf.Keys
 
     def __init__(self, **args):
         args = eKonf.to_config(args)
@@ -17,7 +19,6 @@ class SimpleTrainer:
         self.verbose = args.get("verbose", False)
         self._model_cfg = eKonf.to_dict(args.config)
         self._dataset = args.get(eKonf.Keys.DATASET)
-        self._keys_ = args.get(eKonf.Keys.KEYS)
         self._columns = args.get(eKonf.Keys.COLUMNS)
         self._train_ = args[eKonf.Keys.TRAIN]
         self._predict_ = args[eKonf.Keys.PREDICT]
@@ -33,6 +34,8 @@ class SimpleTrainer:
         self.train_data = None
         self.dev_data = None
         self.test_data = None
+        self.label_list = None
+        self.labels_map = None
 
         eKonf.methods(self._method_, self)
 
@@ -93,17 +96,20 @@ class SimpleTrainer:
         return data
 
     def convert_to_predict(self, data):
-        input_col = self._predict_[self._keys_.input]
+        input_col = self._predict_[self.Keys.INPUT]
         data_to_predict = data[input_col].tolist()
         if self.verbose:
             print(data_to_predict[:5])
         return data_to_predict
 
     def append_predictions(self, data, preds):
-        predicted_column = self._predict_[self._keys_.predicted]
-        model_outputs_column = self._predict_[self._keys_.model_outputs]
-        data[predicted_column] = preds[self._keys_.predicted]
-        data[model_outputs_column] = preds[self._keys_.model_outputs]
+        predicted_column = self._predict_[self.Keys.PREDICTED]
+        model_outputs_column = self._predict_[self.Keys.MODEL_OUTPUTS]
+        data[predicted_column] = preds[self.Keys.PREDICTED]
+        data[model_outputs_column] = preds[self.Keys.MODEL_OUTPUTS]
+        pred_probs_column = self._predict_.get(self.Keys.PRED_PROBS)
+        if pred_probs_column:
+            data[pred_probs_column] = preds[self.Keys.PRED_PROBS]
         return data
 
     def predict(self, data, _predict_={}):
@@ -129,6 +135,7 @@ class SimpleTrainer:
         if self.verbose:
             print(self.pred_data.head())
         if self._eval_cfg:
+            self._eval_cfg.labels = self.labels_list
             eKonf.instantiate(self._eval_cfg, data=self.pred_data)
 
 
@@ -141,7 +148,7 @@ class SimpleNER(SimpleTrainer):
 
         args = self.args
         if args.labels is None:
-            labels = list(self.train_data[self._keys_.labels].unique())
+            labels = list(self.train_data[self.Keys.LABELS].unique())
 
         # Create a NERModel
         model = NERModel(
@@ -202,9 +209,7 @@ class SimpleClassification(SimpleTrainer):
             self.load_datasets()
         train_data, dev_data, test_data = self.convert_to_train()
 
-        self._model_cfg["labels_list"] = (
-            train_data[self._keys_.labels].unique().tolist()
-        )
+        self._model_cfg["labels_list"] = train_data[self.Keys.LABELS].unique().tolist()
         args.num_labels = len(self._model_cfg["labels_list"])
 
         # Create a NERModel
@@ -215,6 +220,8 @@ class SimpleClassification(SimpleTrainer):
             cuda_device=args.cuda_device,
             args=self._model_cfg,
         )
+        self.label_list = model.args.labels_list
+        self.labels_map = model.args.labels_map
 
         # Train the model
         model.train_model(
@@ -237,9 +244,10 @@ class SimpleClassification(SimpleTrainer):
         if model_dir is None:
             model_dir = self.args.config.best_model_dir
 
-        self.model = ClassificationModel(
-            self.args.model_type, model_dir, args=self._model_cfg
-        )
+        self.model = ClassificationModel(self.args.model_type, model_dir)
+        # , args=self._model_cfg
+        self.labels_list = self.model.args.labels_list
+        self.labels_map = self.model.args.labels_map
         log.info(f"Loaded model from {model_dir}")
 
     def _predict(self, data: list):
@@ -249,8 +257,10 @@ class SimpleClassification(SimpleTrainer):
         predictions, raw_outputs = self.model.predict(data)
         log.info(f"type of raw_outputs: {type(raw_outputs)}")
         raw_outputs = [output.flatten().tolist() for output in raw_outputs]
+        pred_probs = [softmax(output).max() for output in raw_outputs]
         log.info(f"raw_output: {raw_outputs[0]}")
         return {
-            self._keys_.predicted: predictions,
-            self._keys_.model_outputs: raw_outputs,
+            self.Keys.PREDICTED.value: predictions,
+            self.Keys.PRED_PROBS.value: pred_probs,
+            self.Keys.MODEL_OUTPUTS.value: raw_outputs,
         }

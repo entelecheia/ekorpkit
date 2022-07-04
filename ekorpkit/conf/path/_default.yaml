@@ -1,4 +1,4 @@
-root: ${dir.data}/${.name}
+root: ${join_path:${dir.data},${.name}}
 name: ${oc.select:..name, ${name}}
 cached_path: ${oc.select:.cache.path,null}
 filetype: ${oc.select:..filetype,''}

@@ -9,7 +9,7 @@ info:
   lang: ko
 scores:
   score_path: ${dir.resource}/lexicons/mpko/mp_polarity_lexicon_lex.parquet
-  _keys_:
+  columns:
     words: word
     score: polarity
     count: count

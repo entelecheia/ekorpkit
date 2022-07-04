@@ -35,7 +35,6 @@ def test_predict_sentiments():
     ds_cfg.use_name_as_subdir = True
 
     cfg = eKonf.compose(config_group="pipeline")
-    cfg.verbose = True
     cfg.output_dir = "./data/tmp/predict"
     cfg.data.dataset = ds_cfg
     cfg._pipeline_ = ["subset", "predict"]
@@ -50,9 +49,9 @@ def test_predict_sentiments():
 
 def test_eval_sentiments():
     eval_cfg = eKonf.compose(config_group="model/eval=classification")
-    eval_cfg.verbose = True
-    eval_cfg._eval_.actual = "labels"
-    eval_cfg._eval_.predicted = "polarity_label"
+    eval_cfg.columns.actual = 'labels'
+    eval_cfg.columns.predicted = 'polarity_label'
+    eval_cfg.labels = ['positive', 'negative', 'neutral']
     eval_cfg.data_dir = "./data/tmp/predict"
     eval_cfg.data_file = "financial_phrasebank*.parquet"
     eval_cfg.output_dir = "./data/tmp/eval"
@@ -87,6 +86,6 @@ def test_eval_fomc_sentiments():
     cfg.output_dir = "./data/tmp/predict"
     cfg.output_file = f"{cfg.name}-lm.parquet"
     cfg.num_workers = 100
-    fomc_sentiments = eKonf.pipe(cfg, fomc_statements)
+    fomc_sentiments = eKonf.pipe(fomc_statements, cfg)
 
     assert True

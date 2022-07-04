@@ -2,6 +2,7 @@ import logging
 import re
 import threading
 import os
+import numpy as np
 import pandas as pd
 import codecs
 import requests
@@ -516,6 +517,13 @@ class FOMC:
             else None,
             axis=1,
         )
+        df["recent_meeting"] = df["date"].map(
+            lambda x: self._get_recent_meeting_date(x)
+        )
+        df["recent_decision"] = df["recent_meeting"].map(
+            lambda x: self._get_rate_change(x)
+        )
+        df["recent_rate"] = df["recent_meeting"].map(lambda x: self._get_rate(x))
         df["next_meeting"] = df["date"].map(lambda x: self._get_next_meeting_date(x))
         df["next_decision"] = df["next_meeting"].map(lambda x: self._get_rate_change(x))
         df["next_rate"] = df["next_meeting"].map(lambda x: self._get_rate(x))
@@ -572,3 +580,103 @@ class FOMC:
                 return dt_ix
             else:
                 return None
+
+    def _get_recent_meeting_date(self, article_date):
+        """
+        Returns the most recent fomc meeting date for the given date x, referring to fomc_calendar DataFrame.
+        Usually FOMC Meetings takes two days, so it starts searching from x+2.
+        x should be of datetime type or yyyy-mm-dd format string.
+        """
+        import datetime as dt
+
+        if isinstance(article_date, str):
+            article_date = datetime.strptime(article_date, "%Y-%m-%d")
+
+        # Add two days to get the day after next
+        article_date += dt.timedelta(days=2)
+
+        cal = self.calendar.copy()
+        if cal.index.min() > article_date:
+            # If the date is older than the first FOMC Meeting, do not return any date.
+            return None
+        else:
+            dt_ix = cal[cal.index < article_date].index.max()
+            if not pd.isnull(dt_ix):
+                return dt_ix
+            else:
+                return None
+
+    @staticmethod
+    def get_irf(data, nlags=4, nirf=20):
+        import statsmodels.api as sm
+
+        # Dimensions
+        nobs = data.shape[0] - nlags
+        neqs = data.shape[1]
+
+        # Estimate via statsmodels VAR
+        mod = sm.tsa.VAR(data)
+        res = mod.fit(maxlags=nlags, ic=None, trend="n")
+
+        # Variance / Covariance matrix
+        omega = res.sigma_u
+
+        # Take LDL decomposition of the variance / covariance matrix
+        L = np.linalg.cholesky(omega)
+        D = np.diag(L.diagonal() ** 2)
+        L[np.diag_indices(L.shape[0])] = 1
+
+        # Storage
+        irf_tilde = np.zeros((nirf + nlags + 1, neqs, neqs))
+        irf = np.zeros((nirf, neqs, neqs))
+
+        # Initial values
+        irf_tilde[nlags] = np.eye(neqs)
+        irf[0] = L
+
+        # Iteratively create IRFs
+        for i in range(nirf):
+            for j in range(nlags):
+                irf_tilde[i + nlags + 1] += np.dot(
+                    res.params.iloc[j * neqs : (j + 1) * neqs, :].T,
+                    irf_tilde[i + nlags - j],
+                )
+            irf[i] = np.dot(irf_tilde[i + nlags], L)
+
+        irfs = {}
+        for col in data.columns:
+            ix = data.columns.get_loc(col)
+            irf_df = pd.DataFrame(-irf[:, :, ix])
+            irf_df.columns = data.columns
+            irfs[col] = irf_df
+
+        return irfs
+
+    @staticmethod
+    def plot_irf(irfs, impulse_name, ncols=2, figsize=(16, 12)):
+        irf = irfs[impulse_name]
+
+        names = irf.columns.tolist()
+        neqs = len(names)
+
+        cfg = eKonf.compose("visualize/plot=lineplot")
+
+        cfg.figure.figsize = figsize
+        cfg.subplots.ncols = ncols
+        cfg.subplots.nrows = int(np.ceil(neqs / ncols))
+        lineplot = cfg.lineplot.copy()
+        ax = cfg.ax.copy()
+        cfg.plots = []
+        cfg.axes = []
+
+        for i, name in enumerate(names):
+            plot = lineplot.copy()
+            plot.y = name
+            plot.axno = i
+            cfg.plots.append(plot)
+            _ax = ax.copy()
+            _ax.title = name
+            _ax.axno = i
+            cfg.axes.append(_ax)
+
+        eKonf.instantiate(cfg, data=irf)
