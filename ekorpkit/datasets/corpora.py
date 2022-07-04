@@ -12,6 +12,7 @@ class Corpora(BaseSet):
     def __init__(self, **args):
         super().__init__(**args)
         self.corpora = args.get("corpora")
+        self.corpora = eKonf.to_dict(self.corpora)
         if self.corpora is None:
             self.corpora = self.name
         if isinstance(self.corpora, str):
@@ -20,8 +21,8 @@ class Corpora(BaseSet):
             self.corpora = {name: None for name in self.corpora}
         # if eKonf.is_list(self.name):
         #     self.name = "-".join(self.name)
-        if self.name is None and eKonf.is_config(self.corpora):
-            self.name = "-".join(list(self.corpora.keys()))
+        if self.name is None and eKonf.is_dict(self.corpora):
+            self.name = "-".join(self.corpora.keys())
 
         self.metadata_dir = self.args.get("metadata_dir", None)
         if self.metadata_dir is None:

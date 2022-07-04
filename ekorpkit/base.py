@@ -107,6 +107,7 @@ def _is_dir(a, *p):
 
 def _join_path(a, *p):
     if p and p[0] is not None:
+        p = [str(_p) for _p in p]
         return os.path.join(a, *p)
     else:
         return a
