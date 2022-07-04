@@ -14,6 +14,9 @@ def eval_classification(data=None, **args):
     eval_metrics = args[eKonf.Keys.FUNC]
     if data is None:
         data = eKonf.load_data(**args.path.data)
+    if data is None:
+        log.warning(f"No data to evaluate on given path: {args.path.data}")
+        return
     eval_metrics = eKonf.partial(eval_metrics)
     data = data.dropna(subset=[_eval_.actual, _eval_.predicted])
     cm = eval_metrics(data[_eval_.actual], data[_eval_.predicted], labels=labels)
