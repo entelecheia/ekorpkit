@@ -37,7 +37,10 @@ def _setLogger(level=None, force=True, **kwargs):
     level = level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
     if isinstance(level, str):
         level = getattr(logging, level.upper(), logging.INFO)
-    logging.basicConfig(level=level, force=force, **kwargs)
+    if sys.version_info >= (3, 8):
+        logging.basicConfig(level=level, force=force, **kwargs)
+    else:
+        logging.basicConfig(level=level, **kwargs)
 
 
 def _getLogger(
