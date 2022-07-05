@@ -16,6 +16,7 @@ from .base import (
     _env_set,
     _exists,
     _function,
+    _getLogger,
     _init_env_,
     _instantiate,
     _is_colab,
@@ -41,6 +42,7 @@ from .base import (
     _run,
     _save,
     _select,
+    _setLogger,
     _SPLITS,
     _stop_env_,
     _to_config,
@@ -55,7 +57,7 @@ from .base import (
     Environments,
 )
 
-log = logging.getLogger(__name__)
+logger = _getLogger(__name__)
 
 
 class eKonf:
@@ -536,3 +538,15 @@ class eKonf:
     @staticmethod
     def to_numeric(data, _columns=None, errors="coerce", downcast=None, **kwargs):
         return _to_numeric(data, _columns, errors, downcast, **kwargs)
+
+    @staticmethod
+    def getLogger(
+        name=None,
+        log_level=None,
+        fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    ):
+        return _getLogger(name, log_level, fmt)
+
+    @staticmethod
+    def setLogger(level=None, force=True, **kwargs):
+        return _setLogger(level, force, **kwargs)

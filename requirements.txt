@@ -1,6 +1,5 @@
 numpy
 tqdm
-openpyxl
 pandas
 hydra-core>=1.2.0
 hydra-colorlog
@@ -13,3 +12,4 @@ requests
 scipy
 cached-path
 pytablewriter>=0.64.0
+ftfy

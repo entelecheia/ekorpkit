@@ -4,13 +4,13 @@ import hydra
 from ekorpkit import eKonf, __hydra_version_base__
 
 
-log = logging.getLogger(__name__)
+logger = eKonf.getLogger(__name__)
 
 
 def run_job(**args):
     command = args.get("ekorpkit") or {}
     command = [f"{k}={v}" for k, v in command.items()]
-    log.info(f"Running ekorpkit with args: {command}")
+    logger.info(f"Running ekorpkit with args: {command}")
     _run_cmd(command)
 
 
@@ -28,11 +28,11 @@ def run_workflow(**args):
     _default_args = args.get("ekorpkit") or {}
     _default_args = [f"{k}={v}" for k, v in _default_args.items()]
     for wf_name, workflow in _workflows.items():
-        log.info("Running workflow: {}".format(wf_name))
+        logger.info("Running workflow: {}".format(wf_name))
         _jobs = workflow.get("jobs") or []
         for job in _jobs:
             job_arg = _default_args + [f"+job/{wf_name}={job}"]
-            log.info(f"Running job [{job}] with args: {job_arg}")
+            logger.info(f"Running job [{job}] with args: {job_arg}")
             _run_cmd(job_arg)
 
 
@@ -41,11 +41,11 @@ def main(cfg) -> None:
     verbose = cfg.verbose
 
     if verbose:
-        log.info("## eKorpkit-flow Command Line Interface##")
+        logger.info("## eKorpkit-flow Command Line Interface##")
     eKonf.load_dotenv(verbose)
 
     if cfg.get("verbose"):
-        log.info("## hydra configuration resolved ##")
+        logger.info("## hydra configuration resolved ##")
         eKonf.pprint(cfg)
 
     eKonf.instantiate(cfg)
