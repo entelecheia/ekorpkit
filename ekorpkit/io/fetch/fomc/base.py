@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import codecs
 import requests
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from bs4 import BeautifulSoup
 from datetime import datetime
 from abc import abstractmethod
@@ -366,7 +366,7 @@ class FOMC:
           +1: Rate hike
         """
         import numpy as np
-        from tqdm import tqdm
+        from tqdm.auto import tqdm
 
         # fedrates = fedrates.copy()[fedrates.index >= self.calendar.index.min()]
         fedrates["rate"] = fedrates[series_id].shift(-3)

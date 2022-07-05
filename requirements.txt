@@ -13,4 +13,4 @@ scipy
 cached-path
 pytablewriter>=0.64.0
 ftfy
-google-cloud-storage>=1.30,<2.0.0
+google-cloud-storage>=1.30

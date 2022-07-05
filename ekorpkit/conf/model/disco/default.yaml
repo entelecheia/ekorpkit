@@ -5,9 +5,12 @@ defaults:
   - diffusion_model: 512x512_diffusion_uncond_finetune_008100
   - midas: default
   - download: default
+  - /auto: load
 
 _target_: ekorpkit.models.disco.base.DiscoDiffusion
 name: disco-diffusion
+auto:
+  load: true
 verbose: ${oc.select:..verbose, false}
 cuda_device: 0
 use_cpu: false

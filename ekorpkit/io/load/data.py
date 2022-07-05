@@ -2,7 +2,7 @@ import logging
 from io import StringIO
 from zipfile import ZipFile
 import pandas as pd
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from ekorpkit.io.parse.json import parse_data
 from joblib import Parallel, delayed
 from ekorpkit.utils.batch.batcher import tqdm_joblib

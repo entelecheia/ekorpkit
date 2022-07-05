@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from ekorpkit import eKonf
 from .ngram import Ngrams
 from .score import get_process_memory, prune_vocab

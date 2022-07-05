@@ -9,7 +9,7 @@ import gc
 import matplotlib.pyplot as plt
 import shutil
 from datetime import datetime
-from tqdm.notebook import tqdm
+from tqdm.auto import tqdm
 from glob import glob
 from pathlib import Path
 from ekorpkit import eKonf
@@ -21,7 +21,7 @@ from .utils import (
     get_inbetweens,
 )
 
-# from tqdm import tqdm
+# from tqdm.auto import tqdm
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ class DiscoDiffusion:
         self.args = args
         self.name = args.name
         self.verbose = args.get("verbose", True)
+        self.auto = args.auto
         self._path = self.args.path
         self._module = self.args.module
         self._midas = self.args.midas
@@ -56,6 +57,9 @@ class DiscoDiffusion:
 
         self.is_notebook = eKonf.is_notebook()
         self.is_colab = eKonf.is_colab()
+
+        if self.auto.load:
+            self.load()
 
     @property
     def path(self):
@@ -720,6 +724,7 @@ class DiscoDiffusion:
         check_model_SHA = download.check_model_SHA
         for name, model in download.models.items():
             if not isinstance(model, str):
+                log.info(f"Downloading model {name} from {model}")
                 _download_models(name, **model, check_model_SHA=check_model_SHA)
 
     def _3d_step(self, img_filepath, frame_num, midas_model, midas_transform):
