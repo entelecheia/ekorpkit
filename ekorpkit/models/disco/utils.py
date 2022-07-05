@@ -79,6 +79,8 @@ def move_files(start_num, end_num, old_folder, new_folder, batch_name, batch_num
 def split_prompts(prompts, max_frames):
     prompt_series = pd.Series([np.nan for a in range(max_frames)])
     for i, prompt in prompts.items():
+        if isinstance(prompt, str):
+            prompt =[prompt]
         prompt_series[i] = prompt
     # prompt_series = prompt_series.astype(str)
     prompt_series = prompt_series.ffill().bfill()
