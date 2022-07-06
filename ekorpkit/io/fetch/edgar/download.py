@@ -18,7 +18,7 @@ from requests.exceptions import (
     Timeout,
     RetryError,
 )
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from typing import List
 from urllib3.util import Retry
 from ekorpkit import eKonf

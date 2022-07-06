@@ -16,6 +16,7 @@ from .base import (
     _env_set,
     _exists,
     _function,
+    _getLogger,
     _init_env_,
     _instantiate,
     _is_colab,
@@ -32,6 +33,7 @@ from .base import (
     _merge,
     _methods,
     _mkdir,
+    _mount_google_drive,
     _nvidia_smi,
     _osenv,
     _partial,
@@ -41,6 +43,8 @@ from .base import (
     _run,
     _save,
     _select,
+    _set_cuda,
+    _setLogger,
     _SPLITS,
     _stop_env_,
     _to_config,
@@ -55,7 +59,7 @@ from .base import (
     Environments,
 )
 
-log = logging.getLogger(__name__)
+logger = _getLogger(__name__)
 
 
 class eKonf:
@@ -536,3 +540,31 @@ class eKonf:
     @staticmethod
     def to_numeric(data, _columns=None, errors="coerce", downcast=None, **kwargs):
         return _to_numeric(data, _columns, errors, downcast, **kwargs)
+
+    @staticmethod
+    def getLogger(
+        name=None,
+        log_level=None,
+        fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    ):
+        return _getLogger(name, log_level, fmt)
+
+    @staticmethod
+    def setLogger(level=None, force=True, **kwargs):
+        return _setLogger(level, force, **kwargs)
+
+    @staticmethod
+    def set_cuda(device=0):
+        return _set_cuda(device)
+
+    @staticmethod
+    def mount_google_drive(
+        workspace=None,
+        project=None,
+        mountpoint="/content/drive",
+        force_remount=False,
+        timeout_ms=120000,
+    ):
+        return _mount_google_drive(
+            workspace, project, mountpoint, force_remount, timeout_ms
+        )

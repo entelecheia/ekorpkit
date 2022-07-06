@@ -5,7 +5,7 @@ import shutil
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from ekorpkit.utils.lib import wget
+from ekorpkit.io.fetch.web import web_download
 
 
 log = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ def _download_models(
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(archive_path, path)
     else:
-        wget(link, archive_path)
+        web_download(link, archive_path)
         if os.path.exists(archive_path):
             log.info(f"Copying {name} File to {path} from {archive_path}")
             Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -79,6 +79,8 @@ def move_files(start_num, end_num, old_folder, new_folder, batch_name, batch_num
 def split_prompts(prompts, max_frames):
     prompt_series = pd.Series([np.nan for a in range(max_frames)])
     for i, prompt in prompts.items():
+        if isinstance(prompt, str):
+            prompt =[prompt]
         prompt_series[i] = prompt
     # prompt_series = prompt_series.astype(str)
     prompt_series = prompt_series.ffill().bfill()

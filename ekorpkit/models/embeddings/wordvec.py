@@ -7,7 +7,7 @@ import gensim.downloader as api
 from gensim.models import Word2Vec, KeyedVectors
 from unicodedata import category
 from collections import namedtuple
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from ekorpkit.io.file import save_dataframe, load_dataframe
 from ekorpkit import eKonf
 

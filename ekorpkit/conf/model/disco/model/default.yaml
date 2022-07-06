@@ -1,0 +1,16 @@
+diffusion_model: 512x512_diffusion_uncond_finetune_008100
+use_secondary_model: true
+use_checkpoint: true
+diffusion_sampling_mode: ddim
+###  Custom model
+custom_model: ema_0.9999_058000.pt
+clip_models:
+  ViT-B/32: true
+  ViT-B/16: true
+  ViT-L/14: false
+  ViT-L/14@336px: false
+  RN50x4: false
+  RN50x16: false
+  RN50x64: false
+  RN101: false
+raft_model_path: ${..path.library_dir}/RAFT/models/raft-things.pth

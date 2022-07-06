@@ -36,10 +36,11 @@ datasets: all, transformers, dataset, model
 # torch: transformers
 tensorflow: all, transformers, model
 # tf-nightly: transformers, model
-google-api-python-client: all, transformers, model
-google-cloud-storage>=2.0.0: all, transformers, model, dataset
+google-api-python-client: google
+google-cloud-storage>=2.0.0: google
 flaml: automl, model, all
 yellowbrick: automl, model, all
+scipy: automl, model, all, transformers
 
 modin: ddbackend
 ray: ddbackend
@@ -71,11 +72,12 @@ datasketch: all, dataset
 pysimdjson: all, dataset, parser
 p_tqdm: all, dataset, parser
 joblib: all, dataset, parser
-ftfy: all, dataset, parser, tokenize
+# ftfy: all, dataset, parser, tokenize, disco
 jsonlines: all, dataset, parser
 loky: all, dataset, parser
 pathos: all, dataset, parser, edgar
 guesslang: guesslang
+openpyxl: all, dataset, parser
 
 numba: numba
 

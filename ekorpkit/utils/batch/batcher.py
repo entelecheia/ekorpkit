@@ -5,7 +5,7 @@ import scipy.sparse as ssp
 import random
 import pandas as pd
 from math import ceil
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import contextlib
 
 batcher_instance = None

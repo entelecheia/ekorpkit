@@ -10,6 +10,6 @@ num_channels: 256
 num_head_channels: 64
 num_res_blocks: 2
 resblock_updown: true
-use_checkpoint: ${..clip.use_checkpoint}
+use_checkpoint: ${..model.use_checkpoint}
 use_fp16: ${iif:${..use_cpu},false,true}
 use_scale_shift_norm: true

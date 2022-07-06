@@ -2,7 +2,7 @@ import os
 import math
 import logging
 from collections import defaultdict, namedtuple
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 log = logging.getLogger(__name__)
 

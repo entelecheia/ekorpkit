@@ -18,48 +18,28 @@ def gitclone(url, targetdir=None, verbose=False):
         res = subprocess.run(
             ["git", "clone", url], stdout=subprocess.PIPE
         ).stdout.decode("utf-8")
-    if verbose:
-        print(res)
+    log.info(res)
 
 
 def pipi(name, verbose=False):
     res = subprocess.run(
         ["pip", "install", name], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
-    if verbose:
-        print(res)
+    log.info(res)
 
 
 def pipie(name, verbose=False):
     res = subprocess.run(
         ["git", "install", "-e", name], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
-    if verbose:
-        print(res)
-
-
-def wget(url, output_path, verbose=False):
-    res = subprocess.run(
-        [
-            "wget",
-            url,
-            "--no-directories",
-            "--progress=bar:force:noscroll",
-            "-O",
-            f"{output_path}",
-        ],
-        stdout=subprocess.PIPE,
-    ).stdout.decode("utf-8")
-    if verbose:
-        print(res)
+    log.info(res)
 
 
 def apti(name, verbose=False):
     res = subprocess.run(
         ["apt", "install", name], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
-    if verbose:
-        print(res)
+    log.info(res)
 
 
 def load_module_from_file(name, libpath, specname=None):

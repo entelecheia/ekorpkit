@@ -25,4 +25,4 @@ hydra:
       file:
         level: ${hydra.job_logging.root.level}
     root:
-      level: INFO
+      level: ${oc.env:EKORPKIT_LOG_LEVEL,INFO}

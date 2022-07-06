@@ -7,7 +7,7 @@ import tomotopy as tp
 from pathlib import Path
 from collections import namedtuple
 from datetime import datetime
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import numpy as np
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer

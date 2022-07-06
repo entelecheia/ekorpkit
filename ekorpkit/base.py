@@ -33,7 +33,30 @@ from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
 
-log = logging.getLogger(__name__)
+def _setLogger(level=None, force=True, **kwargs):
+    level = level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
+    os.environ["EKORPKIT_LOG_LEVEL"] = level
+    if isinstance(level, str):
+        level = getattr(logging, level.upper(), logging.INFO)
+    if sys.version_info >= (3, 8):
+        logging.basicConfig(level=level, force=force, **kwargs)
+    else:
+        logging.basicConfig(level=level, **kwargs)
+
+
+def _getLogger(
+    _name=None,
+    _log_level=None,
+    _fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+):
+    _name = _name or __name__
+    logger = logging.getLogger(_name)
+    _log_level = _log_level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
+    logger.setLevel(_log_level)
+    return logger
+
+
+logger = _getLogger()
 
 __hydra_version_base__ = "1.2"
 
@@ -43,10 +66,14 @@ class Environments(BaseSettings):
     EKORPKIT_DATA_DIR: Optional[str]
     EKORPKIT_PROJECT: Optional[str]
     EKORPKIT_WORKSPACE_ROOT: Optional[str]
+    EKORPKIT_LOG_LEVEL: Optional[str]
     FRED_API_KEY: Optional[str] = SecretStr
     NASDAQ_API_KEY: Optional[str] = SecretStr
     WANDB_API_KEY: Optional[str] = SecretStr
     NUM_WORKERS: Optional[int]
+    KMP_DUPLICATE_LIB_OK: Optional[str]
+    CUDA_DEVICE_ORDER: Optional[str]
+    CUDA_VISIBLE_DEVICES: Optional[str]
 
     class Config:
         env_prefix = ""
@@ -425,7 +452,7 @@ class _Defaults(str, Enum):
 def _methods(cfg: Any, obj: object, return_function=False):
     cfg = _to_dict(cfg)
     if not cfg:
-        log.info("No method defined to call")
+        logger.info("No method defined to call")
         return
 
     if isinstance(cfg, dict) and _Keys.METHOD in cfg:
@@ -435,9 +462,9 @@ def _methods(cfg: Any, obj: object, return_function=False):
     if isinstance(_method_, str):
         _fn = getattr(obj, _method_)
         if return_function:
-            log.info(f"Returning function {_fn}")
+            logger.info(f"Returning function {_fn}")
             return _fn
-        log.info(f"Calling {_method_}")
+        logger.info(f"Calling {_method_}")
         return _fn(**cfg)
     elif isinstance(_method_, dict):
         if _Keys.CALL in _method_:
@@ -449,17 +476,17 @@ def _methods(cfg: Any, obj: object, return_function=False):
             _parms = _method_.pop(_Keys.rcPARAMS, {})
             if return_function:
                 if not _parms:
-                    log.info(f"Returning function {_fn}")
+                    logger.info(f"Returning function {_fn}")
                     return _fn
-                log.info(f"Returning function {_fn} with params {_parms}")
+                logger.info(f"Returning function {_fn} with params {_parms}")
                 return functools.partial(_fn, **_parms)
-            log.info(f"Calling {_method_}")
+            logger.info(f"Calling {_method_}")
             return _fn(**_parms)
         else:
-            log.info(f"Skipping call to {_method_}")
+            logger.info(f"Skipping call to {_method_}")
     elif isinstance(_method_, list):
         for _each_method in _method_:
-            log.info(f"Calling {_each_method}")
+            logger.info(f"Calling {_each_method}")
             if isinstance(_each_method, str):
                 getattr(obj, _each_method)()
             elif isinstance(_each_method, dict):
@@ -472,17 +499,17 @@ def _methods(cfg: Any, obj: object, return_function=False):
                         **_each_method[_Keys.rcPARAMS]
                     )
                 else:
-                    log.info(f"Skipping call to {_each_method}")
+                    logger.info(f"Skipping call to {_each_method}")
 
 
 def _function(cfg: Any, _name_, return_function=False, **parms):
     cfg = _to_dict(cfg)
     if not isinstance(cfg, dict):
-        log.info("No function defined to execute")
+        logger.info("No function defined to execute")
         return None
 
     if _Keys.FUNC not in cfg:
-        log.info("No function defined to execute")
+        logger.info("No function defined to execute")
         return None
 
     _functions_ = cfg[_Keys.FUNC]
@@ -499,15 +526,15 @@ def _function(cfg: Any, _name_, return_function=False, **parms):
     if _exec_:
         if callable(fn):
             if return_function:
-                log.info(f"Returning function {fn}")
+                logger.info(f"Returning function {fn}")
                 return fn
-            log.info(f"Executing function {fn} with parms {_parms}")
+            logger.info(f"Executing function {fn} with parms {_parms}")
             return fn(**_parms)
         else:
-            log.info(f"Function {_name_} not callable")
+            logger.info(f"Function {_name_} not callable")
             return None
     else:
-        log.info(f"Skipping execute of {fn}")
+        logger.info(f"Skipping execute of {fn}")
         return None
 
 
@@ -620,7 +647,7 @@ def _run(config: Any, **kwargs: Any) -> Any:
     config = _merge(config, kwargs)
     _config_ = config.get(_Keys.CONFIG)
     if _config_ is None:
-        log.warning("No _config_ specified in config")
+        logger.warning("No _config_ specified in config")
         return None
     if isinstance(_config_, str):
         _config_ = [_config_]
@@ -633,7 +660,7 @@ def _partial(
     config: Any = None, config_group: str = None, *args: Any, **kwargs: Any
 ) -> Any:
     if config is None and config_group is None:
-        log.warning("No config specified")
+        logger.warning("No config specified")
         return None
     elif config_group is not None:
         config = _compose(config_group=config_group)
@@ -675,13 +702,13 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     verbose = config.get(_Keys.VERBOSE, False)
     if not _is_instantiatable(config):
         if verbose:
-            log.info(f"Config is not instantiatable, returning config")
+            logger.info(f"Config is not instantiatable, returning config")
         return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
         kwargs[_Keys.RECURSIVE.value] = _recursive_
     if verbose:
-        log.info(f"instantiating {config.get(_Keys.TARGET)}...")
+        logger.info(f"instantiating {config.get(_Keys.TARGET)}...")
     return hydra.utils.instantiate(config, *args, **kwargs)
 
 
@@ -707,6 +734,9 @@ def _init_env_(cfg=None, verbose=False):
     global _env_initialized_
 
     _load_dotenv(verbose=verbose)
+    if _is_notebook():
+        _log_level = os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
+        logging.basicConfig(level=_log_level, force=True)
 
     if cfg is None:
         cfg = _config
@@ -716,7 +746,7 @@ def _init_env_(cfg=None, verbose=False):
     for env_name, env_value in env.get("os", {}).items():
         if env_value:
             if verbose:
-                log.info(f"setting environment variable {env_name} to {env_value}")
+                logger.info(f"setting environment variable {env_name} to {env_value}")
             os.environ[env_name] = str(env_value)
 
     if env.distributed_framework.initialize:
@@ -727,7 +757,7 @@ def _init_env_(cfg=None, verbose=False):
             ray_cfg = env.get("ray", None)
             ray_cfg = _to_container(ray_cfg, resolve=True)
             if verbose:
-                log.info(f"initializing ray with {ray_cfg}")
+                logger.info(f"initializing ray with {ray_cfg}")
             ray.init(**ray_cfg)
             backend_handle = ray
 
@@ -737,16 +767,16 @@ def _init_env_(cfg=None, verbose=False):
             dask_cfg = env.get("dask", None)
             dask_cfg = _to_container(dask_cfg, resolve=True)
             if verbose:
-                log.info(f"initializing dask client with {dask_cfg}")
+                logger.info(f"initializing dask client with {dask_cfg}")
             client = Client(**dask_cfg)
             if verbose:
-                log.info(client)
+                logger.info(client)
 
         batcher.batcher_instance = batcher.Batcher(
             backend_handle=backend_handle, **env.batcher
         )
         if verbose:
-            log.info(f"initialized batcher with {batcher.batcher_instance}")
+            logger.info(f"initialized batcher with {batcher.batcher_instance}")
     _env_initialized_ = True
 
 
@@ -754,7 +784,7 @@ def _stop_env_(cfg, verbose=False):
     env = cfg.env
     backend = env.distributed_framework.backend
     if verbose:
-        log.info(f"stopping {backend}, if running")
+        logger.info(f"stopping {backend}, if running")
 
     if env.distributed_framework.initialize:
         if backend == "ray":
@@ -763,7 +793,7 @@ def _stop_env_(cfg, verbose=False):
             if ray.is_initialized():
                 ray.shutdown()
                 if verbose:
-                    log.info("shutting down ray")
+                    logger.info("shutting down ray")
 
         # elif modin_engine == 'dask':
         #     from dask.distributed import Client
@@ -776,7 +806,7 @@ def _stop_env_(cfg, verbose=False):
 def _pipe(data, pipe):
     _func_ = pipe.get(_Keys.FUNC)
     fn = _partial(_func_)
-    log.info(f"Applying pipe: {fn}")
+    logger.info(f"Applying pipe: {fn}")
     if isinstance(data, dict):
         if "concat_dataframes" in str(fn):
             return fn(data, pipe)
@@ -784,7 +814,7 @@ def _pipe(data, pipe):
             dfs = {}
             for df_no, df_name in enumerate(data):
                 df_each = data[df_name]
-                log.info(
+                logger.info(
                     f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(data)}"
                 )
                 pipe[_Keys.SUFFIX.value] = df_name
@@ -842,7 +872,7 @@ def _ensure_kwargs(_kwargs, _fn):
     if callable(_fn):
         kwargs = {}
         args = getargspec(_fn).args
-        log.info(f"args of {_fn}: {args}")
+        logger.info(f"args of {_fn}: {args}")
         for k, v in _kwargs.items():
             if k in args:
                 kwargs[k] = v
@@ -874,7 +904,7 @@ def _apply(
             batcher_instance.minibatch_size = min(
                 int(len(series) / batcher_instance.procs) + 1, minibatch_size
             )
-            log.info(
+            logger.info(
                 f"Using batcher with minibatch size: {batcher_instance.minibatch_size}"
             )
             results = decorator_apply(func, batcher_instance, description=description)(
@@ -885,7 +915,7 @@ def _apply(
             return results
 
     if batcher_instance is None:
-        log.warning("Warning: batcher not initialized")
+        logger.warning("Warning: batcher not initialized")
     tqdm.pandas(desc=description)
     return series.progress_apply(func)
 
@@ -893,9 +923,9 @@ def _apply(
 def _is_colab():
     is_colab = "google.colab" in sys.modules
     if is_colab:
-        log.info("Google Colab detected.")
+        logger.info("Google Colab detected.")
     else:
-        log.info("Google Colab not detected.")
+        logger.info("Google Colab not detected.")
     return is_colab
 
 
@@ -905,9 +935,9 @@ def _is_notebook():
         ip = sys.modules["ipykernel"]
         ip_version = ip.version_info
         ip_client = ip.write_connection_file.__module__.split(".")[0]
-        log.info(f"IPython version: {ip_version}, client: {ip_client}")
+        logger.info(f"IPython version: {ip_version}, client: {ip_client}")
     else:
-        log.info("IPython not detected.")
+        logger.info("IPython not detected.")
     return is_notebook
 
 
@@ -918,3 +948,58 @@ def _nvidia_smi():
         ["nvidia-smi", "-L"], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
     return nvidiasmi_output
+
+
+def _is_cuda_available():
+    try:
+        import torch
+
+        return torch.cuda.is_available()
+    except ImportError:
+        return False
+
+
+def _set_cuda(device=0):
+    try:
+        import torch
+
+        _names = []
+        if isinstance(device, str):
+            device = device.replce("cuda:", "")
+            ids = device.split(",")
+        else:
+            ids = [str(device)]
+        for id in ids:
+            _device_name = torch.cuda.get_device_name(int(id))
+            _names.append(_device_name)
+        logger.info(f"Setting cuda device to {_names}")
+        device = ", ".join(ids)
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = device
+    except:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+        raise Exception("Cuda device not found")
+
+
+def _mount_google_drive(
+    workspace=None,
+    project=None,
+    mountpoint="/content/drive",
+    force_remount=False,
+    timeout_ms=120000,
+):
+    try:
+        from google.colab import drive
+
+        drive.mount(mountpoint, force_remount=force_remount, timeout_ms=timeout_ms)
+
+        if isinstance(workspace, str):
+            if not workspace.startswith(os.path.sep) and not workspace.startswith(".."):
+                workspace = os.path.join(mountpoint, workspace)
+            _env_set("EKORPKIT_WORKSPACE_ROOT", workspace)
+            logger.info(f"Setting EKORPKIT_WORKSPACE_ROOT to {workspace}")
+        if isinstance(project, str):
+            _env_set("EKORPKIT_PROJECT", project)
+            logger.info(f"Setting EKORPKIT_PROJECT to {project}")
+    except ImportError:
+        logger.warning("Google Colab not detected.")

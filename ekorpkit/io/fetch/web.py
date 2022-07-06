@@ -4,7 +4,7 @@ import os
 import requests
 import tarfile
 import zipfile
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from urllib import request
 from ekorpkit import eKonf
 
@@ -86,6 +86,8 @@ def web_download(
             print(f"[{filename}] is already downloaded at {local_path}")
         return None
     filename = os.path.basename(local_path)
+    if not os.path.exists(os.path.dirname(local_path)):
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
     with tqdm(
         unit="B", unit_scale=True, miniters=1, desc=f"[{filename}] download {filename}"
     ) as t:

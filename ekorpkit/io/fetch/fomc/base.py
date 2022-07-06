@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import codecs
 import requests
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from bs4 import BeautifulSoup
 from datetime import datetime
 from abc import abstractmethod
@@ -366,7 +366,7 @@ class FOMC:
           +1: Rate hike
         """
         import numpy as np
-        from tqdm import tqdm
+        from tqdm.auto import tqdm
 
         # fedrates = fedrates.copy()[fedrates.index >= self.calendar.index.min()]
         fedrates["rate"] = fedrates[series_id].shift(-3)
@@ -653,9 +653,10 @@ class FOMC:
         return irfs
 
     @staticmethod
-    def plot_irf(irfs, impulse_name, ncols=2, figsize=(16, 12)):
+    def plot_irf(irfs, impulse_name, ncols=2, figsize=(16, 12), title=None):
         irf = irfs[impulse_name]
 
+        title = title or f"Impulse Response of {impulse_name} shock"
         names = irf.columns.tolist()
         neqs = len(names)
 
@@ -678,5 +679,6 @@ class FOMC:
             _ax.title = name
             _ax.axno = i
             cfg.axes.append(_ax)
+        cfg.figure.super.title = title
 
         eKonf.instantiate(cfg, data=irf)

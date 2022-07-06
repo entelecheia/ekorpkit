@@ -46,9 +46,15 @@ def collage(
     for filepath in image_filepaths:
         img_arr.append(convert_image(filepath))
     if num_images is not None:
-        img_arr = img_arr[:num_images]
+        num_images = min(num_images, len(img_arr))
+    else:
+        num_images = len(img_arr)
+    ncols = min(ncols, num_images)
+    nrows = num_images // ncols
+    num_images = nrows * ncols
 
-    array = np.array(img_arr[:49])
+    img_arr = img_arr[:num_images]
+    array = np.array(img_arr)
     result = gallery(array, ncols=ncols)
 
     plt.figure(figsize=figsize)

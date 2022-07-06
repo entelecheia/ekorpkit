@@ -6,7 +6,7 @@ import logging
 from hydra.utils import instantiate
 from omegaconf.listconfig import ListConfig
 from ekorpkit.utils.func import any_to_utf8
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from joblib import Parallel, delayed
 from ekorpkit.utils.batch.batcher import tqdm_joblib
 
