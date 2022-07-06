@@ -7,11 +7,7 @@ from ekorpkit import eKonf
 def test_disco():
 
     cfg = eKonf.compose("model/disco")
-    cfg.basic.batch_name = "dovish"
-    cfg.diffuse.n_batches = 1
+    cfg.diffuse.n_samples = 1
     disco = eKonf.instantiate(cfg)
-
-    disco.load()
     disco.diffuse()
-
     assert True
