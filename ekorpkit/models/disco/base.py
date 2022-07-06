@@ -41,8 +41,6 @@ class DiscoDiffusion:
         self._midas = self.args.midas
         self._model = self.args.model
         self._diffuse = self.args.diffuse
-        self._diffuse.text_prompts = eKonf.to_dict(self._diffuse.text_prompts)
-        self._diffuse.image_prompts = eKonf.to_dict(self._diffuse.image_prompts)
 
         self.clip_models = []
         self.model = None
@@ -81,9 +79,8 @@ class DiscoDiffusion:
     def diffuse(self, text_prompts=None, image_prompts=None, **args):
         """Diffuse the model"""
 
-        args = eKonf.merge(self._diffuse, args)
         log.info("> loading settings...")
-        args = self.load_config(args)
+        args = self.load_config(**args)
         log.info("> loading optical flow...")
         self.load_optical_flow(args)
 
@@ -91,8 +88,8 @@ class DiscoDiffusion:
             f"Starting Run: {args.batch_name}({args.batch_num}) at frame {args.start_frame}"
         )
 
-        text_prompts = text_prompts or args.text_prompts
-        image_prompts = image_prompts or args.image_prompts
+        text_prompts = text_prompts or eKonf.to_dict(args.text_prompts)
+        image_prompts = image_prompts or eKonf.to_dict(args.image_prompts)
         if isinstance(text_prompts, str):
             text_prompts = {0: [text_prompts]}
         elif isinstance(text_prompts, list):
@@ -283,7 +280,9 @@ class DiscoDiffusion:
 
     def save_settings(self, args):
         """Save the settings"""
-        _path = f"{self._output.batch_dir}/{args.batch_name}({args.batch_num})_settings.yaml"
+        _path = os.path.join(
+            self._output.batch_dir, f"{args.batch_name}({args.batch_num})_settings.yaml"
+        )
         eKonf.save(args, _path)
 
     def _3d_step(self, img_filepath, frame_num, midas_model, midas_transform):
@@ -367,6 +366,12 @@ class DiscoDiffusion:
         from ipywidgets import Output
 
         seed = args.seed
+        batch_dir = self._output.batch_dir
+        old_frame_scaled_path = os.path.join(batch_dir, "old_frame_scaled.png")
+        prev_frame_path = os.path.join(batch_dir, "prev_frame.png")
+        prev_frame_scaled_path = os.path.join(batch_dir, "prev_frame_scaled.png")
+        warped_path = os.path.join(batch_dir, "warped.png")
+        progress_path = os.path.join(batch_dir, "progress.png")
 
         if (args.animation_mode == "3D") and (args.midas_weight > 0.0):
             midas = Midas(**self._midas)
@@ -378,6 +383,11 @@ class DiscoDiffusion:
                 midas_resize_mode,
                 midas_normalization,
             ) = midas.init_midas_depth_model(args.midas_depth_model)
+
+        if isinstance(args.cut_overview, str):
+            cut_overview = eval(args.cut_overview)
+            cut_innercut = eval(args.cut_innercut)
+            cut_icgray_p = eval(args.cut_icgray_p)
 
         log.info(f"looping over range({args.start_frame}, {args.max_frames})")
         for frame_num in range(args.start_frame, args.max_frames):
@@ -416,12 +426,13 @@ class DiscoDiffusion:
                 if frame_num > 0:
                     seed += 1
                     if args.resume_run and frame_num == args.start_frame:
-                        img_0 = cv2.imread(
-                            self._output.batch_dir
-                            + f"/{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png"
+                        _img_path = os.path.join(
+                            batch_dir,
+                            f"{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png",
                         )
+                        img_0 = cv2.imread(_img_path)
                     else:
-                        img_0 = cv2.imread("prevFrame.png")
+                        img_0 = cv2.imread(prev_frame_path)
                     center = (1 * img_0.shape[1] // 2, 1 * img_0.shape[0] // 2)
                     trans_mat = np.float32(
                         [[1, 0, translation_x], [0, 1, translation_y]]
@@ -437,8 +448,8 @@ class DiscoDiffusion:
                         borderMode=cv2.BORDER_WRAP,
                     )
 
-                    cv2.imwrite("prevFrameScaled.png", img_0)
-                    init_image = "prevFrameScaled.png"
+                    init_image = prev_frame_scaled_path
+                    cv2.imwrite(init_image, img_0)
                     init_scale = args.frames_scale
                     skip_steps = args.calc_frames_skip_steps
 
@@ -446,35 +457,34 @@ class DiscoDiffusion:
                 if frame_num > 0:
                     seed += 1
                     if args.resume_run and frame_num == args.start_frame:
-                        img_filepath = (
-                            self._output.batch_dir
-                            + f"/{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png"
+                        img_filepath = os.path.join(
+                            batch_dir,
+                            f"{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png",
                         )
                         if args.turbo_mode and frame_num > args.turbo_preroll:
-                            shutil.copyfile(img_filepath, "oldFrameScaled.png")
+                            shutil.copyfile(img_filepath, old_frame_scaled_path)
                     else:
-                        img_filepath = "prevFrame.png"
+                        img_filepath = prev_frame_path
 
                     next_step_pil = self._3d_step(
                         img_filepath, frame_num, midas_model, midas_transform
                     )
-                    next_step_pil.save("prevFrameScaled.png")
+                    next_step_pil.save(prev_frame_scaled_path)
 
                     ### Turbo mode - skip some diffusions, use 3d morph for clarity and to save time
                     if args.turbo_mode:
                         if frame_num == args.turbo_preroll:  # start tracking oldframe
-                            next_step_pil.save(
-                                "oldFrameScaled.png"
-                            )  # stash for later blending
+                            # stash for later blending
+                            next_step_pil.save(old_frame_scaled_path)
                         elif frame_num > args.turbo_preroll:
                             # set up 2 warped image sequences, old & new, to blend toward new diff image
                             old_frame = self._3d_step(
-                                "oldFrameScaled.png",
+                                old_frame_scaled_path,
                                 frame_num,
                                 midas_model,
                                 midas_transform,
                             )
-                            old_frame.save("oldFrameScaled.png")
+                            old_frame.save(old_frame_scaled_path)
                             if frame_num % int(args.turbo_steps) != 0:
                                 log.info(
                                     "turbo skip this frame: skipping clip diffusion steps"
@@ -486,10 +496,9 @@ class DiscoDiffusion:
                                 log.info(
                                     "turbo skip this frame: skipping clip diffusion steps and saving blended frame"
                                 )
-                                newWarpedImg = cv2.imread(
-                                    "prevFrameScaled.png"
-                                )  # this is already updated..
-                                oldWarpedImg = cv2.imread("oldFrameScaled.png")
+                                # this is already updated..
+                                newWarpedImg = cv2.imread(prev_frame_scaled_path)
+                                oldWarpedImg = cv2.imread(old_frame_scaled_path)
                                 blendedImage = cv2.addWeighted(
                                     newWarpedImg,
                                     blend_factor,
@@ -497,12 +506,10 @@ class DiscoDiffusion:
                                     1 - blend_factor,
                                     0.0,
                                 )
-                                cv2.imwrite(
-                                    f"{self._output.batch_dir}/{filename}", blendedImage
-                                )
-                                next_step_pil.save(
-                                    f"{img_filepath}"
-                                )  # save it also as prev_frame to feed next iteration
+                                _img_path = os.path.join(batch_dir, filename)
+                                cv2.imwrite(_img_path, blendedImage)
+                                # save it also as prev_frame to feed next iteration
+                                next_step_pil.save(img_filepath)
                                 if args.vr_mode:
                                     generate_eye_views(
                                         self.TRANSLATION_SCALE,
@@ -524,15 +531,14 @@ class DiscoDiffusion:
                                 continue
                             else:
                                 # if not a skip frame, will run diffusion and need to blend.
-                                oldWarpedImg = cv2.imread("prevFrameScaled.png")
-                                cv2.imwrite(
-                                    f"oldFrameScaled.png", oldWarpedImg
-                                )  # swap in for blending later
+                                oldWarpedImg = cv2.imread(prev_frame_scaled_path)
+                                # swap in for blending later
+                                cv2.imwrite(old_frame_scaled_path, oldWarpedImg)
                                 log.info(
                                     "clip/diff this frame - generate clip diff image"
                                 )
 
-                    init_image = "prevFrameScaled.png"
+                    init_image = prev_frame_scaled_path
                     init_scale = args.frames_scale
                     skip_steps = args.calc_frames_skip_steps
 
@@ -544,20 +550,29 @@ class DiscoDiffusion:
                 if args.video_init_flow_warp:
                     if frame_num == 0:
                         skip_steps = args.video_init_skip_steps
-                        init_image = f"{args.video_frames_dir}/{frame_num+1:04}.jpg"
+                        init_image = os.path.join(
+                            args.video_frames_dir, f"{frame_num+1:04}.jpg"
+                        )
                     if frame_num > 0:
-                        prev = PIL.Image.open(
-                            self._output.batch_dir
-                            + f"/{args.batch_name}({args.batch_num})_{frame_num-1:04}.png"
+                        _img_path = os.path.join(
+                            batch_dir,
+                            f"/{args.batch_name}({args.batch_num})_{frame_num-1:04}.png",
+                        )
+                        prev = PIL.Image.open(_img_path)
+
+                        frame1_path = os.path.join(
+                            args.video_frames_dir, f"{frame_num:04}.jpg"
+                        )
+                        frame2_path = os.path.join(
+                            args.video_frames_dir, f"{frame_num+1:04}.jpg"
+                        )
+                        frame2 = PIL.Image.open(frame2_path)
+                        flo_path = os.path.join(
+                            args.self._video.flo_dir,
+                            f"{frame1_path.split('/')[-1]}.npy",
                         )
 
-                        frame1_path = f"{args.video_frames_dir}/{frame_num:04}.jpg"
-                        frame2 = PIL.Image.open(
-                            f"{args.video_frames_dir}/{frame_num+1:04}.jpg"
-                        )
-                        flo_path = f"/{args.self._video.flo_dir}/{frame1_path.split('/')[-1]}.npy"
-
-                        init_image = "warped.png"
+                        init_image = warped_path
                         log(args.video_init_flow_blend)
                         weights_path = None
                         if args.video_init_check_consistency:
@@ -573,7 +588,9 @@ class DiscoDiffusion:
                         ).save(init_image)
 
                 else:
-                    init_image = f"{args.video_frames_dir}/{frame_num+1:04}.jpg"
+                    init_image = os.path.join(
+                        args.video_frames_dir, f"{frame_num+1:04}.jpg"
+                    )
 
             loss_values = []
 
@@ -734,7 +751,7 @@ class DiscoDiffusion:
                     x_is_NaN = False
                     x = x.detach().requires_grad_()
                     n = x.shape[0]
-                    if self._model.use_secondary_model is True:
+                    if self._model.use_secondary_model:
                         alpha = torch.tensor(
                             diffusion.sqrt_alphas_cumprod[cur_t],
                             device=cuda_device,
@@ -778,10 +795,10 @@ class DiscoDiffusion:
                                 args.animation_mode,
                                 input_resolution,
                                 args.skip_augs,
-                                Overview=args.cut_overview[1000 - t_int],
-                                InnerCrop=args.cut_innercut[1000 - t_int],
+                                Overview=cut_overview[1000 - t_int],
+                                InnerCrop=cut_innercut[1000 - t_int],
                                 IC_Size_Pow=args.cut_ic_pow,
-                                IC_Grey_P=args.cut_icgray_p[1000 - t_int],
+                                IC_Grey_P=cut_icgray_p[1000 - t_int],
                             )
                             clip_in = self.normalize(cuts(x_in.add(1).div(2)))
                             image_embeds = (
@@ -793,8 +810,8 @@ class DiscoDiffusion:
                             )
                             dists = dists.view(
                                 [
-                                    args.cut_overview[1000 - t_int]
-                                    + args.cut_innercut[1000 - t_int],
+                                    cut_overview[1000 - t_int]
+                                    + cut_innercut[1000 - t_int],
                                     n,
                                     -1,
                                 ]
@@ -810,7 +827,7 @@ class DiscoDiffusion:
                                 / args.cutn_batches
                             )
                     tv_losses = tv_loss(x_in)
-                    if self._model.use_secondary_model is True:
+                    if self._model.use_secondary_model:
                         range_losses = range_loss(out)
                     else:
                         range_losses = range_loss(out["pred_xstart"])
@@ -843,10 +860,13 @@ class DiscoDiffusion:
                 sample_fn = diffusion.plms_sample_loop_progressive
 
             image_display = Output()
-            for i in range(args.n_batches):
+            for i in range(args.n_samples):
                 if args.animation_mode == "None":
                     display.clear_output(wait=True)
-                    batchBar = tqdm(range(args.n_batches), desc="Batches")
+                    batchBar = tqdm(
+                        range(args.n_samples),
+                        desc=f"{args.batch_name}({args.batch_num})",
+                    )
                     batchBar.n = i
                     batchBar.refresh()
                 print("")
@@ -916,67 +936,59 @@ class DiscoDiffusion:
                                     "%y%m%d-%H%M%S_%f"
                                 )
                                 percent = math.ceil(j / total_steps * 100)
-                                if args.n_batches > 0:
+                                if args.n_samples > 0:
                                     # if intermediates are saved to the subfolder, don't append a step or percentage to the name
-                                    if (
-                                        cur_t == -1
-                                        and args.intermediates_in_subfolder is True
-                                    ):
+                                    if cur_t == -1 and args.intermediates_in_subfolder:
                                         save_num = (
-                                            f"{frame_num:04}"
+                                            frame_num
                                             if args.animation_mode != "None"
                                             else i
                                         )
-                                        filename = f"{args.batch_name}({args.batch_num})_{save_num}.png"
+                                        filename = f"{args.batch_name}({args.batch_num})_{save_num:04}.png"
                                     else:
                                         # If we're working with percentages, append it
                                         if args.steps_per_checkpoint is not None:
-                                            filename = f"{args.batch_name}({args.batch_num})_{i:04}-{percent:02}%.png"
+                                            # filename = f"{args.batch_name}({args.batch_num})_{i:04}-{percent:03}%.png"
+                                            filename = f"{args.batch_name}({args.batch_num})_{i:04}-{j:03}.png"
                                         # Or else, iIf we're working with specific steps, append those
                                         else:
                                             filename = f"{args.batch_name}({args.batch_num})_{i:04}-{j:03}.png"
                                 image = TF.to_pil_image(image.add(1).div(2).clamp(0, 1))
                                 if j % args.display_rate == 0 or cur_t == -1:
-                                    image.save("progress.png")
+                                    image.save(progress_path)
                                     display.clear_output(wait=True)
-                                    display.display(display.Image("progress.png"))
+                                    display.display(display.Image(progress_path))
+
+                                if args.intermediates_in_subfolder:
+                                    _img_path = os.path.join(
+                                        self._output.partial_dir, filename
+                                    )
+                                else:
+                                    _img_path = os.path.join(batch_dir, filename)
+
                                 if args.steps_per_checkpoint is not None:
                                     if j % args.steps_per_checkpoint == 0 and j > 0:
-                                        if args.intermediates_in_subfolder is True:
-                                            image.save(
-                                                f"{self._output.partial_dir}/{filename}"
-                                            )
-                                        else:
-                                            image.save(
-                                                f"{self._output.batch_dir}/{filename}"
-                                            )
+                                        image.save(_img_path)
                                 else:
                                     if j in args.intermediate_saves:
-                                        if args.intermediates_in_subfolder is True:
-                                            image.save(
-                                                f"{self._output.partial_dir}/{filename}"
-                                            )
-                                        else:
-                                            image.save(
-                                                f"{self._output.batch_dir}/{filename}"
-                                            )
+                                        image.save(_img_path)
                                 if cur_t == -1:
                                     if frame_num == 0:
                                         self.save_settings(args)
                                     if args.animation_mode != "None":
-                                        image.save("prevFrame.png")
-                                    image.save(f"{self._output.batch_dir}/{filename}")
+                                        image.save(prev_frame_path)
+                                    image.save(os.path.join(batch_dir, filename))
                                     log.info(f"Saved {filename}")
                                     if args.animation_mode == "3D":
                                         # If turbo, save a blended image
+                                        _img_path = os.path.join(batch_dir, filename)
                                         if args.turbo_mode and frame_num > 0:
                                             # Mix new image with prevFrameScaled
                                             blend_factor = (1) / int(args.turbo_steps)
-                                            newFrame = cv2.imread(
-                                                "prevFrame.png"
-                                            )  # This is already updated..
+                                            # This is already updated..
+                                            newFrame = cv2.imread(prev_frame_path)
                                             prev_frame_warped = cv2.imread(
-                                                "prevFrameScaled.png"
+                                                prev_frame_scaled_path
                                             )
                                             blendedImage = cv2.addWeighted(
                                                 newFrame,
@@ -985,14 +997,9 @@ class DiscoDiffusion:
                                                 (1 - blend_factor),
                                                 0.0,
                                             )
-                                            cv2.imwrite(
-                                                f"{self._output.batch_dir}/{filename}",
-                                                blendedImage,
-                                            )
+                                            cv2.imwrite(_img_path, blendedImage)
                                         else:
-                                            image.save(
-                                                f"{self._output.batch_dir}/{filename}"
-                                            )
+                                            image.save(_img_path)
 
                                         if args.vr_mode:
                                             generate_eye_views(
@@ -1016,31 +1023,16 @@ class DiscoDiffusion:
                                     # if frame_num != _diffuse.max_frames-1:
                                     #   display.clear_output()
 
+                if args.animation_mode == "None":
+                    batchBar.n = i + 1
+                    batchBar.refresh()
+
                 plt.plot(np.array(loss_values), "r")
 
-    def _prepare_folders(self, batch_name):
-        self._output.batch_dir = os.path.join(self._path.output_dir, batch_name)
-        self._output.retain_dir = os.path.join(self._output.batch_dir, "retained")
-        self._output.partial_dir = os.path.join(self._output.batch_dir, "partials")
-        self._output.video_frames_dir = os.path.join(
-            self._output.batch_dir, "video_frames"
-        )
-        self._output.in_dir = self._output.video_frames_dir
-        self._output.flo_dir = os.path.join(
-            self._output.video_frames_dir, "out_flo_fwd"
-        )
-        self._output.temp_flo_dir = os.path.join(
-            self._output.video_frames_dir, "temp_flo"
-        )
-        self._output.flo_fwd_dir = os.path.join(
-            self._output.video_frames_dir, "out_flo_fwd"
-        )
-        for _name, _path in self._output.items():
-            if not os.path.exists(_path):
-                os.makedirs(_path)
-
-    def load_config(self, args):
+    def load_config(self, **args):
         """Load the settings"""
+        log.info(f"Merging config with args: {args}")
+        args = eKonf.merge(self._diffuse, args)
         self._prepare_folders(args.batch_name)
 
         # Get corrected sizes
@@ -1278,19 +1270,26 @@ class DiscoDiffusion:
             args.rotation_3d_y = float(args.rotation_3d_y)
             args.rotation_3d_z = float(args.rotation_3d_z)
 
-        if not eKonf.is_list(args.intermediate_saves):
-            if args.intermediate_saves:
-                args.steps_per_checkpoint = math.floor(
-                    (args.steps - args.skip_steps - 1) // (args.intermediate_saves + 1)
-                )
-                args.steps_per_checkpoint = (
-                    args.steps_per_checkpoint if args.steps_per_checkpoint > 0 else 1
-                )
-                log.info(f"Will save every {args.steps_per_checkpoint} steps")
-            else:
-                args.steps_per_checkpoint = args.steps + 10
-        else:
+        if eKonf.is_list(args.intermediate_saves):
             args.steps_per_checkpoint = None
+        else:
+            if (
+                not isinstance(args.steps_per_checkpoint, int)
+                or args.steps_per_checkpoint < 1
+            ):
+                if args.intermediate_saves is not None:
+                    args.steps_per_checkpoint = math.floor(
+                        (args.steps - args.skip_steps - 1)
+                        // (args.intermediate_saves + 1)
+                    )
+                    args.steps_per_checkpoint = (
+                        args.steps_per_checkpoint
+                        if args.steps_per_checkpoint > 0
+                        else 1
+                    )
+                else:
+                    args.steps_per_checkpoint = args.steps + 10
+            log.info(f"Will save every {args.steps_per_checkpoint} steps")
 
         timestep_respacing = f"ddim{args.steps}"
         diffusion_steps = (
@@ -1359,7 +1358,7 @@ class DiscoDiffusion:
                     and start_frame % int(args.turbo_steps) != 0
                 ):
                     start_frame = start_frame - (start_frame % int(args.turbo_steps))
-                if args.retain_overwritten_frames is True:
+                if args.retain_overwritten_frames:
                     existing_frames = len(
                         glob(
                             self._output.batch_dir
@@ -1394,12 +1393,8 @@ class DiscoDiffusion:
             args.seed = int(args.set_seed)
         log.info(f"Using seed: {args.seed}")
 
-        args.n_batches = args.n_batches if args.animation_mode == "None" else 1
+        args.n_samples = args.n_samples if args.animation_mode == "None" else 1
         args.max_frames = args.max_frames if args.animation_mode != "None" else 1
-        if isinstance(args.cut_overview, str):
-            args.cut_overview = eval(args.cut_overview)
-            args.cut_innercut = eval(args.cut_innercut)
-            args.cut_icgray_p = eval(args.cut_icgray_p)
 
         if args.animation_mode == "Video Input":
             # This isn't great in terms of what will get saved to the settings.. but it should work.
@@ -1415,13 +1410,88 @@ class DiscoDiffusion:
 
         return args
 
-    def collage(self, ncols=7, num_images=None, filename_patterns="*.png"):
-        args = self.load_config(self._diffuse)
-
-        num_images = num_images or args.n_batches
+    def collage(self, ncols=7, num_images=None, filename_patterns=None, **kwargs):
+        args = self.load_config(**kwargs)
+        filename_patterns = (
+            filename_patterns or f"{args.batch_name}({args.batch_num})_*.png"
+        )
+        num_images = num_images or args.n_samples
         eKonf.collage(
             filename_patterns=filename_patterns,
             base_dir=self._output.batch_dir,
             num_images=num_images,
             ncols=ncols,
         )
+
+    def make_gif(
+        self,
+        batch_name=None,
+        batch_num=0,
+        sample_num=0,
+        show=False,
+        force_remake=False,
+        output_file=None,
+        filename_patterns=None,
+        duration=100,
+        loop=0,
+        width=None,
+        **kwargs,
+    ):
+        from PIL import Image
+        from IPython.display import Image as Img
+        from IPython.display import display
+
+        args = self.load_config(**kwargs)
+        batch_name = batch_name or args.batch_name
+        batch_num = batch_num or args.batch_num
+        self._prepare_folders(batch_name)
+        base_dir = self._output.partial_dir
+
+        filename_patterns = (
+            filename_patterns or f"{batch_name}({batch_num})_{sample_num:04}-*.png"
+        )
+        log.info(f"Making GIF from {filename_patterns}")
+        output_file = output_file or f"{batch_name}({batch_num})_{sample_num:04}.gif"
+        output_path = os.path.join(self._output.batch_dir, output_file)
+        if os.path.exists(output_path) and not force_remake:
+            log.info(f"Skipping GIF creation, already exists: {output_path}")
+        else:
+            frames = [
+                Image.open(image) for image in glob(f"{base_dir}/{filename_patterns}")
+            ]
+            if len(frames) > 0:
+                frame_one = frames[0]
+                frame_one.save(
+                    output_path,
+                    format="GIF",
+                    append_images=frames,
+                    save_all=True,
+                    duration=duration,
+                    loop=loop,
+                )
+            else:
+                log.warning(f"No frames found for {filename_patterns}")
+
+        if show and os.path.exists(output_path):
+            display(Img(data=open(output_path, "rb").read(), width=width))
+
+    def _prepare_folders(self, batch_name):
+        self._output.batch_dir = os.path.join(self._path.output_dir, batch_name)
+        self._output.retain_dir = os.path.join(self._output.batch_dir, "retained")
+        self._output.partial_dir = os.path.join(self._output.batch_dir, "partials")
+        self._output.video_frames_dir = os.path.join(
+            self._output.batch_dir, "video_frames"
+        )
+        self._output.in_dir = self._output.video_frames_dir
+        self._output.flo_dir = os.path.join(
+            self._output.video_frames_dir, "out_flo_fwd"
+        )
+        self._output.temp_flo_dir = os.path.join(
+            self._output.video_frames_dir, "temp_flo"
+        )
+        self._output.flo_fwd_dir = os.path.join(
+            self._output.video_frames_dir, "out_flo_fwd"
+        )
+        for _name, _path in self._output.items():
+            if not os.path.exists(_path):
+                os.makedirs(_path)

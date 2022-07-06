@@ -13,7 +13,7 @@ name: disco-diffusion
 auto:
   load: true
 verbose: ${oc.select:..verbose, false}
-cuda_device: 0
+cuda_device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
 use_cpu: false
 text_prompts:
   0:
@@ -27,6 +27,8 @@ image_prompts:
 diffuse:
   text_prompts: ${..text_prompts}
   image_prompts: ${..image_prompts}
+  intermediate_saves: ${.steps}
+  steps_per_checkpoint: 2
   batch_num:
   stop_on_next_loop: false
   side_x:

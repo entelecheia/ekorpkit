@@ -42,6 +42,7 @@ from .base import (
     _run,
     _save,
     _select,
+    _set_cuda,
     _setLogger,
     _SPLITS,
     _stop_env_,
@@ -550,3 +551,7 @@ class eKonf:
     @staticmethod
     def setLogger(level=None, force=True, **kwargs):
         return _setLogger(level, force, **kwargs)
+
+    @staticmethod
+    def set_cuda(device=0):
+        return _set_cuda(device)

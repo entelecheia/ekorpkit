@@ -35,6 +35,7 @@ from . import _version
 
 def _setLogger(level=None, force=True, **kwargs):
     level = level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
+    os.environ["EKORPKIT_LOG_LEVEL"] = level
     if isinstance(level, str):
         level = getattr(logging, level.upper(), logging.INFO)
     if sys.version_info >= (3, 8):
@@ -70,6 +71,9 @@ class Environments(BaseSettings):
     NASDAQ_API_KEY: Optional[str] = SecretStr
     WANDB_API_KEY: Optional[str] = SecretStr
     NUM_WORKERS: Optional[int]
+    KMP_DUPLICATE_LIB_OK: Optional[str]
+    CUDA_DEVICE_ORDER: Optional[str]
+    CUDA_VISIBLE_DEVICES: Optional[str]
 
     class Config:
         env_prefix = ""
@@ -944,3 +948,58 @@ def _nvidia_smi():
         ["nvidia-smi", "-L"], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
     return nvidiasmi_output
+
+
+def _is_cuda_available():
+    try:
+        import torch
+
+        return torch.cuda.is_available()
+    except ImportError:
+        return False
+
+
+def _set_cuda(device=0):
+    try:
+        import torch
+
+        _names = []
+        if isinstance(device, str):
+            device = device.replce("cuda:", "")
+            ids = device.split(",")
+        else:
+            ids = [str(device)]
+        for id in ids:
+            _device_name = torch.cuda.get_device_name(int(id))
+            _names.append(_device_name)
+        logger.info(f"Setting cuda device to {_names}")
+        device = ", ".join(ids)
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = device
+    except:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+        raise Exception("Cuda device not found")
+
+
+def _mount_google_drive(
+    workspace=None,
+    project=None,
+    mountpoint="/content/drive",
+    force_remount=False,
+    timeout_ms=120000,
+):
+    try:
+        from google.colab import drive
+
+        drive.mount(mountpoint, force_remount=force_remount, timeout_ms=timeout_ms)
+
+        if isinstance(workspace, str):
+            if not workspace.startswith(os.path.sep) and not workspace.startswith(".."):
+                workspace = os.path.join(mountpoint, workspace)
+            _env_set("EKORPKIT_WORKSPACE_ROOT", workspace)
+            logger.info(f"Setting EKORPKIT_WORKSPACE_ROOT to {workspace}")
+        if isinstance(project, str):
+            _env_set("EKORPKIT_PROJECT", project)
+            logger.info(f"Setting EKORPKIT_PROJECT to {project}")
+    except ImportError:
+        logger.warning("Google Colab not detected.")

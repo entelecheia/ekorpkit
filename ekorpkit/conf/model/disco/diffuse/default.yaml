@@ -1,7 +1,7 @@
 animation_mode: None #@param ['None', '2D', '3D', 'Video Input'] {type:'string'}
 batch_name: TimeToDisco #@param{type: 'string'}
 display_rate: 20 #@param{type: 'number'}
-n_batches: 6 #@param{type: 'number'}
+n_samples: 6 #@param{type: 'number'}
 batch_size: 1
 resume_run: false
 run_to_resume: latest
