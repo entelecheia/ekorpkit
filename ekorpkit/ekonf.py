@@ -33,6 +33,7 @@ from .base import (
     _merge,
     _methods,
     _mkdir,
+    _mount_google_drive,
     _nvidia_smi,
     _osenv,
     _partial,
@@ -555,3 +556,15 @@ class eKonf:
     @staticmethod
     def set_cuda(device=0):
         return _set_cuda(device)
+
+    @staticmethod
+    def mount_google_drive(
+        workspace=None,
+        project=None,
+        mountpoint="/content/drive",
+        force_remount=False,
+        timeout_ms=120000,
+    ):
+        return _mount_google_drive(
+            workspace, project, mountpoint, force_remount, timeout_ms
+        )
