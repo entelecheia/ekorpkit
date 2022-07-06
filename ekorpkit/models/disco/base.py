@@ -1422,6 +1422,8 @@ class DiscoDiffusion:
         args = self.load_config(**kwargs)
         batch_name = batch_name or args.batch_name
         batch_num = batch_num or args.batch_num
+        self._prepare_folders(batch_name)
+
         filename_patterns = filename_patterns or f"{batch_name}({batch_num})_*.png"
         num_images = num_images or args.n_samples
         eKonf.collage(
@@ -1443,6 +1445,8 @@ class DiscoDiffusion:
         duration=100,
         loop=0,
         width=None,
+        optimize=True,
+        quality=50,
         **kwargs,
     ):
         from PIL import Image
@@ -1476,7 +1480,10 @@ class DiscoDiffusion:
                     save_all=True,
                     duration=duration,
                     loop=loop,
+                    optimize=optimize,
+                    quality=quality,
                 )
+                log.info(f"Saved GIF to {output_path}")
             else:
                 log.warning(f"No frames found for {filename_patterns}")
 
