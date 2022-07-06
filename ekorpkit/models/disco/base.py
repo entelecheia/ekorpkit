@@ -1410,11 +1410,19 @@ class DiscoDiffusion:
 
         return args
 
-    def collage(self, ncols=7, num_images=None, filename_patterns=None, **kwargs):
+    def collage(
+        self,
+        batch_name=None,
+        batch_num=0,
+        ncols=7,
+        num_images=None,
+        filename_patterns=None,
+        **kwargs,
+    ):
         args = self.load_config(**kwargs)
-        filename_patterns = (
-            filename_patterns or f"{args.batch_name}({args.batch_num})_*.png"
-        )
+        batch_name = batch_name or args.batch_name
+        batch_num = batch_num or args.batch_num
+        filename_patterns = filename_patterns or f"{batch_name}({batch_num})_*.png"
         num_images = num_images or args.n_samples
         eKonf.collage(
             filename_patterns=filename_patterns,
