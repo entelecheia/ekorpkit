@@ -1,7 +1,7 @@
 defaults:
   - _default
 
-_target_: ekorpkit.io.fetch.loader.bok.BOKMniutes
+_target_: ekorpkit.io.fetch.bok.BOKMniutes
 name: bok_minutes
 scrap:
   base_url: http://bok.or.kr

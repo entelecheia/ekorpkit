@@ -7,7 +7,7 @@ import subprocess
 import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-from ekorpkit.io.fetch.loader.base import BaseFetcher
+from ekorpkit.io.fetch.base import BaseFetcher
 from ekorpkit import eKonf
 
 

@@ -1,4 +1,4 @@
 defaults:
   - _default
 
-_target_: ekorpkit.io.fetch.loader.dummy.DummyCorpus
+_target_: ekorpkit.io.fetch.dummy.DummyCorpus

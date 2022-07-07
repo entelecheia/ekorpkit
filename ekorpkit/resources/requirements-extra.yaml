@@ -36,13 +36,12 @@ datasets: all, transformers, dataset, model
 # torch: transformers
 tensorflow: all, transformers, model
 # tf-nightly: transformers, model
-google-api-python-client: google
-google-cloud-storage>=2.0.0: google
 flaml: automl, model, all
 yellowbrick: automl, model, all
 scipy: automl, model, all, transformers
 
 boto3>=1.0,<2.0: aws, cached-path
+google-api-python-client: google
 google-cloud-storage>=1.32.0,<3.0: google, cached-path
 huggingface-hub>=0.8.1,<0.9.0: hf, cached-path
 

@@ -1,6 +1,5 @@
 import logging
 import os
-import pandas as pd
 from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
 

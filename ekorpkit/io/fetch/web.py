@@ -1,17 +1,11 @@
 import gzip
 import shutil
 import os
-import requests
 import tarfile
 import zipfile
 from tqdm.auto import tqdm
 from urllib import request
 from ekorpkit import eKonf
-
-
-# GOOGLE_DRIVE_URL = "https://drive.google.com/uc"
-GOOGLE_DRIVE_URL = "https://drive.google.com/uc?export=download"
-CHUNK_SIZE = 512 * 1024  # 512KB
 
 
 def download_from_gcs(**cfg):
