@@ -1,10 +1,11 @@
 import os
 import logging
-import cached_path as _cpath
 import gdown
 import shutil
 from pathlib import Path
+from ekorpkit.io.fetch.cached_path import _cached_path as _cpath
 
+# import cached_path as _cpath
 
 log = logging.getLogger(__name__)
 

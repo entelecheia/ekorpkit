@@ -33,7 +33,6 @@ from .base import (
     _merge,
     _methods,
     _mkdir,
-    _mount_google_drive,
     _nvidia_smi,
     _osenv,
     _partial,
@@ -58,6 +57,8 @@ from .base import (
     DictKeyType,
     Environments,
 )
+from ekorpkit.io.google import _mount_google_drive
+
 
 logger = _getLogger(__name__)
 

@@ -10,7 +10,10 @@ chardet
 rehash
 requests
 scipy
-cached-path
+# cached-path
 pytablewriter>=0.64.0
 ftfy
-google-cloud-storage>=1.30
+requests>=2.0,<3.0
+rich>=12.1
+filelock>=3.4,<3.8
+dataclasses; python_version<"3.7"
