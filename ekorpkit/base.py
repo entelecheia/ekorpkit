@@ -12,21 +12,7 @@ from enum import Enum
 from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
-from typing import Any, List, IO, Dict, Union, Tuple, Optional
-from pydantic import (
-    BaseModel,
-    BaseSettings,
-    SecretStr,
-    Field,
-    PositiveInt,
-    conint,
-    constr,
-    schema,
-    validator,
-)
-from pydantic.dataclasses import dataclass
-from pydantic.env_settings import SettingsSourceCallable
-from typing_extensions import Annotated
+from typing import Any, List, IO, Dict, Union, Tuple
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
@@ -59,36 +45,6 @@ def _getLogger(
 logger = _getLogger()
 
 __hydra_version_base__ = "1.2"
-
-
-class Environments(BaseSettings):
-    EKORPKIT_CONFIG_DIR: Optional[str]
-    EKORPKIT_DATA_DIR: Optional[str]
-    EKORPKIT_PROJECT: Optional[str]
-    EKORPKIT_WORKSPACE_ROOT: Optional[str]
-    EKORPKIT_LOG_LEVEL: Optional[str]
-    FRED_API_KEY: Optional[str] = SecretStr
-    NASDAQ_API_KEY: Optional[str] = SecretStr
-    WANDB_API_KEY: Optional[str] = SecretStr
-    NUM_WORKERS: Optional[int]
-    KMP_DUPLICATE_LIB_OK: Optional[str]
-    CUDA_DEVICE_ORDER: Optional[str]
-    CUDA_VISIBLE_DEVICES: Optional[str]
-
-    class Config:
-        env_prefix = ""
-        case_sentive = False
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings: SettingsSourceCallable,
-            env_settings: SettingsSourceCallable,
-            file_secret_settings: SettingsSourceCallable,
-        ) -> Tuple[SettingsSourceCallable, ...]:
-            return env_settings, file_secret_settings
 
 
 def __ekorpkit_path__():

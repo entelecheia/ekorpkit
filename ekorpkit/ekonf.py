@@ -55,9 +55,9 @@ from .base import (
     _to_yaml,
     _update,
     DictKeyType,
-    Environments,
 )
 from ekorpkit.io.google import _mount_google_drive
+from ekorpkit.config import Environments
 
 
 logger = _getLogger(__name__)
