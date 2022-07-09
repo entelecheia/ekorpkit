@@ -3,8 +3,9 @@ defaults:
   - /force: download
   - /path: output
 
+_name_: fetcher
 name: ${oc.select:..name, _temp_fetched}
-output_dir: ${oc.select:..data_dir, ${dir.tmp}/${.name}}
+output_dir: ${oc.select:..data_dir, ${dir.tmp}/${._name_}}
 output_file: ${.name}.parquet
 limit: -1
 auto:

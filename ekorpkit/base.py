@@ -670,8 +670,13 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
 
 def _load_dotenv(verbose=False):
     original_cwd = getcwd()
-    dotenv_path = Path(original_cwd, ".env")
-    dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+    config_dir = os.environ.get("EKORPKIT_CONFIG_DIR")
+    dotenv_dir = config_dir or original_cwd
+    dotenv_path = Path(dotenv_dir, ".env")
+    if dotenv_path.is_file():
+        dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+    else:
+        logger.info(f"No .env file found in {dotenv_path}")
 
 
 def _osenv(key: str = None) -> Any:

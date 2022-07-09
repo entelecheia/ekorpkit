@@ -13,7 +13,13 @@ class LabelStudio(BaseFetcher):
         super().__init__(**args)
         self._api = self.args.api
         if not self._api.token:
-            raise ValueError("token is required")
+            raise ValueError(
+                "api.token is required, set envrionment variable LABELSTUDIO_TOKEN or config 'api.token' directly"
+            )
+        if not self._api.server:
+            raise ValueError(
+                "api.server is required, set envrionment variable LABELSTUDIO_SERVER or config 'api.server' directly"
+            )
         self._project_id = self.args.project_id
         if not self._project_id:
             raise ValueError("project_id is required")
@@ -27,7 +33,7 @@ class LabelStudio(BaseFetcher):
         _query = [f"{k}={v}" for k, v in self._query.items() if v]
         file_addr = self._api.server + self._api.path + "?" + "&".join(_query)
 
-        log.info(f"fetching {file_addr} to {self._path.output}")
+        log.info(f"fetching {file_addr} to {self._path.output.filepath}")
         file_res = requests.get(file_addr, headers=headers)
         with open(self._path.output.filepath, "wb") as f:
             f.write(file_res.content)

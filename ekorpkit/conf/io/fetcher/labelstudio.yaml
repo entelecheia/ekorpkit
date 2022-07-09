@@ -4,15 +4,17 @@ defaults:
 _target_: ekorpkit.io.fetch.labelstudio.LabelStudio
 name: labelstudio
 api:
-  header: 
+  header:
     Authorization: Token ${..token}
   token: ${oc.env:LABELSTUDIO_TOKEN,null}
-  server: https://34e1-14-49-229-3.ngrok.io
+  server: ${oc.env:LABELSTUDIO_SERVER,null}
   path: /api/projects/${..project_id}/export
 project_id:
-query:  
+query:
   exportType: JSON
   download_all_tasks:
   download_resources:
   ids:
 output_file: annotations.json
+force:
+  download: false
