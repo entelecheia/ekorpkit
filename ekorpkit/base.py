@@ -675,6 +675,7 @@ def _load_dotenv(verbose=False):
     dotenv_path = Path(dotenv_dir, ".env")
     if dotenv_path.is_file():
         dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+        logger.info(f"Loaded .env from {dotenv_path}")
     else:
         logger.info(f"No .env file found in {dotenv_path}")
 

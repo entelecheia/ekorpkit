@@ -15,6 +15,6 @@ query:
   download_all_tasks:
   download_resources:
   ids:
-output_file: annotations.json
+json_file: annotations.json
 force:
   download: false
