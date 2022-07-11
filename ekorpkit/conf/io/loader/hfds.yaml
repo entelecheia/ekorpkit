@@ -6,3 +6,4 @@ data_sources: ${oc.select:..data_sources, ''}
 num_workers: ${oc.select:task.num_workers,100}
 ignore_verifications: true
 download_mode:
+verbose: ${oc.select:..verbose, true}

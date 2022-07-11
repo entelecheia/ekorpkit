@@ -4,3 +4,4 @@ subset:
 data_dir: ${oc.select:..data_dir, ''}
 data_sources: ${oc.select:..data_sources, ''}
 num_workers: ${oc.select:task.num_workers,100}
+verbose: ${oc.select:..verbose, true}

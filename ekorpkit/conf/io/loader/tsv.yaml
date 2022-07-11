@@ -5,3 +5,4 @@ data_sources: ${oc.select:..data_sources, ''}
 data:
   dtype:
   sep: '\t'
+verbose: ${oc.select:..verbose, true}

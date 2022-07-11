@@ -10,12 +10,13 @@ decompressor:
 multiprocessing_at: load_data
 decode_before_parse: true
 filetype:
-limit: 
+limit:
 data:
-  field: 
+  field:
   item:
   item_separator: '\n\n'
   explode: false
 meta:
-  field: 
+  field:
   item:
+verbose: ${oc.select:..verbose, false}

@@ -2,3 +2,4 @@ _target_: ekorpkit.io.load.data.load_dataframe
 name: ${oc.select:..name,''}
 data_dir: ${oc.select:..data_dir, ''}
 data_sources: ${oc.select:..data_sources, ''}
+verbose: ${oc.select:..verbose, true}

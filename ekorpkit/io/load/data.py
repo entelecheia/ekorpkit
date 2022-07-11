@@ -26,7 +26,10 @@ def load_data(split_name=None, **loader_cfg):
     # data_items =  args['data']['item'].keys()
     multiprocessing_at = loader_cfg.get("multiprocessing_at", "load_data")
 
-    default_items = {eKonf.Keys.SPLIT: split_name}
+    if split_name:
+        default_items = {eKonf.Keys.SPLIT.value: split_name}
+    else:
+        default_items = {}
     documents = []
     num_workers = num_workers if num_workers else 1
     num_files = len(filepaths)
