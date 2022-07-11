@@ -436,9 +436,14 @@ class eKonf:
     def load_data(filename=None, base_dir=None, verbose=False, **kwargs):
         from ekorpkit.io.file import load_data
 
-        if filename is None:
-            raise ValueError("filename must be specified")
-        return load_data(filename, base_dir=base_dir, verbose=verbose, **kwargs)
+        if _Keys.TARGET in kwargs:
+            return eKonf.instantiate(
+                kwargs, filename=filename, base_dir=base_dir, verbose=verbose
+            )
+        else:
+            if filename is None:
+                raise ValueError("filename must be specified")
+            return load_data(filename, base_dir=base_dir, verbose=verbose, **kwargs)
 
     @staticmethod
     def get_filepaths(

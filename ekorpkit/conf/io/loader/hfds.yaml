@@ -2,7 +2,7 @@ _target_: ekorpkit.io.load.data.load_hfds
 name:
 subset:
 data_dir: ${oc.select:..data_dir, ''}
-data_souces: ${oc.select:..data_sources, ''}
+data_sources: ${oc.select:..data_sources, ''}
 num_workers: ${oc.select:task.num_workers,100}
 ignore_verifications: true
 download_mode:

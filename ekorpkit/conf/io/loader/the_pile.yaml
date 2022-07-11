@@ -1,7 +1,7 @@
 _target_: ekorpkit.io.fetch.loader.pile.load_pile_data
 name: ${oc.select:..name, the_pile}
 data_dir: ${oc.select:..data_dir, ''}
-data_souces:
+data_sources:
   train: 
     url: 'https://mystic.the-eye.eu/public/AI/pile/train/{}.jsonl.zst'
     splits: 30

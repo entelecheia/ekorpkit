@@ -19,7 +19,7 @@ def parse_plaintext(
 ):
     if split:
         docs = []
-        for i, line in enumerate(contents.split("\n")):
+        for i, line in enumerate(contents.splitlines()):
             line = line.strip()
             doc = {"lineno": i, "text": line}
             if i < 2:
@@ -32,7 +32,7 @@ def parse_plaintext(
     elif meta_line is not None:
         text = []
         meta = []
-        for i, line in enumerate(contents.split("\n")):
+        for i, line in enumerate(contents.splitlines()):
             line = line.strip()
             if i < meta_line:
                 meta.append(line)
@@ -41,7 +41,7 @@ def parse_plaintext(
         doc = {meta_key: "\n".join(meta), "text": "\n".join(text)}
         return [doc]
     else:
-        doc = {"text": contents.strip()}
+        doc = {"text": "\n".join(contents.splitlines())}
         return [doc]
 
 

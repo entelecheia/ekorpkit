@@ -13,9 +13,12 @@ from ekorpkit import eKonf
 log = logging.getLogger(__name__)
 
 
-def load_data(split_name, **loader_cfg):
+def load_data(split_name=None, **loader_cfg):
     data_dir = loader_cfg["data_dir"]
-    data_files = loader_cfg["data_souces"][split_name]
+    if split_name:
+        data_files = loader_cfg["data_sources"][split_name]
+    else:
+        data_files = loader_cfg["data_sources"]
     filepaths = get_filepaths(data_files, data_dir)
 
     num_workers = loader_cfg.get("num_workers", 1)
@@ -120,7 +123,7 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
 
 def load_dataframe(split_name, **loader_cfg):
     data_dir = loader_cfg["data_dir"]
-    data_files = loader_cfg["data_souces"][split_name]
+    data_files = loader_cfg["data_sources"][split_name]
     filepaths = get_filepaths(data_files, data_dir)
 
     documents = []
@@ -144,7 +147,7 @@ def load_hfds(split_name, **loader_cfg):
     from datasets import load_dataset
 
     dataset_name = loader_cfg["name"]
-    split = loader_cfg["data_souces"][split_name]
+    split = loader_cfg["data_sources"][split_name]
     subsets = loader_cfg["subset"]
     download_mode = loader_cfg.get("download_mode", "force_redownload")
     ignore_verifications = loader_cfg.get("ignore_verifications", True)
@@ -177,7 +180,7 @@ def load_hfds(split_name, **loader_cfg):
 
 def load_tsv_data(split_name, **loader_cfg):
     data_dir = loader_cfg["data_dir"]
-    data_files = loader_cfg["data_souces"][split_name]
+    data_files = loader_cfg["data_sources"][split_name]
     filepaths = get_filepaths(data_files, data_dir)
     data_args = loader_cfg["data"]
     sep = data_args.get("sep", "\t")

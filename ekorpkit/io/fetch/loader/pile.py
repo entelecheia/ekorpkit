@@ -82,7 +82,7 @@ class ThePile:
 
     def _parse_split_urls(self):
         self.splits = {}
-        for split, info in self.cfg.data_souces.items():
+        for split, info in self.cfg.data_sources.items():
             if info.get("splits", None):
                 urls = [
                     info["url"].format(str(i).zfill(info.zfill))
