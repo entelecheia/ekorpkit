@@ -58,22 +58,3 @@ class Dataset(BaseSet):
     @test_data.setter
     def test_data(self, data):
         self.splits[self.SPLITS.TEST.value] = data
-
-    def persist(self):
-        if not self._loaded:
-            log.info(f"Dataset {self.name} is not loaded")
-            return
-        if self.summary_info is None:
-            self.summarize()
-        for split, data in self._splits.items():
-            if data is None:
-                continue
-            data_file = self.data_files[split]
-            eKonf.save_data(
-                data,
-                data_file,
-                base_dir=self.data_dir,
-                verbose=self.verbose,
-            )
-        if self.summary_info is not None:
-            self.summary_info.save(info={"column_info": self.COLUMN.INFO})
