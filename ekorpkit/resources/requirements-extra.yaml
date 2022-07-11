@@ -2,7 +2,7 @@
 # Put your extra requirements here in the following format
 #
 # package[version_required]: tag1, tag2, ...
-# ex) pip install -e .\[modin\]
+# ex) pip install -e ."[modin]"
 
 fugashi: all, tokenize, fugashi
 mecab-python3: all, tokenize, mecab
@@ -31,13 +31,13 @@ html-to-json: all, parser, html
 fasttext-langdetect: parser, langdetect
 cssutils: all, parser, edgar
 
-simpletransformers: all, transformers, model
+simpletransformers>=0.63: all, transformers, model
 datasets: all, transformers, dataset, model
 # torch: transformers
 tensorflow: all, transformers, model
 # tf-nightly: transformers, model
 flaml: automl, model, all
-yellowbrick: automl, model, all
+yellowbrick: yellowbrick
 scipy: automl, model, all, transformers
 
 boto3>=1.0,<2.0: aws, cached-path
@@ -93,4 +93,4 @@ timm: disco
 einops: disco
 
 cleanlab: label
-snorkel: all, snorkel, label
+snorkel: snorkel, label
