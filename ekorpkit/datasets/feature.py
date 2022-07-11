@@ -78,15 +78,6 @@ class FeatureSet(Dataset):
     def y(self):
         return self.data[self.COLUMN.Y]
 
-    def build(self):
-        data = None
-        if self._pipeline_ and len(self._pipeline_) > 0:
-            data = apply_pipeline(data, self._pipeline_, self._pipeline_cfg)
-        if data is not None:
-            log.info(f"Dataset {self.name} built with {len(data)} rows")
-        else:
-            log.info(f"Dataset {self.name} is empty")
-
     def persist(self):
         if not self._loaded:
             log.info(f"Dataset {self.name} is not loaded")

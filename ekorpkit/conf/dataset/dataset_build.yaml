@@ -1,7 +1,8 @@
 defaults:
-  - feature
+  - dataset
   - /pipeline: _build_split
 
+data_file:
 auto:
   build: true
 info:
