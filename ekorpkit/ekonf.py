@@ -17,6 +17,7 @@ from .base import (
     _exists,
     _function,
     _getLogger,
+    _getsource,
     _init_env_,
     _instantiate,
     _is_colab,
@@ -54,6 +55,7 @@ from .base import (
     _to_numeric,
     _to_yaml,
     _update,
+    _viewsource,
     DictKeyType,
 )
 from ekorpkit.io.google import _mount_google_drive
@@ -574,3 +576,11 @@ class eKonf:
         return _mount_google_drive(
             workspace, project, mountpoint, force_remount, timeout_ms
         )
+
+    @staticmethod
+    def getsource(obj):
+        return _getsource(obj)
+
+    @staticmethod
+    def viewsource(obj):
+        return _viewsource(obj)

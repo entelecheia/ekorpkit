@@ -1,0 +1,20 @@
+defaults:
+  - /data: default
+  - /path: default
+
+_target_: ekorpkit.models.snorkel.base.BaseSnorkel
+_name_: snorkel
+name: ${._name_}
+data_columns: ${oc.select:..data_columns, null}
+data_dir: ${oc.select:..data_dir, ${dir.project}/data}
+data_file: ${oc.select:..data_file, null}
+output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
+output_file: ${oc.select:..output_file, ${.name}_preds.parquet}
+num_workers: ${oc.select:..num_workers,1}
+verbose: ${oc.select:..verbose, false}
+columns:
+  labels: labels
+  classes: classes
+  snorkel_classes: snorkel_classes
+  annotator: annotator
+ABSTAIN: -1

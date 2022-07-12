@@ -5,8 +5,10 @@ import random
 import hydra
 import dotenv
 import functools
-import ekorpkit.utils.batch.batcher as batcher
+import inspect
+import importlib
 import pandas as pd
+import ekorpkit.utils.batch.batcher as batcher
 from pandas import DataFrame
 from enum import Enum
 from tqdm.auto import tqdm
@@ -941,3 +943,26 @@ def _set_cuda(device=0):
     except:
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
         raise Exception("Cuda device not found")
+
+
+def _getsource(obj):
+    """Return the source code of the object."""
+    try:
+        if _is_config(obj):
+            if _Keys.TARGET in obj:
+                target_string = obj[_Keys.TARGET]
+                mod_name, object_name = target_string.rsplit(".", 1)
+                mod = importlib.import_module(mod_name)
+                obj = getattr(mod, object_name)
+        elif isinstance(obj, str):
+            mod_name, object_name = obj.rsplit(".", 1)
+            mod = importlib.import_module(mod_name)
+            obj = getattr(mod, object_name)
+        return inspect.getsource(obj)
+    except:
+        return ""
+
+
+def _viewsource(obj):
+    """Print the source code of the object."""
+    print(_getsource(obj))
