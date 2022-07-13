@@ -214,10 +214,13 @@ class BaseSnorkel:
             print(data.query(f"{_classes} != {_snorkel_classes}"))
         return data
 
-    def save_preds(self, data, **kwargs):
+    def save_preds(self, data, columns=None, **kwargs):
         if data is None:
             data = self._preds
         if data is None:
             raise ValueError("No predictions to save")
+        if isinstance(columns, list):
+            data = data[columns].drop_duplicates()
+
         args = eKonf.to_dict(eKonf.merge(self._path.output, kwargs))
         eKonf.save_data(data, **args)

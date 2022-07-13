@@ -1,4 +1,5 @@
 import logging
+import warnings
 import os
 import sys
 import random
@@ -21,9 +22,12 @@ from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
 
-def _setLogger(level=None, force=True, **kwargs):
+def _setLogger(level=None, force=True, filterwarnings_action="ignore", **kwargs):
     level = level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
     os.environ["EKORPKIT_LOG_LEVEL"] = level
+    if filterwarnings_action is not None:
+        warnings.filterwarnings(filterwarnings_action)
+
     if isinstance(level, str):
         level = getattr(logging, level.upper(), logging.INFO)
     if sys.version_info >= (3, 8):

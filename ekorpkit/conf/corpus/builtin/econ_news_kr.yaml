@@ -26,7 +26,7 @@ column_info:
 
 io:
   data_sources:
-    train: \d{8}_\d{8}\.zip
+    train: r:\d{8}_\d{8}\.zip
   loader:
     multiprocessing_at: _load_archive
     decode_before_parse: true

@@ -1468,9 +1468,8 @@ class DiscoDiffusion:
         if os.path.exists(output_path) and not force_remake:
             log.info(f"Skipping GIF creation, already exists: {output_path}")
         else:
-            frames = [
-                Image.open(image) for image in glob(f"{base_dir}/{filename_patterns}")
-            ]
+            files = sorted(glob(f"{base_dir}/{filename_patterns}"))
+            frames = [Image.open(image) for image in files]
             if len(frames) > 0:
                 frame_one = frames[0]
                 frame_one.save(

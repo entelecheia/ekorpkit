@@ -12,6 +12,10 @@ log = logging.getLogger(__name__)
 
 def is_valid_regex(expr):
     try:
+        if expr.startswith("r:"):
+            expr = expr[2:]
+        else:
+            return False
         re.compile(expr)
         return True
     except re.error:
