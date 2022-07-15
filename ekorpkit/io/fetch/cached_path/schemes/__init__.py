@@ -26,7 +26,8 @@ def add_scheme_client(client: Type[SchemeClient]) -> None:
         raise ValueError(f"Unexpected type for {client} scheme: {client.scheme}")
 
 
-for client in (HttpClient, S3Client, GsClient):
+# for client in (HttpClient, S3Client, GsClient):
+for client in (HttpClient, GsClient):
     add_scheme_client(client)  # type: ignore
 
 

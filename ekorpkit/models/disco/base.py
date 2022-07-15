@@ -132,7 +132,8 @@ class DiscoDiffusion:
                 for p in self.sample_imagepaths:
                     print(p)
 
-                self.collage(image_filepaths=self.sample_imagepaths)
+                if args.show_collage:
+                    self.collage(image_filepaths=self.sample_imagepaths)
 
     def _prepare_models(self):
         from guided_diffusion.script_util import create_model_and_diffusion
@@ -882,7 +883,7 @@ class DiscoDiffusion:
                     )
                     batchBar.n = i
                     batchBar.refresh()
-                print("")
+                # print("")
                 display.display(image_display)
                 gc.collect()
                 torch.cuda.empty_cache()

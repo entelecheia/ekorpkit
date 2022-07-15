@@ -10,7 +10,13 @@ from .scheme_client import SchemeClient
 
 
 class S3Client(SchemeClient):
-    from botocore.exceptions import EndpointConnectionError
+    try:
+        from botocore.exceptions import EndpointConnectionError
+    except ImportError:
+        raise ImportError(
+            "S3Client requires botocore to be installed. "
+            "Install it with `pip install botocore`."
+        )
 
     recoverable_errors = SchemeClient.recoverable_errors + (EndpointConnectionError,)
     scheme = "s3"
