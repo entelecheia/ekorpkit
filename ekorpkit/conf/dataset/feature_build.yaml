@@ -1,6 +1,6 @@
 defaults:
   - feature
-  - /pipeline: _build_feature
+  - /pipeline: _build_split
 
 auto:
   build: true

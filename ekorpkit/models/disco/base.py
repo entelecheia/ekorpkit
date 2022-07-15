@@ -20,6 +20,7 @@ from .utils import (
     parse_key_frames,
     get_inbetweens,
 )
+from ekorpkit.utils.func import elapsed_timer
 
 
 log = logging.getLogger(__name__)
@@ -55,6 +56,7 @@ class DiscoDiffusion:
         self.rotation_3d_z_series = None
         self.prompts_series = None
         self.image_prompts_series = None
+        self.sample_imagepaths = []
 
         self.is_notebook = eKonf.is_notebook()
         self.is_colab = eKonf.is_colab()
@@ -109,17 +111,29 @@ class DiscoDiffusion:
         self._diffuse = args
 
         self._prepare_models()
+        self.sample_imagepaths = []
+        with elapsed_timer(format_time=True) as elapsed:
 
-        gc.collect()
-        torch.cuda.empty_cache()
-        try:
-            self._run(args)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            log.info(f"Seed used: {args.seed}")
             gc.collect()
             torch.cuda.empty_cache()
+            try:
+                self._run(args)
+            except KeyboardInterrupt:
+                pass
+            finally:
+                log.info(f"Seed used: {args.seed}")
+                gc.collect()
+                torch.cuda.empty_cache()
+
+            log.info(" >> elapsed time to diffuse: {}".format(elapsed()))
+            if args.animation_mode == "None":
+                print(f"{args.n_samples} samples generated to {self._output.batch_dir}")
+                print("sample image paths:")
+                for p in self.sample_imagepaths:
+                    print(p)
+
+                if args.show_collage:
+                    self.collage(image_filepaths=self.sample_imagepaths)
 
     def _prepare_models(self):
         from guided_diffusion.script_util import create_model_and_diffusion
@@ -869,7 +883,7 @@ class DiscoDiffusion:
                     )
                     batchBar.n = i
                     batchBar.refresh()
-                print("")
+                # print("")
                 display.display(image_display)
                 gc.collect()
                 torch.cuda.empty_cache()
@@ -977,7 +991,9 @@ class DiscoDiffusion:
                                         self.save_settings(args)
                                     if args.animation_mode != "None":
                                         image.save(prev_frame_path)
-                                    image.save(os.path.join(batch_dir, filename))
+                                    _img_path = os.path.join(batch_dir, filename)
+                                    image.save(_img_path)
+                                    self.sample_imagepaths.append(_img_path)
                                     log.info(f"Saved {filename}")
                                     if args.animation_mode == "3D":
                                         # If turbo, save a blended image
@@ -1412,21 +1428,25 @@ class DiscoDiffusion:
 
     def collage(
         self,
+        image_filepaths=None,
         batch_name=None,
-        batch_num=0,
-        ncols=7,
+        batch_num=None,
+        ncols=2,
         num_images=None,
         filename_patterns=None,
         **kwargs,
     ):
         args = self.load_config(**kwargs)
         batch_name = batch_name or args.batch_name
-        batch_num = batch_num or args.batch_num
+        if batch_num is None:
+            batch_num = args.batch_num
         self._prepare_folders(batch_name)
 
         filename_patterns = filename_patterns or f"{batch_name}({batch_num})_*.png"
         num_images = num_images or args.n_samples
+
         eKonf.collage(
+            image_filepaths=image_filepaths,
             filename_patterns=filename_patterns,
             base_dir=self._output.batch_dir,
             num_images=num_images,
@@ -1436,7 +1456,7 @@ class DiscoDiffusion:
     def make_gif(
         self,
         batch_name=None,
-        batch_num=0,
+        batch_num=None,
         sample_num=0,
         show=False,
         force_remake=False,
@@ -1455,7 +1475,8 @@ class DiscoDiffusion:
 
         args = self.load_config(**kwargs)
         batch_name = batch_name or args.batch_name
-        batch_num = batch_num or args.batch_num
+        if batch_num is None:
+            batch_num = args.batch_num
         self._prepare_folders(batch_name)
         base_dir = self._output.partial_dir
 
@@ -1468,9 +1489,8 @@ class DiscoDiffusion:
         if os.path.exists(output_path) and not force_remake:
             log.info(f"Skipping GIF creation, already exists: {output_path}")
         else:
-            frames = [
-                Image.open(image) for image in glob(f"{base_dir}/{filename_patterns}")
-            ]
+            files = sorted(glob(f"{base_dir}/{filename_patterns}"))
+            frames = [Image.open(image) for image in files]
             if len(frames) > 0:
                 frame_one = frames[0]
                 frame_one.save(
@@ -1483,7 +1503,7 @@ class DiscoDiffusion:
                     optimize=optimize,
                     quality=quality,
                 )
-                log.info(f"Saved GIF to {output_path}")
+                print(f"Saved GIF to {output_path}")
             else:
                 log.warning(f"No frames found for {filename_patterns}")
 

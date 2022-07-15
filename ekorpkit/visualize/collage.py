@@ -1,8 +1,12 @@
+import logging
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from ekorpkit.io.file import get_filepaths
+
+
+log = logging.getLogger(__name__)
 
 
 def convert_image(img_file):
@@ -40,7 +44,8 @@ def collage(
     if image_filepaths is None:
         image_filepaths = get_filepaths(filename_patterns, base_dir=base_dir)
     if not image_filepaths:
-        raise ValueError("No files found")
+        log.warning("no images found")
+        return
 
     img_arr = []
     for filepath in image_filepaths:

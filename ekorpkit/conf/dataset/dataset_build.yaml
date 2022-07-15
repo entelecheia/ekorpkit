@@ -1,0 +1,15 @@
+defaults:
+  - dataset
+  - /pipeline: _build_split
+
+data_file:
+auto:
+  build: true
+info:
+  data_dir: ${iif:${..use_name_as_subdir},${..data_dir}/${.name},${..data_dir}}
+pipeline:
+  name: ${oc.select:..name, null}
+  output_dir: ${iif:${..use_name_as_subdir},${..data_dir}/${.name},${..data_dir}}
+  split_sampling:
+    dev_size:
+    test_size: 0.2

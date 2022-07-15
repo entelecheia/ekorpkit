@@ -2,7 +2,7 @@ import logging
 import os
 import pandas as pd
 from ekorpkit import eKonf
-from ekorpkit.io.fetch.loader.base import BaseFetcher
+from ekorpkit.io.fetch.base import BaseFetcher
 
 
 log = logging.getLogger(__name__)

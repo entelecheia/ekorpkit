@@ -4,18 +4,19 @@ defaults:
 _target_: ekorpkit.io.load.data.load_data
 name: ${oc.select:..name,''}
 data_dir: ${oc.select:..data_dir, ''}
-data_souces: ${oc.select:..data_sources, ''}
+data_sources: ${oc.select:..data_sources, ''}
 num_workers: ${oc.select:..num_workers,1}
 decompressor:
 multiprocessing_at: load_data
 decode_before_parse: true
 filetype:
-limit: 
+limit:
 data:
-  field: 
+  field:
   item:
   item_separator: '\n\n'
   explode: false
 meta:
-  field: 
+  field:
   item:
+verbose: ${oc.select:..verbose, false}

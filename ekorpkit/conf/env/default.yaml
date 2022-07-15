@@ -2,12 +2,13 @@ defaults:
   - run
 
 os:
-  MODIN_ENGINE: ray
-  MODIN_CPUS: ${oc.select:..distributed_framework.num_workers,50}
+  # MODIN_ENGINE: ray
+  # MODIN_CPUS: ${oc.select:..distributed_framework.num_workers,50}
   # MODIN_OUT_OF_CORE: 'true'
   # MALLOC_TRIM_THRESHOLD_: 65536
   # WANDB_API_KEY: ${oc.env:WANDB_API_KEY,null}
   CACHED_PATH_CACHE_ROOT: ${dir.cache}/cached_path
+  KMP_DUPLICATE_LIB_OK: "TRUE"
 distributed_framework:
   backend: joblib
   initialize: true

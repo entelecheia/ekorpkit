@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import pandas as pd
 from glob import glob
 from pathlib import Path, PosixPath, WindowsPath
@@ -7,6 +8,41 @@ from ekorpkit.utils.func import elapsed_timer
 
 
 log = logging.getLogger(__name__)
+
+
+def is_valid_regex(expr):
+    try:
+        if expr.startswith("r:"):
+            expr = expr[2:]
+        else:
+            return False
+        re.compile(expr)
+        return True
+    except re.error:
+        return False
+
+
+def glob_re(pattern, base_dir, recursive=False):
+    if is_valid_regex(pattern):
+        pattern = re.compile(pattern)
+        files = []
+        if recursive:
+            for (dirpath, dirnames, filenames) in os.walk(base_dir):
+                files += [
+                    os.path.join(dirpath, file)
+                    for file in filenames
+                    if pattern.search(file)
+                ]
+        else:
+            files = [
+                os.path.join(base_dir, file)
+                for file in os.listdir(base_dir)
+                if pattern.search(file)
+            ]
+    else:
+        file = os.path.join(base_dir, pattern) if base_dir else pattern
+        files = glob(file, recursive=recursive)
+    return files
 
 
 def get_filepaths(
@@ -18,12 +54,12 @@ def get_filepaths(
         filename_patterns = [filename_patterns]
     filepaths = []
     for file in filename_patterns:
-        file = os.path.join(base_dir, file) if base_dir else file
-        if os.path.exists(file):
-            if Path(file).is_file():
-                filepaths.append(file)
+        filepath = os.path.join(base_dir, file) if base_dir else file
+        if os.path.exists(filepath):
+            if Path(filepath).is_file():
+                filepaths.append(filepath)
         else:
-            filepaths += glob(file, recursive=recursive)
+            filepaths += glob_re(file, base_dir, recursive=recursive)
     filepaths = [fp for fp in filepaths if Path(fp).is_file()]
     if verbose:
         log.info(f"Processing [{len(filepaths)}] files from {filename_patterns}")

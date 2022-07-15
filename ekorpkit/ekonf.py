@@ -17,6 +17,7 @@ from .base import (
     _exists,
     _function,
     _getLogger,
+    _getsource,
     _init_env_,
     _instantiate,
     _is_colab,
@@ -33,7 +34,6 @@ from .base import (
     _merge,
     _methods,
     _mkdir,
-    _mount_google_drive,
     _nvidia_smi,
     _osenv,
     _partial,
@@ -55,9 +55,12 @@ from .base import (
     _to_numeric,
     _to_yaml,
     _update,
+    _viewsource,
     DictKeyType,
-    Environments,
 )
+from ekorpkit.io.google import _mount_google_drive
+from ekorpkit.config import Environments
+
 
 logger = _getLogger(__name__)
 
@@ -435,9 +438,14 @@ class eKonf:
     def load_data(filename=None, base_dir=None, verbose=False, **kwargs):
         from ekorpkit.io.file import load_data
 
-        if filename is None:
-            raise ValueError("filename must be specified")
-        return load_data(filename, base_dir=base_dir, verbose=verbose, **kwargs)
+        if _Keys.TARGET in kwargs:
+            return eKonf.instantiate(
+                kwargs, filename=filename, base_dir=base_dir, verbose=verbose
+            )
+        else:
+            if filename is None:
+                raise ValueError("filename must be specified")
+            return load_data(filename, base_dir=base_dir, verbose=verbose, **kwargs)
 
     @staticmethod
     def get_filepaths(
@@ -568,3 +576,11 @@ class eKonf:
         return _mount_google_drive(
             workspace, project, mountpoint, force_remount, timeout_ms
         )
+
+    @staticmethod
+    def getsource(obj):
+        return _getsource(obj)
+
+    @staticmethod
+    def viewsource(obj):
+        return _viewsource(obj)

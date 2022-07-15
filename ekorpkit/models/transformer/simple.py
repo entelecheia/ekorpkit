@@ -1,6 +1,9 @@
+import numpy as np
+import pandas as pd
 import logging
 import sklearn
 from scipy.special import softmax
+from sklearn.model_selection import train_test_split
 from abc import ABCMeta, abstractmethod
 from ekorpkit import eKonf
 
@@ -119,6 +122,32 @@ class SimpleTrainer:
         preds = self._predict(data_to_predict)
         data = self.append_predictions(data, preds)
         return data
+
+    def cross_val_predict(self, cv=5, dev_size=0.2, random_state=1235, shuffle=True):
+        if not self.splits:
+            self.load_datasets()
+        if shuffle:
+            data = self.dataset.data.sample(frac=1).reset_index(drop=True)
+        else:
+            data = self.dataset.data.reset_index(drop=True)
+
+        splits = np.array_split(data, cv)
+        pred_dfs = []
+        for i, split in enumerate(splits):
+            _data = pd.concat(splits[:i] + splits[i + 1 :])
+            _train_data, _dev_data = train_test_split(
+                _data, test_size=dev_size, random_state=random_state, shuffle=shuffle
+            )
+            log.info(f"Train data: {_train_data.shape}, Test data: {_dev_data.shape}")
+            self.train_data = _train_data
+            self.dev_data = _dev_data
+            self.test_data = split
+
+            self.train()
+            log.info(f"Predicting split {i}")
+            pred_df = self.predict(split)
+            pred_dfs.append(pred_df)
+        return pd.concat(pred_dfs)
 
     def eval(self):
         if not self.splits:

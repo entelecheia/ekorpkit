@@ -1,0 +1,20 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.fetch.labelstudio.LabelStudio
+name: labelstudio
+api:
+  header:
+    Authorization: Token ${..token}
+  token: ${oc.env:LABELSTUDIO_TOKEN,null}
+  server: ${oc.env:LABELSTUDIO_SERVER,null}
+  path: /api/projects/${..project_id}/export
+project_id:
+query:
+  exportType: JSON
+  download_all_tasks:
+  download_resources:
+  ids:
+json_file: annotations.json
+force:
+  download: false

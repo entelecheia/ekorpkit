@@ -1,0 +1,71 @@
+defaults:
+  - _build
+  - /preprocessor/normalizer: formal_ko
+  - /preprocessor/segmenter: kss
+  - override /io/loader/parser: plaintext
+
+name: econ_news_kr
+fullname: Korean Economic News Dataset
+description: Korean Economic News Dataset
+license:
+homepage: https://www.bigkinds.or.kr
+version: 1.0.0
+lang: ko
+category: formal
+domain: econ
+column_info:
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    date: str
+    code: str
+    category: str
+    filename: str
+
+io:
+  data_sources:
+    train: r:\d{8}_\d{8}\.zip
+  loader:
+    multiprocessing_at: _load_archive
+    decode_before_parse: true
+    filetype:
+    data:
+      field:
+      item:
+        filename: filename
+        text: text
+        category: category
+    parser:
+      split: false
+      meta_line: 
+      meta_key: category
+
+pipeline:
+  _transform_:
+    - split_column
+    - eval_columns
+    - reset_index
+  _preprocess_:
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 10
+
+  split_column:
+    source: filename
+    target:
+      - code
+      - date
+      - ext
+    split:
+      pat: "."
+      expand: true
+  eval_columns:
+    eval_at: python
+    expressions:
+      date: "df.date.str[:4] + '-' + df.date.str[4:6] + '-' + df.date.str[6:8] + ' ' + df.date.str[8:10] + ':' + df.date.str[10:12] + ':' + df.date.str[12:14]"

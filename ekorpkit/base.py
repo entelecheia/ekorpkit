@@ -1,41 +1,33 @@
 import logging
+import warnings
 import os
 import sys
 import random
 import hydra
 import dotenv
 import functools
-import ekorpkit.utils.batch.batcher as batcher
+import inspect
+import importlib
 import pandas as pd
+import ekorpkit.utils.batch.batcher as batcher
 from pandas import DataFrame
 from enum import Enum
 from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
-from typing import Any, List, IO, Dict, Union, Tuple, Optional
-from pydantic import (
-    BaseModel,
-    BaseSettings,
-    SecretStr,
-    Field,
-    PositiveInt,
-    conint,
-    constr,
-    schema,
-    validator,
-)
-from pydantic.dataclasses import dataclass
-from pydantic.env_settings import SettingsSourceCallable
-from typing_extensions import Annotated
+from typing import Any, List, IO, Dict, Union, Tuple
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
 
-def _setLogger(level=None, force=True, **kwargs):
+def _setLogger(level=None, force=True, filterwarnings_action="ignore", **kwargs):
     level = level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
     os.environ["EKORPKIT_LOG_LEVEL"] = level
+    if filterwarnings_action is not None:
+        warnings.filterwarnings(filterwarnings_action)
+
     if isinstance(level, str):
         level = getattr(logging, level.upper(), logging.INFO)
     if sys.version_info >= (3, 8):
@@ -59,36 +51,6 @@ def _getLogger(
 logger = _getLogger()
 
 __hydra_version_base__ = "1.2"
-
-
-class Environments(BaseSettings):
-    EKORPKIT_CONFIG_DIR: Optional[str]
-    EKORPKIT_DATA_DIR: Optional[str]
-    EKORPKIT_PROJECT: Optional[str]
-    EKORPKIT_WORKSPACE_ROOT: Optional[str]
-    EKORPKIT_LOG_LEVEL: Optional[str]
-    FRED_API_KEY: Optional[str] = SecretStr
-    NASDAQ_API_KEY: Optional[str] = SecretStr
-    WANDB_API_KEY: Optional[str] = SecretStr
-    NUM_WORKERS: Optional[int]
-    KMP_DUPLICATE_LIB_OK: Optional[str]
-    CUDA_DEVICE_ORDER: Optional[str]
-    CUDA_VISIBLE_DEVICES: Optional[str]
-
-    class Config:
-        env_prefix = ""
-        case_sentive = False
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings: SettingsSourceCallable,
-            env_settings: SettingsSourceCallable,
-            file_secret_settings: SettingsSourceCallable,
-        ) -> Tuple[SettingsSourceCallable, ...]:
-            return env_settings, file_secret_settings
 
 
 def __ekorpkit_path__():
@@ -714,8 +676,14 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
 
 def _load_dotenv(verbose=False):
     original_cwd = getcwd()
-    dotenv_path = Path(original_cwd, ".env")
-    dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+    config_dir = os.environ.get("EKORPKIT_CONFIG_DIR")
+    dotenv_dir = config_dir or original_cwd
+    dotenv_path = Path(dotenv_dir, ".env")
+    if dotenv_path.is_file():
+        dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+        logger.info(f"Loaded .env from {dotenv_path}")
+    else:
+        logger.info(f"No .env file found in {dotenv_path}")
 
 
 def _osenv(key: str = None) -> Any:
@@ -745,8 +713,7 @@ def _init_env_(cfg=None, verbose=False):
     backend = env.distributed_framework.backend
     for env_name, env_value in env.get("os", {}).items():
         if env_value:
-            if verbose:
-                logger.info(f"setting environment variable {env_name} to {env_value}")
+            logger.info(f"setting environment variable {env_name} to {env_value}")
             os.environ[env_name] = str(env_value)
 
     if env.distributed_framework.initialize:
@@ -935,7 +902,7 @@ def _is_notebook():
         ip = sys.modules["ipykernel"]
         ip_version = ip.version_info
         ip_client = ip.write_connection_file.__module__.split(".")[0]
-        logger.info(f"IPython version: {ip_version}, client: {ip_client}")
+        # logger.info(f"IPython version: {ip_version}, client: {ip_client}")
     else:
         logger.info("IPython not detected.")
     return is_notebook
@@ -981,25 +948,24 @@ def _set_cuda(device=0):
         raise Exception("Cuda device not found")
 
 
-def _mount_google_drive(
-    workspace=None,
-    project=None,
-    mountpoint="/content/drive",
-    force_remount=False,
-    timeout_ms=120000,
-):
+def _getsource(obj):
+    """Return the source code of the object."""
     try:
-        from google.colab import drive
+        if _is_config(obj):
+            if _Keys.TARGET in obj:
+                target_string = obj[_Keys.TARGET]
+                mod_name, object_name = target_string.rsplit(".", 1)
+                mod = importlib.import_module(mod_name)
+                obj = getattr(mod, object_name)
+        elif isinstance(obj, str):
+            mod_name, object_name = obj.rsplit(".", 1)
+            mod = importlib.import_module(mod_name)
+            obj = getattr(mod, object_name)
+        return inspect.getsource(obj)
+    except:
+        return ""
 
-        drive.mount(mountpoint, force_remount=force_remount, timeout_ms=timeout_ms)
 
-        if isinstance(workspace, str):
-            if not workspace.startswith(os.path.sep) and not workspace.startswith(".."):
-                workspace = os.path.join(mountpoint, workspace)
-            _env_set("EKORPKIT_WORKSPACE_ROOT", workspace)
-            logger.info(f"Setting EKORPKIT_WORKSPACE_ROOT to {workspace}")
-        if isinstance(project, str):
-            _env_set("EKORPKIT_PROJECT", project)
-            logger.info(f"Setting EKORPKIT_PROJECT to {project}")
-    except ImportError:
-        logger.warning("Google Colab not detected.")
+def _viewsource(obj):
+    """Print the source code of the object."""
+    print(_getsource(obj))

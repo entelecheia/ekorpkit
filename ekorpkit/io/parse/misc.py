@@ -15,33 +15,41 @@ def html_to_json(contents):
 
 
 def parse_plaintext(
-    contents, split=False, meta_line=None, meta_key="meta", progress_per=1000, **kwargs
+    contents,
+    split=False,
+    meta_line=None,
+    meta_key="meta",
+    data_key="text",
+    lineno_key="lineno",
+    progress_per=1000,
+    verbose=False,
+    **kwargs,
 ):
     if split:
         docs = []
-        for i, line in enumerate(contents.split("\n")):
+        for i, line in enumerate(contents.splitlines()):
             line = line.strip()
-            doc = {"lineno": i, "text": line}
-            if i < 2:
+            doc = {lineno_key: i, data_key: line}
+            if i < 2 and verbose:
                 log.info(f"processing line {i}")
                 log.info(doc)
-            elif progress_per and i % progress_per == 0:
+            elif progress_per and i > 0 and i % progress_per == 0:
                 log.info(f"processing line {i}")
             docs.append(doc)
         return docs
     elif meta_line is not None:
         text = []
         meta = []
-        for i, line in enumerate(contents.split("\n")):
+        for i, line in enumerate(contents.splitlines()):
             line = line.strip()
             if i < meta_line:
                 meta.append(line)
             else:
                 text.append(line)
-        doc = {meta_key: "\n".join(meta), "text": "\n".join(text)}
+        doc = {meta_key: "\n".join(meta), data_key: "\n".join(text)}
         return [doc]
     else:
-        doc = {"text": contents.strip()}
+        doc = {data_key: "\n".join(contents.splitlines())}
         return [doc]
 
 

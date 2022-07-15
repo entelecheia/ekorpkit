@@ -3,18 +3,19 @@ defaults:
   - /force: download
   - /path: output
 
+_name_: fetcher
 name: ${oc.select:..name, _temp_fetched}
-output_dir: ${oc.select:..data_dir, ${dir.tmp}/${.name}}
+output_dir: ${oc.select:..data_dir, ${dir.tmp}/${._name_}/${.name}}
 output_file: ${.name}.parquet
 limit: -1
 auto:
-  load: true
-force: 
-  download: true
+  load: ${oc.select:..autoload, true}
+force:
+  download: ${oc.select:..force_download, false}
 num_workers: ${oc.select:task.num_workers, 1}
 verbose: ${oc.select:..verbose, false}
 
-# obsolete:
 autoload: true
 force_download: ${oc.select:..force.download, false}
+# obsolete:
 compress: false
