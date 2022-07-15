@@ -1,11 +1,11 @@
 from typing import Set, Type
 
-from .gs import GsClient
-from .hf import hf_get_from_cache
 from .http import HttpClient
 from .scheme_client import SchemeClient
 
 # from .s3 import S3Client
+# from .gs import GsClient
+# from .hf import hf_get_from_cache
 
 _SCHEME_TO_CLIENT = {}
 
@@ -28,7 +28,7 @@ def add_scheme_client(client: Type[SchemeClient]) -> None:
 
 
 # for client in (HttpClient, S3Client, GsClient):
-for client in (HttpClient, GsClient):
+for client in HttpClient:
     add_scheme_client(client)  # type: ignore
 
 
