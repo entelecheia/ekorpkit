@@ -2,10 +2,10 @@ from typing import Set, Type
 
 from .http import HttpClient
 from .scheme_client import SchemeClient
+from .hf import hf_get_from_cache
 
 # from .s3 import S3Client
 # from .gs import GsClient
-# from .hf import hf_get_from_cache
 
 _SCHEME_TO_CLIENT = {}
 
