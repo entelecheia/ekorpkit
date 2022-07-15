@@ -3,8 +3,9 @@ from typing import Set, Type
 from .gs import GsClient
 from .hf import hf_get_from_cache
 from .http import HttpClient
-from .s3 import S3Client
 from .scheme_client import SchemeClient
+
+# from .s3 import S3Client
 
 _SCHEME_TO_CLIENT = {}
 

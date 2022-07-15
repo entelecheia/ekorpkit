@@ -713,8 +713,7 @@ def _init_env_(cfg=None, verbose=False):
     backend = env.distributed_framework.backend
     for env_name, env_value in env.get("os", {}).items():
         if env_value:
-            if verbose:
-                logger.info(f"setting environment variable {env_name} to {env_value}")
+            logger.info(f"setting environment variable {env_name} to {env_value}")
             os.environ[env_name] = str(env_value)
 
     if env.distributed_framework.initialize:
@@ -903,7 +902,7 @@ def _is_notebook():
         ip = sys.modules["ipykernel"]
         ip_version = ip.version_info
         ip_client = ip.write_connection_file.__module__.split(".")[0]
-        logger.info(f"IPython version: {ip_version}, client: {ip_client}")
+        # logger.info(f"IPython version: {ip_version}, client: {ip_client}")
     else:
         logger.info("IPython not detected.")
     return is_notebook
