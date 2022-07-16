@@ -2,15 +2,37 @@ import logging
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
+from .base import _configure_font
+from PIL import Image, ImageDraw, ImageFont
 from ekorpkit.io.file import get_filepaths
 
 
 log = logging.getLogger(__name__)
 
 
-def convert_image(img_file):
-    img = Image.open(img_file).convert("RGB")
+def convert_image(
+    img_file,
+    show_filename=False,
+    filename_offset=(5, 5),
+    fontname=None,
+    fontsize=12,
+    fontcolor=None,
+):
+    img = Image.open(img_file)
+    if show_filename:
+        fontname, fontpath = _configure_font(
+            set_font_for_matplot=False, fontname=fontname
+        )
+        if fontpath:
+            font = ImageFont.truetype(fontpath, fontsize)
+        else:
+            font = None
+        draw = ImageDraw.Draw(img)
+        draw.text(
+            filename_offset, os.path.basename(img_file), font=font, fill=fontcolor
+        )
+
+    img = img.convert("RGB")
     img = np.asarray(img)
     return img
 
@@ -38,18 +60,29 @@ def collage(
     num_images=None,
     figsize=(30, 20),
     dpi=300,
+    title=None,
+    title_fontsize=12,
+    show_filename=False,
+    filename_offset=(5, 5),
+    fontname=None,
+    fontsize=12,
+    fontcolor="#000",
     **kwargs,
 ):
     verbose = kwargs.get("verbose", False)
     if image_filepaths is None:
-        image_filepaths = get_filepaths(filename_patterns, base_dir=base_dir)
+        image_filepaths = sorted(get_filepaths(filename_patterns, base_dir=base_dir))
     if not image_filepaths:
         log.warning("no images found")
         return
 
     img_arr = []
     for filepath in image_filepaths:
-        img_arr.append(convert_image(filepath))
+        img_arr.append(
+            convert_image(
+                filepath, show_filename, filename_offset, fontname, fontsize, fontcolor
+            )
+        )
     if num_images is not None:
         num_images = min(num_images, len(img_arr))
     else:
@@ -66,6 +99,8 @@ def collage(
     plt.imshow(result)
     plt.grid(False)
     plt.axis("off")
+    if title is not None:
+        plt.title(title, fontdict={"fontsize": title_fontsize})
     plt.show()
     if output_filepath is not None:
         if base_dir is not None:

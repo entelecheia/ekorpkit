@@ -527,6 +527,13 @@ class eKonf:
         num_images=None,
         figsize=(30, 20),
         dpi=300,
+        title=None,
+        title_fontsize=12,
+        show_filename=False,
+        filename_offset=(5, 5),
+        fontname=None,
+        fontsize=12,
+        fontcolor=None,
     ):
         from ekorpkit.visualize.collage import collage
 
@@ -539,6 +546,13 @@ class eKonf:
             num_images=num_images,
             figsize=figsize,
             dpi=dpi,
+            title=title,
+            title_fontsize=title_fontsize,
+            show_filename=show_filename,
+            filename_offset=filename_offset,
+            fontname=fontname,
+            fontsize=fontsize,
+            fontcolor=fontcolor,
         )
 
     @staticmethod

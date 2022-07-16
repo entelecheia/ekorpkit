@@ -18,3 +18,4 @@ rich>=12.1
 filelock>=3.4,<3.8
 dataclasses; python_version<"3.7"
 huggingface-hub>=0.8.1
+fclist-cffi

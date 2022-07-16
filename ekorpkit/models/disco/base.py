@@ -128,6 +128,7 @@ class DiscoDiffusion:
             log.info(" >> elapsed time to diffuse: {}".format(elapsed()))
             if args.animation_mode == "None":
                 print(f"{args.n_samples} samples generated to {self._output.batch_dir}")
+                print(f"text prompts: {text_prompts}")
                 print("sample image paths:")
                 for p in self.sample_imagepaths:
                     print(p)
@@ -1045,11 +1046,24 @@ class DiscoDiffusion:
 
                 plt.plot(np.array(loss_values), "r")
 
-    def load_config(self, **args):
+    def load_config(self, batch_name=None, batch_num=None, **args):
         """Load the settings"""
+        if batch_name is None:
+            batch_name = args.batch_name
+        self._prepare_folders(batch_name)
+        _diffuse = self._diffuse
+        if batch_num is not None:
+            _path = os.path.join(
+                self._output.batch_dir, f"{batch_name}({batch_num})_settings.yaml"
+            )
+            if os.path.exists(_path):
+                log.info(f"Loading config from {_path}")
+                batch_args = eKonf.load(_path)
+                log.info(f"Merging config with diffuse defaults")
+                _diffuse = eKonf.merge(_diffuse, batch_args)
+
         log.info(f"Merging config with args: {args}")
-        args = eKonf.merge(self._diffuse, args)
-        self._prepare_folders(args.batch_name)
+        args = eKonf.merge(_diffuse, args)
 
         # Get corrected sizes
         args.side_x = (args.width_height[0] // 64) * 64
@@ -1426,6 +1440,10 @@ class DiscoDiffusion:
 
         return args
 
+    def show_config(self, batch_name=None, batch_num=None):
+        args = self.load_config(batch_name, batch_num)
+        eKonf.print(args)
+
     def collage(
         self,
         image_filepaths=None,
@@ -1434,16 +1452,26 @@ class DiscoDiffusion:
         ncols=2,
         num_images=None,
         filename_patterns=None,
+        show_prompt=True,
+        prompt_fontsize=18,
+        show_filename=False,
+        filename_offset=(5, 5),
+        fontname=None,
+        fontsize=12,
+        fontcolor=None,
         **kwargs,
     ):
-        args = self.load_config(**kwargs)
+        args = self.load_config(batch_name, batch_num, **kwargs)
         batch_name = batch_name or args.batch_name
         if batch_num is None:
             batch_num = args.batch_num
-        self._prepare_folders(batch_name)
 
         filename_patterns = filename_patterns or f"{batch_name}({batch_num})_*.png"
         num_images = num_images or args.n_samples
+        prompt = None
+        if show_prompt:
+            if 0 in args.text_prompts:
+                prompt = args.text_prompts[0][0]
 
         eKonf.collage(
             image_filepaths=image_filepaths,
@@ -1451,6 +1479,13 @@ class DiscoDiffusion:
             base_dir=self._output.batch_dir,
             num_images=num_images,
             ncols=ncols,
+            title=prompt,
+            title_fontsize=prompt_fontsize,
+            show_filename=show_filename,
+            filename_offset=filename_offset,
+            fontname=fontname,
+            fontsize=fontsize,
+            fontcolor=fontcolor,
         )
 
     def make_gif(
@@ -1473,11 +1508,11 @@ class DiscoDiffusion:
         from IPython.display import Image as Img
         from IPython.display import display
 
-        args = self.load_config(**kwargs)
+        args = self.load_config(batch_name, batch_num, **kwargs)
         batch_name = batch_name or args.batch_name
         if batch_num is None:
             batch_num = args.batch_num
-        self._prepare_folders(batch_name)
+        # self._prepare_folders(batch_name)
         base_dir = self._output.partial_dir
 
         filename_patterns = (
