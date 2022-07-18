@@ -1,7 +1,7 @@
 defaults:
   - /module: disco
   - /path: disco
-  - diffuse: default
+  - config: default
   - model: default
   - diffusion_model: 512x512_diffusion_uncond_finetune_008100
   - midas: default
@@ -24,7 +24,7 @@ text_prompts:
 image_prompts:
   # 0:['ImagePromptsWorkButArentVeryGood.png:2',],
 
-diffuse:
+config:
   text_prompts: ${..text_prompts}
   image_prompts: ${..image_prompts}
   intermediate_saves: ${.steps}
@@ -38,7 +38,8 @@ diffuse:
   seed:
 
 output:
-  batch_dir: ${..path.output_dir}/${..diffuse.batch_name}
+  root: ${..path.output_dir}/${..name}
+  batch_dir: ${.root}/${..diffuse.batch_name}
   retain_dir: ${.batch_dir}/retained
   partial_dir: ${.batch_dir}/partials
   video_frames_dir: ${.batch_dir}/video_frames

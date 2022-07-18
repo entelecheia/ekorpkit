@@ -94,6 +94,7 @@ statsmodels: all, fomc, stats
 lpips: disco
 timm: disco
 einops: disco
+jax: dalle-mini
 
 cleanlab: label
 snorkel: snorkel, label

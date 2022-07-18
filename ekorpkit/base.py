@@ -932,7 +932,7 @@ def _set_cuda(device=0):
 
         _names = []
         if isinstance(device, str):
-            device = device.replce("cuda:", "")
+            device = device.replace("cuda:", "")
             ids = device.split(",")
         else:
             ids = [str(device)]

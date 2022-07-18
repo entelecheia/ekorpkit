@@ -21,6 +21,7 @@ from .utils import (
     get_inbetweens,
 )
 from ekorpkit.utils.func import elapsed_timer
+from ..dalle.base import BaseTTIModel
 
 
 log = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ class DiscoDiffusion:
         self._module = self.args.module
         self._midas = self.args.midas
         self._model = self.args.model
-        self._diffuse = self.args.diffuse
+        self._config = self.args.config
 
         self.clip_models = []
         self.model = None
@@ -73,10 +74,11 @@ class DiscoDiffusion:
         self.download_models()
         log.info("> loading modules...")
         self.load_modules()
-        log.info("> loading diffusion models...")
-        self.load_diffusion_models()
-        log.info("> loading clip models...")
-        self.load_clip_models()
+        log.info("> loading models...")
+        self.load_models()
+
+    def imagine(self, text_prompts=None, image_prompts=None, **args):
+        self.diffuse(text_prompts, image_prompts, **args)
 
     def diffuse(self, text_prompts=None, image_prompts=None, **args):
         """Diffuse the model"""
@@ -108,7 +110,7 @@ class DiscoDiffusion:
         )
         args.text_prompts = text_prompts
         args.image_prompts = image_prompts
-        self._diffuse = args
+        self._config = args
 
         self._prepare_models()
         self.sample_imagepaths = []
@@ -217,6 +219,12 @@ class DiscoDiffusion:
                         del raft_model
                         gc.collect()
 
+    def load_models(self):
+        log.info("> loading diffusion models...")
+        self.load_diffusion_models()
+        log.info("> loading clip models...")
+        self.load_clip_models()
+
     def load_diffusion_models(self):
         from guided_diffusion.script_util import model_and_diffusion_defaults
         from .secondary import SecondaryDiffusionImageNet2
@@ -304,7 +312,7 @@ class DiscoDiffusion:
         import py3d_tools as p3dT
         from . import disco_xform_utils as dxf
 
-        args = self._diffuse
+        args = self._config
         if args.key_frames:
             translation_x = self.translation_x_series[frame_num]
             translation_y = self.translation_y_series[frame_num]
@@ -1048,10 +1056,12 @@ class DiscoDiffusion:
 
     def load_config(self, batch_name=None, batch_num=None, **args):
         """Load the settings"""
+        _config = self._config
         if batch_name is None:
-            batch_name = args.batch_name
+            batch_name = _config.batch_name
+        else:
+            _config.batch_name = batch_name
         self._prepare_folders(batch_name)
-        _diffuse = self._diffuse
         if batch_num is not None:
             _path = os.path.join(
                 self._output.batch_dir, f"{batch_name}({batch_num})_settings.yaml"
@@ -1060,10 +1070,11 @@ class DiscoDiffusion:
                 log.info(f"Loading config from {_path}")
                 batch_args = eKonf.load(_path)
                 log.info(f"Merging config with diffuse defaults")
-                _diffuse = eKonf.merge(_diffuse, batch_args)
+                _config = eKonf.merge(_config, batch_args)
+                return _config
 
         log.info(f"Merging config with args: {args}")
-        args = eKonf.merge(_diffuse, args)
+        args = eKonf.merge(_config, args)
 
         # Get corrected sizes
         args.side_x = (args.width_height[0] // 64) * 64
@@ -1349,29 +1360,24 @@ class DiscoDiffusion:
         if args.steps <= args.calc_frames_skip_steps:
             raise Exception("ERROR: You can't skip more steps than your total steps")
 
+        batch_arg_file = os.path.join(
+            self._output.batch_dir, f"{args.batch_name}(*)_settings.yaml"
+        )
         if args.resume_run:
             if args.run_to_resume == "latest":
                 try:
                     args.batch_num
                 except:
-                    args.batch_num = (
-                        len(
-                            glob(
-                                f"{self._output.batch_dir}/{args.batch_name}(*)_settings.yaml"
-                            )
-                        )
-                        - 1
-                    )
+                    args.batch_num = len(glob(batch_arg_file)) - 1
             else:
-                args.batch_num = int(args.run_to_resum)
+                args.batch_num = int(args.run_to_resume)
 
+            _frame_file = os.path.join(
+                self._output.batch_dir,
+                f"/{args.batch_name}({args.batch_num})_*.png",
+            )
             if args.resume_from_frame == "latest":
-                start_frame = len(
-                    glob(
-                        self._output.batch_dir
-                        + f"/{args.batch_name}({args.batch_num})_*.png"
-                    )
-                )
+                start_frame = len(glob(_frame_file))
                 if (
                     args.animation_mode != "3D"
                     and args.turbo_mode == True
@@ -1389,12 +1395,7 @@ class DiscoDiffusion:
                 ):
                     start_frame = start_frame - (start_frame % int(args.turbo_steps))
                 if args.retain_overwritten_frames:
-                    existing_frames = len(
-                        glob(
-                            self._output.batch_dir
-                            + f"/{args.batch_name}({args.batch_num})_*.png"
-                        )
-                    )
+                    existing_frames = len(glob(_frame_file))
                     frames_to_save = existing_frames - start_frame
                     print(f"Moving {frames_to_save} frames to the Retained folder")
                     move_files(
@@ -1407,13 +1408,7 @@ class DiscoDiffusion:
                     )
         else:
             start_frame = 0
-            args.batch_num = len(glob(self._output.batch_dir + "/*.txt"))
-            while os.path.isfile(
-                f"{self._output.batch_dir}/{args.batch_name}({args.batch_num})_settings.yaml"
-            ) or os.path.isfile(
-                f"{self._output.batch_dir}/{args.batch_name}-{args.batch_num}_settings.yaml"
-            ):
-                args.batch_num += 1
+            args.batch_num = len(glob(batch_arg_file))
         args.start_frame = start_frame
 
         if args.set_seed == "random_seed":
@@ -1546,7 +1541,7 @@ class DiscoDiffusion:
             display(Img(data=open(output_path, "rb").read(), width=width))
 
     def _prepare_folders(self, batch_name):
-        self._output.batch_dir = os.path.join(self._path.output_dir, batch_name)
+        self._output.batch_dir = os.path.join(self._output.root, batch_name)
         self._output.retain_dir = os.path.join(self._output.batch_dir, "retained")
         self._output.partial_dir = os.path.join(self._output.batch_dir, "partials")
         self._output.video_frames_dir = os.path.join(

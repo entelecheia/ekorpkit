@@ -3,7 +3,8 @@ import os
 import subprocess
 import sys
 import importlib
-from ekorpkit.base import _is_dir
+from pathlib import Path
+from ekorpkit.base import _is_dir, _is_file
 
 
 log = logging.getLogger(__name__)
@@ -44,10 +45,14 @@ def apti(name, verbose=False):
 
 def load_module_from_file(name, libpath, specname=None):
     module_path = os.path.join(libpath, name.replace(".", os.path.sep))
-    if _is_dir(module_path):
-        module_path = os.path.join(module_path, "__init__.py")
-    else:
+    if _is_file(module_path + ".py"):
         module_path = module_path + ".py"
+    else:
+        if _is_dir(module_path):
+            module_path = os.path.join(module_path, "__init__.py")
+        else:
+            module_path = str(Path(module_path).parent / "__init__.py")
+
     spec = importlib.util.spec_from_file_location(name, module_path)
     module = importlib.util.module_from_spec(spec)
     if not specname:

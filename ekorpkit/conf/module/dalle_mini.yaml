@@ -1,0 +1,11 @@
+library_dir: ${oc.select:..path.library_dir, libs}
+modules:
+  - name: dalle_mini
+    libname: dalle-mini
+    liburi: https://github.com/borisdayma/dalle-mini
+    specname:
+    syspath: dalle-mini/src/dalle_mini
+  - name: vqgan_jax.modeling_flax_vqgan
+    libname: vqgan-jax
+    liburi: https://github.com/patil-suraj/vqgan-jax
+    specname:
