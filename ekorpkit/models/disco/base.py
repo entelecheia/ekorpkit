@@ -27,23 +27,14 @@ from ..dalle.base import BaseTTIModel
 log = logging.getLogger(__name__)
 
 
-class DiscoDiffusion:
+class DiscoDiffusion(BaseTTIModel):
 
     TRANSLATION_SCALE = 1.0 / 200.0
 
     def __init__(self, **args):
-        args = eKonf.to_config(args)
-        self.args = args
-        self.name = args.name
-        self.verbose = args.get("verbose", True)
-        self.auto = args.auto
-        self._path = self.args.path
-        self._output = self.args.output
-        self._module = self.args.module
-        self._midas = self.args.midas
-        self._model = self.args.model
-        self._config = self.args.config
+        super().__init__(**args)
 
+        self._midas = self.args.midas
         self.clip_models = []
         self.model = None
         self.diffusion = None
@@ -57,25 +48,9 @@ class DiscoDiffusion:
         self.rotation_3d_z_series = None
         self.prompts_series = None
         self.image_prompts_series = None
-        self.sample_imagepaths = []
-
-        self.is_notebook = eKonf.is_notebook()
-        self.is_colab = eKonf.is_colab()
 
         if self.auto.load:
             self.load()
-
-    @property
-    def path(self):
-        return self._path
-
-    def load(self):
-        log.info("> downloading models...")
-        self.download_models()
-        log.info("> loading modules...")
-        self.load_modules()
-        log.info("> loading models...")
-        self.load_models()
 
     def imagine(self, text_prompts=None, image_prompts=None, **args):
         self.diffuse(text_prompts, image_prompts, **args)
@@ -278,20 +253,6 @@ class DiscoDiffusion:
         )
         self.lpips_model = lpips.LPIPS(net="vgg").to(self.cuda_device)
 
-    def load_modules(self):
-        """Load the modules"""
-        library_dir = self._module.library_dir
-        for module in self._module.modules:
-            name = module.name
-            libname = module.libname
-            liburi = module.liburi
-            specname = module.specname
-            libpath = os.path.join(library_dir, libname)
-            syspath = module.get("syspath")
-            if syspath is not None:
-                syspath = os.path.join(library_dir, syspath)
-            eKonf.ensure_import_module(name, libpath, liburi, specname, syspath)
-
     def download_models(self):
         """Download the models"""
         download = self.args.download
@@ -300,13 +261,6 @@ class DiscoDiffusion:
             if not isinstance(model, str):
                 log.info(f"Downloading model {name} from {model}")
                 _download_models(name, **model, check_model_SHA=check_model_SHA)
-
-    def save_settings(self, args):
-        """Save the settings"""
-        _path = os.path.join(
-            self._output.batch_dir, f"{args.batch_name}({args.batch_num})_settings.yaml"
-        )
-        eKonf.save(args, _path)
 
     def _3d_step(self, img_filepath, frame_num, midas_model, midas_transform):
         import py3d_tools as p3dT
@@ -1056,25 +1010,7 @@ class DiscoDiffusion:
 
     def load_config(self, batch_name=None, batch_num=None, **args):
         """Load the settings"""
-        _config = self._config
-        if batch_name is None:
-            batch_name = _config.batch_name
-        else:
-            _config.batch_name = batch_name
-        self._prepare_folders(batch_name)
-        if batch_num is not None:
-            _path = os.path.join(
-                self._output.batch_dir, f"{batch_name}({batch_num})_settings.yaml"
-            )
-            if os.path.exists(_path):
-                log.info(f"Loading config from {_path}")
-                batch_args = eKonf.load(_path)
-                log.info(f"Merging config with diffuse defaults")
-                _config = eKonf.merge(_config, batch_args)
-                return _config
-
-        log.info(f"Merging config with args: {args}")
-        args = eKonf.merge(_config, args)
+        args = super().load_config(batch_name=batch_name, batch_num=batch_num, **args)
 
         # Get corrected sizes
         args.side_x = (args.width_height[0] // 64) * 64
@@ -1435,54 +1371,6 @@ class DiscoDiffusion:
 
         return args
 
-    def show_config(self, batch_name=None, batch_num=None):
-        args = self.load_config(batch_name, batch_num)
-        eKonf.print(args)
-
-    def collage(
-        self,
-        image_filepaths=None,
-        batch_name=None,
-        batch_num=None,
-        ncols=2,
-        num_images=None,
-        filename_patterns=None,
-        show_prompt=True,
-        prompt_fontsize=18,
-        show_filename=False,
-        filename_offset=(5, 5),
-        fontname=None,
-        fontsize=12,
-        fontcolor=None,
-        **kwargs,
-    ):
-        args = self.load_config(batch_name, batch_num, **kwargs)
-        batch_name = batch_name or args.batch_name
-        if batch_num is None:
-            batch_num = args.batch_num
-
-        filename_patterns = filename_patterns or f"{batch_name}({batch_num})_*.png"
-        num_images = num_images or args.n_samples
-        prompt = None
-        if show_prompt:
-            if 0 in args.text_prompts:
-                prompt = args.text_prompts[0][0]
-
-        eKonf.collage(
-            image_filepaths=image_filepaths,
-            filename_patterns=filename_patterns,
-            base_dir=self._output.batch_dir,
-            num_images=num_images,
-            ncols=ncols,
-            title=prompt,
-            title_fontsize=prompt_fontsize,
-            show_filename=show_filename,
-            filename_offset=filename_offset,
-            fontname=fontname,
-            fontsize=fontsize,
-            fontcolor=fontcolor,
-        )
-
     def make_gif(
         self,
         batch_name=None,
@@ -1541,7 +1429,7 @@ class DiscoDiffusion:
             display(Img(data=open(output_path, "rb").read(), width=width))
 
     def _prepare_folders(self, batch_name):
-        self._output.batch_dir = os.path.join(self._output.root, batch_name)
+        super()._prepare_folders(batch_name)
         self._output.retain_dir = os.path.join(self._output.batch_dir, "retained")
         self._output.partial_dir = os.path.join(self._output.batch_dir, "partials")
         self._output.video_frames_dir = os.path.join(

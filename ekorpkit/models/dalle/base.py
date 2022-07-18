@@ -101,6 +101,7 @@ class BaseTTIModel:
         eKonf.print(args)
 
     def get_text_prompt(self, prompts):
+        prompts = eKonf.to_dict(prompts)
         if isinstance(prompts, str):
             return prompts
         elif isinstance(prompts, list):
@@ -139,6 +140,7 @@ class BaseTTIModel:
         prompt = None
         if show_prompt:
             prompt = self.get_text_prompt(args.text_prompts)
+            log.info(f"Prompt: {prompt}")
 
         eKonf.collage(
             image_filepaths=image_filepaths,

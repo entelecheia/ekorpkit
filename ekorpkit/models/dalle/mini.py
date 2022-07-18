@@ -10,9 +10,10 @@ from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from transformers import CLIPProcessor, FlaxCLIPModel
 from flax.jax_utils import replicate
-from flax.training.common_utils import shard_prng_key
+from flax.training.common_utils import shard_prng_key, shard
 from PIL import Image
 from tqdm.auto import trange
+from IPython import display
 from .base import BaseTTIModel
 
 
@@ -29,13 +30,15 @@ class DalleMini(BaseTTIModel):
         self.processor = None
         self.vqgan = None
         self.vqgan_params = None
+        self.clip = None
+        self.clip_params = None
+        self.clip_processor = None
         self.devices = None
 
         if self.auto.load:
             self.load()
 
     def imagine(self, text_prompts=None, **args):
-        from IPython import display
 
         """Diffuse the model"""
 
@@ -178,6 +181,63 @@ class DalleMini(BaseTTIModel):
             revision=self._model.VQGAN_COMMIT_ID,
             _do_init=self._model.VQGAN_INIT,
         )
+
+    def load_clip_models(self):
+        self.clip, self.clip_params = FlaxCLIPModel.from_pretrained(
+            self._model.CLIP_REPO,
+            revision=self._model.CLIP_COMMIT_ID,
+            dtype=jnp.float16,
+            _do_init=self._model.CLIP_INIT,
+        )
+        self.clip_processor = CLIPProcessor.from_pretrained(
+            self._model.CLIP_REPO,
+            revision=self._model.CLIP_COMMIT_ID,
+        )
+
+    def rank_image_by_clip_score(self, prompts, images):
+        """
+        Rank an image by its clip score.
+        """
+
+        if self.clip is None:
+            self.load_clip_models()
+
+        _num_devices = self._num_devices
+        _devices = self.devices[:_num_devices]
+        log.info(f"Using {_num_devices} devices")
+        log.info(f"Devices: {_devices}")
+
+        _clip_params = replicate(self.clip_params, devices=_devices)
+
+        # score images
+        @partial(jax.pmap, axis_name="batch", devices=_devices)
+        def p_clip(inputs, params):
+            logits = self.clip(params=params, **inputs).logits_per_image
+            return logits
+
+        # from flax.training.common_utils import shard
+
+        # get clip scores
+        clip_inputs = self.clip_processor(
+            text=prompts * _num_devices,
+            images=images,
+            return_tensors="np",
+            padding="max_length",
+            max_length=77,
+            truncation=True,
+        ).data
+        logits = p_clip(shard(clip_inputs), _clip_params)
+
+        # organize scores per prompt
+        p = len(prompts)
+        logits = np.asarray([logits[:, i::p, i] for i in range(p)]).squeeze()
+
+        for i, prompt in enumerate(prompts):
+            print(f"Prompt: {prompt}\n")
+            for idx in logits[i].argsort()[::-1]:
+                display.display(images[idx * p + i])
+                print(f"Score: {jnp.asarray(logits[i][idx], dtype=jnp.float32):.2f}\n")
+            print()
 
     def load_config(self, batch_name=None, batch_num=None, **args):
         """Load the settings"""

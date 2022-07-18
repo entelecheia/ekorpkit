@@ -39,7 +39,7 @@ config:
 
 output:
   root: ${..path.output_dir}/${..name}
-  batch_dir: ${.root}/${..diffuse.batch_name}
+  batch_dir: ${.root}/${..config.batch_name}
   retain_dir: ${.batch_dir}/retained
   partial_dir: ${.batch_dir}/partials
   video_frames_dir: ${.batch_dir}/video_frames
