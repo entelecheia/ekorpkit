@@ -3,6 +3,7 @@ check_model_SHA: false #@param{type:"boolean"}
 archive_dir: ${..path.archive_dir}
 model_dir: ${..path.model_dir}
 pretrained_dir: ${..path.pretrained_dir}
+pretrained_symlink: ./pretrained
 models:
   archive_dir: ${..archive_dir}
   model_dir: ${..model_dir}

@@ -31,7 +31,6 @@ html-to-json: all, parser, html
 fasttext-langdetect: parser, langdetect
 cssutils: all, parser, edgar
 
-
 accelerate: all, transformers, model
 evaluate: all, transformers, model
 simpletransformers>=0.63: all, transformers, model
@@ -91,10 +90,10 @@ fredapi: all, fred, fomc
 nasdaq-data-link: all, nasdaq, fomc
 statsmodels: all, fomc, stats
 
-lpips: disco
-timm: disco
-einops: disco
-jax: dalle-mini
+lpips: disco, art
+timm: disco, art
+einops: disco, art
+jax: dalle-mini, art
 
 cleanlab: label
 snorkel: snorkel, label

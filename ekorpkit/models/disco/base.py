@@ -262,6 +262,12 @@ class DiscoDiffusion(BaseTTIModel):
                 log.info(f"Downloading model {name} from {model}")
                 _download_models(name, **model, check_model_SHA=check_model_SHA)
 
+        if not os.path.exists(download.pretrained_symlink):
+            os.symlink(download.pretrained_dir, download.pretrained_symlink)
+            log.info(
+                f"Created symlink of {download.pretrained_dir} to {download.pretrained_symlink}"
+            )
+
     def _3d_step(self, img_filepath, frame_num, midas_model, midas_transform):
         import py3d_tools as p3dT
         from . import disco_xform_utils as dxf
