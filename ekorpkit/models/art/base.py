@@ -28,6 +28,10 @@ class BaseTTIModel:
     def path(self):
         return self._path
 
+    @property
+    def config(self):
+        return self._config
+
     def load(self):
         log.info("> downloading models...")
         self.download_models()

@@ -27,8 +27,8 @@ image_prompts:
 config:
   text_prompts: ${..text_prompts}
   image_prompts: ${..image_prompts}
-  intermediate_saves: ${.steps}
-  steps_per_checkpoint: 2
+  intermediate_saves: 0
+  steps_per_checkpoint: 
   batch_num:
   stop_on_next_loop: false
   side_x:
