@@ -21,7 +21,7 @@ from .utils import (
     get_inbetweens,
 )
 from ekorpkit.utils.func import elapsed_timer
-from ..dalle.base import BaseTTIModel
+from ..art.base import BaseTTIModel
 
 
 log = logging.getLogger(__name__)

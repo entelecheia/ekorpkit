@@ -2,16 +2,16 @@ defaults:
   - /module: dalle_mini
   - /path: disco_imagen
   - model: default
-  # - download: default
+  - config: default
   - /auto: load
 
-_target_: ekorpkit.models.dalle.mini.DalleMini
+_target_: ekorpkit.models.art.mini.DalleMini
 name: dalle-mini
 auto:
   load: true
 verbose: ${oc.select:..verbose, false}
 cuda_device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
-num_devices: 
+num_devices:
 use_cpu: false
 text_prompts:
   - sunset over a lake in the mountains
