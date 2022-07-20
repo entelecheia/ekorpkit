@@ -53,7 +53,6 @@ output:
   retain_dir: ${.batch_dir}/retained
   partial_dir: ${.batch_dir}/partials
   video_frames_dir: ${.batch_dir}/video_frames
-  in_dir: ${.video_frames_dir}
   flo_dir: ${.video_frames_dir}/out_flo_fwd
   temp_flo_dir: ${.video_frames_dir}/temp_flo
   flo_fwd_dir: ${.video_frames_dir}/out_flo_fwd

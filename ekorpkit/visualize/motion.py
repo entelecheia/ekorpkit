@@ -1,6 +1,7 @@
 import os
 import logging
 import subprocess
+from pathlib import Path
 from ekorpkit.io.file import get_filepaths
 from ekorpkit.base import _display, _display_image
 
@@ -59,15 +60,50 @@ def make_gif(
     return output_filepath
 
 
+def extract_frames(
+    video_path, extract_nth_frame, extracted_frame_dir, frame_filename="%04d.jpg"
+):
+    log.info(f"Exporting Video Frames (1 every {extract_nth_frame})...")
+    try:
+        for f in Path(f"{extracted_frame_dir}").glob("*.jpg"):
+            f.unlink()
+    except:
+        log.info(f"No video frames found in {extracted_frame_dir}")
+    vf = f"select=not(mod(n\,{extract_nth_frame}))"
+    if os.path.exists(video_path):
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-i",
+                f"{video_path}",
+                "-vf",
+                f"{vf}",
+                "-vsync",
+                "vfr",
+                "-q:v",
+                "2",
+                "-loglevel",
+                "error",
+                "-stats",
+                f"{extracted_frame_dir}/{frame_filename}",
+            ],
+            stdout=subprocess.PIPE,
+        ).stdout.decode("utf-8")
+    else:
+        log.warning(
+            f"WARNING!\n\nVideo not found: {video_path}.\nPlease check your video path."
+        )
+
+
 def create_video(
-    base_dir, mp4_path, input_url, fps, start_number, vframes, force=False
+    base_dir, video_path, input_url, fps, start_number, vframes, force=False
 ):
 
     log.info(f"Creating video from {input_url}")
-    if os.path.exists(mp4_path) and not force:
-        log.info(f"Skipping video creation, already exists: {mp4_path}")
+    if os.path.exists(video_path) and not force:
+        log.info(f"Skipping video creation, already exists: {video_path}")
         log.info("If you want to re-create the video, set force=True")
-        return mp4_path
+        return video_path
 
     cmd = [
         "ffmpeg",
@@ -92,7 +128,7 @@ def create_video(
         "17",
         "-preset",
         "veryslow",
-        mp4_path,
+        video_path,
     ]
 
     process = subprocess.Popen(
@@ -106,6 +142,6 @@ def create_video(
         print(stderr)
         raise RuntimeError(stderr)
     else:
-        print(f"The video is ready and saved to {mp4_path}")
+        print(f"The video is ready and saved to {video_path}")
 
-    return mp4_path
+    return video_path

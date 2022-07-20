@@ -5,7 +5,7 @@ import shutil
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from ekorpkit.io.fetch.web import web_download
+from ekorpkit.io.fetch.web import web_download, web_download_unzip
 
 
 log = logging.getLogger(__name__)
@@ -19,6 +19,8 @@ def _download_models(
     link_fb=None,
     SHA=None,
     check_model_SHA=False,
+    zip_path=None,
+    unzip=False,
     **kwargs,
 ):
 
@@ -57,7 +59,10 @@ def _download_models(
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(archive_path, path)
     else:
-        web_download(link, archive_path)
+        if unzip:
+            web_download_unzip(link, zip_path)
+        else:
+            web_download(link, archive_path)
         if os.path.exists(archive_path):
             log.info(f"Copying {name} File to {path} from {archive_path}")
             Path(path).parent.mkdir(parents=True, exist_ok=True)
