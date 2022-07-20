@@ -8,6 +8,8 @@ run_to_resume: latest
 resume_from_frame: latest
 retain_overwritten_frames: false
 show_collage: true
+diffusion_sampling_mode: ddim # ['plms','ddim']
+use_secondary_model: true
 
 steps: 250 #@param [25,50,100,150,250,500,1000]{type: 'raw', allow-input: true}
 width_height: [1280, 768] #@param{type: 'raw'}

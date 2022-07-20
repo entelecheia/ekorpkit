@@ -13,7 +13,6 @@ from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key, shard
 from PIL import Image
 from tqdm.auto import trange
-from IPython import display
 from .base import BaseTTIModel
 
 
@@ -106,7 +105,7 @@ class DalleMini(BaseTTIModel):
             # sample_images = []
             sample_num = 0
             for i in trange(max(args.n_samples // _num_devices, 1)):
-                display.clear_output(wait=True)
+                eKonf.clear_output(wait=True)
                 # get a new key
                 key, subkey = jax.random.split(key)
                 # generate images
@@ -128,7 +127,7 @@ class DalleMini(BaseTTIModel):
                 )
                 for decoded_img in decoded_images:
                     img = Image.fromarray(np.asarray(decoded_img * 255, dtype=np.uint8))
-                    display.display(img)
+                    eKonf.display(img)
                     # sample_images.append(img)
                     filename = (
                         f"{args.batch_name}({args.batch_num})_{sample_num:04}.png"
@@ -139,7 +138,7 @@ class DalleMini(BaseTTIModel):
                     log.info(f"Saved {filename}")
                     sample_num += 1
 
-            display.clear_output(wait=True)
+            eKonf.clear_output(wait=True)
             log.info(" >> elapsed time to diffuse: {}".format(elapsed()))
             print(f"{args.n_samples} samples generated to {_batch_dir}")
             print(f"text prompts: {text_prompts}")
@@ -235,7 +234,7 @@ class DalleMini(BaseTTIModel):
         for i, prompt in enumerate(prompts):
             print(f"Prompt: {prompt}\n")
             for idx in logits[i].argsort()[::-1]:
-                display.display(images[idx * p + i])
+                eKonf.display(images[idx * p + i])
                 print(f"Score: {jnp.asarray(logits[i][idx], dtype=jnp.float32):.2f}\n")
             print()
 

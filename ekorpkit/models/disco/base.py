@@ -1,13 +1,18 @@
 import os
 import logging
+from re import I
 import subprocess
 import math
-import torch
 import random
 import numpy as np
 import gc
 import matplotlib.pyplot as plt
 import shutil
+import torch
+import torchvision.transforms as T
+import torchvision.transforms.functional as TF
+import PIL
+from PIL import Image
 from datetime import datetime
 from tqdm.auto import tqdm
 from glob import glob
@@ -22,9 +27,18 @@ from .utils import (
 )
 from ekorpkit.utils.func import elapsed_timer
 from ..art.base import BaseTTIModel
-
+from enum import Enum
 
 log = logging.getLogger(__name__)
+
+
+class AnimMode(str, Enum):
+    """Animation mode"""
+
+    NONE = "None"
+    ANIM_2D = "2D"
+    ANIM_3D = "3D"
+    VIDEO_INPUT = "Video Input"
 
 
 class DiscoDiffusion(BaseTTIModel):
@@ -46,22 +60,16 @@ class DiscoDiffusion(BaseTTIModel):
         self.rotation_3d_x_series = None
         self.rotation_3d_y_series = None
         self.rotation_3d_z_series = None
-        self.prompts_series = None
+        self.text_prompts_series = None
         self.image_prompts_series = None
 
         if self.auto.load:
             self.load()
 
     def imagine(self, text_prompts=None, image_prompts=None, **args):
-        self.diffuse(text_prompts, image_prompts, **args)
-
-    def diffuse(self, text_prompts=None, image_prompts=None, **args):
-        """Diffuse the model"""
 
         log.info("> loading settings...")
         args = self.load_config(**args)
-        log.info("> loading optical flow...")
-        self.load_optical_flow(args)
 
         log.info(
             f"Starting Run: {args.batch_name}({args.batch_num}) at frame {args.start_frame}"
@@ -77,12 +85,6 @@ class DiscoDiffusion(BaseTTIModel):
             image_prompts = {0: [image_prompts]}
         elif isinstance(image_prompts, list):
             image_prompts = {0: image_prompts}
-        self.prompts_series = (
-            split_prompts(text_prompts, args.max_frames) if text_prompts else None
-        )
-        self.image_prompts_series = (
-            split_prompts(image_prompts, args.max_frames) if image_prompts else None
-        )
         args.text_prompts = text_prompts
         args.image_prompts = image_prompts
         self._config = args
@@ -94,7 +96,10 @@ class DiscoDiffusion(BaseTTIModel):
             gc.collect()
             torch.cuda.empty_cache()
             try:
-                self._run(args)
+                if args.animation_mode == AnimMode.NONE:
+                    self._run(args)
+                else:
+                    self._run_anim(args)
             except KeyboardInterrupt:
                 pass
             finally:
@@ -103,7 +108,7 @@ class DiscoDiffusion(BaseTTIModel):
                 torch.cuda.empty_cache()
 
             log.info(" >> elapsed time to diffuse: {}".format(elapsed()))
-            if args.animation_mode == "None":
+            if args.animation_mode == AnimMode.NONE:
                 print(f"{args.n_samples} samples generated to {self._output.batch_dir}")
                 print(f"text prompts: {text_prompts}")
                 print("sample image paths:")
@@ -112,6 +117,8 @@ class DiscoDiffusion(BaseTTIModel):
 
                 if args.show_collage:
                     self.collage(image_filepaths=self.sample_imagepaths)
+
+        self.save_settings(args)
 
     def _prepare_models(self):
         from guided_diffusion.script_util import create_model_and_diffusion
@@ -133,66 +140,63 @@ class DiscoDiffusion(BaseTTIModel):
         if self.model_config["use_fp16"]:
             self.model.convert_to_fp16()
 
-    def load_optical_flow(self, args):
+    def init_flow_warp(self, args):
         """Load the optical flow"""
         import argparse
         from raft import RAFT
         from .flow import load_img, get_flow
 
-        if args.animation_mode == "Video Input":
-            rsft_args = argparse.Namespace()
-            rsft_args.small = False
-            rsft_args.mixed_precision = True
+        rsft_args = argparse.Namespace()
+        rsft_args.small = False
+        rsft_args.mixed_precision = True
 
-            if not args.video_init_flow_warp:
-                log.info("video_init_flow_warp not set, skipping")
+        if not args.video_init_flow_warp:
+            log.info("video_init_flow_warp not set, skipping")
 
-            else:
-                flows = glob(self._output.flo_dir + "/*.*")
-                if (len(flows) > 0) and not args.force_flow_generation:
-                    log.info(
-                        f"Skipping flow generation:\nFound {len(flows)} existing flow files in current working folder: {self._output.flo_dir}.\nIf you wish to generate new flow files, check force_flow_generation and run this cell again."
+        else:
+            flows = glob(self._output.flo_dir + "/*.*")
+            if (len(flows) > 0) and not args.force_flow_generation:
+                log.info(
+                    f"Skipping flow generation:\nFound {len(flows)} existing flow files in current working folder: {self._output.flo_dir}.\nIf you wish to generate new flow files, check force_flow_generation and run this cell again."
+                )
+
+            if (len(flows) == 0) or args.force_flow_generation:
+                frames = sorted(glob(self._output.in_dir + "/*.*"))
+                if len(frames) < 2:
+                    log.warning(
+                        f"WARNING!\nCannot create flow maps: Found {len(frames)} frames extracted from your video input.\nPlease check your video path."
                     )
+                if len(frames) >= 2:
 
-                if (len(flows) == 0) or args.force_flow_generation:
-                    frames = sorted(glob(self._output.in_dir + "/*.*"))
-                    if len(frames) < 2:
-                        log.warning(
-                            f"WARNING!\nCannot create flow maps: Found {len(frames)} frames extracted from your video input.\nPlease check your video path."
+                    raft_model = torch.nn.DataParallel(RAFT(rsft_args))
+                    raft_model.load_state_dict(torch.load(self._model.raft_model_path))
+                    raft_model = raft_model.module.cuda().eval()
+
+                    for f in Path(f"{self._output.flo_fwd_dir}").glob("*.*"):
+                        f.unlink()
+
+                    # TBD Call out to a consistency checker?
+                    self.framecount = 0
+                    for frame1, frame2 in tqdm(
+                        zip(frames[:-1], frames[1:]), total=len(frames) - 1
+                    ):
+
+                        out_flow21_fn = (
+                            f"{self._output.flo_fwd_dir}/{frame1.split('/')[-1]}"
                         )
-                    if len(frames) >= 2:
 
-                        raft_model = torch.nn.DataParallel(RAFT(rsft_args))
-                        raft_model.load_state_dict(
-                            torch.load(self._model.raft_model_path)
-                        )
-                        raft_model = raft_model.module.cuda().eval()
+                        frame1 = load_img(frame1, args.width_height)
+                        frame2 = load_img(frame2, args.width_height)
 
-                        for f in Path(f"{self._output.flo_fwd_dir}").glob("*.*"):
-                            f.unlink()
+                        flow21 = get_flow(frame2, frame1, raft_model)
+                        np.save(out_flow21_fn, flow21)
 
-                        # TBD Call out to a consistency checker?
-                        self.framecount = 0
-                        for frame1, frame2 in tqdm(
-                            zip(frames[:-1], frames[1:]), total=len(frames) - 1
-                        ):
+                        if args.video_init_check_consistency:
+                            # TBD
+                            pass
 
-                            out_flow21_fn = (
-                                f"{self._output.flo_fwd_dir}/{frame1.split('/')[-1]}"
-                            )
-
-                            frame1 = load_img(frame1, args.width_height)
-                            frame2 = load_img(frame2, args.width_height)
-
-                            flow21 = get_flow(frame2, frame1, raft_model)
-                            np.save(out_flow21_fn, flow21)
-
-                            if args.video_init_check_consistency:
-                                # TBD
-                                pass
-
-                        del raft_model
-                        gc.collect()
+                    del raft_model
+                    gc.collect()
 
     def load_models(self):
         log.info("> loading diffusion models...")
@@ -322,181 +326,426 @@ class DiscoDiffusion(BaseTTIModel):
         )
         return next_step_pil
 
-    def _run(self, args):
-        """Run the simulation"""
-        import cv2
+    def _get_model_stats(self, text_prompt, image_prompt, args):
+        """Update the model stats"""
         import clip
-        import torchvision.transforms as T
-        import torchvision.transforms.functional as TF
-        import PIL
-        from PIL import Image
-        from .midas import Midas
+        from .diffuse import parse_prompt, MakeCutouts, fetch
+
+        model_stats = []
+        weights = []
+
+        for clip_model in self.clip_models:
+            cutn = 16
+            model_stat = {
+                "clip_model": None,
+                "target_embeds": [],
+                "make_cutouts": None,
+                "weights": [],
+            }
+            model_stat["clip_model"] = clip_model
+
+            for prompt in text_prompt:
+                txt, weight = parse_prompt(prompt)
+                txt = clip_model.encode_text(
+                    clip.tokenize(prompt).to(self.cuda_device)
+                ).float()
+
+                if args.fuzzy_prompt:
+                    for i in range(25):
+                        model_stat["target_embeds"].append(
+                            (txt + torch.randn(txt.shape).cuda() * args.rand_mag).clamp(
+                                0, 1
+                            )
+                        )
+                        model_stat["weights"].append(weight)
+                else:
+                    model_stat["target_embeds"].append(txt)
+                    model_stat["weights"].append(weight)
+
+            if image_prompt:
+                model_stat["make_cutouts"] = MakeCutouts(
+                    clip_model.visual.input_resolution,
+                    cutn,
+                    skip_augs=args.skip_augs,
+                )
+                for prompt in image_prompt:
+                    path, weight = parse_prompt(prompt)
+                    img = Image.open(fetch(path)).convert("RGB")
+                    img = TF.resize(
+                        img,
+                        min(args.side_x, args.side_y, *img.size),
+                        T.InterpolationMode.LANCZOS,
+                    )
+                    batch = model_stat["make_cutouts"](
+                        TF.to_tensor(img)
+                        .to(self.cuda_device)
+                        .unsqueeze(0)
+                        .mul(2)
+                        .sub(1)
+                    )
+                    embed = clip_model.encode_image(self.normalize(batch)).float()
+                    if args.fuzzy_prompt:
+                        for i in range(25):
+                            model_stat["target_embeds"].append(
+                                (
+                                    embed
+                                    + torch.randn(embed.shape).cuda() * args.rand_mag
+                                ).clamp(0, 1)
+                            )
+                            weights.extend([weight / cutn] * cutn)
+                    else:
+                        model_stat["target_embeds"].append(embed)
+                        model_stat["weights"].extend([weight / cutn] * cutn)
+
+            model_stat["target_embeds"] = torch.cat(model_stat["target_embeds"])
+            model_stat["weights"] = torch.tensor(
+                model_stat["weights"], device=self.cuda_device
+            )
+            if model_stat["weights"].sum().abs() < 1e-3:
+                raise RuntimeError("The weights must not sum to 0.")
+            model_stat["weights"] /= model_stat["weights"].sum().abs()
+            model_stats.append(model_stat)
+
+        return model_stats
+
+    def _init_image(self, init_image, args):
+        from .diffuse import create_perlin_noise, fetch
+
+        init = None
+        if init_image is not None:
+            init = Image.open(fetch(init_image)).convert("RGB")
+            init = init.resize((args.side_x, args.side_y), Image.LANCZOS)
+            init = TF.to_tensor(init).to(self.cuda_device).unsqueeze(0).mul(2).sub(1)
+
+        if args.perlin_init:
+            log.info(f"Perlin init with {args.perlin_mode} mode")
+            if args.perlin_mode == "color":
+                grayscale = False
+                grayscale2 = False
+            elif args.perlin_mode == "gray":
+                grayscale = True
+                grayscale2 = True
+            else:
+                grayscale = False
+                grayscale2 = True
+            init = create_perlin_noise(
+                args.side_x,
+                args.side_y,
+                octaves=[1.5 ** -i * 0.5 for i in range(12)],
+                width=1,
+                height=1,
+                grayscale=grayscale,
+                device=self.cuda_device,
+            )
+            init2 = create_perlin_noise(
+                args.side_x,
+                args.side_y,
+                octaves=[1.5 ** -i * 0.5 for i in range(8)],
+                width=4,
+                height=4,
+                grayscale=grayscale2,
+                device=self.cuda_device,
+            )
+            # init = TF.to_tensor(init).add(TF.to_tensor(init2)).div(2).to(device)
+            init = (
+                TF.to_tensor(init)
+                .add(TF.to_tensor(init2))
+                .div(2)
+                .to(self.cuda_device)
+                .unsqueeze(0)
+                .mul(2)
+                .sub(1)
+            )
+            del init2
+        return init
+
+    def _generate_progress_samples(
+        self,
+        cur_t,
+        init,
+        init_scale,
+        skip_steps,
+        loss_values,
+        model_stats,
+        frame_num,
+        diffusion,
+        midas_model,
+        midas_transform,
+        image_display,
+        args,
+    ):
+        import cv2
+        from .secondary import alpha_sigma_to_t
         from .diffuse import (
-            generate_eye_views,
-            parse_prompt,
-            MakeCutouts,
-            fetch,
-            create_perlin_noise,
             MakeCutoutsDango,
             spherical_dist_loss,
             tv_loss,
             range_loss,
             regen_perlin,
+            generate_eye_views,
         )
-        from .secondary import alpha_sigma_to_t
-        from .flow import warp
-        from IPython import display
-        from ipywidgets import Output
 
-        seed = args.seed
         batch_dir = self._output.batch_dir
-        old_frame_scaled_path = os.path.join(batch_dir, "old_frame_scaled.png")
-        prev_frame_path = os.path.join(batch_dir, "prev_frame.png")
-        prev_frame_scaled_path = os.path.join(batch_dir, "prev_frame_scaled.png")
-        warped_path = os.path.join(batch_dir, "warped.png")
-        progress_path = os.path.join(batch_dir, "progress.png")
+        partial_dir = self._output.partial_dir
+        prev_frame_path = self._output.prev_frame_path
+        prev_frame_scaled_path = self._output.prev_frame_scaled_path
+        progress_path = self._output.progress_path
 
-        if (args.animation_mode == "3D") and (args.midas_weight > 0.0):
-            midas = Midas(**self._midas)
-            (
-                midas_model,
-                midas_transform,
-                midas_net_w,
-                midas_net_h,
-                midas_resize_mode,
-                midas_normalization,
-            ) = midas.init_midas_depth_model(args.midas_depth_model)
-
+        secondary_model = self.secondary_model
+        model = self.model
         if isinstance(args.cut_overview, str):
             cut_overview = eval(args.cut_overview)
             cut_innercut = eval(args.cut_innercut)
             cut_icgray_p = eval(args.cut_icgray_p)
+        else:
+            cut_overview = args.cut_overview
+            cut_innercut = args.cut_innercut
+            cut_icgray_p = args.cut_icgray_p
 
-        log.info(f"looping over range({args.start_frame}, {args.max_frames})")
-        for frame_num in range(args.start_frame, args.max_frames):
-            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
-            if args.stop_on_next_loop:
-                break
-
-            if self.is_notebook:
-                display.clear_output(wait=True)
-
-            # Print Frame progress if animation mode is on
-            if args.animation_mode != "None":
-                batchBar = tqdm(range(args.max_frames), desc="Frames")
-                batchBar.n = frame_num
-                batchBar.refresh()
-
-            # Inits if not video frames
-            if args.animation_mode != "Video Input":
-                if args.init_image in ["", "none", "None", "NONE"]:
-                    init_image = None
+        def cond_fn(x, t, y=None):
+            with torch.enable_grad():
+                x_is_NaN = False
+                x = x.detach().requires_grad_()
+                n = x.shape[0]
+                if args.use_secondary_model:
+                    alpha = torch.tensor(
+                        diffusion.sqrt_alphas_cumprod[cur_t],
+                        device=self.cuda_device,
+                        dtype=torch.float32,
+                    )
+                    sigma = torch.tensor(
+                        diffusion.sqrt_one_minus_alphas_cumprod[cur_t],
+                        device=self.cuda_device,
+                        dtype=torch.float32,
+                    )
+                    cosine_t = alpha_sigma_to_t(alpha, sigma)
+                    out = secondary_model(x, cosine_t[None].repeat([n])).pred
+                    fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
+                    x_in = out * fac + x * (1 - fac)
+                    x_in_grad = torch.zeros_like(x_in)
                 else:
-                    init_image = args.init_image
-                init_scale = args.init_scale
-                skip_steps = args.skip_steps
-
-            if args.animation_mode == "2D":
-                if args.key_frames:
-                    angle = self.angle_series[frame_num]
-                    zoom = self.zoom_series[frame_num]
-                    translation_x = self.translation_x_series[frame_num]
-                    translation_y = self.translation_y_series[frame_num]
-                    log.info(
-                        f"angle: {angle}, zoom: {zoom}, translation_x: {translation_x}, translation_y: {translation_y}"
+                    my_t = (
+                        torch.ones([n], device=self.cuda_device, dtype=torch.long)
+                        * cur_t
                     )
+                    out = diffusion.p_mean_variance(
+                        model, x, my_t, clip_denoised=False, model_kwargs={"y": y}
+                    )
+                    fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
+                    x_in = out["pred_xstart"] * fac + x * (1 - fac)
+                    x_in_grad = torch.zeros_like(x_in)
 
-                if frame_num > 0:
-                    seed += 1
-                    if args.resume_run and frame_num == args.start_frame:
-                        _img_path = os.path.join(
-                            batch_dir,
-                            f"{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png",
+                for model_stat in model_stats:
+                    for i in range(args.cutn_batches):
+                        t_int = (
+                            int(t.item()) + 1
+                        )  # errors on last step without +1, need to find source
+                        # when using SLIP Base model the dimensions need to be hard coded to avoid AttributeError: 'VisionTransformer' object has no attribute 'input_resolution'
+                        try:
+                            input_resolution = model_stat[
+                                "clip_model"
+                            ].visual.input_resolution
+                        except:
+                            input_resolution = 224
+
+                        cuts = MakeCutoutsDango(
+                            args.animation_mode,
+                            input_resolution,
+                            args.skip_augs,
+                            Overview=cut_overview[1000 - t_int],
+                            InnerCrop=cut_innercut[1000 - t_int],
+                            IC_Size_Pow=args.cut_ic_pow,
+                            IC_Grey_P=cut_icgray_p[1000 - t_int],
                         )
-                        img_0 = cv2.imread(_img_path)
-                    else:
-                        img_0 = cv2.imread(prev_frame_path)
-                    center = (1 * img_0.shape[1] // 2, 1 * img_0.shape[0] // 2)
-                    trans_mat = np.float32(
-                        [[1, 0, translation_x], [0, 1, translation_y]]
-                    )
-                    rot_mat = cv2.getRotationMatrix2D(center, angle, zoom)
-                    trans_mat = np.vstack([trans_mat, [0, 0, 1]])
-                    rot_mat = np.vstack([rot_mat, [0, 0, 1]])
-                    transformation_matrix = np.matmul(rot_mat, trans_mat)
-                    img_0 = cv2.warpPerspective(
-                        img_0,
-                        transformation_matrix,
-                        (img_0.shape[1], img_0.shape[0]),
-                        borderMode=cv2.BORDER_WRAP,
-                    )
-
-                    init_image = prev_frame_scaled_path
-                    cv2.imwrite(init_image, img_0)
-                    init_scale = args.frames_scale
-                    skip_steps = args.calc_frames_skip_steps
-
-            if args.animation_mode == "3D":
-                if frame_num > 0:
-                    seed += 1
-                    if args.resume_run and frame_num == args.start_frame:
-                        img_filepath = os.path.join(
-                            batch_dir,
-                            f"{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png",
+                        clip_in = self.normalize(cuts(x_in.add(1).div(2)))
+                        image_embeds = (
+                            model_stat["clip_model"].encode_image(clip_in).float()
                         )
-                        if args.turbo_mode and frame_num > args.turbo_preroll:
-                            shutil.copyfile(img_filepath, old_frame_scaled_path)
-                    else:
-                        img_filepath = prev_frame_path
+                        dists = spherical_dist_loss(
+                            image_embeds.unsqueeze(1),
+                            model_stat["target_embeds"].unsqueeze(0),
+                        )
+                        dists = dists.view(
+                            [
+                                cut_overview[1000 - t_int] + cut_innercut[1000 - t_int],
+                                n,
+                                -1,
+                            ]
+                        )
+                        losses = dists.mul(model_stat["weights"]).sum(2).mean(0)
+                        loss_values.append(
+                            losses.sum().item()
+                        )  # log loss, probably shouldn't do per cutn_batch
+                        x_in_grad += (
+                            torch.autograd.grad(
+                                losses.sum() * args.clip_guidance_scale, x_in
+                            )[0]
+                            / args.cutn_batches
+                        )
+                tv_losses = tv_loss(x_in)
+                if args.use_secondary_model:
+                    range_losses = range_loss(out)
+                else:
+                    range_losses = range_loss(out["pred_xstart"])
+                sat_losses = torch.abs(x_in - x_in.clamp(min=-1, max=1)).mean()
+                loss = (
+                    tv_losses.sum() * args.tv_scale
+                    + range_losses.sum() * args.range_scale
+                    + sat_losses.sum() * args.sat_scale
+                )
+                if init is not None and init_scale:
+                    init_losses = self.lpips_model(x_in, init)
+                    loss = loss + init_losses.sum() * init_scale
+                x_in_grad += torch.autograd.grad(loss, x_in)[0]
+                if torch.isnan(x_in_grad).any() == False:
+                    grad = -torch.autograd.grad(x_in, x, x_in_grad)[0]
+                else:
+                    # print("NaN'd")
+                    x_is_NaN = True
+                    grad = torch.zeros_like(x)
+            if args.clamp_grad and x_is_NaN == False:
+                magnitude = grad.square().mean().sqrt()
+                return (
+                    grad * magnitude.clamp(max=args.clamp_max) / magnitude
+                )  # min=-0.02, min=-clamp_max,
+            return grad
 
-                    next_step_pil = self._3d_step(
-                        img_filepath, frame_num, midas_model, midas_transform
-                    )
-                    next_step_pil.save(prev_frame_scaled_path)
+        def symmetry_transformation_fn(x):
+            if args.use_horizontal_symmetry:
+                [n, c, h, w] = x.size()
+                x = torch.concat(
+                    (x[:, :, :, : w // 2], torch.flip(x[:, :, :, : w // 2], [-1])),
+                    -1,
+                )
+                print("horizontal symmetry applied")
+            if args.use_vertical_symmetry:
+                [n, c, h, w] = x.size()
+                x = torch.concat(
+                    (x[:, :, : h // 2, :], torch.flip(x[:, :, : h // 2, :], [-2])),
+                    -2,
+                )
+                print("vertical symmetry applied")
+            return x
 
-                    ### Turbo mode - skip some diffusions, use 3d morph for clarity and to save time
-                    if args.turbo_mode:
-                        if frame_num == args.turbo_preroll:  # start tracking oldframe
-                            # stash for later blending
-                            next_step_pil.save(old_frame_scaled_path)
-                        elif frame_num > args.turbo_preroll:
-                            # set up 2 warped image sequences, old & new, to blend toward new diff image
-                            old_frame = self._3d_step(
-                                old_frame_scaled_path,
-                                frame_num,
-                                midas_model,
-                                midas_transform,
-                            )
-                            old_frame.save(old_frame_scaled_path)
-                            if frame_num % int(args.turbo_steps) != 0:
-                                log.info(
-                                    "turbo skip this frame: skipping clip diffusion steps"
-                                )
+        if args.diffusion_sampling_mode == "ddim":
+            sampling_fn = diffusion.ddim_sample_loop_progressive
+        else:
+            sampling_fn = diffusion.plms_sample_loop_progressive
+
+        if args.perlin_init:
+            init = regen_perlin(
+                args.perlin_mode,
+                args.batch_size,
+                args.side_x,
+                args.side_y,
+                self.cuda_device,
+            )
+
+        if args.diffusion_sampling_mode == "ddim":
+            progress_samples = sampling_fn(
+                model,
+                (args.batch_size, 3, args.side_y, args.side_x),
+                clip_denoised=args.clip_denoised,
+                model_kwargs={},
+                cond_fn=cond_fn,
+                progress=True,
+                skip_timesteps=skip_steps,
+                init_image=init,
+                randomize_class=args.randomize_class,
+                eta=args.eta,
+                transformation_fn=symmetry_transformation_fn,
+                transformation_percent=args.transformation_percent,
+            )
+        else:
+            progress_samples = sampling_fn(
+                model,
+                (args.batch_size, 3, args.side_y, args.side_x),
+                clip_denoised=args.clip_denoised,
+                model_kwargs={},
+                cond_fn=cond_fn,
+                progress=True,
+                skip_timesteps=skip_steps,
+                init_image=init,
+                randomize_class=args.randomize_class,
+                order=2,
+            )
+
+        for prog_num, prog_sample in enumerate(progress_samples):
+            cur_t -= 1
+            intermediate_step = False
+            if args.steps_per_checkpoint is not None:
+                if prog_num % args.steps_per_checkpoint == 0 and prog_num > 0:
+                    intermediate_step = True
+            elif prog_num in args.intermediate_saves:
+                intermediate_step = True
+
+            with image_display:
+                if (
+                    prog_num % args.display_rate == 0
+                    or cur_t == -1
+                    or intermediate_step
+                ):
+                    for k, image in enumerate(prog_sample["pred_xstart"]):
+                        # tqdm.write(f'Batch {i}, step {j}, output {k}:')
+                        if args.n_samples > 0:
+                            # if intermediates are saved to the subfolder, don't append a step or percentage to the name
+                            if cur_t == -1 and args.intermediates_in_subfolder:
                                 filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}.png"
-                                blend_factor = (
-                                    (frame_num % int(args.turbo_steps)) + 1
-                                ) / int(args.turbo_steps)
-                                log.info(
-                                    "turbo skip this frame: skipping clip diffusion steps and saving blended frame"
-                                )
-                                # this is already updated..
-                                newWarpedImg = cv2.imread(prev_frame_scaled_path)
-                                oldWarpedImg = cv2.imread(old_frame_scaled_path)
-                                blendedImage = cv2.addWeighted(
-                                    newWarpedImg,
-                                    blend_factor,
-                                    oldWarpedImg,
-                                    1 - blend_factor,
-                                    0.0,
-                                )
+                            else:
+                                filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}-{prog_num:03}.png"
+                        image = TF.to_pil_image(image.add(1).div(2).clamp(0, 1))
+                        if prog_num % args.display_rate == 0 or cur_t == -1:
+                            image.save(progress_path)
+                            eKonf.clear_output(wait=True)
+                            eKonf.display_image(progress_path)
+
+                        if args.intermediates_in_subfolder:
+                            _img_path = os.path.join(partial_dir, filename)
+                        else:
+                            _img_path = os.path.join(batch_dir, filename)
+
+                        if args.steps_per_checkpoint is not None:
+                            if (
+                                prog_num % args.steps_per_checkpoint == 0
+                                and prog_num > 0
+                            ):
+                                image.save(_img_path)
+                        else:
+                            if prog_num in args.intermediate_saves:
+                                image.save(_img_path)
+                        if cur_t == -1:
+                            if args.animation_mode != AnimMode.NONE:
+                                image.save(prev_frame_path)
+                            _img_path = os.path.join(batch_dir, filename)
+                            image.save(_img_path)
+                            self.sample_imagepaths.append(_img_path)
+                            log.info(f"Saved {filename}")
+                            if args.animation_mode == AnimMode.ANIM_3D:
+                                # If turbo, save a blended image
                                 _img_path = os.path.join(batch_dir, filename)
-                                cv2.imwrite(_img_path, blendedImage)
-                                # save it also as prev_frame to feed next iteration
-                                next_step_pil.save(img_filepath)
+                                if args.turbo_mode and frame_num > 0:
+                                    # Mix new image with prevFrameScaled
+                                    blend_factor = (1) / int(args.turbo_steps)
+                                    # This is already updated..
+                                    new_frame = cv2.imread(prev_frame_path)
+                                    prev_frame_warped = cv2.imread(
+                                        prev_frame_scaled_path
+                                    )
+                                    blended_image = cv2.addWeighted(
+                                        new_frame,
+                                        blend_factor,
+                                        prev_frame_warped,
+                                        (1 - blend_factor),
+                                        0.0,
+                                    )
+                                    cv2.imwrite(_img_path, blended_image)
+                                else:
+                                    image.save(_img_path)
+
                                 if args.vr_mode:
                                     generate_eye_views(
                                         self.TRANSLATION_SCALE,
-                                        self._output.batch_dir,
+                                        batch_dir,
                                         filename,
                                         frame_num,
                                         midas_model,
@@ -511,69 +760,279 @@ class DiscoDiffusion(BaseTTIModel):
                                         args.sampling_mode,
                                         args.midas_weight,
                                     )
-                                continue
-                            else:
-                                # if not a skip frame, will run diffusion and need to blend.
-                                oldWarpedImg = cv2.imread(prev_frame_scaled_path)
-                                # swap in for blending later
-                                cv2.imwrite(old_frame_scaled_path, oldWarpedImg)
-                                log.info(
-                                    "clip/diff this frame - generate clip diff image"
-                                )
+        return loss_values
 
-                    init_image = prev_frame_scaled_path
-                    init_scale = args.frames_scale
-                    skip_steps = args.calc_frames_skip_steps
+    def _init_2d(
+        self,
+        frame_num,
+        seed,
+        args,
+    ):
+        import cv2
 
-            if args.animation_mode == "Video Input":
-                init_scale = args.video_init_frames_scale
-                skip_steps = args.calc_frames_skip_steps
-                if not args.video_init_seed_continuity:
-                    seed += 1
-                if args.video_init_flow_warp:
-                    if frame_num == 0:
-                        skip_steps = args.video_init_skip_steps
-                        init_image = os.path.join(
-                            args.video_frames_dir, f"{frame_num+1:04}.jpg"
-                        )
-                    if frame_num > 0:
-                        _img_path = os.path.join(
-                            batch_dir,
-                            f"/{args.batch_name}({args.batch_num})_{frame_num-1:04}.png",
-                        )
-                        prev = PIL.Image.open(_img_path)
+        batch_dir = self._output.batch_dir
+        prev_frame_path = self._output.prev_frame_path
+        prev_frame_scaled_path = self._output.prev_frame_scaled_path
 
-                        frame1_path = os.path.join(
-                            args.video_frames_dir, f"{frame_num:04}.jpg"
-                        )
-                        frame2_path = os.path.join(
-                            args.video_frames_dir, f"{frame_num+1:04}.jpg"
-                        )
-                        frame2 = PIL.Image.open(frame2_path)
-                        flo_path = os.path.join(
-                            args.self._video.flo_dir,
-                            f"{frame1_path.split('/')[-1]}.npy",
-                        )
+        if args.key_frames:
+            angle = self.angle_series[frame_num]
+            zoom = self.zoom_series[frame_num]
+            translation_x = self.translation_x_series[frame_num]
+            translation_y = self.translation_y_series[frame_num]
+            log.info(
+                f"angle: {angle}, zoom: {zoom}, translation_x: {translation_x}, translation_y: {translation_y}"
+            )
 
-                        init_image = warped_path
-                        log(args.video_init_flow_blend)
-                        weights_path = None
-                        if args.video_init_check_consistency:
-                            # TBD
-                            pass
+        seed += 1
+        if args.resume_run and frame_num == args.start_frame:
+            _img_path = os.path.join(
+                batch_dir,
+                f"{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png",
+            )
+            img_0 = cv2.imread(_img_path)
+        else:
+            img_0 = cv2.imread(prev_frame_path)
+        center = (1 * img_0.shape[1] // 2, 1 * img_0.shape[0] // 2)
+        trans_mat = np.float32([[1, 0, translation_x], [0, 1, translation_y]])
+        rot_mat = cv2.getRotationMatrix2D(center, angle, zoom)
+        trans_mat = np.vstack([trans_mat, [0, 0, 1]])
+        rot_mat = np.vstack([rot_mat, [0, 0, 1]])
+        transformation_matrix = np.matmul(rot_mat, trans_mat)
+        img_0 = cv2.warpPerspective(
+            img_0,
+            transformation_matrix,
+            (img_0.shape[1], img_0.shape[0]),
+            borderMode=cv2.BORDER_WRAP,
+        )
 
-                        warp(
-                            prev,
-                            frame2,
-                            flo_path,
-                            blend=args.video_init_flow_blend,
-                            weights_path=weights_path,
-                        ).save(init_image)
+        init_image = prev_frame_scaled_path
+        cv2.imwrite(init_image, img_0)
+        init_scale = args.frames_scale
+        skip_steps = args.calc_frames_skip_steps
+        return seed, init_image, init_scale, skip_steps
 
-                else:
-                    init_image = os.path.join(
-                        args.video_frames_dir, f"{frame_num+1:04}.jpg"
+    def _init_3d(
+        self,
+        frame_num,
+        seed,
+        midas_model,
+        midas_transform,
+        args,
+    ):
+        import cv2
+        from .diffuse import generate_eye_views
+
+        batch_dir = self._output.batch_dir
+        prev_frame_path = self._output.prev_frame_path
+        prev_frame_scaled_path = self._output.prev_frame_scaled_path
+        old_frame_scaled_path = self._output.old_frame_scaled_path
+        skip_frame = False
+
+        seed += 1
+        if args.resume_run and frame_num == args.start_frame:
+            img_filepath = os.path.join(
+                batch_dir,
+                f"{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png",
+            )
+            if args.turbo_mode and frame_num > args.turbo_preroll:
+                shutil.copyfile(img_filepath, old_frame_scaled_path)
+        else:
+            img_filepath = prev_frame_path
+
+        next_step_pil = self._3d_step(
+            img_filepath, frame_num, midas_model, midas_transform
+        )
+        next_step_pil.save(prev_frame_scaled_path)
+
+        ### Turbo mode - skip some diffusions, use 3d morph for clarity and to save time
+        if args.turbo_mode:
+            if frame_num == args.turbo_preroll:  # start tracking oldframe
+                # stash for later blending
+                next_step_pil.save(old_frame_scaled_path)
+            elif frame_num > args.turbo_preroll:
+                # set up 2 warped image sequences, old & new, to blend toward new diff image
+                old_frame = self._3d_step(
+                    old_frame_scaled_path,
+                    frame_num,
+                    midas_model,
+                    midas_transform,
+                )
+                old_frame.save(old_frame_scaled_path)
+                if frame_num % int(args.turbo_steps) != 0:
+                    log.info("turbo skip this frame: skipping clip diffusion steps")
+                    filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}.png"
+                    blend_factor = ((frame_num % int(args.turbo_steps)) + 1) / int(
+                        args.turbo_steps
                     )
+                    log.info(
+                        "turbo skip this frame: skipping clip diffusion steps and saving blended frame"
+                    )
+                    # this is already updated..
+                    newWarpedImg = cv2.imread(prev_frame_scaled_path)
+                    oldWarpedImg = cv2.imread(old_frame_scaled_path)
+                    blendedImage = cv2.addWeighted(
+                        newWarpedImg,
+                        blend_factor,
+                        oldWarpedImg,
+                        1 - blend_factor,
+                        0.0,
+                    )
+                    _img_path = os.path.join(batch_dir, filename)
+                    cv2.imwrite(_img_path, blendedImage)
+                    # save it also as prev_frame to feed next iteration
+                    next_step_pil.save(img_filepath)
+                    if args.vr_mode:
+                        generate_eye_views(
+                            self.TRANSLATION_SCALE,
+                            self._output.batch_dir,
+                            filename,
+                            frame_num,
+                            midas_model,
+                            midas_transform,
+                            self.cuda_device,
+                            args.vr_eye_angle,
+                            args.vr_ipd,
+                            args.near_plane,
+                            args.far_plane,
+                            args.fov,
+                            args.padding_mode,
+                            args.sampling_mode,
+                            args.midas_weight,
+                        )
+                    skip_frame = True
+                else:
+                    # if not a skip frame, will run diffusion and need to blend.
+                    oldWarpedImg = cv2.imread(prev_frame_scaled_path)
+                    # swap in for blending later
+                    cv2.imwrite(old_frame_scaled_path, oldWarpedImg)
+                    log.info("clip/diff this frame - generate clip diff image")
+
+        init_image = prev_frame_scaled_path
+        init_scale = args.frames_scale
+        skip_steps = args.calc_frames_skip_steps
+
+        return seed, init_image, init_scale, skip_steps, skip_frame
+
+    def _init_video(self, frame_num, seed, args):
+        from .flow import warp
+
+        batch_dir = self._output.batch_dir
+        video_frames_dir = self._output.video_frames_dir
+        warped_path = self._output.warped_path
+
+        init_scale = args.video_init_frames_scale
+        skip_steps = args.calc_frames_skip_steps
+
+        if not args.video_init_seed_continuity:
+            seed += 1
+        if args.video_init_flow_warp:
+            if frame_num == 0:
+                skip_steps = args.video_init_skip_steps
+                init_image = os.path.join(video_frames_dir, f"{frame_num+1:04}.jpg")
+            if frame_num > 0:
+                _img_path = os.path.join(
+                    batch_dir,
+                    f"{args.batch_name}({args.batch_num})_{frame_num-1:04}.png",
+                )
+                prev = PIL.Image.open(_img_path)
+
+                frame1_path = os.path.join(video_frames_dir, f"{frame_num:04}.jpg")
+                frame2_path = os.path.join(video_frames_dir, f"{frame_num+1:04}.jpg")
+                frame2 = PIL.Image.open(frame2_path)
+                flo_path = os.path.join(
+                    args.self._video.flo_dir,
+                    f"{frame1_path.split('/')[-1]}.npy",
+                )
+
+                init_image = warped_path
+                log(args.video_init_flow_blend)
+                weights_path = None
+                if args.video_init_check_consistency:
+                    # TBD
+                    pass
+
+                warp(
+                    prev,
+                    frame2,
+                    flo_path,
+                    blend=args.video_init_flow_blend,
+                    weights_path=weights_path,
+                ).save(init_image)
+
+        else:
+            init_image = os.path.join(video_frames_dir, f"{frame_num+1:04}.jpg")
+        return seed, init_image, init_scale, skip_steps
+
+    def _run_anim(self, args):
+        """Run the simulation"""
+        from .midas import Midas
+        from ipywidgets import Output
+
+        seed = args.seed
+        diffusion = self.diffusion
+        midas_model = None
+        midas_transform = None
+        cur_t = None
+
+        text_series, image_series = self._get_prompt_series(args, args.max_frames)
+
+        if (args.animation_mode == AnimMode.ANIM_3D) and (args.midas_weight > 0.0):
+            midas = Midas(**self._midas)
+            midas_model, midas_transform, _, _, _, _ = midas.init_midas_depth_model(
+                args.midas_depth_model
+            )
+        if args.animation_mode == AnimMode.VIDEO_INPUT:
+            log.info("> init optical flow...")
+            self.init_flow_warp(args)
+
+        log.info(f"looping over range({args.start_frame}, {args.max_frames})")
+        for frame_num in range(args.start_frame, args.max_frames):
+            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
+            if args.stop_on_next_loop:
+                break
+
+            eKonf.clear_output(wait=True)
+            batchBar = tqdm(
+                range(args.max_frames),
+                desc=f"{args.batch_name}({args.batch_num}) frames",
+            )
+            batchBar.n = frame_num
+            batchBar.refresh()
+
+            init_image = None
+            if os.path.exists(args.init_image):
+                init_image = args.init_image
+            init_scale = args.init_scale
+            skip_steps = args.skip_steps
+
+            if args.animation_mode == AnimMode.ANIM_2D:
+                if frame_num > 0:
+                    seed, init_image, init_scale, skip_steps = self._init_2d(
+                        frame_num,
+                        seed,
+                        args,
+                    )
+            if args.animation_mode == AnimMode.ANIM_3D:
+                if frame_num > 0:
+                    (
+                        seed,
+                        init_image,
+                        init_scale,
+                        skip_steps,
+                        skip_frame,
+                    ) = self._init_3d(
+                        frame_num,
+                        seed,
+                        midas_model,
+                        midas_transform,
+                        args,
+                    )
+                    if skip_frame:
+                        continue
+            if args.animation_mode == AnimMode.VIDEO_INPUT:
+                seed, init_image, init_scale, skip_steps = self._init_video(
+                    frame_num, seed, args
+                )
 
             loss_values = []
 
@@ -584,435 +1043,141 @@ class DiscoDiffusion(BaseTTIModel):
                 torch.cuda.manual_seed_all(seed)
                 torch.backends.cudnn.deterministic = True
 
-            target_embeds, weights = [], []
-
-            if self.prompts_series is not None and frame_num >= len(
-                self.prompts_series
-            ):
-                frame_prompt = self.prompts_series[-1]
-            elif self.prompts_series is not None:
-                frame_prompt = self.prompts_series[frame_num]
-            else:
-                frame_prompt = []
-
-            if self.image_prompts_series is not None and frame_num >= len(
-                self.image_prompts_series
-            ):
-                image_prompt = self.image_prompts_series[-1]
-            elif self.image_prompts_series is not None:
-                image_prompt = self.image_prompts_series[frame_num]
-            else:
-                image_prompt = []
+            text_prompt, image_prompt = self._get_prompt(
+                text_series, image_series, frame_num
+            )
             log.info(f"Image prompt: {image_prompt}")
-            log.info(f"Frame {frame_num} Prompt: {frame_prompt}")
+            log.info(f"Frame {frame_num} Prompt: {text_prompt}")
 
-            model_stats = []
-            for clip_model in self.clip_models:
-                cutn = 16
-                model_stat = {
-                    "clip_model": None,
-                    "target_embeds": [],
-                    "make_cutouts": None,
-                    "weights": [],
-                }
-                model_stat["clip_model"] = clip_model
-
-                for prompt in frame_prompt:
-                    txt, weight = parse_prompt(prompt)
-                    txt = clip_model.encode_text(
-                        clip.tokenize(prompt).to(self.cuda_device)
-                    ).float()
-
-                    if args.fuzzy_prompt:
-                        for i in range(25):
-                            model_stat["target_embeds"].append(
-                                (
-                                    txt + torch.randn(txt.shape).cuda() * args.rand_mag
-                                ).clamp(0, 1)
-                            )
-                            model_stat["weights"].append(weight)
-                    else:
-                        model_stat["target_embeds"].append(txt)
-                        model_stat["weights"].append(weight)
-
-                if image_prompt:
-                    model_stat["make_cutouts"] = MakeCutouts(
-                        clip_model.visual.input_resolution,
-                        cutn,
-                        skip_augs=args.skip_augs,
-                    )
-                    for prompt in image_prompt:
-                        path, weight = parse_prompt(prompt)
-                        img = Image.open(fetch(path)).convert("RGB")
-                        img = TF.resize(
-                            img,
-                            min(args.side_x, args.side_y, *img.size),
-                            T.InterpolationMode.LANCZOS,
-                        )
-                        batch = model_stat["make_cutouts"](
-                            TF.to_tensor(img)
-                            .to(self.cuda_device)
-                            .unsqueeze(0)
-                            .mul(2)
-                            .sub(1)
-                        )
-                        embed = clip_model.encode_image(self.normalize(batch)).float()
-                        if args.fuzzy_prompt:
-                            for i in range(25):
-                                model_stat["target_embeds"].append(
-                                    (
-                                        embed
-                                        + torch.randn(embed.shape).cuda()
-                                        * args.rand_mag
-                                    ).clamp(0, 1)
-                                )
-                                weights.extend([weight / cutn] * cutn)
-                        else:
-                            model_stat["target_embeds"].append(embed)
-                            model_stat["weights"].extend([weight / cutn] * cutn)
-
-                model_stat["target_embeds"] = torch.cat(model_stat["target_embeds"])
-                model_stat["weights"] = torch.tensor(
-                    model_stat["weights"], device=self.cuda_device
-                )
-                if model_stat["weights"].sum().abs() < 1e-3:
-                    raise RuntimeError("The weights must not sum to 0.")
-                model_stat["weights"] /= model_stat["weights"].sum().abs()
-                model_stats.append(model_stat)
-
-            init = None
-            if init_image is not None:
-                init = Image.open(fetch(init_image)).convert("RGB")
-                init = init.resize((args.side_x, args.side_y), Image.LANCZOS)
-                init = (
-                    TF.to_tensor(init).to(self.cuda_device).unsqueeze(0).mul(2).sub(1)
-                )
-
-            if args.perlin_init:
-                if args.perlin_mode == "color":
-                    init = create_perlin_noise(
-                        [1.5 ** -i * 0.5 for i in range(12)], 1, 1, False
-                    )
-                    init2 = create_perlin_noise(
-                        [1.5 ** -i * 0.5 for i in range(8)], 4, 4, False
-                    )
-                elif args.perlin_mode == "gray":
-                    init = create_perlin_noise(
-                        [1.5 ** -i * 0.5 for i in range(12)], 1, 1, True
-                    )
-                    init2 = create_perlin_noise(
-                        [1.5 ** -i * 0.5 for i in range(8)], 4, 4, True
-                    )
-                else:
-                    init = create_perlin_noise(
-                        [1.5 ** -i * 0.5 for i in range(12)], 1, 1, False
-                    )
-                    init2 = create_perlin_noise(
-                        [1.5 ** -i * 0.5 for i in range(8)], 4, 4, True
-                    )
-                # init = TF.to_tensor(init).add(TF.to_tensor(init2)).div(2).to(device)
-                init = (
-                    TF.to_tensor(init)
-                    .add(TF.to_tensor(init2))
-                    .div(2)
-                    .to(self.cuda_device)
-                    .unsqueeze(0)
-                    .mul(2)
-                    .sub(1)
-                )
-                del init2
-
-            cur_t = None
-
-            cuda_device = self.cuda_device
-            model = self.model
-            diffusion = self.diffusion
-            secondary_model = self.secondary_model
-
-            def cond_fn(x, t, y=None):
-                with torch.enable_grad():
-                    x_is_NaN = False
-                    x = x.detach().requires_grad_()
-                    n = x.shape[0]
-                    if self._model.use_secondary_model:
-                        alpha = torch.tensor(
-                            diffusion.sqrt_alphas_cumprod[cur_t],
-                            device=cuda_device,
-                            dtype=torch.float32,
-                        )
-                        sigma = torch.tensor(
-                            diffusion.sqrt_one_minus_alphas_cumprod[cur_t],
-                            device=cuda_device,
-                            dtype=torch.float32,
-                        )
-                        cosine_t = alpha_sigma_to_t(alpha, sigma)
-                        out = secondary_model(x, cosine_t[None].repeat([n])).pred
-                        fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
-                        x_in = out * fac + x * (1 - fac)
-                        x_in_grad = torch.zeros_like(x_in)
-                    else:
-                        my_t = (
-                            torch.ones([n], device=cuda_device, dtype=torch.long)
-                            * cur_t
-                        )
-                        out = diffusion.p_mean_variance(
-                            model, x, my_t, clip_denoised=False, model_kwargs={"y": y}
-                        )
-                        fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
-                        x_in = out["pred_xstart"] * fac + x * (1 - fac)
-                        x_in_grad = torch.zeros_like(x_in)
-                    for model_stat in model_stats:
-                        for i in range(args.cutn_batches):
-                            t_int = (
-                                int(t.item()) + 1
-                            )  # errors on last step without +1, need to find source
-                            # when using SLIP Base model the dimensions need to be hard coded to avoid AttributeError: 'VisionTransformer' object has no attribute 'input_resolution'
-                            try:
-                                input_resolution = model_stat[
-                                    "clip_model"
-                                ].visual.input_resolution
-                            except:
-                                input_resolution = 224
-
-                            cuts = MakeCutoutsDango(
-                                args.animation_mode,
-                                input_resolution,
-                                args.skip_augs,
-                                Overview=cut_overview[1000 - t_int],
-                                InnerCrop=cut_innercut[1000 - t_int],
-                                IC_Size_Pow=args.cut_ic_pow,
-                                IC_Grey_P=cut_icgray_p[1000 - t_int],
-                            )
-                            clip_in = self.normalize(cuts(x_in.add(1).div(2)))
-                            image_embeds = (
-                                model_stat["clip_model"].encode_image(clip_in).float()
-                            )
-                            dists = spherical_dist_loss(
-                                image_embeds.unsqueeze(1),
-                                model_stat["target_embeds"].unsqueeze(0),
-                            )
-                            dists = dists.view(
-                                [
-                                    cut_overview[1000 - t_int]
-                                    + cut_innercut[1000 - t_int],
-                                    n,
-                                    -1,
-                                ]
-                            )
-                            losses = dists.mul(model_stat["weights"]).sum(2).mean(0)
-                            loss_values.append(
-                                losses.sum().item()
-                            )  # log loss, probably shouldn't do per cutn_batch
-                            x_in_grad += (
-                                torch.autograd.grad(
-                                    losses.sum() * args.clip_guidance_scale, x_in
-                                )[0]
-                                / args.cutn_batches
-                            )
-                    tv_losses = tv_loss(x_in)
-                    if self._model.use_secondary_model:
-                        range_losses = range_loss(out)
-                    else:
-                        range_losses = range_loss(out["pred_xstart"])
-                    sat_losses = torch.abs(x_in - x_in.clamp(min=-1, max=1)).mean()
-                    loss = (
-                        tv_losses.sum() * args.tv_scale
-                        + range_losses.sum() * args.range_scale
-                        + sat_losses.sum() * args.sat_scale
-                    )
-                    if init is not None and init_scale:
-                        init_losses = self.lpips_model(x_in, init)
-                        loss = loss + init_losses.sum() * init_scale
-                    x_in_grad += torch.autograd.grad(loss, x_in)[0]
-                    if torch.isnan(x_in_grad).any() == False:
-                        grad = -torch.autograd.grad(x_in, x, x_in_grad)[0]
-                    else:
-                        # print("NaN'd")
-                        x_is_NaN = True
-                        grad = torch.zeros_like(x)
-                if args.clamp_grad and x_is_NaN == False:
-                    magnitude = grad.square().mean().sqrt()
-                    return (
-                        grad * magnitude.clamp(max=args.clamp_max) / magnitude
-                    )  # min=-0.02, min=-clamp_max,
-                return grad
-
-            if self._model.diffusion_sampling_mode == "ddim":
-                sample_fn = diffusion.ddim_sample_loop_progressive
-            else:
-                sample_fn = diffusion.plms_sample_loop_progressive
+            model_stats = self._get_model_stats(text_prompt, image_prompt, args)
+            init = self._init_image(init_image, args)
 
             image_display = Output()
-            for i in range(args.n_samples):
-                if args.animation_mode == "None":
-                    display.clear_output(wait=True)
-                    batchBar = tqdm(
-                        range(args.n_samples),
-                        desc=f"{args.batch_name}({args.batch_num})",
-                    )
-                    batchBar.n = i
-                    batchBar.refresh()
-                # print("")
-                display.display(image_display)
-                gc.collect()
-                torch.cuda.empty_cache()
-                cur_t = diffusion.num_timesteps - skip_steps - 1
-                total_steps = cur_t
 
-                if args.perlin_init:
-                    init = regen_perlin(
-                        args.perlin_mode,
-                        args.batch_size,
-                        args.side_x,
-                        args.side_y,
-                        self.cuda_device,
-                    )
+            eKonf.display(image_display)
+            gc.collect()
+            torch.cuda.empty_cache()
+            cur_t = diffusion.num_timesteps - skip_steps - 1
 
-                if self._model.diffusion_sampling_mode == "ddim":
-                    samples = sample_fn(
-                        model,
-                        (args.batch_size, 3, args.side_y, args.side_x),
-                        clip_denoised=args.clip_denoised,
-                        model_kwargs={},
-                        cond_fn=cond_fn,
-                        progress=True,
-                        skip_timesteps=skip_steps,
-                        init_image=init,
-                        randomize_class=args.randomize_class,
-                        eta=args.eta,
-                        # transformation_fn=symmetry_transformation_fn,
-                        # transformation_percent=_extra.transformation_percent,
-                    )
-                else:
-                    samples = sample_fn(
-                        model,
-                        (args.batch_size, 3, args.side_y, args.side_x),
-                        clip_denoised=args.clip_denoised,
-                        model_kwargs={},
-                        cond_fn=cond_fn,
-                        progress=True,
-                        skip_timesteps=skip_steps,
-                        init_image=init,
-                        randomize_class=args.randomize_class,
-                        order=2,
-                    )
+            loss_values = self._generate_progress_samples(
+                cur_t,
+                init,
+                init_scale,
+                skip_steps,
+                loss_values,
+                model_stats,
+                frame_num,
+                diffusion,
+                midas_model,
+                midas_transform,
+                image_display,
+                args,
+            )
 
-                # with run_display:
-                # display.clear_output(wait=True)
-                for j, sample in enumerate(samples):
-                    cur_t -= 1
-                    intermediate_step = False
-                    if args.steps_per_checkpoint is not None:
-                        if j % args.steps_per_checkpoint == 0 and j > 0:
-                            intermediate_step = True
-                    elif j in args.intermediate_saves:
-                        intermediate_step = True
-                    with image_display:
-                        if (
-                            j % args.display_rate == 0
-                            or cur_t == -1
-                            or intermediate_step == True
-                        ):
-                            for k, image in enumerate(sample["pred_xstart"]):
-                                # tqdm.write(f'Batch {i}, step {j}, output {k}:')
-                                current_time = datetime.now().strftime(
-                                    "%y%m%d-%H%M%S_%f"
-                                )
-                                percent = math.ceil(j / total_steps * 100)
-                                if args.n_samples > 0:
-                                    # if intermediates are saved to the subfolder, don't append a step or percentage to the name
-                                    if cur_t == -1 and args.intermediates_in_subfolder:
-                                        save_num = (
-                                            frame_num
-                                            if args.animation_mode != "None"
-                                            else i
-                                        )
-                                        filename = f"{args.batch_name}({args.batch_num})_{save_num:04}.png"
-                                    else:
-                                        # If we're working with percentages, append it
-                                        if args.steps_per_checkpoint is not None:
-                                            # filename = f"{args.batch_name}({args.batch_num})_{i:04}-{percent:03}%.png"
-                                            filename = f"{args.batch_name}({args.batch_num})_{i:04}-{j:03}.png"
-                                        # Or else, iIf we're working with specific steps, append those
-                                        else:
-                                            filename = f"{args.batch_name}({args.batch_num})_{i:04}-{j:03}.png"
-                                image = TF.to_pil_image(image.add(1).div(2).clamp(0, 1))
-                                if j % args.display_rate == 0 or cur_t == -1:
-                                    image.save(progress_path)
-                                    display.clear_output(wait=True)
-                                    display.display(display.Image(progress_path))
+            plt.plot(np.array(loss_values), "r")
 
-                                if args.intermediates_in_subfolder:
-                                    _img_path = os.path.join(
-                                        self._output.partial_dir, filename
-                                    )
-                                else:
-                                    _img_path = os.path.join(batch_dir, filename)
+        batchBar.n = frame_num + 1
+        batchBar.refresh()
 
-                                if args.steps_per_checkpoint is not None:
-                                    if j % args.steps_per_checkpoint == 0 and j > 0:
-                                        image.save(_img_path)
-                                else:
-                                    if j in args.intermediate_saves:
-                                        image.save(_img_path)
-                                if cur_t == -1:
-                                    if frame_num == 0:
-                                        self.save_settings(args)
-                                    if args.animation_mode != "None":
-                                        image.save(prev_frame_path)
-                                    _img_path = os.path.join(batch_dir, filename)
-                                    image.save(_img_path)
-                                    self.sample_imagepaths.append(_img_path)
-                                    log.info(f"Saved {filename}")
-                                    if args.animation_mode == "3D":
-                                        # If turbo, save a blended image
-                                        _img_path = os.path.join(batch_dir, filename)
-                                        if args.turbo_mode and frame_num > 0:
-                                            # Mix new image with prevFrameScaled
-                                            blend_factor = (1) / int(args.turbo_steps)
-                                            # This is already updated..
-                                            newFrame = cv2.imread(prev_frame_path)
-                                            prev_frame_warped = cv2.imread(
-                                                prev_frame_scaled_path
-                                            )
-                                            blendedImage = cv2.addWeighted(
-                                                newFrame,
-                                                blend_factor,
-                                                prev_frame_warped,
-                                                (1 - blend_factor),
-                                                0.0,
-                                            )
-                                            cv2.imwrite(_img_path, blendedImage)
-                                        else:
-                                            image.save(_img_path)
+    def _get_prompt_series(self, args, max_frames):
+        text_prompts = eKonf.to_dict(args.text_prompts)
+        image_prompts = eKonf.to_dict(args.image_prompts)
+        text_series = split_prompts(text_prompts, max_frames) if text_prompts else None
+        image_series = (
+            split_prompts(image_prompts, max_frames) if image_prompts else None
+        )
+        return text_series, image_series
 
-                                        if args.vr_mode:
-                                            generate_eye_views(
-                                                self.TRANSLATION_SCALE,
-                                                self._output.batch_dir,
-                                                filename,
-                                                frame_num,
-                                                midas_model,
-                                                midas_transform,
-                                                self.cuda_device,
-                                                args.vr_eye_angle,
-                                                args.vr_ipd,
-                                                args.near_plane,
-                                                args.far_plane,
-                                                args.fov,
-                                                args.padding_mode,
-                                                args.sampling_mode,
-                                                args.midas_weight,
-                                            )
+    def _get_prompt(self, text_series, image_series, frame_num):
+        if text_series is not None and frame_num >= len(text_series):
+            text_prompt = text_series[-1]
+        elif text_series is not None:
+            text_prompt = text_series[frame_num]
+        else:
+            text_prompt = []
 
-                                    # if frame_num != _diffuse.max_frames-1:
-                                    #   display.clear_output()
+        if image_series is not None and frame_num >= len(image_series):
+            image_prompt = image_series[-1]
+        elif image_series is not None:
+            image_prompt = image_series[frame_num]
+        else:
+            image_prompt = []
+        return text_prompt, image_prompt
 
-                if args.animation_mode == "None":
-                    batchBar.n = i + 1
-                    batchBar.refresh()
+    def _run(self, args):
+        """Run the simulation"""
+        from ipywidgets import Output
 
-                plt.plot(np.array(loss_values), "r")
+        seed = args.seed
+        diffusion = self.diffusion
+
+        midas_model = None
+        midas_transform = None
+        init_image = None
+        cur_t = None
+        loss_values = []
+
+        text_series, image_series = self._get_prompt_series(args, args.n_samples)
+
+        if os.path.exists(args.init_image):
+            init_image = args.init_image
+        init_scale = args.init_scale
+        skip_steps = args.skip_steps
+
+        if seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
+            torch.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+            torch.backends.cudnn.deterministic = True
+
+        image_display = Output()
+
+        for sample_num in range(args.n_samples):
+            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
+            if args.stop_on_next_loop:
+                break
+
+            eKonf.clear_output(wait=True)
+            batchBar = tqdm(
+                range(args.n_samples),
+                desc=f"{args.batch_name}({args.batch_num}) samples",
+            )
+            batchBar.n = sample_num
+            batchBar.refresh()
+
+            text_prompt, image_prompt = self._get_prompt(
+                text_series, image_series, sample_num
+            )
+            log.info(f"Image prompt: {image_prompt}")
+            log.info(f"Sample {sample_num} Prompt: {text_prompt}")
+
+            model_stats = self._get_model_stats(text_prompt, image_prompt, args)
+            init = self._init_image(init_image, args)
+
+            eKonf.display(image_display)
+            gc.collect()
+            torch.cuda.empty_cache()
+            cur_t = diffusion.num_timesteps - skip_steps - 1
+
+            loss_values = self._generate_progress_samples(
+                cur_t,
+                init,
+                init_scale,
+                skip_steps,
+                loss_values,
+                model_stats,
+                sample_num,
+                diffusion,
+                midas_model,
+                midas_transform,
+                image_display,
+                args,
+            )
+
+        batchBar.n = sample_num + 1
+        batchBar.refresh()
+        plt.plot(np.array(loss_values), "r")
 
     def load_config(self, batch_name=None, batch_num=None, **args):
         """Load the settings"""
@@ -1026,7 +1191,14 @@ class DiscoDiffusion(BaseTTIModel):
                 f"Changing output size to {args.side_x}x{args.side_y}. Dimensions must by multiples of 64."
             )
 
-        if args.animation_mode == "Video Input":
+        _mode = AnimMode.NONE.value
+        for mode in AnimMode:
+            if mode.value.lower() == args.animation_mode.lower():
+                _mode = mode.value
+                break
+        args.animation_mode = _mode
+
+        if args.animation_mode == AnimMode.VIDEO_INPUT:
             args.steps = args.video_init_steps
 
             log.info(f"Exporting Video Frames (1 every {args.extract_nth_frame})...")
@@ -1061,16 +1233,16 @@ class DiscoDiffusion(BaseTTIModel):
                 )
             # !ffmpeg -i {video_init_path} -vf {vf} -vsync vfr -q:v 2 -loglevel error -stats {video.video_frames_dir}/%04d.jpg
 
-        if args.animation_mode == "Video Input":
+        if args.animation_mode == AnimMode.VIDEO_INPUT:
             args.max_frames = len(glob(f"{self._output.video_frames_dir}/*.jpg"))
 
         # insist turbo be used only w 3d anim.
-        if args.turbo_mode and args.animation_mode != "3D":
+        if args.turbo_mode and args.animation_mode != AnimMode.ANIM_3D:
             log.info("Turbo mode only available with 3D animations. Disabling Turbo.")
             args.turbo_mode = False
 
         # insist VR be used only w 3d anim.
-        if args.vr_mode and args.animation_mode != "3D":
+        if args.vr_mode and args.animation_mode != AnimMode.ANIM_3D:
             log.info("VR mode only available with 3D animations. Disabling VR.")
             args.vr_mode = False
 
@@ -1287,7 +1459,7 @@ class DiscoDiffusion(BaseTTIModel):
         skip_step_ratio = int(args.frames_skip_steps.rstrip("%")) / 100
         args.calc_frames_skip_steps = math.floor(args.steps * skip_step_ratio)
 
-        if args.animation_mode == "Video Input":
+        if args.animation_mode == AnimMode.VIDEO_INPUT:
             frames = sorted(glob(self._output.in_dir + "/*.*"))
             if len(frames) == 0:
                 raise Exception(
@@ -1321,7 +1493,7 @@ class DiscoDiffusion(BaseTTIModel):
             if args.resume_from_frame == "latest":
                 start_frame = len(glob(_frame_file))
                 if (
-                    args.animation_mode != "3D"
+                    args.animation_mode != AnimMode.ANIM_3D
                     and args.turbo_mode == True
                     and start_frame > args.turbo_preroll
                     and start_frame % int(args.turbo_steps) != 0
@@ -1330,7 +1502,7 @@ class DiscoDiffusion(BaseTTIModel):
             else:
                 start_frame = int(args.resume_from_frame) + 1
                 if (
-                    args.animation_mode != "3D"
+                    args.animation_mode != AnimMode.ANIM_3D
                     and args.turbo_mode == True
                     and start_frame > args.turbo_preroll
                     and start_frame % int(args.turbo_steps) != 0
@@ -1339,7 +1511,7 @@ class DiscoDiffusion(BaseTTIModel):
                 if args.retain_overwritten_frames:
                     existing_frames = len(glob(_frame_file))
                     frames_to_save = existing_frames - start_frame
-                    print(f"Moving {frames_to_save} frames to the Retained folder")
+                    log.info(f"Moving {frames_to_save} frames to the Retained folder")
                     move_files(
                         start_frame,
                         existing_frames,
@@ -1360,10 +1532,10 @@ class DiscoDiffusion(BaseTTIModel):
             args.seed = int(args.set_seed)
         log.info(f"Using seed: {args.seed}")
 
-        args.n_samples = args.n_samples if args.animation_mode == "None" else 1
-        args.max_frames = args.max_frames if args.animation_mode != "None" else 1
+        args.n_samples = args.n_samples if args.animation_mode == AnimMode.NONE else 1
+        args.max_frames = args.max_frames if args.animation_mode != AnimMode.NONE else 1
 
-        if args.animation_mode == "Video Input":
+        if args.animation_mode == AnimMode.VIDEO_INPUT:
             # This isn't great in terms of what will get saved to the settings.. but it should work.
             args.steps = args.video_init_steps
             args.clip_guidance_scale = args.video_init_clip_guidance_scale
@@ -1382,8 +1554,6 @@ class DiscoDiffusion(BaseTTIModel):
         batch_name=None,
         batch_num=None,
         sample_num=0,
-        show=False,
-        force_remake=False,
         output_file=None,
         filename_patterns=None,
         duration=100,
@@ -1391,66 +1561,931 @@ class DiscoDiffusion(BaseTTIModel):
         width=None,
         optimize=True,
         quality=50,
+        show=False,
+        force=False,
         **kwargs,
     ):
-        from PIL import Image
-        from IPython.display import Image as Img
-        from IPython.display import display
-
         args = self.load_config(batch_name, batch_num, **kwargs)
         batch_name = batch_name or args.batch_name
         if batch_num is None:
             batch_num = args.batch_num
-        # self._prepare_folders(batch_name)
         base_dir = self._output.partial_dir
 
         filename_patterns = (
             filename_patterns or f"{batch_name}({batch_num})_{sample_num:04}-*.png"
         )
-        log.info(f"Making GIF from {filename_patterns}")
         output_file = output_file or f"{batch_name}({batch_num})_{sample_num:04}.gif"
         output_path = os.path.join(self._output.batch_dir, output_file)
-        if os.path.exists(output_path) and not force_remake:
-            log.info(f"Skipping GIF creation, already exists: {output_path}")
-        else:
-            files = sorted(glob(f"{base_dir}/{filename_patterns}"))
-            frames = [Image.open(image) for image in files]
-            if len(frames) > 0:
-                frame_one = frames[0]
-                frame_one.save(
-                    output_path,
-                    format="GIF",
-                    append_images=frames,
-                    save_all=True,
-                    duration=duration,
-                    loop=loop,
-                    optimize=optimize,
-                    quality=quality,
-                )
-                print(f"Saved GIF to {output_path}")
-            else:
-                log.warning(f"No frames found for {filename_patterns}")
 
-        if show and os.path.exists(output_path):
-            display(Img(data=open(output_path, "rb").read(), width=width))
+        eKonf.make_gif(
+            filename_patterns=filename_patterns,
+            base_dir=base_dir,
+            output_filepath=output_path,
+            duration=duration,
+            loop=loop,
+            width=width,
+            optimize=optimize,
+            quality=quality,
+            show=show,
+            force=force,
+            **kwargs,
+        )
 
     def _prepare_folders(self, batch_name):
         super()._prepare_folders(batch_name)
-        self._output.retain_dir = os.path.join(self._output.batch_dir, "retained")
-        self._output.partial_dir = os.path.join(self._output.batch_dir, "partials")
-        self._output.video_frames_dir = os.path.join(
-            self._output.batch_dir, "video_frames"
-        )
-        self._output.in_dir = self._output.video_frames_dir
-        self._output.flo_dir = os.path.join(
-            self._output.video_frames_dir, "out_flo_fwd"
-        )
-        self._output.temp_flo_dir = os.path.join(
-            self._output.video_frames_dir, "temp_flo"
-        )
-        self._output.flo_fwd_dir = os.path.join(
-            self._output.video_frames_dir, "out_flo_fwd"
-        )
-        for _name, _path in self._output.items():
-            if not os.path.exists(_path):
+        o = self._output
+        batch_dir = o.batch_dir
+        o.retain_dir = os.path.join(batch_dir, "retained")
+        o.partial_dir = os.path.join(batch_dir, "partials")
+        o.video_frames_dir = os.path.join(batch_dir, "video_frames")
+        o.in_dir = self._output.video_frames_dir
+        o.flo_dir = os.path.join(o.video_frames_dir, "out_flo_fwd")
+        o.temp_flo_dir = os.path.join(o.video_frames_dir, "temp_flo")
+        o.flo_fwd_dir = os.path.join(o.video_frames_dir, "out_flo_fwd")
+        o.flo_out_dir = os.path.join(batch_dir, "flow")
+        o.blend_out_dir = os.path.join(batch_dir, "blend")
+        for _name, _path in o.items():
+            if _name.endswith("_dir") and not os.path.exists(_path):
                 os.makedirs(_path)
+        o.prev_frame_path = os.path.join(batch_dir, "prev_frame.png")
+        o.prev_frame_scaled_path = os.path.join(batch_dir, "prev_frame_scaled.png")
+        o.progress_path = os.path.join(batch_dir, "progress.png")
+        o.warped_path = os.path.join(batch_dir, "warped.png")
+        o.old_frame_scaled_path = os.path.join(batch_dir, "old_frame_scaled.png")
+
+    def create_video(self, batch_name=None, batch_num=None, force=False, **kwargs):
+        import PIL
+        from tqdm.notebook import trange
+        from .flow import warp
+        from ekorpkit.visualize.motion import create_video as _create_video
+
+        args = self.load_config(batch_name, batch_num)
+        batch_name = batch_name or args.batch_name
+        if batch_num is None:
+            batch_num = args.batch_num
+        # @title ### **Create video**
+        # @markdown Video file will save in the same folder as your images.
+
+        _video = args.video_output
+        _video = eKonf.merge(_video, kwargs)
+
+        _in_dir = self._output.in_dir
+        _flo_dir = self._output.flo_dir
+        _batch_dir = self._output.batch_dir
+        _flo_out_dir = self._output.flo_out_dir
+        _blend_out_dir = self._output.blend_out_dir
+
+        if args.animation_mode == AnimMode.VIDEO_INPUT:
+            frames = sorted(glob(_in_dir + "/*.*"))
+            if len(frames) == 0:
+                log.warning(
+                    "ERROR: 0 frames found.\nPlease check your video input path and rerun the video settings cell."
+                )
+                return
+            flows = glob(_flo_dir + "/*.*")
+            if (len(flows) == 0) and args.video_init_flow_warp:
+                log.warning(
+                    "ERROR: 0 flow files found.\nPlease rerun the flow generation cell."
+                )
+                return
+
+        if _video.skip_video_for_run_all == True:
+            print(
+                "Skipping video creation, set skip_video_for_run_all=False if you want to run it"
+            )
+
+        else:
+            frames = []
+
+            frame_files = f"{batch_name}({batch_num})_*.png"
+            frames_path = os.path.join(_batch_dir, frame_files)
+            frames_in = glob(frames_path)
+
+            if _video.last_frame == "final_frame":
+                _video.last_frame = len(frames_in)
+                log.info(f"Total frames: {_video.last_frame}")
+
+            frame_filename = f"{batch_name}({batch_num})_%04d.png"
+            frames_in_path = os.path.join(_batch_dir, frame_filename)
+            mp4_filename = f"{batch_name}({batch_num}).mp4"
+
+            if (args.video_init_blend_mode == "optical flow") and (
+                args.animation_mode == AnimMode.VIDEO_INPUT
+            ):
+                frames_path = os.path.join(_flo_out_dir, frame_files)
+                if _video.last_frame == "final_frame":
+                    _video.last_frame = len(glob(frames_path))
+
+                frames_in_path = os.path.join(_flo_out_dir, frame_filename)
+                mp4_filename = f"{batch_name}({batch_num})_flow.mp4"
+                shutil.copy(frames_in[0], _flo_out_dir)
+
+                for i in trange(
+                    _video.init_frame, min(len(frames_in), _video.last_frame)
+                ):
+                    frame1_path = frames_in[i - 1]
+                    frame2_path = frames_in[i]
+
+                    frame1 = PIL.Image.open(frame1_path)
+                    frame2 = PIL.Image.open(frame2_path)
+                    frame1_stem = f"{(int(frame1_path.split('/')[-1].split('_')[-1][:-4])+1):04}.jpg"
+
+                    _flo_path = os.path.join(_flo_dir, f"{frame1_stem}.npy")
+                    weights_path = None
+                    if _video.video_init_check_consistency:
+                        # TBD
+                        pass
+
+                    _filename = f"{batch_name}({batch_num})_{i:04}.png"
+                    _frame_path = os.path.join(_flo_out_dir, _filename)
+                    warp(
+                        frame1,
+                        frame2,
+                        _flo_path,
+                        blend=_video.blend,
+                        weights_path=weights_path,
+                    ).save(_frame_path)
+
+            if args.video_init_blend_mode == "linear":
+                frames_path = os.path.join(_blend_out_dir, frame_files)
+                if _video.last_frame == "final_frame":
+                    _video.last_frame = len(glob(frames_path))
+
+                frames_in_path = os.path.join(_blend_out_dir, frame_filename)
+                mp4_filename = f"{batch_name}({batch_num})_blend.mp4"
+                shutil.copy(frames_in[0], _blend_out_dir)
+
+                for i in trange(1, len(frames_in)):
+                    frame1_path = frames_in[i - 1]
+                    frame2_path = frames_in[i]
+
+                    frame1 = PIL.Image.open(frame1_path)
+                    frame2 = PIL.Image.open(frame2_path)
+
+                    _filename = f"{batch_name}({batch_num})_{i:04}.png"
+                    _frame_path = os.path.join(_blend_out_dir, _filename)
+                    frame = PIL.Image.fromarray(
+                        (
+                            np.array(frame1) * (1 - _video.blend)
+                            + np.array(frame2) * (_video.blend)
+                        ).astype("uint8")
+                    ).save(_frame_path)
+
+            mp4_path = os.path.join(_batch_dir, mp4_filename)
+
+            return _create_video(
+                base_dir=_batch_dir,
+                mp4_path=mp4_path,
+                input_url=frames_in_path,
+                fps=_video.fps,
+                start_number=_video.init_frame,
+                vframes=(_video.last_frame + 1),
+                force=force,
+            )
+
+    # def _run_old(self, args):
+    #     """Run the simulation"""
+    #     import cv2
+    #     import clip
+    #     import torchvision.transforms as T
+    #     import torchvision.transforms.functional as TF
+    #     import PIL
+    #     from PIL import Image
+    #     from .midas import Midas
+    #     from .diffuse import (
+    #         generate_eye_views,
+    #         parse_prompt,
+    #         MakeCutouts,
+    #         fetch,
+    #         create_perlin_noise,
+    #         MakeCutoutsDango,
+    #         spherical_dist_loss,
+    #         tv_loss,
+    #         range_loss,
+    #         regen_perlin,
+    #     )
+    #     from .secondary import alpha_sigma_to_t
+    #     from .flow import warp
+    #     from IPython import display
+    #     from ipywidgets import Output
+
+    #     seed = args.seed
+    #     batch_dir = self._output.batch_dir
+    #     old_frame_scaled_path = os.path.join(batch_dir, "old_frame_scaled.png")
+    #     prev_frame_path = os.path.join(batch_dir, "prev_frame.png")
+    #     prev_frame_scaled_path = os.path.join(batch_dir, "prev_frame_scaled.png")
+    #     warped_path = os.path.join(batch_dir, "warped.png")
+    #     progress_path = os.path.join(batch_dir, "progress.png")
+
+    #     if (args.animation_mode == "3D") and (args.midas_weight > 0.0):
+    #         midas = Midas(**self._midas)
+    #         (
+    #             midas_model,
+    #             midas_transform,
+    #             midas_net_w,
+    #             midas_net_h,
+    #             midas_resize_mode,
+    #             midas_normalization,
+    #         ) = midas.init_midas_depth_model(args.midas_depth_model)
+
+    #     if isinstance(args.cut_overview, str):
+    #         cut_overview = eval(args.cut_overview)
+    #         cut_innercut = eval(args.cut_innercut)
+    #         cut_icgray_p = eval(args.cut_icgray_p)
+
+    #     log.info(f"looping over range({args.start_frame}, {args.max_frames})")
+    #     for frame_num in range(args.start_frame, args.max_frames):
+    #         # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
+    #         if args.stop_on_next_loop:
+    #             break
+
+    #         display.clear_output(wait=True)
+
+    #         # Print Frame progress if animation mode is on
+    #         if args.animation_mode != "None":
+    #             batchBar = tqdm(range(args.max_frames), desc="Frames")
+    #             batchBar.n = frame_num
+    #             batchBar.refresh()
+
+    #         # Inits if not video frames
+    #         if args.animation_mode != "Video Input":
+    #             if args.init_image in ["", "none", "None", "NONE"]:
+    #                 init_image = None
+    #             else:
+    #                 init_image = args.init_image
+    #             init_scale = args.init_scale
+    #             skip_steps = args.skip_steps
+
+    #         if args.animation_mode == "2D":
+    #             if args.key_frames:
+    #                 angle = self.angle_series[frame_num]
+    #                 zoom = self.zoom_series[frame_num]
+    #                 translation_x = self.translation_x_series[frame_num]
+    #                 translation_y = self.translation_y_series[frame_num]
+    #                 log.info(
+    #                     f"angle: {angle}, zoom: {zoom}, translation_x: {translation_x}, translation_y: {translation_y}"
+    #                 )
+
+    #             if frame_num > 0:
+    #                 seed += 1
+    #                 if args.resume_run and frame_num == args.start_frame:
+    #                     _img_path = os.path.join(
+    #                         batch_dir,
+    #                         f"{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png",
+    #                     )
+    #                     img_0 = cv2.imread(_img_path)
+    #                 else:
+    #                     img_0 = cv2.imread(prev_frame_path)
+    #                 center = (1 * img_0.shape[1] // 2, 1 * img_0.shape[0] // 2)
+    #                 trans_mat = np.float32(
+    #                     [[1, 0, translation_x], [0, 1, translation_y]]
+    #                 )
+    #                 rot_mat = cv2.getRotationMatrix2D(center, angle, zoom)
+    #                 trans_mat = np.vstack([trans_mat, [0, 0, 1]])
+    #                 rot_mat = np.vstack([rot_mat, [0, 0, 1]])
+    #                 transformation_matrix = np.matmul(rot_mat, trans_mat)
+    #                 img_0 = cv2.warpPerspective(
+    #                     img_0,
+    #                     transformation_matrix,
+    #                     (img_0.shape[1], img_0.shape[0]),
+    #                     borderMode=cv2.BORDER_WRAP,
+    #                 )
+
+    #                 init_image = prev_frame_scaled_path
+    #                 cv2.imwrite(init_image, img_0)
+    #                 init_scale = args.frames_scale
+    #                 skip_steps = args.calc_frames_skip_steps
+
+    #         if args.animation_mode == "3D":
+    #             if frame_num > 0:
+    #                 seed += 1
+    #                 if args.resume_run and frame_num == args.start_frame:
+    #                     img_filepath = os.path.join(
+    #                         batch_dir,
+    #                         f"{args.batch_name}({args.batch_num})_{args.start_frame-1:04}.png",
+    #                     )
+    #                     if args.turbo_mode and frame_num > args.turbo_preroll:
+    #                         shutil.copyfile(img_filepath, old_frame_scaled_path)
+    #                 else:
+    #                     img_filepath = prev_frame_path
+
+    #                 next_step_pil = self._3d_step(
+    #                     img_filepath, frame_num, midas_model, midas_transform
+    #                 )
+    #                 next_step_pil.save(prev_frame_scaled_path)
+
+    #                 ### Turbo mode - skip some diffusions, use 3d morph for clarity and to save time
+    #                 if args.turbo_mode:
+    #                     if frame_num == args.turbo_preroll:  # start tracking oldframe
+    #                         # stash for later blending
+    #                         next_step_pil.save(old_frame_scaled_path)
+    #                     elif frame_num > args.turbo_preroll:
+    #                         # set up 2 warped image sequences, old & new, to blend toward new diff image
+    #                         old_frame = self._3d_step(
+    #                             old_frame_scaled_path,
+    #                             frame_num,
+    #                             midas_model,
+    #                             midas_transform,
+    #                         )
+    #                         old_frame.save(old_frame_scaled_path)
+    #                         if frame_num % int(args.turbo_steps) != 0:
+    #                             log.info(
+    #                                 "turbo skip this frame: skipping clip diffusion steps"
+    #                             )
+    #                             filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}.png"
+    #                             blend_factor = (
+    #                                 (frame_num % int(args.turbo_steps)) + 1
+    #                             ) / int(args.turbo_steps)
+    #                             log.info(
+    #                                 "turbo skip this frame: skipping clip diffusion steps and saving blended frame"
+    #                             )
+    #                             # this is already updated..
+    #                             newWarpedImg = cv2.imread(prev_frame_scaled_path)
+    #                             oldWarpedImg = cv2.imread(old_frame_scaled_path)
+    #                             blendedImage = cv2.addWeighted(
+    #                                 newWarpedImg,
+    #                                 blend_factor,
+    #                                 oldWarpedImg,
+    #                                 1 - blend_factor,
+    #                                 0.0,
+    #                             )
+    #                             _img_path = os.path.join(batch_dir, filename)
+    #                             cv2.imwrite(_img_path, blendedImage)
+    #                             # save it also as prev_frame to feed next iteration
+    #                             next_step_pil.save(img_filepath)
+    #                             if args.vr_mode:
+    #                                 generate_eye_views(
+    #                                     self.TRANSLATION_SCALE,
+    #                                     self._output.batch_dir,
+    #                                     filename,
+    #                                     frame_num,
+    #                                     midas_model,
+    #                                     midas_transform,
+    #                                     self.cuda_device,
+    #                                     args.vr_eye_angle,
+    #                                     args.vr_ipd,
+    #                                     args.near_plane,
+    #                                     args.far_plane,
+    #                                     args.fov,
+    #                                     args.padding_mode,
+    #                                     args.sampling_mode,
+    #                                     args.midas_weight,
+    #                                 )
+    #                             continue
+    #                         else:
+    #                             # if not a skip frame, will run diffusion and need to blend.
+    #                             oldWarpedImg = cv2.imread(prev_frame_scaled_path)
+    #                             # swap in for blending later
+    #                             cv2.imwrite(old_frame_scaled_path, oldWarpedImg)
+    #                             log.info(
+    #                                 "clip/diff this frame - generate clip diff image"
+    #                             )
+
+    #                 init_image = prev_frame_scaled_path
+    #                 init_scale = args.frames_scale
+    #                 skip_steps = args.calc_frames_skip_steps
+
+    #         if args.animation_mode == "Video Input":
+    #             init_scale = args.video_init_frames_scale
+    #             skip_steps = args.calc_frames_skip_steps
+    #             if not args.video_init_seed_continuity:
+    #                 seed += 1
+    #             if args.video_init_flow_warp:
+    #                 if frame_num == 0:
+    #                     skip_steps = args.video_init_skip_steps
+    #                     init_image = os.path.join(
+    #                         args.video_frames_dir, f"{frame_num+1:04}.jpg"
+    #                     )
+    #                 if frame_num > 0:
+    #                     _img_path = os.path.join(
+    #                         batch_dir,
+    #                         f"/{args.batch_name}({args.batch_num})_{frame_num-1:04}.png",
+    #                     )
+    #                     prev = PIL.Image.open(_img_path)
+
+    #                     frame1_path = os.path.join(
+    #                         args.video_frames_dir, f"{frame_num:04}.jpg"
+    #                     )
+    #                     frame2_path = os.path.join(
+    #                         args.video_frames_dir, f"{frame_num+1:04}.jpg"
+    #                     )
+    #                     frame2 = PIL.Image.open(frame2_path)
+    #                     flo_path = os.path.join(
+    #                         args.self._video.flo_dir,
+    #                         f"{frame1_path.split('/')[-1]}.npy",
+    #                     )
+
+    #                     init_image = warped_path
+    #                     log(args.video_init_flow_blend)
+    #                     weights_path = None
+    #                     if args.video_init_check_consistency:
+    #                         # TBD
+    #                         pass
+
+    #                     warp(
+    #                         prev,
+    #                         frame2,
+    #                         flo_path,
+    #                         blend=args.video_init_flow_blend,
+    #                         weights_path=weights_path,
+    #                     ).save(init_image)
+
+    #             else:
+    #                 init_image = os.path.join(
+    #                     args.video_frames_dir, f"{frame_num+1:04}.jpg"
+    #                 )
+
+    #         loss_values = []
+
+    #         if seed is not None:
+    #             np.random.seed(seed)
+    #             random.seed(seed)
+    #             torch.manual_seed(seed)
+    #             torch.cuda.manual_seed_all(seed)
+    #             torch.backends.cudnn.deterministic = True
+
+    #         target_embeds, weights = [], []
+
+    #         if self.prompts_series is not None and frame_num >= len(
+    #             self.prompts_series
+    #         ):
+    #             frame_prompt = self.prompts_series[-1]
+    #         elif self.prompts_series is not None:
+    #             frame_prompt = self.prompts_series[frame_num]
+    #         else:
+    #             frame_prompt = []
+
+    #         if self.image_prompts_series is not None and frame_num >= len(
+    #             self.image_prompts_series
+    #         ):
+    #             image_prompt = self.image_prompts_series[-1]
+    #         elif self.image_prompts_series is not None:
+    #             image_prompt = self.image_prompts_series[frame_num]
+    #         else:
+    #             image_prompt = []
+    #         log.info(f"Image prompt: {image_prompt}")
+    #         log.info(f"Frame {frame_num} Prompt: {frame_prompt}")
+
+    #         model_stats = []
+    #         for clip_model in self.clip_models:
+    #             cutn = 16
+    #             model_stat = {
+    #                 "clip_model": None,
+    #                 "target_embeds": [],
+    #                 "make_cutouts": None,
+    #                 "weights": [],
+    #             }
+    #             model_stat["clip_model"] = clip_model
+
+    #             for prompt in frame_prompt:
+    #                 txt, weight = parse_prompt(prompt)
+    #                 txt = clip_model.encode_text(
+    #                     clip.tokenize(prompt).to(self.cuda_device)
+    #                 ).float()
+
+    #                 if args.fuzzy_prompt:
+    #                     for i in range(25):
+    #                         model_stat["target_embeds"].append(
+    #                             (
+    #                                 txt + torch.randn(txt.shape).cuda() * args.rand_mag
+    #                             ).clamp(0, 1)
+    #                         )
+    #                         model_stat["weights"].append(weight)
+    #                 else:
+    #                     model_stat["target_embeds"].append(txt)
+    #                     model_stat["weights"].append(weight)
+
+    #             if image_prompt:
+    #                 model_stat["make_cutouts"] = MakeCutouts(
+    #                     clip_model.visual.input_resolution,
+    #                     cutn,
+    #                     skip_augs=args.skip_augs,
+    #                 )
+    #                 for prompt in image_prompt:
+    #                     path, weight = parse_prompt(prompt)
+    #                     img = Image.open(fetch(path)).convert("RGB")
+    #                     img = TF.resize(
+    #                         img,
+    #                         min(args.side_x, args.side_y, *img.size),
+    #                         T.InterpolationMode.LANCZOS,
+    #                     )
+    #                     batch = model_stat["make_cutouts"](
+    #                         TF.to_tensor(img)
+    #                         .to(self.cuda_device)
+    #                         .unsqueeze(0)
+    #                         .mul(2)
+    #                         .sub(1)
+    #                     )
+    #                     embed = clip_model.encode_image(self.normalize(batch)).float()
+    #                     if args.fuzzy_prompt:
+    #                         for i in range(25):
+    #                             model_stat["target_embeds"].append(
+    #                                 (
+    #                                     embed
+    #                                     + torch.randn(embed.shape).cuda()
+    #                                     * args.rand_mag
+    #                                 ).clamp(0, 1)
+    #                             )
+    #                             weights.extend([weight / cutn] * cutn)
+    #                     else:
+    #                         model_stat["target_embeds"].append(embed)
+    #                         model_stat["weights"].extend([weight / cutn] * cutn)
+
+    #             model_stat["target_embeds"] = torch.cat(model_stat["target_embeds"])
+    #             model_stat["weights"] = torch.tensor(
+    #                 model_stat["weights"], device=self.cuda_device
+    #             )
+    #             if model_stat["weights"].sum().abs() < 1e-3:
+    #                 raise RuntimeError("The weights must not sum to 0.")
+    #             model_stat["weights"] /= model_stat["weights"].sum().abs()
+    #             model_stats.append(model_stat)
+
+    #         init = None
+    #         if init_image is not None:
+    #             init = Image.open(fetch(init_image)).convert("RGB")
+    #             init = init.resize((args.side_x, args.side_y), Image.LANCZOS)
+    #             init = (
+    #                 TF.to_tensor(init).to(self.cuda_device).unsqueeze(0).mul(2).sub(1)
+    #             )
+
+    #         if args.perlin_init:
+    #             if args.perlin_mode == "color":
+    #                 init = create_perlin_noise(
+    #                     [1.5 ** -i * 0.5 for i in range(12)], 1, 1, False
+    #                 )
+    #                 init2 = create_perlin_noise(
+    #                     [1.5 ** -i * 0.5 for i in range(8)], 4, 4, False
+    #                 )
+    #             elif args.perlin_mode == "gray":
+    #                 init = create_perlin_noise(
+    #                     [1.5 ** -i * 0.5 for i in range(12)], 1, 1, True
+    #                 )
+    #                 init2 = create_perlin_noise(
+    #                     [1.5 ** -i * 0.5 for i in range(8)], 4, 4, True
+    #                 )
+    #             else:
+    #                 init = create_perlin_noise(
+    #                     [1.5 ** -i * 0.5 for i in range(12)], 1, 1, False
+    #                 )
+    #                 init2 = create_perlin_noise(
+    #                     [1.5 ** -i * 0.5 for i in range(8)], 4, 4, True
+    #                 )
+    #             # init = TF.to_tensor(init).add(TF.to_tensor(init2)).div(2).to(device)
+    #             init = (
+    #                 TF.to_tensor(init)
+    #                 .add(TF.to_tensor(init2))
+    #                 .div(2)
+    #                 .to(self.cuda_device)
+    #                 .unsqueeze(0)
+    #                 .mul(2)
+    #                 .sub(1)
+    #             )
+    #             del init2
+
+    #         cur_t = None
+
+    #         cuda_device = self.cuda_device
+    #         model = self.model
+    #         diffusion = self.diffusion
+    #         secondary_model = self.secondary_model
+
+    #         def cond_fn(x, t, y=None):
+    #             with torch.enable_grad():
+    #                 x_is_NaN = False
+    #                 x = x.detach().requires_grad_()
+    #                 n = x.shape[0]
+    #                 if args.use_secondary_model:
+    #                     alpha = torch.tensor(
+    #                         diffusion.sqrt_alphas_cumprod[cur_t],
+    #                         device=cuda_device,
+    #                         dtype=torch.float32,
+    #                     )
+    #                     sigma = torch.tensor(
+    #                         diffusion.sqrt_one_minus_alphas_cumprod[cur_t],
+    #                         device=cuda_device,
+    #                         dtype=torch.float32,
+    #                     )
+    #                     cosine_t = alpha_sigma_to_t(alpha, sigma)
+    #                     out = secondary_model(x, cosine_t[None].repeat([n])).pred
+    #                     fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
+    #                     x_in = out * fac + x * (1 - fac)
+    #                     x_in_grad = torch.zeros_like(x_in)
+    #                 else:
+    #                     my_t = (
+    #                         torch.ones([n], device=cuda_device, dtype=torch.long)
+    #                         * cur_t
+    #                     )
+    #                     out = diffusion.p_mean_variance(
+    #                         model, x, my_t, clip_denoised=False, model_kwargs={"y": y}
+    #                     )
+    #                     fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
+    #                     x_in = out["pred_xstart"] * fac + x * (1 - fac)
+    #                     x_in_grad = torch.zeros_like(x_in)
+    #                 for model_stat in model_stats:
+    #                     for i in range(args.cutn_batches):
+    #                         t_int = (
+    #                             int(t.item()) + 1
+    #                         )  # errors on last step without +1, need to find source
+    #                         # when using SLIP Base model the dimensions need to be hard coded to avoid AttributeError: 'VisionTransformer' object has no attribute 'input_resolution'
+    #                         try:
+    #                             input_resolution = model_stat[
+    #                                 "clip_model"
+    #                             ].visual.input_resolution
+    #                         except:
+    #                             input_resolution = 224
+
+    #                         cuts = MakeCutoutsDango(
+    #                             args.animation_mode,
+    #                             input_resolution,
+    #                             args.skip_augs,
+    #                             Overview=cut_overview[1000 - t_int],
+    #                             InnerCrop=cut_innercut[1000 - t_int],
+    #                             IC_Size_Pow=args.cut_ic_pow,
+    #                             IC_Grey_P=cut_icgray_p[1000 - t_int],
+    #                         )
+    #                         clip_in = self.normalize(cuts(x_in.add(1).div(2)))
+    #                         image_embeds = (
+    #                             model_stat["clip_model"].encode_image(clip_in).float()
+    #                         )
+    #                         dists = spherical_dist_loss(
+    #                             image_embeds.unsqueeze(1),
+    #                             model_stat["target_embeds"].unsqueeze(0),
+    #                         )
+    #                         dists = dists.view(
+    #                             [
+    #                                 cut_overview[1000 - t_int]
+    #                                 + cut_innercut[1000 - t_int],
+    #                                 n,
+    #                                 -1,
+    #                             ]
+    #                         )
+    #                         losses = dists.mul(model_stat["weights"]).sum(2).mean(0)
+    #                         loss_values.append(
+    #                             losses.sum().item()
+    #                         )  # log loss, probably shouldn't do per cutn_batch
+    #                         x_in_grad += (
+    #                             torch.autograd.grad(
+    #                                 losses.sum() * args.clip_guidance_scale, x_in
+    #                             )[0]
+    #                             / args.cutn_batches
+    #                         )
+    #                 tv_losses = tv_loss(x_in)
+    #                 if args.use_secondary_model:
+    #                     range_losses = range_loss(out)
+    #                 else:
+    #                     range_losses = range_loss(out["pred_xstart"])
+    #                 sat_losses = torch.abs(x_in - x_in.clamp(min=-1, max=1)).mean()
+    #                 loss = (
+    #                     tv_losses.sum() * args.tv_scale
+    #                     + range_losses.sum() * args.range_scale
+    #                     + sat_losses.sum() * args.sat_scale
+    #                 )
+    #                 if init is not None and init_scale:
+    #                     init_losses = self.lpips_model(x_in, init)
+    #                     loss = loss + init_losses.sum() * init_scale
+    #                 x_in_grad += torch.autograd.grad(loss, x_in)[0]
+    #                 if torch.isnan(x_in_grad).any() == False:
+    #                     grad = -torch.autograd.grad(x_in, x, x_in_grad)[0]
+    #                 else:
+    #                     # print("NaN'd")
+    #                     x_is_NaN = True
+    #                     grad = torch.zeros_like(x)
+    #             if args.clamp_grad and x_is_NaN == False:
+    #                 magnitude = grad.square().mean().sqrt()
+    #                 return (
+    #                     grad * magnitude.clamp(max=args.clamp_max) / magnitude
+    #                 )  # min=-0.02, min=-clamp_max,
+    #             return grad
+
+    #         if args.diffusion_sampling_mode == "ddim":
+    #             sample_fn = diffusion.ddim_sample_loop_progressive
+    #         else:
+    #             sample_fn = diffusion.plms_sample_loop_progressive
+
+    #         image_display = Output()
+    #         for i in range(args.n_samples):
+    #             if args.animation_mode == "None":
+    #                 display.clear_output(wait=True)
+    #                 batchBar = tqdm(
+    #                     range(args.n_samples),
+    #                     desc=f"{args.batch_name}({args.batch_num})",
+    #                 )
+    #                 batchBar.n = i
+    #                 batchBar.refresh()
+    #             # print("")
+    #             display.display(image_display)
+    #             gc.collect()
+    #             torch.cuda.empty_cache()
+    #             cur_t = diffusion.num_timesteps - skip_steps - 1
+    #             total_steps = cur_t
+
+    #             if args.perlin_init:
+    #                 init = regen_perlin(
+    #                     args.perlin_mode,
+    #                     args.batch_size,
+    #                     args.side_x,
+    #                     args.side_y,
+    #                     self.cuda_device,
+    #                 )
+
+    #             if args.diffusion_sampling_mode == "ddim":
+    #                 samples = sample_fn(
+    #                     model,
+    #                     (args.batch_size, 3, args.side_y, args.side_x),
+    #                     clip_denoised=args.clip_denoised,
+    #                     model_kwargs={},
+    #                     cond_fn=cond_fn,
+    #                     progress=True,
+    #                     skip_timesteps=skip_steps,
+    #                     init_image=init,
+    #                     randomize_class=args.randomize_class,
+    #                     eta=args.eta,
+    #                     # transformation_fn=symmetry_transformation_fn,
+    #                     # transformation_percent=_extra.transformation_percent,
+    #                 )
+    #             else:
+    #                 samples = sample_fn(
+    #                     model,
+    #                     (args.batch_size, 3, args.side_y, args.side_x),
+    #                     clip_denoised=args.clip_denoised,
+    #                     model_kwargs={},
+    #                     cond_fn=cond_fn,
+    #                     progress=True,
+    #                     skip_timesteps=skip_steps,
+    #                     init_image=init,
+    #                     randomize_class=args.randomize_class,
+    #                     order=2,
+    #                 )
+
+    #             # with run_display:
+    #             # display.clear_output(wait=True)
+    #             for j, sample in enumerate(samples):
+    #                 cur_t -= 1
+    #                 intermediate_step = False
+    #                 if args.steps_per_checkpoint is not None:
+    #                     if j % args.steps_per_checkpoint == 0 and j > 0:
+    #                         intermediate_step = True
+    #                 elif j in args.intermediate_saves:
+    #                     intermediate_step = True
+    #                 with image_display:
+    #                     if (
+    #                         j % args.display_rate == 0
+    #                         or cur_t == -1
+    #                         or intermediate_step == True
+    #                     ):
+    #                         for k, image in enumerate(sample["pred_xstart"]):
+    #                             # tqdm.write(f'Batch {i}, step {j}, output {k}:')
+    #                             current_time = datetime.now().strftime(
+    #                                 "%y%m%d-%H%M%S_%f"
+    #                             )
+    #                             percent = math.ceil(j / total_steps * 100)
+    #                             if args.n_samples > 0:
+    #                                 # if intermediates are saved to the subfolder, don't append a step or percentage to the name
+    #                                 if cur_t == -1 and args.intermediates_in_subfolder:
+    #                                     save_num = (
+    #                                         frame_num
+    #                                         if args.animation_mode != "None"
+    #                                         else i
+    #                                     )
+    #                                     filename = f"{args.batch_name}({args.batch_num})_{save_num:04}.png"
+    #                                 else:
+    #                                     # If we're working with percentages, append it
+    #                                     if args.steps_per_checkpoint is not None:
+    #                                         # filename = f"{args.batch_name}({args.batch_num})_{i:04}-{percent:03}%.png"
+    #                                         filename = f"{args.batch_name}({args.batch_num})_{i:04}-{j:03}.png"
+    #                                     # Or else, iIf we're working with specific steps, append those
+    #                                     else:
+    #                                         filename = f"{args.batch_name}({args.batch_num})_{i:04}-{j:03}.png"
+    #                             image = TF.to_pil_image(image.add(1).div(2).clamp(0, 1))
+    #                             if j % args.display_rate == 0 or cur_t == -1:
+    #                                 image.save(progress_path)
+    #                                 display.clear_output(wait=True)
+    #                                 display.display(display.Image(progress_path))
+
+    #                             if args.intermediates_in_subfolder:
+    #                                 _img_path = os.path.join(
+    #                                     self._output.partial_dir, filename
+    #                                 )
+    #                             else:
+    #                                 _img_path = os.path.join(batch_dir, filename)
+
+    #                             if args.steps_per_checkpoint is not None:
+    #                                 if j % args.steps_per_checkpoint == 0 and j > 0:
+    #                                     image.save(_img_path)
+    #                             else:
+    #                                 if j in args.intermediate_saves:
+    #                                     image.save(_img_path)
+    #                             if cur_t == -1:
+    #                                 if frame_num == 0:
+    #                                     self.save_settings(args)
+    #                                 if args.animation_mode != "None":
+    #                                     image.save(prev_frame_path)
+    #                                 _img_path = os.path.join(batch_dir, filename)
+    #                                 image.save(_img_path)
+    #                                 self.sample_imagepaths.append(_img_path)
+    #                                 log.info(f"Saved {filename}")
+    #                                 if args.animation_mode == "3D":
+    #                                     # If turbo, save a blended image
+    #                                     _img_path = os.path.join(batch_dir, filename)
+    #                                     if args.turbo_mode and frame_num > 0:
+    #                                         # Mix new image with prevFrameScaled
+    #                                         blend_factor = (1) / int(args.turbo_steps)
+    #                                         # This is already updated..
+    #                                         newFrame = cv2.imread(prev_frame_path)
+    #                                         prev_frame_warped = cv2.imread(
+    #                                             prev_frame_scaled_path
+    #                                         )
+    #                                         blendedImage = cv2.addWeighted(
+    #                                             newFrame,
+    #                                             blend_factor,
+    #                                             prev_frame_warped,
+    #                                             (1 - blend_factor),
+    #                                             0.0,
+    #                                         )
+    #                                         cv2.imwrite(_img_path, blendedImage)
+    #                                     else:
+    #                                         image.save(_img_path)
+
+    #                                     if args.vr_mode:
+    #                                         generate_eye_views(
+    #                                             self.TRANSLATION_SCALE,
+    #                                             self._output.batch_dir,
+    #                                             filename,
+    #                                             frame_num,
+    #                                             midas_model,
+    #                                             midas_transform,
+    #                                             self.cuda_device,
+    #                                             args.vr_eye_angle,
+    #                                             args.vr_ipd,
+    #                                             args.near_plane,
+    #                                             args.far_plane,
+    #                                             args.fov,
+    #                                             args.padding_mode,
+    #                                             args.sampling_mode,
+    #                                             args.midas_weight,
+    #                                         )
+
+    #                                 # if frame_num != _diffuse.max_frames-1:
+    #                                 #   display.clear_output()
+
+    #             if args.animation_mode == "None":
+    #                 batchBar.n = i + 1
+    #                 batchBar.refresh()
+
+    #             plt.plot(np.array(loss_values), "r")
+
+    # def diffuse(self, text_prompts=None, image_prompts=None, **args):
+    #     """Diffuse the model"""
+
+    #     log.info("> loading settings...")
+    #     args = self.load_config(**args)
+
+    #     log.info(
+    #         f"Starting Run: {args.batch_name}({args.batch_num}) at frame {args.start_frame}"
+    #     )
+
+    #     text_prompts = text_prompts or eKonf.to_dict(args.text_prompts)
+    #     image_prompts = image_prompts or eKonf.to_dict(args.image_prompts)
+    #     if isinstance(text_prompts, str):
+    #         text_prompts = {0: [text_prompts]}
+    #     elif isinstance(text_prompts, list):
+    #         text_prompts = {0: text_prompts}
+    #     if isinstance(image_prompts, str):
+    #         image_prompts = {0: [image_prompts]}
+    #     elif isinstance(image_prompts, list):
+    #         image_prompts = {0: image_prompts}
+    #     self.prompts_series = (
+    #         split_prompts(text_prompts, args.max_frames) if text_prompts else None
+    #     )
+    #     self.image_prompts_series = (
+    #         split_prompts(image_prompts, args.max_frames) if image_prompts else None
+    #     )
+    #     args.text_prompts = text_prompts
+    #     args.image_prompts = image_prompts
+    #     self._config = args
+
+    #     self._prepare_models()
+    #     self.sample_imagepaths = []
+    #     with elapsed_timer(format_time=True) as elapsed:
+
+    #         gc.collect()
+    #         torch.cuda.empty_cache()
+    #         try:
+    #             self._run_old(args)
+    #         except KeyboardInterrupt:
+    #             pass
+    #         finally:
+    #             log.info(f"Seed used: {args.seed}")
+    #             gc.collect()
+    #             torch.cuda.empty_cache()
+
+    #         log.info(" >> elapsed time to diffuse: {}".format(elapsed()))
+    #         if args.animation_mode == AnimMode.NONE:
+    #             print(f"{args.n_samples} samples generated to {self._output.batch_dir}")
+    #             print(f"text prompts: {text_prompts}")
+    #             print("sample image paths:")
+    #             for p in self.sample_imagepaths:
+    #                 print(p)
+
+    #             if args.show_collage:
+    #                 self.collage(image_filepaths=self.sample_imagepaths)

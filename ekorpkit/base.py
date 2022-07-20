@@ -969,3 +969,71 @@ def _getsource(obj):
 def _viewsource(obj):
     """Print the source code of the object."""
     print(_getsource(obj))
+
+    # from ipywidgets import Output
+
+
+def _clear_output(wait=False):
+    from IPython import display
+
+    if _is_notebook():
+        display.clear_output(wait=True)
+
+
+def _display(
+    *objs,
+    include=None,
+    exclude=None,
+    metadata=None,
+    transient=None,
+    display_id=None,
+    raw=False,
+    clear=False,
+    **kwargs,
+):
+    from IPython import display
+
+    if _is_notebook():
+        return display.display(
+            *objs,
+            include=include,
+            exclude=exclude,
+            metadata=metadata,
+            transient=transient,
+            display_id=display_id,
+            raw=raw,
+            clear=clear,
+            **kwargs,
+        )
+
+
+def _display_image(
+    data=None,
+    url=None,
+    filename=None,
+    format=None,
+    embed=None,
+    width=None,
+    height=None,
+    retina=False,
+    unconfined=False,
+    metadata=None,
+    alt=None,
+):
+    from IPython import display
+
+    if _is_notebook():
+        img = display.Image(
+            data=data,
+            url=url,
+            filename=filename,
+            format=format,
+            embed=embed,
+            width=width,
+            height=height,
+            retina=retina,
+            unconfined=unconfined,
+            metadata=metadata,
+            alt=alt,
+        )
+        return display.display(img)

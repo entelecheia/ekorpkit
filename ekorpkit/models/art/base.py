@@ -21,9 +21,6 @@ class BaseTTIModel:
 
         self.sample_imagepaths = []
 
-        self.is_notebook = eKonf.is_notebook()
-        self.is_colab = eKonf.is_colab()
-
     @property
     def path(self):
         return self._path
@@ -74,6 +71,7 @@ class BaseTTIModel:
         _path = os.path.join(
             self._output.batch_dir, f"{args.batch_name}({args.batch_num})_settings.yaml"
         )
+        log.info(f"Saving config to {_path}")
         eKonf.save(args, _path)
 
     def load_config(self, batch_name=None, batch_num=None, **args):
@@ -164,5 +162,5 @@ class BaseTTIModel:
     def _prepare_folders(self, batch_name):
         self._output.batch_dir = os.path.join(self._output.root, batch_name)
         for _name, _path in self._output.items():
-            if not os.path.exists(_path):
+            if _name.endswith("_dir") and not os.path.exists(_path):
                 os.makedirs(_path)

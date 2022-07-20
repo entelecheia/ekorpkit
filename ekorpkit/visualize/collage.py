@@ -106,3 +106,5 @@ def collage(
         if base_dir is not None:
             output_filepath = os.path.join(base_dir, output_filepath)
         plt.savefig(output_filepath, dpi=dpi)
+
+    return output_filepath

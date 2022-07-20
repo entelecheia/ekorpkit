@@ -63,8 +63,9 @@ def create_perlin_noise(
     width=2,
     height=2,
     grayscale=True,
+    device=None,
 ):
-    out = perlin_ms(octaves, width, height, grayscale)
+    out = perlin_ms(octaves, width, height, grayscale, device)
     if grayscale:
         out = TF.resize(size=(side_y, side_x), img=out.unsqueeze(0))
         out = TF.to_pil_image(out.clamp(0, 1)).convert("RGB")
