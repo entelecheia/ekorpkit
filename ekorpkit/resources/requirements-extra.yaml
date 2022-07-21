@@ -12,7 +12,7 @@ pynori: all, tokenize, pynori
 soynlp: all, tokenize, soynlp
 nltk: all, tokenize, nltk, tokenize-en
 sacremoses: all, tokenize
-emoji: all, tokenize, dataset
+emoji<2.0: all, tokenize, dataset
 # sentencepiece: tokenize
 
 tomotopy: all, topic

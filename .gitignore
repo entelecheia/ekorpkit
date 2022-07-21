@@ -13,6 +13,7 @@ core
 .ekorpkit/
 figs/
 /*.png
+/pretrained
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
