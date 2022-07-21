@@ -6,8 +6,10 @@ batch_size: 1
 resume_run: false
 run_to_resume: latest
 resume_from_frame: latest
-retain_overwritten_frames: false
+retain_overwritten_frames: true
 show_collage: true
+diffusion_sampling_mode: ddim # ['plms','ddim']
+use_secondary_model: true
 
 steps: 250 #@param [25,50,100,150,250,500,1000]{type: 'raw', allow-input: true}
 width_height: [1280, 768] #@param{type: 'raw'}
@@ -136,3 +138,13 @@ use_vertical_symmetry: false #@param {type:"boolean"}
 use_horizontal_symmetry: false #@param {type:"boolean"}
 transformation_percent: [0.09] #@param
 
+video_output:
+  skip_video_for_run_all: false
+  blend: 0.5
+  video_init_check_consistency: false
+  # @param {type:"number"} This is the frame where the video will start
+  init_frame: 1
+  # @param {type:"number"} You can change i to the number of the last frame you want to generate. It will raise an error if that number of frames does not exist.
+  last_frame: final_frame
+  fps: 12
+  view_video_in_cell: false

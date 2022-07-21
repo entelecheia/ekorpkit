@@ -14,7 +14,7 @@ scipy
 pytablewriter>=0.64.0
 ftfy
 requests>=2.0,<3.0
-rich>=12.1
+rich>=11.1
 filelock>=3.4,<3.8
 dataclasses; python_version<"3.7"
 huggingface-hub>=0.8.1

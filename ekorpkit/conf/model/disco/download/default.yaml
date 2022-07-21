@@ -3,6 +3,7 @@ check_model_SHA: false #@param{type:"boolean"}
 archive_dir: ${..path.archive_dir}
 model_dir: ${..path.model_dir}
 pretrained_dir: ${..path.pretrained_dir}
+pretrained_symlink: ./pretrained
 models:
   archive_dir: ${..archive_dir}
   model_dir: ${..model_dir}
@@ -83,3 +84,10 @@ models:
     link: https://openaipublic.azureedge.net/clip/models/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt
     archive_path: ${..archive_dir}/clip/${.filename}
     path: ${dir.home}/.cache/clip/${.filename}
+  RAFT:
+    filename: raft-things.pth
+    link: https://www.dropbox.com/s/4j4z58wuv8o0mfz/models.zip?dl=1
+    archive_path: ${..archive_dir}/models/RAFT/models/${.filename}
+    path: ${..model_dir}/${.filename}
+    zip_path: ${..archive_dir}/models/RAFT/models.zip
+    unzip: true

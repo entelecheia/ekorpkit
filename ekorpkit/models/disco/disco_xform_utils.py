@@ -1,3 +1,4 @@
+import logging
 import torch, torchvision
 import py3d_tools as p3d
 import midas_utils
@@ -14,6 +15,9 @@ except:
 
 MAX_ADABINS_AREA = 500000
 MIN_ADABINS_AREA = 448 * 448
+
+
+log = logging.getLogger(__name__)
 
 
 @torch.no_grad()
@@ -43,7 +47,7 @@ def transform_image_3d(
         """
         predictions using nyu dataset
         """
-        print("Running AdaBins depth estimation implementation...")
+        log.info("Running AdaBins depth estimation implementation...")
         infer_helper = InferenceHelper(dataset="nyu", device=device)
 
         image_pil_area = w * h
@@ -85,7 +89,7 @@ def transform_image_3d(
     midas_optimize = True
 
     # MiDaS depth estimation implementation
-    print("Running MiDaS depth estimation implementation...")
+    log.info("Running MiDaS depth estimation implementation...")
     sample = torch.from_numpy(img_midas_input).float().to(device).unsqueeze(0)
     if midas_optimize == True and device == torch.device("cuda"):
         sample = sample.to(memory_format=torch.channels_last)
@@ -99,7 +103,7 @@ def transform_image_3d(
     ).squeeze()
     prediction_np = prediction_torch.clone().cpu().numpy()
 
-    print("Finished depth estimation.")
+    log.info("Finished depth estimation.")
     torch.cuda.empty_cache()
 
     # MiDaS makes the near values greater, and the far values lesser. Let's reverse that and try to align with AdaBins a bit better.

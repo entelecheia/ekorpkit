@@ -12,7 +12,7 @@ pynori: all, tokenize, pynori
 soynlp: all, tokenize, soynlp
 nltk: all, tokenize, nltk, tokenize-en
 sacremoses: all, tokenize
-emoji: all, tokenize, dataset
+emoji<2.0: all, tokenize, dataset
 # sentencepiece: tokenize
 
 tomotopy: all, topic
@@ -30,7 +30,6 @@ beautifulsoup4: all, parser, dataset
 html-to-json: all, parser, html
 fasttext-langdetect: parser, langdetect
 cssutils: all, parser, edgar
-
 
 accelerate: all, transformers, model
 evaluate: all, transformers, model
@@ -91,9 +90,10 @@ fredapi: all, fred, fomc
 nasdaq-data-link: all, nasdaq, fomc
 statsmodels: all, fomc, stats
 
-lpips: disco
-timm: disco
-einops: disco
+lpips: disco, art
+timm: disco, art
+einops: disco, art
+jax: dalle-mini, art
 
 cleanlab: label
 snorkel: snorkel, label

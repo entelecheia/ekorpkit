@@ -1,0 +1,37 @@
+defaults:
+  - /module: dalle_mini
+  - /path: disco_imagen
+  - model: default
+  - config: default
+  - /auto: load
+
+_target_: ekorpkit.models.art.mini.DalleMini
+name: dalle-mini
+auto:
+  load: true
+verbose: ${oc.select:..verbose, false}
+cuda_device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
+num_devices:
+use_cpu: false
+text_prompts:
+  - sunset over a lake in the mountains
+  - the Eiffel tower landing on the moon
+  # - At a special meeting, hawkish central bankers are poised to raise the target rates, Trending on artstation.
+
+config:
+  batch_name: mini-batch
+  text_prompts: ${..text_prompts}
+  batch_num:
+  n_samples: 4
+  gen_top_k:
+  gen_top_p:
+  temperature:
+  cond_scale: 10.0
+  set_seed: random_seed
+  seed:
+  resume_run: false
+  run_to_resume: latest
+
+output:
+  root: ${..path.output_dir}/${..name}
+  batch_dir: ${.root}/${..config.batch_name}

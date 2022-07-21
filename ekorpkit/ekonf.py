@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from omegaconf import SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple
@@ -7,10 +6,13 @@ from .base import (
     __home_path__,
     __version__,
     _apply,
+    _clear_output,
     _compose,
     _config,
     _Defaults,
     _dependencies,
+    _display,
+    _display_image,
     _ensure_kwargs,
     _ensure_list,
     _env_set,
@@ -527,10 +529,17 @@ class eKonf:
         num_images=None,
         figsize=(30, 20),
         dpi=300,
+        title=None,
+        title_fontsize=12,
+        show_filename=False,
+        filename_offset=(5, 5),
+        fontname=None,
+        fontsize=12,
+        fontcolor=None,
     ):
-        from ekorpkit.visualize.collage import collage
+        from ekorpkit.visualize.collage import collage as _collage
 
-        collage(
+        return _collage(
             image_filepaths=image_filepaths,
             filename_patterns=filename_patterns,
             base_dir=base_dir,
@@ -539,6 +548,45 @@ class eKonf:
             num_images=num_images,
             figsize=figsize,
             dpi=dpi,
+            title=title,
+            title_fontsize=title_fontsize,
+            show_filename=show_filename,
+            filename_offset=filename_offset,
+            fontname=fontname,
+            fontsize=fontsize,
+            fontcolor=fontcolor,
+        )
+
+    @staticmethod
+    def make_gif(
+        image_filepaths=None,
+        filename_patterns=None,
+        base_dir=None,
+        output_filepath=None,
+        duration=100,
+        loop=0,
+        width=None,
+        optimize=True,
+        quality=50,
+        show=False,
+        force=False,
+        **kwargs,
+    ):
+        from ekorpkit.visualize.motion import make_gif as _make_gif
+
+        return _make_gif(
+            image_filepaths=image_filepaths,
+            filename_patterns=filename_patterns,
+            base_dir=base_dir,
+            output_filepath=output_filepath,
+            duration=duration,
+            loop=loop,
+            width=width,
+            optimize=optimize,
+            quality=quality,
+            show=show,
+            force=force,
+            **kwargs,
         )
 
     @staticmethod
@@ -584,3 +632,59 @@ class eKonf:
     @staticmethod
     def viewsource(obj):
         return _viewsource(obj)
+
+    @staticmethod
+    def clear_output(wait=False):
+        return _clear_output(wait)
+
+    @staticmethod
+    def display(
+        *objs,
+        include=None,
+        exclude=None,
+        metadata=None,
+        transient=None,
+        display_id=None,
+        raw=False,
+        clear=False,
+        **kwargs,
+    ):
+        return _display(
+            *objs,
+            include=include,
+            exclude=exclude,
+            metadata=metadata,
+            transient=transient,
+            display_id=display_id,
+            raw=raw,
+            clear=clear,
+            **kwargs,
+        )
+
+    @staticmethod
+    def display_image(
+        data=None,
+        url=None,
+        filename=None,
+        format=None,
+        embed=None,
+        width=None,
+        height=None,
+        retina=False,
+        unconfined=False,
+        metadata=None,
+        alt=None,
+    ):
+        return _display_image(
+            data=data,
+            url=url,
+            filename=filename,
+            format=format,
+            embed=embed,
+            width=width,
+            height=height,
+            retina=retina,
+            unconfined=unconfined,
+            metadata=metadata,
+            alt=alt,
+        )

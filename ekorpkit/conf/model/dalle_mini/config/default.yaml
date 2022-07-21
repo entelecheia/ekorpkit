@@ -1,0 +1,12 @@
+batch_name: mini-batch
+text_prompts: 
+batch_num:
+n_samples: 4
+gen_top_k:
+gen_top_p:
+temperature:
+cond_scale: 10.0
+set_seed: random_seed
+seed:
+resume_run: false
+run_to_resume: latest

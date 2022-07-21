@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import omegaconf
 import logging
@@ -227,21 +228,46 @@ def set_style(style, rcParams, fontpath=None, language=None, **kwargs):
     plt.rcParams.update(rcParams)
 
 
-def _configure_font(set_font_for_matplot=True, fontpath=None, verbose=False):
+def find_font_file(query):
+    matches = list(
+        filter(
+            lambda path: query in os.path.basename(path), font_manager.findSystemFonts()
+        )
+    )
+    return matches
+
+
+def _configure_font(
+    set_font_for_matplot=True, fontpath=None, fontname=None, verbose=False
+):
+    if fontname and not fontname.endswith(".ttf"):
+        fontname += ".ttf"
     if not fontpath:
         if platform.system() == "Darwin":
-            fontpath = "/System/Library/Fonts/Supplemental/AppleGothic.ttf"
+            fontname = fontname or "AppleGothic.ttf"
+            fontpath = os.path.join("/System/Library/Fonts/Supplemental/", fontname)
         elif platform.system() == "Windows":
-            fontpath = "c:/Windows/Fonts/malgun.ttf"
+            fontname = fontname or "malgun.ttf"
+            fontpath = os.path.join("c:/Windows/Fonts/", fontname)
         elif platform.system() == "Linux":
-            fontpath = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+            fontname = fontname or "NanumGothic.ttf"
+            if fontname.lower().startswith("nanum"):
+                fontpath = os.path.join("/usr/share/fonts/truetype/nanum/", fontname)
+            else:
+                fontpath = os.path.join("/usr/share/fonts/truetype/", fontname)
+        if fontpath and not Path(fontpath).is_file():
+            paths = find_font_file(fontname)
+            if len(paths) > 0:
+                fontpath = paths[0]
+            else:
+                fontpath = None
         if verbose:
-            print("Font path:", fontpath)
+            log.info(f"Font path: {fontpath}")
 
-    if not Path(fontpath).is_file():
+    if fontpath is None or not Path(fontpath).is_file():
         fontname = None
         fontpath = None
-        print(f"Font file does not exist at {fontpath}")
+        log.warning(f"Font file does not exist at {fontpath}")
         if platform.system() == "Linux":
             font_install_help = """
             apt install fontconfig
@@ -256,7 +282,9 @@ def _configure_font(set_font_for_matplot=True, fontpath=None, verbose=False):
         if set_font_for_matplot and fontname:
             rc("font", family=fontname)
             plt.rcParams["axes.unicode_minus"] = False
-    if verbose:
-        print("font family: ", plt.rcParams["font.family"])
-        print("font path: ", fontpath)
+            font_family = plt.rcParams["font.family"]
+            if verbose:
+                log.info(f"font family: {font_family}")
+        if verbose:
+            log.info(f"font name: {fontname}")
     return fontname, fontpath
