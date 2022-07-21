@@ -91,7 +91,7 @@ class BaseTTIModel:
                 batch_args = eKonf.load(_path)
                 log.info(f"Merging config with diffuse defaults")
                 _config = eKonf.merge(_config, batch_args)
-                return _config
+                # return _config
 
         log.info(f"Merging config with args: {args}")
         args = eKonf.merge(_config, args)

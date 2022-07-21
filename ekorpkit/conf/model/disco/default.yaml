@@ -35,17 +35,8 @@ config:
   side_y:
   calc_frames_skip_steps:
   start_frame:
+  start_sample:
   seed:
-  video_output:
-    skip_video_for_run_all: false
-    blend: 0.5
-    video_init_check_consistency: false
-    # @param {type:"number"} This is the frame where the video will start
-    init_frame: 1
-    # @param {type:"number"} You can change i to the number of the last frame you want to generate. It will raise an error if that number of frames does not exist.
-    last_frame: final_frame
-    fps: 12
-    view_video_in_cell: false
 
 output:
   root: ${..path.output_dir}/${..name}

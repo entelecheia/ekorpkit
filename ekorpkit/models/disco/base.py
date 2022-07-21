@@ -70,33 +70,43 @@ class DiscoDiffusion(BaseTTIModel):
         self,
         text_prompts=None,
         image_prompts=None,
+        batch_name=None,
+        batch_num=None,
         animation_mode: AnimMode = None,
+        run_to_resume=None,
         **args,
     ):
 
-        if animation_mode:
+        if text_prompts is not None:
+            args.update(dict(text_prompts=text_prompts))
+        if image_prompts is not None:
+            args.update(dict(image_prompts=image_prompts))
+        if animation_mode is not None:
             args.update(dict(animation_mode=animation_mode))
+        if run_to_resume is not None:
+            args.update(dict(run_to_resume=run_to_resume))
+
         log.info("> loading settings...")
-        args = self.load_config(**args)
+        args = self.load_config(batch_name=batch_name, batch_num=batch_num, **args)
+        args = self._prepare_config(args)
+        self._config = args
+
+        if args.animation_mode == AnimMode.NONE:
+            if args.start_sample >= args.n_samples:
+                log.warning(
+                    f"start_sample ({args.start_sample}) must be less than n_samples ({args.n_samples})"
+                )
+                return
+        else:
+            if args.start_frame >= args.max_frames:
+                log.warning(
+                    f"start frame {args.start_frame} is greater than max frames {args.max_frames}"
+                )
+                return
 
         log.info(
             f"Starting Run: {args.batch_name}({args.batch_num}) at frame {args.start_frame}"
         )
-
-        text_prompts = text_prompts or eKonf.to_dict(args.text_prompts)
-        image_prompts = image_prompts or eKonf.to_dict(args.image_prompts)
-        if isinstance(text_prompts, str):
-            text_prompts = {0: [text_prompts]}
-        elif isinstance(text_prompts, list):
-            text_prompts = {0: text_prompts}
-        if isinstance(image_prompts, str):
-            image_prompts = {0: [image_prompts]}
-        elif isinstance(image_prompts, list):
-            image_prompts = {0: image_prompts}
-        args.text_prompts = text_prompts
-        args.image_prompts = image_prompts
-        self._config = args
-
         self._prepare_models()
         self.sample_imagepaths = []
         with elapsed_timer(format_time=True) as elapsed:
@@ -985,6 +995,7 @@ class DiscoDiffusion(BaseTTIModel):
         midas_model = None
         midas_transform = None
         cur_t = None
+        batchBar = None
 
         text_series, image_series = self._get_prompt_series(args, args.max_frames)
 
@@ -1042,6 +1053,10 @@ class DiscoDiffusion(BaseTTIModel):
                 seed, init_image, init_scale, skip_steps = self._init_video(
                     frame_num, seed, args
                 )
+            log.info(f"init_image: {init_image}")
+            log.info(
+                f"init_scale: {init_scale}, skip_steps: {skip_steps}, seed: {seed}"
+            )
 
             loss_values = []
 
@@ -1085,8 +1100,9 @@ class DiscoDiffusion(BaseTTIModel):
 
             plt.plot(np.array(loss_values), "r")
 
-        batchBar.n = frame_num + 1
-        batchBar.refresh()
+        if batchBar is not None:
+            batchBar.n = frame_num + 1
+            batchBar.refresh()
 
     def _get_prompt_series(self, args, max_frames):
         text_prompts = eKonf.to_dict(args.text_prompts)
@@ -1124,6 +1140,7 @@ class DiscoDiffusion(BaseTTIModel):
         midas_transform = None
         init_image = None
         cur_t = None
+        batchBar = None
         loss_values = []
 
         text_series, image_series = self._get_prompt_series(args, args.n_samples)
@@ -1132,6 +1149,8 @@ class DiscoDiffusion(BaseTTIModel):
             init_image = args.init_image
         init_scale = args.init_scale
         skip_steps = args.skip_steps
+        log.info(f"init_image: {init_image}")
+        log.info(f"init_scale: {init_scale}, skip_steps: {skip_steps}, seed: {seed}")
 
         if seed is not None:
             np.random.seed(seed)
@@ -1141,8 +1160,8 @@ class DiscoDiffusion(BaseTTIModel):
             torch.backends.cudnn.deterministic = True
 
         image_display = Output()
-
-        for sample_num in range(args.n_samples):
+        log.info(f"looping over range({args.start_sample}, {args.n_samples})")
+        for sample_num in range(args.start_sample, args.n_samples):
             # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
             if args.stop_on_next_loop:
                 break
@@ -1184,17 +1203,33 @@ class DiscoDiffusion(BaseTTIModel):
                 args,
             )
 
-        batchBar.n = sample_num + 1
-        batchBar.refresh()
-        plt.plot(np.array(loss_values), "r")
+        if batchBar is not None:
+            batchBar.n = sample_num + 1
+            batchBar.refresh()
+            plt.plot(np.array(loss_values), "r")
 
-    def load_config(self, batch_name=None, batch_num=None, **args):
-        """Load the settings"""
-        args = super().load_config(batch_name=batch_name, batch_num=batch_num, **args)
-
+    def _prepare_config(self, args):
         batch_dir = self._output.batch_dir
         video_frames_dir = self._output.video_frames_dir
         flo_dir = self._output.flo_dir
+
+        # Ensure prompts formatted correctly
+        text_prompts = eKonf.to_dict(args.text_prompts)
+        image_prompts = eKonf.to_dict(args.image_prompts)
+        if isinstance(text_prompts, str):
+            text_prompts = {0: [text_prompts]}
+            log.info(f"converted string type text_prompts to {text_prompts}")
+        elif isinstance(text_prompts, list):
+            text_prompts = {0: text_prompts}
+            log.info(f"converted list type text_prompts to {text_prompts}")
+        if isinstance(image_prompts, str):
+            image_prompts = {0: [image_prompts]}
+            log.info(f"converted string type image_prompts to {image_prompts}")
+        elif isinstance(image_prompts, list):
+            image_prompts = {0: image_prompts}
+            log.info(f"converted list type image_prompts to {image_prompts}")
+        args.text_prompts = text_prompts
+        args.image_prompts = image_prompts
 
         # Get corrected sizes
         args.side_x = (args.width_height[0] // 64) * 64
@@ -1462,17 +1497,17 @@ class DiscoDiffusion(BaseTTIModel):
             batch_dir, f"{args.batch_name}(*)_settings.yaml"
         )
         if args.resume_run:
-            if args.run_to_resume == "latest":
-                try:
-                    args.batch_num
-                except:
+            if args.batch_num is None:
+                if args.run_to_resume == "latest":
                     args.batch_num = len(glob(batch_config_file)) - 1
-            else:
-                args.batch_num = int(args.run_to_resume)
+                    log.info("Resuming latest batch")
+                else:
+                    args.batch_num = int(args.run_to_resume)
+                    log.info("Resuming batch with run_to_resume as batch_num")
+            log.info(f"Resuming batch_num: {args.batch_num}")
 
             _frame_file = os.path.join(
-                batch_dir,
-                f"/{args.batch_name}({args.batch_num})_*.png",
+                batch_dir, f"{args.batch_name}({args.batch_num})_*.png"
             )
             if args.resume_from_frame == "latest":
                 start_frame = len(glob(_frame_file))
@@ -1508,6 +1543,7 @@ class DiscoDiffusion(BaseTTIModel):
             start_frame = 0
             args.batch_num = len(glob(batch_config_file))
         args.start_frame = start_frame
+        args.start_sample = start_frame
 
         if args.set_seed == "random_seed":
             random.seed()
