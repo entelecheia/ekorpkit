@@ -1018,7 +1018,7 @@ def _display_image(
     retina=False,
     unconfined=False,
     metadata=None,
-    alt=None,
+    **kwargs,
 ):
     from IPython import display
 
@@ -1034,6 +1034,6 @@ def _display_image(
             retina=retina,
             unconfined=unconfined,
             metadata=metadata,
-            alt=alt,
+            **kwargs,
         )
         return display.display(img)
