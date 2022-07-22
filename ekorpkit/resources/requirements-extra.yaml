@@ -94,6 +94,9 @@ lpips: disco, art
 timm: disco, art
 einops: disco, art
 jax: dalle-mini, art
+flax: art, dalle-mini
+unidecode: art, disco
+opencv-python: art, disco
 
 cleanlab: label
 snorkel: snorkel, label
