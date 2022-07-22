@@ -673,7 +673,7 @@ class eKonf:
         retina=False,
         unconfined=False,
         metadata=None,
-        alt=None,
+        **kwargs,
     ):
         return _display_image(
             data=data,
@@ -686,5 +686,5 @@ class eKonf:
             retina=retina,
             unconfined=unconfined,
             metadata=metadata,
-            alt=alt,
+            **kwargs,
         )
