@@ -1,0 +1,127 @@
+run:
+  animation_mode: "None ['None', '2D', '3D', 'Video Input'] {type:'string'}"
+  batch_name: "TimeToDisco {type: 'string'}"
+  display_rate: "20 {type: 'number'}"
+  n_samples: "6 {type: 'number'}"
+  batch_size: "1"
+  resume_run: "false"
+  run_to_resume: "latest"
+  resume_from_frame: "latest"
+  retain_overwritten_frames: "true"
+  show_collage: "true"
+  diffusion_sampling_mode: "ddim ['plms','ddim']"
+  use_secondary_model: "true"
+basic:
+  steps: "250 [25,50,100,150,250,500,1000] {type: 'raw', allow-input: true}"
+  width_height: "[1280, 768] {type: 'raw'}"
+  clip_guidance_scale: "5000 {type: 'number'}"
+  tv_scale: "0 {type: 'number'}"
+  range_scale: "150 {type: 'number'}"
+  sat_scale: "0 {type: 'number'}"
+  cutn_batches: "4 {type: 'number'}"
+  skip_augs: "false {type: 'boolean'}"
+##  Init Image Settings
+init_image:
+  init_image: "None {type: 'string'}"
+  init_scale: "1000 {type: 'integer'}"
+  skip_steps: "10 {type: 'integer'} *Make sure you set skip_steps to ~50% of your steps if you want to use an init image.*"
+##  Coherency Settings
+coherency:
+  frames_scale: "1500 {type: 'integer'} : `frame_scale` tries to guide the new frame to looking like the old one. A good default is 1500."
+  frames_skip_steps: "'60%' ['40%', '50%', '60%', '70%', '80%'] {type: 'string'} : `frame_skip_steps` will blur the previous frame - higher values will flicker less but struggle to add enough new detail to zoom into."
+# *For animation, you probably want to turn `cutn_batches` to 1 to make it quicker.*
+##  Video Init Basic Settings
+video_init:
+  video_init_steps: "100 [25,50,100,150,250,500,1000]{type: 'raw', allow-input: true}"
+  video_init_clip_guidance_scale: "1000 {type: 'number'}"
+  video_init_tv_scale: "0.1 {type: 'number'}"
+  video_init_range_scale: "150 {type: 'number'}"
+  video_init_sat_scale: "300 {type: 'number'}"
+  video_init_cutn_batches: "4 {type: 'number'}"
+  video_init_skip_steps: "50 {type: 'integer'}"
+##  Video Input Settings
+video_init_input:
+  video_init_file: "init.mp4 {type: 'string'}"
+  video_init_path: "{..path.init_dir}/{.video_init_file}"
+  extract_nth_frame: "2 {type: 'number'}"
+  persistent_frame_output_in_batch_folder: "true {type: 'boolean'}"
+  video_init_seed_continuity: "false {type: 'boolean'}"
+##  Video Optical Flow Settings
+video_init_flow:
+  video_init_flow_warp: "true {type: 'boolean'} : Call optical flow from video frames and warp prev frame with flow"
+  video_init_flow_blend: "0.999 {type: 'number'} : 0 - take next frame, 1 - take prev warped frame"
+  video_init_check_consistency: "false"
+  video_init_blend_mode: "optical flow ['None', 'linear', 'optical flow'] : Call optical flow from video frames and warp prev frame with flow"
+##  Video Init Coherency Settings
+video_init_coherency:
+  video_init_frames_scale: "15000 {type: 'integer'} : `frame_scale` tries to guide the new frame to looking like the old one. A good default is 1500."
+  video_init_frames_skip_steps: "'70%' ['40%', '50%', '60%', '70%', '80%'] {type: 'string'} : `frame_skip_steps` will blur the previous frame - higher values will flicker less but struggle to add enough new detail to zoom into."
+  force_flow_generation: "false {type:'boolean'}"
+##  2D Animation Settings
+animation_2d:
+  key_frames: "true {type: 'boolean'}"
+  max_frames: "10000 {type: 'number'}"
+  interp_spline: "Linear ['Linear','Quadratic','Cubic']{type: 'string'} : Do not change, currently will not look good."
+  angle: "'0:(0)' {type: 'string'} : All rotations are provided in degrees."
+  zoom: "'0: (1), 10: (1.05)' {type: 'string'} : # `zoom` is a multiplier of dimensions, 1 is no zoom."
+  translation_x: "'0: (0)' {type: 'string'}"
+  translation_y: "'0: (0)' {type: 'string'}"
+  translation_z: "'0: (10.0)' {type: 'string'}"
+  rotation_3d_x: "'0: (0)' {type: 'string'}"
+  rotation_3d_y: "'0: (0)' {type: 'string'}"
+  rotation_3d_z: "'0: (0)' {type: 'string'}"
+  midas_depth_model: "dpt_large {type: 'string'}"
+  midas_weight: "0.3 {type: 'number'}"
+  near_plane: "200 {type: 'number'}"
+  far_plane: "10000 {type: 'number'}"
+  fov: "40 {type: 'number'}"
+  padding_mode: "border {type: 'string'}"
+  sampling_mode: "bicubic {type: 'string'}"
+## Turbo Mode (3D anim only)
+animation_3d_turbo_mode:
+  turbo_mode: "false {type: 'boolean'} : (Starts after frame 10,) skips diffusion steps and just uses depth map to warp images for skipped frames. Speeds up rendering by 2x-4x, and may improve image coherence between frames. For different settings tuned for Turbo Mode, refer to the original Disco-Turbo Github: https://github.com/zippy731/disco-diffusion-turbo"
+  turbo_steps: '"3" ["2","3","4","5","6"] {type: "string"}'
+  turbo_preroll: "10 # frames"
+## VR Mode (3D anim only)
+animation_3d_vr_mode:
+  vr_mode: "false {type: 'boolean'} : Enables stereo rendering of left/right eye views (supporting Turbo) which use a different (fish-eye) camera projection matrix. Note the images you're prompting will work better if they have some inherent wide-angle aspect. The generated images will need to be combined into left/right videos. These can then be stitched into the VR180 format. Google made the VR180 Creator tool but subsequently stopped supporting it. It's available for download in a few places including https://www.patrickgrunwald.de/vr180-creator-download. The tool is not only good for stitching (videos and photos) but also for adding the correct metadata into existing videos, which is needed for services like YouTube to identify the format correctly. Watching YouTube VR videos isn't necessarily the easiest depending on your headset. For instance Oculus have a dedicated media studio and store which makes the files easier to access on a Quest https://creator.oculus.com/manage/mediastudio/. The command to get ffmpeg to concat your frames for each eye is in the form: `ffmpeg -framerate 15 -i frame_%4d_l.png l.mp4` (repeat for r)"
+  vr_eye_angle: "0.5 {type: 'number'} : `vr_eye_angle` is the y-axis rotation of the eyes towards the center"
+  vr_ipd: "5.0 {type: 'number'} : interpupillary distance (between the eyes)"
+## Saving Settings
+saving:
+  intermediate_saves: "0 {type: 'raw'} : Intermediate steps will save a copy at your specified intervals. You can either format it as a single integer or a list of specific steps. A value of `2` will save a copy at 33% and 66%. 0 will save none. A value of `[5, 9, 34, 45]` will save at steps 5, 9, 34, and 45. (Make sure to include the brackets)"
+  steps_per_checkpoint:
+  intermediates_in_subfolder: "true {type: 'boolean'}"
+## Advanced Settings
+advanced_perlin_init:
+  perlin_init: "false {type: 'boolean'} : Perlin init will replace your init"
+  perlin_mode: "mixed ['mixed', 'color', 'gray']"
+advanced:
+  set_seed: "random_seed {type: 'string'}"
+  eta: "0.8 {type: 'number'}"
+  clamp_grad: "true {type: 'boolean'}"
+  clamp_max: "0.05 {type: 'number'}"
+advanced_extra:
+  randomize_class: "true"
+  clip_denoised: "false"
+  fuzzy_prompt: "false"
+  rand_mag: "0.05"
+## Cutn Scheduling
+cutn_scheduling:
+  cut_overview: "'[12]*400+[4]*600' {type: 'string'} \n>> Format: `[40]*400+[20]*600` = 40 cuts for the first 400 /1000 steps, then 20 for the last 600/1000. cut_overview and cut_innercut are cumulative for total cutn on any given step. Overview cuts see the entire image and are good for early structure, innercuts are your standard cutn."
+  cut_innercut: "'[4]*400+[12]*600' {type: 'string'}"
+  cut_ic_pow: "1 {type: 'number'}"
+  cut_icgray_p: "'[0.2]*400+[0]*600' {type: 'string'}"
+## Transformation Settings
+transformation:
+  use_vertical_symmetry: "false {type: 'boolean'}"
+  use_horizontal_symmetry: "false {type: 'boolean'}"
+  transformation_percent: "[0.09]"
+video_output:
+  skip_video_for_run_all: "false"
+  blend: "0.5"
+  video_init_check_consistency: "false"
+  init_frame: "1 {type: 'number'} : This is the frame where the video will start"
+  last_frame: "final_frame {type: 'number'} \n>> You can change i to the number of the last frame you want to generate. \nIt will raise an error if that number of frames does not exist."
+  fps: "12"
+  view_video_in_cell: "false"

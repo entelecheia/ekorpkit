@@ -1,6 +1,6 @@
 import os
 import logging
-import subprocess
+import re
 import math
 import random
 import numpy as np
@@ -48,6 +48,7 @@ class DiscoDiffusion(BaseTTIModel):
     def __init__(self, **args):
         super().__init__(**args)
 
+        self._parameters = self.args.parameters
         self._midas = self.args.midas
         self.clip_models = []
         self.model = None
@@ -1747,3 +1748,17 @@ class DiscoDiffusion(BaseTTIModel):
                 vframes=(_video.last_frame + 1),
                 force=force,
             )
+
+    def parameters(self, name=None):
+        if name is None:
+            eKonf.print(self._parameters)
+        else:
+            if name in self._parameters:
+                eKonf.print(self._parameters[name])
+            else:
+                for cfg in self._parameters:
+                    for k, v in self._parameters[cfg].items():
+                        if re.search(name, k):
+                            print(f"[{k}]")
+                            print(v)
+                            print("")

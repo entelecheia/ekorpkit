@@ -15,7 +15,7 @@ from enum import Enum
 from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
-from typing import Any, List, IO, Dict, Union, Tuple
+from typing import Any, List, IO, Dict, Union, Tuple, Type
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
@@ -1037,3 +1037,23 @@ def _display_image(
             **kwargs,
         )
         return display.display(img)
+
+
+def _human_readable_type_name(t: Type) -> str:
+    """
+    Generates a useful-for-humans label for a type. For builtin types, it's just the class name (eg "str" or "int"). For other types, it includes the module (eg "pathlib.Path").
+    """
+    module = t.__module__
+    if module == "builtins":
+        return t.__qualname__
+    elif module.split(".")[0] == "ekorpkit":
+        module = "ekorpkit"
+
+    try:
+        return module + "." + t.__qualname__
+    except AttributeError:
+        return str(t)
+
+
+def _readable_types_list(type_list: List[Type]) -> str:
+    return ", ".join(_human_readable_type_name(t) for t in type_list)

@@ -2,6 +2,7 @@ defaults:
   - /module: disco
   - /path: disco
   - config: default
+  - parameters: default
   - model: default
   - diffusion_model: 512x512_diffusion_uncond_finetune_008100
   - midas: default
