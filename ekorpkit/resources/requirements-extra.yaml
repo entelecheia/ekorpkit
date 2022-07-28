@@ -96,7 +96,7 @@ einops: disco, art
 jax: dalle-mini, art
 flax: art, dalle-mini
 unidecode: art, disco
-opencv-python: art, disco
+opencv-python==4.5.5.64: art, disco
 
 cleanlab: label
 snorkel: snorkel, label
