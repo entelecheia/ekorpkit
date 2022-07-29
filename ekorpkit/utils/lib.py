@@ -56,7 +56,8 @@ def pip(
         k = k.replace("_", "-")
         _cmd.append(f"--{k}")
     _cmd.append(name)
-    
+    if verbose:
+        log.info(f"Installing: {' '.join(_cmd)}")
     res = subprocess.run(_cmd, stdout=subprocess.PIPE).stdout.decode("utf-8")
     if verbose:
         print(res)
