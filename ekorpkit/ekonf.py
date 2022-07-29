@@ -688,3 +688,44 @@ class eKonf:
             metadata=metadata,
             **kwargs,
         )
+
+    @staticmethod
+    def pip(
+        name,
+        upgrade=False,
+        prelease=False,
+        editable=False,
+        quiet=True,
+        find_links=None,
+        requirement=None,
+        force_reinstall=False,
+        verbose=False,
+        **kwargs,
+    ):
+        from ekorpkit.utils.lib import pip as _pip
+
+        return _pip(
+            name,
+            upgrade,
+            prelease,
+            editable,
+            quiet,
+            find_links,
+            requirement,
+            force_reinstall,
+            verbose,
+            **kwargs,
+        )
+
+    @staticmethod
+    def upgrade(prelease=False, quiet=True, force_reinstall=False, **kwargs):
+        from ekorpkit.utils.lib import pip
+
+        return pip(
+            name="ekorpkit",
+            upgrade=True,
+            prelease=prelease,
+            quiet=quiet,
+            force_reinstall=force_reinstall,
+            **kwargs,
+        )
