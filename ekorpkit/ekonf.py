@@ -695,7 +695,7 @@ class eKonf:
         upgrade=False,
         prelease=False,
         editable=False,
-        quiet=True,
+        quiet=False,
         find_links=None,
         requirement=None,
         force_reinstall=False,
@@ -718,7 +718,7 @@ class eKonf:
         )
 
     @staticmethod
-    def upgrade(prelease=False, quiet=True, force_reinstall=False, **kwargs):
+    def upgrade(prelease=False, quiet=False, force_reinstall=False, **kwargs):
         from ekorpkit.utils.lib import pip
 
         return pip(
