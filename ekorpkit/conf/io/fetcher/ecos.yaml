@@ -9,7 +9,34 @@ series_id:
 series_name:
 start_date:
 end_date:
-value_column: value
+cycle:
+value_column: DATA_VALUE
+auto:
+  load: false
 pipeline:
   eval_columns:
     expressions:
+api:
+  base_url: http://ecos.bok.or.kr/api
+  service_name: StatisticItemList
+  api_key: ${..ecos_api_key}
+  format: json
+  lang: kr
+  start_num: 1
+  end_num: 10000
+service_names:
+  StatisticTableList: statistic table list
+  StatisticWord: statistic term description
+  StatisticItemList: statistic item list
+  StatisticSearch: statistic search
+  KeyStatisticList: key 100 statistic list
+  StatisticMeta: statistic meta data
+results:
+  StatisticTableList:
+    P_STAT_CODE: parent statistic code
+    STAT_CODE: statistic code
+    STAT_NAME: statistic name
+    CYCLE: cycle
+    SRCH_YN: searchable
+    ORG_NAME: source name
+    

@@ -1,7 +1,6 @@
-from fileinput import filename
-import logging
 import logging
 import os
+import json
 import pandas as pd
 from ekorpkit import eKonf
 from ekorpkit.io.fetch.base import BaseFetcher
@@ -11,83 +10,118 @@ log = logging.getLogger(__name__)
 
 
 class ECOS(BaseFetcher):
-    ecos_url = "http://ecos.bok.or.kr/api/StatisticSearch/"
-
     def __init__(self, **args):
         self.args = eKonf.to_config(args)
         super().__init__(**args)
 
-        self.ecos_api_key = self.args.get("ecos_api_key")
-        self.series_id = self.args.get("series_id")
-        if isinstance(self.series_id, str):
-            self.series_id = [self.series_id]
-        elif not isinstance(self.series_id, list):
-            self.series_id = []
-        self.series_name = self.args.get("series_name")
-        self.value_column = self.args.get("value_column") or "value"
-        if self.series_name is None:
-            if self.series_id:
-                self.series_name = "_".join(self.series_id).replace("/", "_")
-            else:
-                self.series_name = self.value_column
+        self._ecos_api_key = self.args.get("ecos_api_key")
+        self._api = self.args.get("api")
 
+        self.series_id = self.args.get("series_id")
+        self.value_column = self.args.get("value_column") or "value"
         self.start_date = self.args.get("start_date")
         self.end_date = self.args.get("end_date")
+        self.cycle = self.args.get("cycle")
         self.eval_columns = self.args.get("pipeline").get("eval_columns")
 
         self.output_dir = self.args["output_dir"]
         os.makedirs(self.output_dir, exist_ok=True)
         self.output_file = self.args["output_file"]
 
-
         if self.auto.load:
             self.load(
                 series_id=self.series_id,
-                series_name=self.series_name,
                 start_date=self.start_date,
                 end_date=self.end_date,
+                cycle=self.cycle,
             )
 
-    def get(self, series_id, start_date=None, end_date=None, **kwargs):
+    def get(self, series_id, start_date=None, end_date=None, cycle="", **kwargs):
+        codes = [None, None, None, None, None]
         if "/" in series_id:
-            return self.get_nasqaq(series_id, start_date, end_date, **kwargs)
+            series_id = series_id.split("/")
+            codes[: len(series_id)] = series_id
         else:
-            series = self.get_series(series_id, start_date, end_date, **kwargs)
-            df = pd.DataFrame(series, columns=[self.value_column])
-            return df
+            codes[0] = series_id
+        data, _ = self.get_ecos(
+            service="StatisticSearch",
+            stat_code=codes[0],
+            cycle=cycle,
+            start_date=start_date,
+            end_date=end_date,
+            item_code1=codes[1],
+            item_code2=codes[2],
+            item_code3=codes[3],
+            item_code4=codes[4],
+            **kwargs,
+        )
+        return data
 
-    def get_ecos(self, stat_cd, period, start_date, end_date):
+    def get_ecos(
+        self,
+        service,
+        stat_code,
+        cycle="",
+        start_date="",
+        end_date="",
+        start_num=None,
+        end_num=None,
+        item_code1=None,
+        item_code2=None,
+        item_code3=None,
+        item_code4=None,
+        lang=None,
+        format=None,
+        **kwargs,
+    ):
         import requests
-        from bs4 import BeautifulSoup
-        import pandas as pd
-        from lxml import html
-        from urllib.request import Request, urlopen
-        from urllib.parse import urlencode, quote_plus, unquote
 
-        url = self.ecos_url + "{}/xml/kr/1/30000/{}/{}/{}/{}/".format(
-            self.ecos_api_key,
-            stat_cd,
-            period,
+        lang = lang or self._api.lang
+        format = format or self._api.format
+        start_num = start_num or self._api.start_num
+        end_num = end_num or self._api.end_num
+
+        url = "{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}".format(
+            self._api.base_url,
+            service,
+            self._ecos_api_key,
+            format,
+            lang,
+            start_num,
+            end_num,
+            stat_code,
+            cycle,
             start_date,
             end_date,
         )
+        if item_code1 is not None:
+            item_code2 = item_code2 or "?"
+            item_code3 = item_code3 or "?"
+            item_code4 = item_code4 or "?"
+
+            url += "/{}/{}/{}/{}".format(item_code1, item_code2, item_code3, item_code4)
 
         response = requests.get(url).content.decode("utf-8")
+        response = json.loads(response)
+        if service in response:
+            data = pd.DataFrame(response[service]["row"])
+            num_rows = response[service]["list_total_count"]
 
-        xml_obj = BeautifulSoup(response, "lxml-xml")
-        # xml_obj
-        rows = xml_obj.findAll("row")
-        return rows
+            return data, num_rows
+        else:
+            log.info(f"No data found for {service}")
+            if self.verbose:
+                print(response)
+            return None, None
 
     def load(
         self,
         series_id,
-        series_name=None,
         start_date=None,
         end_date=None,
+        cycle=None,
         filename=None,
         expressions=None,
-        index_name="date",
         reset_index=False,
     ):
         if isinstance(series_id, str):
@@ -95,40 +129,40 @@ class ECOS(BaseFetcher):
         elif not isinstance(series_id, list):
             series_id = []
 
-        if series_name is None:
-            series_name = "_".join(series_id).replace("/", "_")
         if filename is None:
-            filename = f"{series_name}.parquet"
+            file_name = "_".join(series_id).replace("/", "_")
+            filename = f"{file_name}.parquet"
 
         if start_date is None:
             start_date = self.start_date
         if end_date is None:
             end_date = self.end_date
+        if cycle is None:
+            cycle = self.cycle
 
         if isinstance(self.eval_columns, dict):
             self.eval_columns["expressions"] = expressions
 
         if self.verbose:
-            print(f"Loading {series_name}{series_id} from {start_date} to {end_date}")
+            print(f"Loading {series_id} from {start_date} to {end_date}")
 
         filepath = os.path.join(self.output_dir, filename)
         if not os.path.exists(filepath) or self.force.download:
-            self.data = self._load_series(
-                series_id, series_name, start_date, end_date, index_name, reset_index
+            self._data = self._load_series(
+                series_id, start_date, end_date, cycle, reset_index
             )
             eKonf.save_data(self.data, filepath, verbose=self.verbose)
         else:
             log.info(f"{filepath} already exists.")
-            self.data = eKonf.load_data(filepath, verbose=self.verbose)
+            self._data = eKonf.load_data(filepath, verbose=self.verbose)
         return self.data.copy()
 
     def _load_series(
         self,
         series_ids=None,
-        series_name=None,
         start_date=None,
         end_date=None,
-        index_name="date",
+        cycle=None,
         reset_index=False,
         **kwargs,
     ):
@@ -139,29 +173,19 @@ class ECOS(BaseFetcher):
                 series_id=series_id,
                 start_date=start_date,
                 end_date=end_date,
+                cycle=cycle,
                 **kwargs,
             )
-            if len(df.columns) == 1:
-                if series_name is None:
-                    series_name = df.columns[0]
-                df.columns = [self.value_column]
             df = eKonf.pipe(df, self.eval_columns)
             if len(series_ids) > 1:
                 df["series_id"] = series_id
-            if series_name:
-                columns = {
-                    col: col.replace(self.value_column, series_name)
-                    for col in df.columns
-                    if col.startswith(self.value_column)
-                }
-                df.rename(columns=columns, inplace=True)
             if self.verbose:
                 print(df.head())
             _dfs.append(df)
 
         df = pd.concat(_dfs)
-        df.index.name = index_name
-        if reset_index:
-            df.index.name = series_name + "_" if series_name else "" + df.index.name
+        if isinstance(reset_index, str) and reset_index in df.columns:
+            df = df.set_index(reset_index)
+        elif reset_index:
             df = df.reset_index()
         return df
