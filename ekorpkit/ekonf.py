@@ -536,6 +536,13 @@ class eKonf:
         fontname=None,
         fontsize=12,
         fontcolor=None,
+        xlabel=None,
+        ylabel=None,
+        xticklabels=None,
+        yticklabels=None,
+        xlabel_fontsize=12,
+        ylabel_fontsize=12,
+        **kwargs,
     ):
         from ekorpkit.visualize.collage import collage as _collage
 
@@ -555,6 +562,13 @@ class eKonf:
             fontname=fontname,
             fontsize=fontsize,
             fontcolor=fontcolor,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            xticklabels=xticklabels,
+            yticklabels=yticklabels,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            **kwargs,
         )
 
     @staticmethod

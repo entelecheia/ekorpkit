@@ -68,11 +68,11 @@ class BaseTTIModel:
 
     def save_settings(self, args):
         """Save the settings"""
-        _path = os.path.join(
-            self._output.batch_dir, f"{args.batch_name}({args.batch_num})_settings.yaml"
-        )
+        _filename = f"{args.batch_name}({args.batch_num})_settings.yaml"
+        _path = os.path.join(self._output.batch_dir, _filename)
         log.info(f"Saving config to {_path}")
         eKonf.save(args, _path)
+        return _filename
 
     def load_config(self, batch_name=None, batch_num=None, **args):
         """Load the settings"""
@@ -157,6 +157,7 @@ class BaseTTIModel:
             fontname=fontname,
             fontsize=fontsize,
             fontcolor=fontcolor,
+            **kwargs,
         )
 
     def _prepare_folders(self, batch_name):

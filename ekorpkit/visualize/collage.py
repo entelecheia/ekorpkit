@@ -67,6 +67,12 @@ def collage(
     fontname=None,
     fontsize=12,
     fontcolor="#000",
+    xlabel=None,
+    ylabel=None,
+    xticklabels=None,
+    yticklabels=None,
+    xlabel_fontsize=12,
+    ylabel_fontsize=12,
     **kwargs,
 ):
     verbose = kwargs.get("verbose", False)
@@ -97,10 +103,35 @@ def collage(
 
     plt.figure(figsize=figsize)
     plt.imshow(result)
+    ax = plt.gca()
     plt.grid(False)
-    plt.axis("off")
+    if xlabel is None and ylabel is None:
+        plt.axis("off")
     if title is not None:
         plt.title(title, fontdict={"fontsize": title_fontsize})
+    if xlabel is not None:
+        plt.xlabel(xlabel, fontdict={"fontsize": xlabel_fontsize})
+    if ylabel is not None:
+        plt.ylabel(ylabel, fontdict={"fontsize": ylabel_fontsize})
+    if xticklabels is not None:
+        # get ncols number of xticks from xlim
+        xlim = ax.get_xlim()
+        xticks = np.linspace(xlim[0], xlim[1], ncols+1)
+        xticks = xticks - (xticks[1] - xticks[0]) / 2
+        xticks[0] = xlim[0]
+        ax.set_xticks(xticks)
+        xticklabels = [""] + xticklabels
+        ax.set_xticklabels(xticklabels, fontsize=xlabel_fontsize)
+    if yticklabels is not None:
+        # get nrows number of yticks from ylim
+        ylim = ax.get_ylim()
+        yticks = np.linspace(ylim[0], ylim[1], nrows+1)
+        yticks = yticks - (yticks[1] - yticks[0]) / 2
+        yticks[0] = ylim[0]
+        ax.set_yticks(yticks)
+        yticklabels = [""] + yticklabels
+        ax.set_yticklabels(yticklabels, fontsize=ylabel_fontsize)
+
     plt.show()
     if output_filepath is not None:
         if base_dir is not None:

@@ -938,7 +938,7 @@ def _set_cuda(device=0):
             ids = [str(device)]
         for id in ids:
             _device_name = torch.cuda.get_device_name(int(id))
-            _names.append(_device_name)
+            _names.append(f"{_device_name} (id:{id})")
         logger.info(f"Setting cuda device to {_names}")
         device = ", ".join(ids)
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"

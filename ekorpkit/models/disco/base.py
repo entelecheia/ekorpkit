@@ -67,6 +67,182 @@ class DiscoDiffusion(BaseTTIModel):
         if self.auto.load:
             self.load()
 
+    def batch_imagine(
+        self,
+        text_prompts=None,
+        image_prompts=None,
+        batch_name=None,
+        batch_args=None,
+        batch_pairs=None,
+        show_collage=False,
+        **args,
+    ):
+        """Run a batch"""
+
+        batch_arg1_name = None
+        batch_arg2_name = None
+        batch_arg1_values = []
+        batch_arg2_values = []
+        animation_mode = AnimMode.NONE
+        n_samples = 1
+        args.update(dict(show_collage=False))
+
+        if batch_args is None:
+            batch_args = {}
+        if not isinstance(batch_args, dict):
+            raise ValueError("batch_args must be a dictionary")
+        if len(batch_args) < 1:
+            raise ValueError("batch_args must have at least 1 element")
+        for i, (k, v) in enumerate(batch_args.items()):
+            if not isinstance(v, (list, tuple)):
+                v = [v]
+        if batch_pairs is None:
+            batch_pairs = [[arg_name] for arg_name in batch_args.keys()]
+
+        _batch_results = []
+        for batch_pair in batch_pairs:
+            if len(batch_pair) > 1:
+                batch_arg1_name = batch_pair[0]
+                batch_arg2_name = batch_pair[1]
+                batch_arg1_values = batch_args[batch_arg1_name]
+                batch_arg2_values = batch_args[batch_arg2_name]
+                _batch_name = f"{batch_name}_{batch_arg1_name}_{batch_arg2_name}"
+                log.info(
+                    f"processing batch pair [{_batch_name}]: [{batch_arg1_name}] and [{batch_arg2_name}]"
+                )
+            else:
+                batch_arg1_name = batch_pair[0]
+                batch_arg1_values = batch_args[batch_arg1_name]
+                batch_arg2_name = None
+                batch_arg2_values = []
+                _batch_name = f"{batch_name}_{batch_arg1_name}"
+                log.info(f"processing batch [{_batch_name}]: [{batch_arg1_name}]")
+
+            batch_config = dict(
+                batch_name=_batch_name,
+                num_args=len(batch_pair),
+                arg1_name=batch_arg1_name,
+                arg2_name=batch_arg2_name,
+                arg1_values=batch_arg1_values,
+                arg2_values=batch_arg2_values,
+                text_prompts=text_prompts,
+                image_prompts=image_prompts,
+                results=[],
+            )
+            for arg1 in batch_arg1_values:
+                if len(batch_pair) > 1:
+                    for arg2 in batch_arg2_values:
+                        log.info(
+                            f"batch: {_batch_name}, {batch_arg1_name}={arg1}, {batch_arg2_name}={arg2}"
+                        )
+                        _args = args.copy()
+                        _args.update({batch_arg1_name: arg1, batch_arg2_name: arg2})
+                        _config_file, _image_filepaths = self.imagine(
+                            text_prompts=text_prompts,
+                            image_prompts=image_prompts,
+                            batch_name=_batch_name,
+                            animation_mode=animation_mode,
+                            n_samples=n_samples,
+                            **_args,
+                        )
+                        batch_config["results"].append(
+                            dict(
+                                arg1=arg1,
+                                arg2=arg2,
+                                config_file=_config_file,
+                                image_filepaths=_image_filepaths,
+                            )
+                        )
+                else:
+                    log.info(f"batch: {_batch_name}, {batch_arg1_name}={arg1}")
+                    _args = args.copy()
+                    _args.update({batch_arg1_name: arg1})
+                    _config_file, _image_filepaths = self.imagine(
+                        text_prompts=text_prompts,
+                        image_prompts=image_prompts,
+                        batch_name=_batch_name,
+                        animation_mode=animation_mode,
+                        n_samples=n_samples,
+                        **_args,
+                    )
+                    batch_config["results"].append(
+                        dict(
+                            arg1=arg1,
+                            arg2=None,
+                            config_file=_config_file,
+                            image_filepaths=_image_filepaths,
+                        )
+                    )
+            _batch_config_path = self.save_batch_config(batch_config)
+            _batch_results.append(_batch_config_path)
+            if show_collage:
+                self.batch_collage(_batch_config_path)
+        return _batch_results
+
+    def save_batch_configs(self, args):
+        """Save the settings"""
+        _batch_name = args["batch_name"]
+        _filename = f"{_batch_name}_batch_configs.yaml"
+        _path = os.path.join(self._output.batch_dir, _filename)
+        log.info(f"Saving batch configs to {_path}")
+        eKonf.save(args, _path)
+        return _path
+
+    def batch_collage(
+        self,
+        batch_config_path,
+        show_prompt=True,
+        prompt_fontsize=18,
+        show_filename=False,
+        filename_offset=(5, 5),
+        fontname=None,
+        fontsize=18,
+        fontcolor=None,
+        **kwargs,
+    ):
+        image_filepaths = []
+
+        args = eKonf.load(batch_config_path)
+        args = eKonf.to_dict(args)
+
+        arg1_name = args["arg1_name"]
+        arg2_name = args["arg2_name"]
+        arg1_values = args["arg1_values"]
+        # reverse arg1_values so that the first image is the top left
+        arg1_values = arg1_values[::-1]
+        arg2_values = args["arg2_values"]
+        results = args["results"]
+        num_args = args["num_args"]
+        prompt = args["text_prompts"]
+        ncols = 1 if num_args == 1 else 2
+        for result in results:
+            image_filepaths.append(result["image_filepaths"][0])
+        if show_prompt:
+            log.info(f"Prompt: {prompt}")
+        output_filepath = os.path.join(
+            self._output.batch_dir, f"{batch_config_path}.png"
+        )
+
+        eKonf.collage(
+            image_filepaths=image_filepaths,
+            output_filepath=output_filepath,
+            ncols=ncols,
+            title=prompt,
+            title_fontsize=prompt_fontsize,
+            show_filename=show_filename,
+            filename_offset=filename_offset,
+            fontname=fontname,
+            fontsize=fontsize,
+            fontcolor=fontcolor,
+            xlabel=arg2_name,
+            ylabel=arg1_name,
+            xticklabels=arg2_values,
+            yticklabels=arg1_values,
+            xlabel_fontsize=fontsize,
+            ylabel_fontsize=fontsize,
+            **kwargs,
+        )
+
     def imagine(
         self,
         text_prompts=None,
@@ -137,7 +313,7 @@ class DiscoDiffusion(BaseTTIModel):
                 if args.show_collage:
                     self.collage(image_filepaths=self.sample_imagepaths)
 
-        self.save_settings(args)
+        return self.save_settings(args), self.sample_imagepaths
 
     def _prepare_models(self):
         from guided_diffusion.script_util import create_model_and_diffusion
@@ -1503,7 +1679,7 @@ class DiscoDiffusion(BaseTTIModel):
                     args.batch_num = len(glob(batch_config_file)) - 1
                     log.info("Resuming latest batch")
                 else:
-                    args.batch_num = int(args.run_to_resume)
+                    args.batch_num = args.run_to_resume
                     log.info("Resuming batch with run_to_resume as batch_num")
             log.info(f"Resuming batch_num: {args.batch_num}")
 
