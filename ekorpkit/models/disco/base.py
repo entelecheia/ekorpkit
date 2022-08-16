@@ -242,6 +242,7 @@ class DiscoDiffusion(BaseTTIModel):
             ylabel_fontsize=fontsize,
             **kwargs,
         )
+        print(f"Saved collage to {output_filepath}")
 
     def imagine(
         self,
