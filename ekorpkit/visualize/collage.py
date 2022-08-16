@@ -132,10 +132,11 @@ def collage(
         yticklabels = [""] + yticklabels
         ax.set_yticklabels(yticklabels, fontsize=ylabel_fontsize)
 
+    plt.tight_layout()
     plt.show()
     if output_filepath is not None:
         if base_dir is not None:
             output_filepath = os.path.join(base_dir, output_filepath)
-        plt.savefig(output_filepath, dpi=dpi)
+        ax.figure.savefig(output_filepath, dpi=dpi)
 
     return output_filepath
