@@ -219,9 +219,7 @@ class DiscoDiffusion(BaseTTIModel):
             image_filepaths.append(result["image_filepaths"][0])
         if show_prompt:
             log.info(f"Prompt: {prompt}")
-        output_filepath = os.path.join(
-            self._output.batch_dir, f"{batch_config_path}.png"
-        )
+        output_filepath = batch_config_path.replace(".yaml", ".png")
 
         eKonf.collage(
             image_filepaths=image_filepaths,
