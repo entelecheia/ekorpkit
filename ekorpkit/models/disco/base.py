@@ -78,11 +78,6 @@ class DiscoDiffusion(BaseTTIModel):
         **args,
     ):
         """Run a batch"""
-
-        batch_arg1_name = None
-        batch_arg2_name = None
-        batch_arg1_values = []
-        batch_arg2_values = []
         animation_mode = AnimMode.NONE
         n_samples = 1
         args.update(dict(show_collage=False))
@@ -93,7 +88,7 @@ class DiscoDiffusion(BaseTTIModel):
             raise ValueError("batch_args must be a dictionary")
         if len(batch_args) < 1:
             raise ValueError("batch_args must have at least 1 element")
-        for i, (k, v) in enumerate(batch_args.items()):
+        for k, v in batch_args.items():
             if not isinstance(v, (list, tuple)):
                 v = [v]
         if batch_pairs is None:
@@ -101,79 +96,38 @@ class DiscoDiffusion(BaseTTIModel):
 
         _batch_results = []
         for batch_pair in batch_pairs:
-            if len(batch_pair) > 1:
-                batch_arg1_name = batch_pair[0]
-                batch_arg2_name = batch_pair[1]
-                batch_arg1_values = batch_args[batch_arg1_name]
-                batch_arg2_values = batch_args[batch_arg2_name]
-                _batch_name = f"{batch_name}_{batch_arg1_name}_{batch_arg2_name}"
-                log.info(
-                    f"processing batch pair [{_batch_name}]: [{batch_arg1_name}] and [{batch_arg2_name}]"
-                )
-            else:
-                batch_arg1_name = batch_pair[0]
-                batch_arg1_values = batch_args[batch_arg1_name]
-                batch_arg2_name = None
-                batch_arg2_values = []
-                _batch_name = f"{batch_name}_{batch_arg1_name}"
-                log.info(f"processing batch [{_batch_name}]: [{batch_arg1_name}]")
-
+            batch_pair_args = {}
+            for arg_name in batch_pair:
+                batch_pair_args[arg_name] = batch_args[arg_name]
+            _batch_name = batch_name + "_" + "_".join(batch_pair)
             batch_config = dict(
                 batch_name=_batch_name,
-                num_args=len(batch_pair),
-                arg1_name=batch_arg1_name,
-                arg2_name=batch_arg2_name,
-                arg1_values=batch_arg1_values,
-                arg2_values=batch_arg2_values,
+                batch_pair_args=batch_pair_args,
                 text_prompts=text_prompts,
                 image_prompts=image_prompts,
                 results=[],
             )
-            for arg1 in batch_arg1_values:
-                if len(batch_pair) > 1:
-                    for arg2 in batch_arg2_values:
-                        log.info(
-                            f"batch: {_batch_name}, {batch_arg1_name}={arg1}, {batch_arg2_name}={arg2}"
-                        )
-                        _args = args.copy()
-                        _args.update({batch_arg1_name: arg1, batch_arg2_name: arg2})
-                        _config_file, _image_filepaths = self.imagine(
-                            text_prompts=text_prompts,
-                            image_prompts=image_prompts,
-                            batch_name=_batch_name,
-                            animation_mode=animation_mode,
-                            n_samples=n_samples,
-                            **_args,
-                        )
-                        batch_config["results"].append(
-                            dict(
-                                arg1=arg1,
-                                arg2=arg2,
-                                config_file=_config_file,
-                                image_filepaths=_image_filepaths,
-                            )
-                        )
-                else:
-                    log.info(f"batch: {_batch_name}, {batch_arg1_name}={arg1}")
-                    _args = args.copy()
-                    _args.update({batch_arg1_name: arg1})
-                    _config_file, _image_filepaths = self.imagine(
-                        text_prompts=text_prompts,
-                        image_prompts=image_prompts,
-                        batch_name=_batch_name,
-                        animation_mode=animation_mode,
-                        n_samples=n_samples,
-                        **_args,
+            for pair_args in eKonf.dict_product(batch_pair_args):
+                _args = args.copy()
+                _args.update(pair_args)
+                print(f"batch: {_batch_name} with {pair_args}")
+                _config_file, _image_filepaths = self.imagine(
+                    text_prompts=text_prompts,
+                    image_prompts=image_prompts,
+                    batch_name=_batch_name,
+                    animation_mode=animation_mode,
+                    n_samples=n_samples,
+                    **_args,
+                )
+                batch_config["results"].append(
+                    dict(
+                        args=pair_args,
+                        config_file=_config_file,
+                        image_filepaths=_image_filepaths,
                     )
-                    batch_config["results"].append(
-                        dict(
-                            arg1=arg1,
-                            arg2=None,
-                            config_file=_config_file,
-                            image_filepaths=_image_filepaths,
-                        )
-                    )
-            _batch_config_path = self.save_batch_config(batch_config)
+                )
+
+            _batch_config_path = self.save_batch_configs(batch_config)
             _batch_results.append(_batch_config_path)
             if show_collage:
                 self.batch_collage(_batch_config_path)
@@ -183,7 +137,7 @@ class DiscoDiffusion(BaseTTIModel):
         """Save the settings"""
         _batch_name = args["batch_name"]
         _filename = f"{_batch_name}_batch_configs.yaml"
-        _path = os.path.join(self._output.batch_dir, _filename)
+        _path = os.path.join(self._output.batch_configs_dir, _filename)
         log.info(f"Saving batch configs to {_path}")
         eKonf.save(args, _path)
         return _path
@@ -191,7 +145,9 @@ class DiscoDiffusion(BaseTTIModel):
     def batch_collage(
         self,
         batch_config_path,
-        show_prompt=True,
+        xlabel=None,
+        ylabel=None,
+        zlabel=None,
         prompt_fontsize=18,
         show_filename=False,
         filename_offset=(5, 5),
@@ -200,47 +156,78 @@ class DiscoDiffusion(BaseTTIModel):
         fontcolor=None,
         **kwargs,
     ):
-        image_filepaths = []
-
         args = eKonf.load(batch_config_path)
         args = eKonf.to_dict(args)
 
-        arg1_name = args["arg1_name"]
-        arg2_name = args["arg2_name"]
-        arg1_values = args["arg1_values"]
-        # reverse arg1_values so that the first image is the top left
-        arg1_values = arg1_values[::-1]
-        arg2_values = args["arg2_values"]
-        results = args["results"]
-        num_args = args["num_args"]
-        prompt = args["text_prompts"]
-        ncols = 1 if num_args == 1 else 2
-        for result in results:
-            image_filepaths.append(result["image_filepaths"][0])
-        if show_prompt:
-            log.info(f"Prompt: {prompt}")
-        output_filepath = batch_config_path.replace(".yaml", ".png")
+        batch_pair_args = args["batch_pair_args"]
+        arg_names = list(batch_pair_args.keys())
 
-        eKonf.collage(
-            image_filepaths=image_filepaths,
-            output_filepath=output_filepath,
-            ncols=ncols,
-            title=prompt,
-            title_fontsize=prompt_fontsize,
-            show_filename=show_filename,
-            filename_offset=filename_offset,
-            fontname=fontname,
-            fontsize=fontsize,
-            fontcolor=fontcolor,
-            xlabel=arg2_name,
-            ylabel=arg1_name,
-            xticklabels=arg2_values,
-            yticklabels=arg1_values,
-            xlabel_fontsize=fontsize,
-            ylabel_fontsize=fontsize,
-            **kwargs,
-        )
-        print(f"Saved collage to {output_filepath}")
+        if ylabel is None:
+            ylabel = arg_names[0]
+        if ylabel in arg_names:
+            yticklabels = batch_pair_args[ylabel]
+            arg_names.remove(ylabel)
+        else:
+            raise ValueError(f"{ylabel} not in {arg_names}")
+        # reverse yticklabels so that the first image is the top left
+        yticklabels = yticklabels[::-1]
+
+        if xlabel is None and len(arg_names) > 0:
+            xlabel = arg_names[0]
+        if xlabel in arg_names:
+            xticklabels = batch_pair_args[xlabel]
+            arg_names.remove(xlabel)
+        else:
+            xticklabels = None
+
+        if zlabel is None and len(arg_names) > 0:
+            zlabel = arg_names[0]
+        if zlabel in arg_names:
+            ztitles = batch_pair_args[zlabel]
+            arg_names.remove(zlabel)
+        else:
+            ztitles = [None]
+
+        results = args["results"]
+        prompt = args["text_prompts"]
+        ncols = 1 if xticklabels is None else len(xticklabels)
+
+        log.info(f"Prompt: {prompt}")
+        for ztitle in ztitles:
+            if ztitle is not None:
+                output_filepath = batch_config_path.replace(
+                    ".yaml", f"_{zlabel}({ztitle}).png"
+                )
+                title = f"{zlabel}: {ztitle}\n\n{prompt}"
+            else:
+                output_filepath = batch_config_path.replace(".yaml", ".png")
+                title = prompt
+
+            image_filepaths = []
+            for result in results:
+                if result["args"][zlabel] == ztitle:
+                    image_filepaths.append(result["image_filepaths"][0])
+
+            eKonf.collage(
+                image_filepaths=image_filepaths,
+                output_filepath=output_filepath,
+                ncols=ncols,
+                title=title,
+                title_fontsize=prompt_fontsize,
+                show_filename=show_filename,
+                filename_offset=filename_offset,
+                fontname=fontname,
+                fontsize=fontsize,
+                fontcolor=fontcolor,
+                xlabel=xlabel,
+                ylabel=ylabel,
+                xticklabels=xticklabels,
+                yticklabels=yticklabels,
+                xlabel_fontsize=fontsize,
+                ylabel_fontsize=fontsize,
+                **kwargs,
+            )
+            print(f"Saved collage to {output_filepath}")
 
     def imagine(
         self,

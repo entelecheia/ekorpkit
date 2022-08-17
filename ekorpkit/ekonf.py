@@ -11,6 +11,7 @@ from .base import (
     _config,
     _Defaults,
     _dependencies,
+    _dict_product,
     _display,
     _display_image,
     _ensure_kwargs,
@@ -743,3 +744,7 @@ class eKonf:
             force_reinstall=force_reinstall,
             **kwargs,
         )
+
+    @staticmethod
+    def dict_product(dicts):
+        return _dict_product(dicts)

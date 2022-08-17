@@ -41,6 +41,7 @@ config:
 
 output:
   root: ${..path.output_dir}/${..name}
+  batch_configs_dir: ${.root}/batch_configs
   batch_dir: ${.root}/${..config.batch_name}
   retain_dir: ${.batch_dir}/retained
   partial_dir: ${.batch_dir}/partials
