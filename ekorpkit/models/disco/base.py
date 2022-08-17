@@ -74,7 +74,7 @@ class DiscoDiffusion(BaseTTIModel):
         batch_name=None,
         batch_args=None,
         batch_pairs=None,
-        show_collage=False,
+        show_collage=True,
         **args,
     ):
         """Run a batch"""
@@ -159,6 +159,7 @@ class DiscoDiffusion(BaseTTIModel):
         args = eKonf.load(batch_config_path)
         args = eKonf.to_dict(args)
 
+        batch_name = args["batch_name"]
         batch_pair_args = args["batch_pair_args"]
         arg_names = list(batch_pair_args.keys())
 
@@ -194,18 +195,18 @@ class DiscoDiffusion(BaseTTIModel):
 
         log.info(f"Prompt: {prompt}")
         for ztitle in ztitles:
+            title = f"batch name: {batch_name}\nprompt: {prompt}\n"
             if ztitle is not None:
                 output_filepath = batch_config_path.replace(
                     ".yaml", f"_{zlabel}({ztitle}).png"
                 )
-                title = f"{zlabel}: {ztitle}\n\n{prompt}"
+                title += f"{zlabel}: {ztitle}\n"
             else:
                 output_filepath = batch_config_path.replace(".yaml", ".png")
-                title = prompt
 
             image_filepaths = []
             for result in results:
-                if result["args"][zlabel] == ztitle:
+                if zlabel is None or result["args"][zlabel] == ztitle:
                     image_filepaths.append(result["image_filepaths"][0])
 
             eKonf.collage(
