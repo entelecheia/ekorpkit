@@ -230,6 +230,41 @@ class DiscoDiffusion(BaseTTIModel):
             )
             print(f"Saved collage to {output_filepath}")
 
+    def imagine_generator(
+        self,
+        text_prompts=None,
+        image_prompts=None,
+        batch_name=None,
+        batch_num=None,
+        **args,
+    ):
+        animation_mode = AnimMode.NONE
+        args.update(dict(animation_mode=animation_mode))
+
+        if text_prompts is not None:
+            args.update(dict(text_prompts=text_prompts))
+        if image_prompts is not None:
+            args.update(dict(image_prompts=image_prompts))
+
+        log.info("> loading settings...")
+        args = self.load_config(batch_name=batch_name, batch_num=batch_num, **args)
+        args = self._prepare_config(args)
+        self.save_settings(args)
+        self._config = args
+
+        self._prepare_models()
+        self.sample_imagepaths = []
+
+        gc.collect()
+        torch.cuda.empty_cache()
+        try:
+            for sample in self._generator(args):
+                yield sample
+        finally:
+            gc.collect()
+            torch.cuda.empty_cache()
+        self.save_settings(args)
+
     def imagine(
         self,
         text_prompts=None,
@@ -641,7 +676,7 @@ class DiscoDiffusion(BaseTTIModel):
             del init2
         return init
 
-    def _generate_progress_samples(
+    def _progress_samples(
         self,
         cur_t,
         init,
@@ -653,7 +688,6 @@ class DiscoDiffusion(BaseTTIModel):
         diffusion,
         midas_model,
         midas_transform,
-        image_display,
         args,
     ):
         import cv2
@@ -861,87 +895,113 @@ class DiscoDiffusion(BaseTTIModel):
             elif prog_num in args.intermediate_saves:
                 intermediate_step = True
 
-            with image_display:
-                if (
-                    prog_num % args.display_rate == 0
-                    or cur_t == -1
-                    or intermediate_step
-                ):
-                    for k, image in enumerate(prog_sample["pred_xstart"]):
-                        # tqdm.write(f'Batch {i}, step {j}, output {k}:')
-                        if args.n_samples > 0:
-                            # if intermediates are saved to the subfolder, don't append a step or percentage to the name
-                            if cur_t == -1 and args.intermediates_in_subfolder:
-                                filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}.png"
-                            else:
-                                filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}-{prog_num:03}.png"
-                        image = TF.to_pil_image(image.add(1).div(2).clamp(0, 1))
-                        if prog_num % args.display_rate == 0 or cur_t == -1:
-                            image.save(progress_path)
-                            eKonf.clear_output(wait=True)
-                            eKonf.display_image(progress_path)
-
-                        if args.intermediates_in_subfolder:
-                            _img_path = os.path.join(partial_dir, filename)
+            if prog_num % args.display_rate == 0 or cur_t == -1 or intermediate_step:
+                for k, image in enumerate(prog_sample["pred_xstart"]):
+                    # tqdm.write(f'Batch {i}, step {j}, output {k}:')
+                    if args.n_samples > 0:
+                        # if intermediates are saved to the subfolder, don't append a step or percentage to the name
+                        if cur_t == -1 and args.intermediates_in_subfolder:
+                            filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}.png"
                         else:
-                            _img_path = os.path.join(batch_dir, filename)
+                            filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}-{prog_num:03}.png"
+                    image = TF.to_pil_image(image.add(1).div(2).clamp(0, 1))
+                    if prog_num % args.display_rate == 0 or cur_t == -1:
+                        image.save(progress_path)
+                        yield {"image": image, "path": progress_path}
 
-                        if args.steps_per_checkpoint is not None:
-                            if (
-                                prog_num % args.steps_per_checkpoint == 0
-                                and prog_num > 0
-                            ):
-                                image.save(_img_path)
-                        else:
-                            if prog_num in args.intermediate_saves:
-                                image.save(_img_path)
-                        if cur_t == -1:
-                            if args.animation_mode != AnimMode.NONE:
-                                image.save(prev_frame_path)
-                            _img_path = os.path.join(batch_dir, filename)
+                    if args.intermediates_in_subfolder:
+                        _img_path = os.path.join(partial_dir, filename)
+                    else:
+                        _img_path = os.path.join(batch_dir, filename)
+
+                    if args.steps_per_checkpoint is not None:
+                        if prog_num % args.steps_per_checkpoint == 0 and prog_num > 0:
                             image.save(_img_path)
-                            self.sample_imagepaths.append(_img_path)
-                            log.info(f"Saved {filename}")
-                            if args.animation_mode == AnimMode.ANIM_3D:
-                                # If turbo, save a blended image
-                                _img_path = os.path.join(batch_dir, filename)
-                                if args.turbo_mode and frame_num > 0:
-                                    # Mix new image with prevFrameScaled
-                                    blend_factor = (1) / int(args.turbo_steps)
-                                    # This is already updated..
-                                    new_frame = cv2.imread(prev_frame_path)
-                                    prev_frame_warped = cv2.imread(
-                                        prev_frame_scaled_path
-                                    )
-                                    blended_image = cv2.addWeighted(
-                                        new_frame,
-                                        blend_factor,
-                                        prev_frame_warped,
-                                        (1 - blend_factor),
-                                        0.0,
-                                    )
-                                    cv2.imwrite(_img_path, blended_image)
-                                else:
-                                    image.save(_img_path)
+                    else:
+                        if prog_num in args.intermediate_saves:
+                            image.save(_img_path)
+                    if cur_t == -1:
+                        if args.animation_mode != AnimMode.NONE:
+                            image.save(prev_frame_path)
+                        _img_path = os.path.join(batch_dir, filename)
+                        image.save(_img_path)
+                        self.sample_imagepaths.append(_img_path)
+                        log.info(f"Saved {filename}")
+                        if args.animation_mode == AnimMode.ANIM_3D:
+                            # If turbo, save a blended image
+                            _img_path = os.path.join(batch_dir, filename)
+                            if args.turbo_mode and frame_num > 0:
+                                # Mix new image with prevFrameScaled
+                                blend_factor = (1) / int(args.turbo_steps)
+                                # This is already updated..
+                                new_frame = cv2.imread(prev_frame_path)
+                                prev_frame_warped = cv2.imread(prev_frame_scaled_path)
+                                blended_image = cv2.addWeighted(
+                                    new_frame,
+                                    blend_factor,
+                                    prev_frame_warped,
+                                    (1 - blend_factor),
+                                    0.0,
+                                )
+                                cv2.imwrite(_img_path, blended_image)
+                            else:
+                                image.save(_img_path)
 
-                                if args.vr_mode:
-                                    generate_eye_views(
-                                        self.TRANSLATION_SCALE,
-                                        batch_dir,
-                                        filename,
-                                        frame_num,
-                                        midas_model,
-                                        midas_transform,
-                                        self.cuda_device,
-                                        args.vr_eye_angle,
-                                        args.vr_ipd,
-                                        args.near_plane,
-                                        args.far_plane,
-                                        args.fov,
-                                        args.padding_mode,
-                                        args.sampling_mode,
-                                        args.midas_weight,
-                                    )
+                            if args.vr_mode:
+                                generate_eye_views(
+                                    self.TRANSLATION_SCALE,
+                                    batch_dir,
+                                    filename,
+                                    frame_num,
+                                    midas_model,
+                                    midas_transform,
+                                    self.cuda_device,
+                                    args.vr_eye_angle,
+                                    args.vr_ipd,
+                                    args.near_plane,
+                                    args.far_plane,
+                                    args.fov,
+                                    args.padding_mode,
+                                    args.sampling_mode,
+                                    args.midas_weight,
+                                )
+
+    def _generate_progress_samples(
+        self,
+        cur_t,
+        init,
+        init_scale,
+        skip_steps,
+        loss_values,
+        model_stats,
+        frame_num,
+        diffusion,
+        midas_model,
+        midas_transform,
+        image_display,
+        args,
+    ):
+        progress_samples = self._progress_samples(
+            cur_t,
+            init,
+            init_scale,
+            skip_steps,
+            loss_values,
+            model_stats,
+            frame_num,
+            diffusion,
+            midas_model,
+            midas_transform,
+            args,
+        )
+        for sample in progress_samples:
+
+            with image_display:
+
+                eKonf.clear_output(wait=True)
+                eKonf.display_image(sample["path"])
+                print(sample)
+
         return loss_values
 
     def _init_2d(
@@ -1247,7 +1307,7 @@ class DiscoDiffusion(BaseTTIModel):
             torch.cuda.empty_cache()
             cur_t = diffusion.num_timesteps - skip_steps - 1
 
-            loss_values = self._generate_progress_samples(
+            progress_samples = self._progress_samples(
                 cur_t,
                 init,
                 init_scale,
@@ -1258,9 +1318,12 @@ class DiscoDiffusion(BaseTTIModel):
                 diffusion,
                 midas_model,
                 midas_transform,
-                image_display,
                 args,
             )
+            for sample in progress_samples:
+                with image_display:
+                    eKonf.clear_output(wait=True)
+                    eKonf.display_image(sample["path"])
 
             plt.plot(np.array(loss_values), "r")
 
@@ -1352,7 +1415,7 @@ class DiscoDiffusion(BaseTTIModel):
             torch.cuda.empty_cache()
             cur_t = diffusion.num_timesteps - skip_steps - 1
 
-            loss_values = self._generate_progress_samples(
+            progress_samples = self._progress_samples(
                 cur_t,
                 init,
                 init_scale,
@@ -1363,14 +1426,74 @@ class DiscoDiffusion(BaseTTIModel):
                 diffusion,
                 midas_model,
                 midas_transform,
-                image_display,
                 args,
             )
+            for sample in progress_samples:
+                with image_display:
+                    eKonf.clear_output(wait=True)
+                    eKonf.display_image(sample["path"])
 
         if batchBar is not None:
             batchBar.n = sample_num + 1
             batchBar.refresh()
             plt.plot(np.array(loss_values), "r")
+
+    def _generator(self, args):
+        """Run the simulation"""
+        seed = args.seed
+        diffusion = self.diffusion
+
+        midas_model = None
+        midas_transform = None
+        init_image = None
+        cur_t = None
+        loss_values = []
+
+        text_series, image_series = self._get_prompt_series(args, args.n_samples)
+
+        if os.path.exists(args.init_image):
+            init_image = args.init_image
+        init_scale = args.init_scale
+        skip_steps = args.skip_steps
+        log.info(f"init_image: {init_image}")
+        log.info(f"init_scale: {init_scale}, skip_steps: {skip_steps}, seed: {seed}")
+
+        if seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
+            torch.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+            torch.backends.cudnn.deterministic = True
+
+        sample_num = args.start_sample
+        args.n_samples = 1
+
+        text_prompt, image_prompt = self._get_prompt(
+            text_series, image_series, sample_num
+        )
+        log.info(f"Image prompt: {image_prompt}")
+        log.info(f"Sample {sample_num} Prompt: {text_prompt}")
+
+        model_stats = self._get_model_stats(text_prompt, image_prompt, args)
+        init = self._init_image(init_image, args)
+
+        gc.collect()
+        torch.cuda.empty_cache()
+        cur_t = diffusion.num_timesteps - skip_steps - 1
+
+        return self._progress_samples(
+            cur_t,
+            init,
+            init_scale,
+            skip_steps,
+            loss_values,
+            model_stats,
+            sample_num,
+            diffusion,
+            midas_model,
+            midas_transform,
+            args,
+        )
 
     def _prepare_config(self, args):
         batch_dir = self._output.batch_dir
