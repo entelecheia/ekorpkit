@@ -19,6 +19,7 @@ from .base import (
     _env_set,
     _exists,
     _function,
+    _get_display,
     _getLogger,
     _getsource,
     _init_env_,
@@ -748,3 +749,7 @@ class eKonf:
     @staticmethod
     def dict_product(dicts):
         return _dict_product(dicts)
+
+    @staticmethod
+    def get_display():
+        return _get_display()

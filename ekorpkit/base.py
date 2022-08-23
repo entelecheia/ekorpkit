@@ -23,6 +23,11 @@ from ekorpkit.utils.func import lower_case_with_underscores
 from . import _version
 
 
+class Dummy:
+    def __call__(self, *args, **kwargs):
+        return Dummy()
+
+
 def _setLogger(level=None, force=True, filterwarnings_action="ignore", **kwargs):
     level = level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
     os.environ["EKORPKIT_LOG_LEVEL"] = level
@@ -898,15 +903,20 @@ def _is_colab():
 
 
 def _is_notebook():
-    is_notebook = "ipykernel" in sys.modules
-    if is_notebook:
-        ip = sys.modules["ipykernel"]
-        ip_version = ip.version_info
-        ip_client = ip.write_connection_file.__module__.split(".")[0]
-        # logger.info(f"IPython version: {ip_version}, client: {ip_client}")
+    try:
+        get_ipython
+    except NameError:
+        return False
+    shell_type = get_ipython().__class__.__name__
+    logger.info(f"shell type: {shell_type}")
+    if shell_type == "ZMQInteractiveShell":
+        return True  # Jupyter notebook or qtconsole
+    elif shell_type == "Shell":
+        return True  # Google colab
+    elif shell_type == "TerminalInteractiveShell":
+        return False  # Terminal running IPython
     else:
-        logger.info("IPython not detected.")
-    return is_notebook
+        return False  # Other type
 
 
 def _nvidia_smi():
@@ -994,7 +1004,7 @@ def _display(
 ):
     from IPython import display
 
-    if _is_notebook():
+    if _is_notebook() and objs is not None:
         return display.display(
             *objs,
             include=include,
@@ -1069,3 +1079,12 @@ def _dict_product(dicts):
      {'character': 'b', 'number': 2}]
     """
     return (dict(zip(dicts, x)) for x in itertools.product(*dicts.values()))
+
+
+def _get_display():
+    from ipywidgets import Output
+
+    if _is_notebook():
+        return Output()
+    else:
+        return None

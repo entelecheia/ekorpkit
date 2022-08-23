@@ -111,7 +111,7 @@ class DiscoDiffusion(BaseTTIModel):
                 _args = args.copy()
                 _args.update(pair_args)
                 print(f"batch: {_batch_name} with {pair_args}")
-                _config_file, _image_filepaths = self.imagine(
+                results = self.imagine(
                     text_prompts=text_prompts,
                     image_prompts=image_prompts,
                     batch_name=_batch_name,
@@ -122,8 +122,8 @@ class DiscoDiffusion(BaseTTIModel):
                 batch_config["results"].append(
                     dict(
                         args=pair_args,
-                        config_file=_config_file,
-                        image_filepaths=_image_filepaths,
+                        config_file=results["config_file"],
+                        image_filepaths=results["image_filepaths"],
                     )
                 )
 
@@ -263,7 +263,9 @@ class DiscoDiffusion(BaseTTIModel):
         finally:
             gc.collect()
             torch.cuda.empty_cache()
-        self.save_settings(args)
+
+        res = {"config": eKonf.to_dict(args), "imagepaths": self.sample_imagepaths}
+        yield res
 
     def imagine(
         self,
@@ -335,7 +337,12 @@ class DiscoDiffusion(BaseTTIModel):
                 if args.show_collage:
                     self.collage(image_filepaths=self.sample_imagepaths)
 
-        return self.save_settings(args), self.sample_imagepaths
+        results = {
+            "image_filepaths": self.sample_imagepaths,
+            "config_file": self.save_settings(args),
+            "config": eKonf.to_dict(args),
+        }
+        return results
 
     def _prepare_models(self):
         from guided_diffusion.script_util import create_model_and_diffusion
@@ -886,39 +893,49 @@ class DiscoDiffusion(BaseTTIModel):
                 order=2,
             )
 
-        for prog_num, prog_sample in enumerate(progress_samples):
+        for step_num, samples in enumerate(progress_samples):
             cur_t -= 1
             intermediate_step = False
             if args.steps_per_checkpoint is not None:
-                if prog_num % args.steps_per_checkpoint == 0 and prog_num > 0:
+                if step_num % args.steps_per_checkpoint == 0 and step_num > 0:
                     intermediate_step = True
-            elif prog_num in args.intermediate_saves:
+            elif step_num in args.intermediate_saves:
                 intermediate_step = True
+            res = {
+                "sample_num": frame_num,
+                "step": step_num,
+                "cur_t": cur_t,
+                "image": None,
+                "pregress_path": None,
+            }
 
-            if prog_num % args.display_rate == 0 or cur_t == -1 or intermediate_step:
-                for k, image in enumerate(prog_sample["pred_xstart"]):
+            if step_num % args.display_rate == 0 or cur_t == -1 or intermediate_step:
+                for k, image in enumerate(samples["pred_xstart"]):
                     # tqdm.write(f'Batch {i}, step {j}, output {k}:')
+                    res["ouput"] = k
                     if args.n_samples > 0:
                         # if intermediates are saved to the subfolder, don't append a step or percentage to the name
                         if cur_t == -1 and args.intermediates_in_subfolder:
                             filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}.png"
                         else:
-                            filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}-{prog_num:03}.png"
+                            filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}-{step_num:03}.png"
                     image = TF.to_pil_image(image.add(1).div(2).clamp(0, 1))
-                    if prog_num % args.display_rate == 0 or cur_t == -1:
+                    if step_num % args.display_rate == 0 or cur_t == -1:
                         image.save(progress_path)
-                        yield {"image": image, "path": progress_path}
+                        res["image"] = image
+                        res["pregress_path"] = progress_path
 
                     if args.intermediates_in_subfolder:
                         _img_path = os.path.join(partial_dir, filename)
                     else:
                         _img_path = os.path.join(batch_dir, filename)
+                    res["image_path"] = _img_path
 
                     if args.steps_per_checkpoint is not None:
-                        if prog_num % args.steps_per_checkpoint == 0 and prog_num > 0:
+                        if step_num % args.steps_per_checkpoint == 0 and step_num > 0:
                             image.save(_img_path)
                     else:
-                        if prog_num in args.intermediate_saves:
+                        if step_num in args.intermediate_saves:
                             image.save(_img_path)
                     if cur_t == -1:
                         if args.animation_mode != AnimMode.NONE:
@@ -965,6 +982,9 @@ class DiscoDiffusion(BaseTTIModel):
                                     args.sampling_mode,
                                     args.midas_weight,
                                 )
+                    yield res
+            else:
+                yield res
 
     def _generate_progress_samples(
         self,
@@ -995,12 +1015,13 @@ class DiscoDiffusion(BaseTTIModel):
             args,
         )
         for sample in progress_samples:
-
-            with image_display:
-
-                eKonf.clear_output(wait=True)
-                eKonf.display_image(sample["path"])
-                print(sample)
+            progress_path = sample.get("pregress_path")
+            if image_display is not None:
+                with image_display:
+                    if progress_path is not None:
+                        eKonf.clear_output(wait=True)
+                        eKonf.display_image(progress_path)
+                # print(sample)
 
         return loss_values
 
@@ -1212,7 +1233,6 @@ class DiscoDiffusion(BaseTTIModel):
     def _run_anim(self, args):
         """Run the simulation"""
         from .midas import Midas
-        from ipywidgets import Output
 
         seed = args.seed
         diffusion = self.diffusion
@@ -1300,14 +1320,14 @@ class DiscoDiffusion(BaseTTIModel):
             model_stats = self._get_model_stats(text_prompt, image_prompt, args)
             init = self._init_image(init_image, args)
 
-            image_display = Output()
+            image_display = eKonf.get_display()
 
             eKonf.display(image_display)
             gc.collect()
             torch.cuda.empty_cache()
             cur_t = diffusion.num_timesteps - skip_steps - 1
 
-            progress_samples = self._progress_samples(
+            self._generate_progress_samples(
                 cur_t,
                 init,
                 init_scale,
@@ -1318,12 +1338,9 @@ class DiscoDiffusion(BaseTTIModel):
                 diffusion,
                 midas_model,
                 midas_transform,
+                image_display,
                 args,
             )
-            for sample in progress_samples:
-                with image_display:
-                    eKonf.clear_output(wait=True)
-                    eKonf.display_image(sample["path"])
 
             plt.plot(np.array(loss_values), "r")
 
@@ -1358,8 +1375,6 @@ class DiscoDiffusion(BaseTTIModel):
 
     def _run(self, args):
         """Run the simulation"""
-        from ipywidgets import Output
-
         seed = args.seed
         diffusion = self.diffusion
 
@@ -1386,7 +1401,7 @@ class DiscoDiffusion(BaseTTIModel):
             torch.cuda.manual_seed_all(seed)
             torch.backends.cudnn.deterministic = True
 
-        image_display = Output()
+        image_display = eKonf.get_display()
         log.info(f"looping over range({args.start_sample}, {args.n_samples})")
         for sample_num in range(args.start_sample, args.n_samples):
             # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
@@ -1415,7 +1430,7 @@ class DiscoDiffusion(BaseTTIModel):
             torch.cuda.empty_cache()
             cur_t = diffusion.num_timesteps - skip_steps - 1
 
-            progress_samples = self._progress_samples(
+            self._generate_progress_samples(
                 cur_t,
                 init,
                 init_scale,
@@ -1426,12 +1441,9 @@ class DiscoDiffusion(BaseTTIModel):
                 diffusion,
                 midas_model,
                 midas_transform,
+                image_display,
                 args,
             )
-            for sample in progress_samples:
-                with image_display:
-                    eKonf.clear_output(wait=True)
-                    eKonf.display_image(sample["path"])
 
         if batchBar is not None:
             batchBar.n = sample_num + 1
@@ -1465,35 +1477,38 @@ class DiscoDiffusion(BaseTTIModel):
             torch.cuda.manual_seed_all(seed)
             torch.backends.cudnn.deterministic = True
 
-        sample_num = args.start_sample
-        args.n_samples = 1
+        for sample_num in range(args.start_sample, args.n_samples):
+            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
+            if args.stop_on_next_loop:
+                break
 
-        text_prompt, image_prompt = self._get_prompt(
-            text_series, image_series, sample_num
-        )
-        log.info(f"Image prompt: {image_prompt}")
-        log.info(f"Sample {sample_num} Prompt: {text_prompt}")
+            text_prompt, image_prompt = self._get_prompt(
+                text_series, image_series, sample_num
+            )
+            log.info(f"Image prompt: {image_prompt}")
+            log.info(f"Sample {sample_num} Prompt: {text_prompt}")
 
-        model_stats = self._get_model_stats(text_prompt, image_prompt, args)
-        init = self._init_image(init_image, args)
+            model_stats = self._get_model_stats(text_prompt, image_prompt, args)
+            init = self._init_image(init_image, args)
 
-        gc.collect()
-        torch.cuda.empty_cache()
-        cur_t = diffusion.num_timesteps - skip_steps - 1
+            gc.collect()
+            torch.cuda.empty_cache()
+            cur_t = diffusion.num_timesteps - skip_steps - 1
 
-        return self._progress_samples(
-            cur_t,
-            init,
-            init_scale,
-            skip_steps,
-            loss_values,
-            model_stats,
-            sample_num,
-            diffusion,
-            midas_model,
-            midas_transform,
-            args,
-        )
+            for sample in self._progress_samples(
+                cur_t,
+                init,
+                init_scale,
+                skip_steps,
+                loss_values,
+                model_stats,
+                sample_num,
+                diffusion,
+                midas_model,
+                midas_transform,
+                args,
+            ):
+                yield sample
 
     def _prepare_config(self, args):
         batch_dir = self._output.batch_dir
