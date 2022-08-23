@@ -86,6 +86,8 @@ def _mkdir(_path: str):
 
 
 def _exists(a, *p):
+    if a is None:
+        return False
     _path = os.path.join(a, *p)
     return os.path.exists(_path)
 

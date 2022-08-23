@@ -267,6 +267,13 @@ class DiscoDiffusion(BaseTTIModel):
         res = {"config": eKonf.to_dict(args), "imagepaths": self.sample_imagepaths}
         yield res
 
+    def save_init_image(self, batch_name, image):
+        self.load_config(batch_name)
+        batch_dir = self._output.batch_dir
+        init_image_path = os.path.join(batch_dir, f"{batch_name}_init.png")
+        image.save(init_image_path)
+        return init_image_path
+
     def imagine(
         self,
         text_prompts=None,
@@ -1264,7 +1271,7 @@ class DiscoDiffusion(BaseTTIModel):
             batchBar.refresh()
 
             init_image = None
-            if os.path.exists(args.init_image):
+            if eKonf.exists(args.init_image):
                 init_image = args.init_image
             init_scale = args.init_scale
             skip_steps = args.skip_steps
@@ -1387,7 +1394,7 @@ class DiscoDiffusion(BaseTTIModel):
 
         text_series, image_series = self._get_prompt_series(args, args.n_samples)
 
-        if os.path.exists(args.init_image):
+        if eKonf.exists(args.init_image):
             init_image = args.init_image
         init_scale = args.init_scale
         skip_steps = args.skip_steps
@@ -1463,7 +1470,7 @@ class DiscoDiffusion(BaseTTIModel):
 
         text_series, image_series = self._get_prompt_series(args, args.n_samples)
 
-        if os.path.exists(args.init_image):
+        if eKonf.exists(args.init_image):
             init_image = args.init_image
         init_scale = args.init_scale
         skip_steps = args.skip_steps
