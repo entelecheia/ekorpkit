@@ -24,6 +24,7 @@ def is_valid_regex(expr):
 
 def glob_re(pattern, base_dir, recursive=False):
     if is_valid_regex(pattern):
+        pattern = pattern[2:]
         pattern = re.compile(pattern)
         files = []
         if recursive:

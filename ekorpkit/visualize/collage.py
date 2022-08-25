@@ -116,7 +116,7 @@ def collage(
     if xticklabels is not None:
         # get ncols number of xticks from xlim
         xlim = ax.get_xlim()
-        xticks = np.linspace(xlim[0], xlim[1], ncols+1)
+        xticks = np.linspace(xlim[0], xlim[1], ncols + 1)
         xticks = xticks - (xticks[1] - xticks[0]) / 2
         xticks[0] = xlim[0]
         ax.set_xticks(xticks)
@@ -125,7 +125,7 @@ def collage(
     if yticklabels is not None:
         # get nrows number of yticks from ylim
         ylim = ax.get_ylim()
-        yticks = np.linspace(ylim[0], ylim[1], nrows+1)
+        yticks = np.linspace(ylim[0], ylim[1], nrows + 1)
         yticks = yticks - (yticks[1] - yticks[0]) / 2
         yticks[0] = ylim[0]
         ax.set_yticks(yticks)

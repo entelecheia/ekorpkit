@@ -77,10 +77,12 @@ def load_jsonlines(contents):
     return data
 
 
-def parse_data(contents, parse_args, default_items, num_workers=1):
+def parse_data(contents, parse_args, default_items, filename="", num_workers=1):
     parser = parse_args.get("parser", None)
     decompressor = parse_args.get("decompressor", None)
-    filename = default_items.get("filename", "")
+    default_items = default_items.copy()
+    if filename is not None and len(filename) > 0:
+        default_items["filename"] = filename
 
     if decompressor is not None and ".gz" in filename:
         contents = instantiate(decompressor, contents)
@@ -141,6 +143,7 @@ def parse_json(data, parse_args, default_items={}, num_workers=1):
     meta_field = meta_args.get("field", None)
     data_args = parse_args["data"]
     data_field = data_args.get("field", None)
+    default_items = default_items.copy()
 
     if meta_args.get("item", None) is not None:
         meta_data = data[meta_field] if meta_field else data
