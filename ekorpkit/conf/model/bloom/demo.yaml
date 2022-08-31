@@ -1,0 +1,9 @@
+defaults:
+  - /auto: load
+
+_target_: ekorpkit.models.bloom.demo.BloomDemo
+name: BloomDemo
+model_uri: bigscience/bloom
+seed: 43
+auto:
+  load: false

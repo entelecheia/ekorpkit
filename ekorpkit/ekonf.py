@@ -3,11 +3,13 @@ from omegaconf import SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple
 from ekorpkit.utils.notebook import (
     _clear_output,
+    _cprint,
     _display,
     _display_image,
     _get_display,
+    _hide_code_in_slideshow,
     _is_notebook,
-    _is_colab,
+    _is_colab,   
 )
 from .base import (
     __ekorpkit_path__,
@@ -755,3 +757,11 @@ class eKonf:
     @staticmethod
     def get_display():
         return _get_display()
+
+    @staticmethod
+    def hide_code_in_slideshow():
+        return _hide_code_in_slideshow()
+
+    @staticmethod
+    def cprint(str_color_tuples, **kwargs):
+        return _cprint(str_color_tuples)

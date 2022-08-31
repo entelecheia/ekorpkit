@@ -696,6 +696,7 @@ def _load_dotenv(verbose=False):
 
 
 def _osenv(key: str = None) -> Any:
+    _load_dotenv()
     if key:
         return os.environ.get(key)
     return os.environ

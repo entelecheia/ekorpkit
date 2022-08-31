@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 
 
@@ -104,3 +105,40 @@ def _display_image(
             **kwargs,
         )
         return display.display(img)
+
+
+def _hide_code_in_slideshow():
+    from IPython import display
+    import binascii
+
+    uid = binascii.hexlify(os.urandom(8)).decode()
+    html = """<div id="%s"></div>
+    <script type="text/javascript">
+        $(function(){
+            var p = $("#%s");
+            if (p.length==0) return;
+            while (!p.hasClass("cell")) {
+                p=p.parent();
+                if (p.prop("tagName") =="body") return;
+            }
+            var cell = p;
+            cell.find(".input").addClass("hide-in-slideshow")
+        });
+    </script>""" % (
+        uid,
+        uid,
+    )
+    display.display_html(html, raw=True)
+
+
+def colored_str(s, color="black"):
+    # return "<text style=color:{}>{}</text>".format(color, s)
+    return "<text style=color:{}>{}</text>".format(color, s.replace("\n", "<br>"))
+
+
+def _cprint(str_tuples):
+    # src: https://stackoverflow.com/questions/16816013/is-it-possible-to-print-using-different-colors-in-ipythons-notebook
+    from IPython.display import HTML as html_print
+    from IPython.display import display
+
+    display(html_print(" ".join([colored_str(ti, color=ci) for ti, ci in str_tuples])))
