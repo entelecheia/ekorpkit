@@ -3,7 +3,7 @@ import logging
 import subprocess
 from pathlib import Path
 from ekorpkit.io.file import get_filepaths
-from ekorpkit.base import _display, _display_image
+from ekorpkit.utils.notebook import _display, _display_image
 
 
 log = logging.getLogger(__name__)
