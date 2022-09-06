@@ -673,7 +673,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     verbose = config.get(_Keys.VERBOSE, False)
     if not _is_instantiatable(config):
         if verbose:
-            logger.info(f"Config is not instantiatable, returning config")
+            logger.info("Config is not instantiatable, returning config")
         return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
