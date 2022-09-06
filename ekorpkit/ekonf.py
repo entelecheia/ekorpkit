@@ -9,7 +9,7 @@ from ekorpkit.utils.notebook import (
     _get_display,
     _hide_code_in_slideshow,
     _is_notebook,
-    _is_colab,   
+    _is_colab,
 )
 from .base import (
     __ekorpkit_path__,
@@ -21,6 +21,7 @@ from .base import (
     _Defaults,
     _dependencies,
     _dict_product,
+    _dict_to_dataframe,
     _ensure_kwargs,
     _ensure_list,
     _env_set,
@@ -48,6 +49,7 @@ from .base import (
     _path,
     _pipe,
     _print,
+    _records_to_dataframe,
     _run,
     _save,
     _select,
@@ -765,3 +767,13 @@ class eKonf:
     @staticmethod
     def cprint(str_color_tuples, **kwargs):
         return _cprint(str_color_tuples)
+
+    @staticmethod
+    def dict_to_dataframe(data, orient="columns", dtype=None, columns=None):
+        return _dict_to_dataframe(data, orient, dtype, columns)
+
+    @staticmethod
+    def records_to_dataframe(
+        data, index=None, exclude=None, columns=None, coerce_float=False, nrows=None
+    ):
+        return _records_to_dataframe(data, index, exclude, columns, coerce_float, nrows)

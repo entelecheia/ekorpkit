@@ -989,3 +989,20 @@ def _dict_product(dicts):
      {'character': 'b', 'number': 2}]
     """
     return (dict(zip(dicts, x)) for x in itertools.product(*dicts.values()))
+
+
+def _dict_to_dataframe(data, orient="columns", dtype=None, columns=None):
+    return pd.DataFrame.from_dict(data, orient=orient, dtype=dtype, columns=columns)
+
+
+def _records_to_dataframe(
+    data, index=None, exclude=None, columns=None, coerce_float=False, nrows=None
+):
+    return pd.DataFrame.from_records(
+        data,
+        index=index,
+        exclude=exclude,
+        columns=columns,
+        coerce_float=coerce_float,
+        nrows=nrows,
+    )
