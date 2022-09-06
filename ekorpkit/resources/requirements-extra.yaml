@@ -98,5 +98,6 @@ flax: art, dalle-mini
 unidecode: art, disco
 opencv-python==4.5.5.64: art, disco
 
-cleanlab: label
-snorkel: snorkel, label
+cleanlab: label, all
+snorkel: label
+rubrix: label

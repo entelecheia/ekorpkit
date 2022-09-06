@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.pipelines.pipe import apply_pipeline
