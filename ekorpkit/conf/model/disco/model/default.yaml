@@ -1,5 +1,4 @@
 diffusion_model: 512x512_diffusion_uncond_finetune_008100
-use_secondary_model: true
 use_checkpoint: true
 clip_models:
   ViTB32: true

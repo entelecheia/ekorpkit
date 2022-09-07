@@ -17,7 +17,6 @@ auto:
   load: true
 verbose: ${oc.select:..verbose, false}
 cuda_device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
-use_cpu: false
 text_prompts:
   0:
     - At a special meeting, hawkish central bankers are poised to raise the target rates, Trending on artstation.

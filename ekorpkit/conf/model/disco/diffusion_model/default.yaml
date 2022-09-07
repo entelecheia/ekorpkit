@@ -1,5 +1,5 @@
-use_checkpoint: ${..model.use_checkpoint}
-use_cpu: ${..use_cpu}
+use_cpu: false
+use_checkpoint: true
 512x512_diffusion_uncond_finetune_008100:
   attention_resolutions: "32, 16, 8"
   class_cond: false
