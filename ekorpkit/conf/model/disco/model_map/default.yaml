@@ -1,0 +1,62 @@
+clip_models:
+  ViTB32: ViT-B/32
+  ViTB16: ViT-B/16
+  ViTL14: ViT-L/14
+  ViTL14_336px: ViT-L/14@336px
+  RN101: RN101
+  RN50: RN50
+  RN50x4: RN50x4
+  RN50x16: RN50x16
+  RN50x64: RN50x64
+  ViTB32_laion2b_e16: 
+    model_name: ViT-B-32
+    pretrained: laion2b_e16
+  ViTB32_laion400m_e31: 
+    model_name: ViT-B-32
+    pretrained: laion400m_e31    
+  ViTB32_laion400m_e32:
+    model_name: ViT-B-32
+    pretrained: laion400m_e32
+  ViTB32quickgelu_laion400m_e31:
+    model_name: ViT-B-32-quickgelu
+    pretrained: laion400m_e31
+  ViTB32quickgelu_laion400m_e32:
+    model_name: ViT-B-32-quickgelu
+    pretrained: laion400m_e32
+  ViTB16_laion400m_e31:
+    model_name: ViT-B-16
+    pretrained: laion400m_e31
+  ViTB16_laion400m_e32:
+    model_name: ViT-B-16
+    pretrained: laion400m_e32
+  RN50_yffcc15m:
+    model_name: RN50
+    pretrained: yffcc15m
+  RN50_cc12m:
+    model_name: RN50
+    pretrained: cc12m
+  RN50_quickgelu_yfcc15m:
+    model_name: RN50-quickgelu
+    pretrained: yfcc15m
+  RN50_quickgelu_cc12m:
+    model_name: RN50-quickgelu
+    pretrained: cc12m
+  RN101_yfcc15m:
+    model_name: RN101
+    pretrained: yfcc15m
+  RN101_quickgelu_yfcc15m:
+    model_name: RN101-quickgelu
+    pretrained: yfcc15m
+kaliyuga_pixel_art_model_names: 
+  - pixelartdiffusion_expanded
+  - pixel_art_diffusion_hard_256
+  - pixel_art_diffusion_soft_256
+  - pixelartdiffusion4k
+  - PulpSciFiDiffusion
+kaliyuga_watercolor_model_names:
+  - watercolordiffusion
+  - watercolordiffusion_2
+kaliyuga_pulpscifi_model_names:
+  - PulpSciFiDiffusion
+diffusion_models_256x256_list: 
+  - 256x256_diffusion_uncond

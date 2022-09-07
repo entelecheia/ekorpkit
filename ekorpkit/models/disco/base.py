@@ -49,7 +49,18 @@ class DiscoDiffusion(BaseTTIModel):
         super().__init__(**args)
 
         self._parameters = self.args.parameters
-        self._midas = self.args.midas
+        self.midas_config = self.args.midas
+        # self.model_config = self.args.model
+        self.model_map = self.args.model_map
+        self.model_map.diffusion_models_256x256_list += (
+            self.model_map.kaliyuga_pixel_art_model_names
+            + self.model_map.kaliyuga_watercolor_model_names
+            + self.model_map.kaliyuga_pulpscifi_model_names
+        )
+        self.diffusion_model_config = self.args.diffusion_model
+        self._download = self.args.download
+
+        self._model_and_diffusion_args = {}
         self.clip_models = []
         self.model = None
         self.diffusion = None
@@ -351,24 +362,31 @@ class DiscoDiffusion(BaseTTIModel):
         }
         return results
 
+    def get_model_path(self, model_name):
+        model_filepath = self._download.models[model_name]["path"]
+        return model_filepath
+
     def _prepare_models(self):
         from guided_diffusion.script_util import create_model_and_diffusion
 
         log.info("Prepping model...")
-        self.model, self.diffusion = create_model_and_diffusion(**self.model_config)
-        if self._model.diffusion_model == "custom":
-            custom_path = self._path.model_dir + "/" + self._model.custom_model
+        self.model, self.diffusion = create_model_and_diffusion(
+            **self._model_and_diffusion_args
+        )
+        self.diffusion_model = self.config.models.diffusion_model
+        if self.diffusion_model == "custom":
+            custom_path = os.path.join(
+                self._path.model_dir, self.config.models.custom_model
+            )
             self.model.load_state_dict(torch.load(custom_path, map_location="cpu"))
         else:
-            model_path = (
-                self._path.model_dir + "/" + self._model.diffusion_model + ".pt"
-            )
+            model_path = self.get_model_path(self.diffusion_model)
             self.model.load_state_dict(torch.load(model_path, map_location="cpu"))
         self.model.requires_grad_(False).eval().to(self.cuda_device)
         for name, param in self.model.named_parameters():
             if "qkv" in name or "norm" in name or "proj" in name:
                 param.requires_grad_()
-        if self.model_config["use_fp16"]:
+        if self._model_and_diffusion_args["use_fp16"]:
             self.model.convert_to_fp16()
 
     def init_flow_warp(self, args):
@@ -380,7 +398,7 @@ class DiscoDiffusion(BaseTTIModel):
         video_frames_dir = self._output.video_frames_dir
         flo_fwd_dir = self._output.flo_fwd_dir
         flo_dir = self._output.flo_dir
-        raft_model_path = self.args.download.models.RAFT.path
+        raft_model_path = self.get_model_path("RAFT")
 
         rsft_args = argparse.Namespace()
         rsft_args.small = False
@@ -451,35 +469,56 @@ class DiscoDiffusion(BaseTTIModel):
         self.cuda_device = DEVICE
 
         if not self.args.use_cpu:
-            ## A100 fix thanks to Emad
+            # A100 fix thanks to Emad
             if torch.cuda.get_device_capability(self.cuda_device) == (8, 0):
                 log.info("Disabling CUDNN for A100 gpu")
                 torch.backends.cudnn.enabled = False
 
-        self.model_config = model_and_diffusion_defaults()
-        self.model_config.update(eKonf.to_dict(self.args.diffusion_model))
-        self.model_default = self.model_config["image_size"]
+        self._model_and_diffusion_args = model_and_diffusion_defaults()
+        self.diffusion_model = self.config.models.diffusion_model
+        if self.diffusion_model in self.diffusion_model_config:
+            cfg = self.diffusion_model_config[self.diffusion_model]
+        else:
+            cfg = self.diffusion_model_config["custom"]
+        log.info(f"Loading diffusion model: {self.diffusion_model}")
+        self._model_and_diffusion_args.update(eKonf.to_dict(cfg))
+        self.model_default = self._model_and_diffusion_args["image_size"]
 
-        if self.args.model.use_secondary_model:
-            secondary_model_path = self.args.download.models.model_secondary.path
+        if self.config.models.use_secondary_model:
+            secondary_model_path = self.get_model_path("model_secondary")
+            log.info(f"Loading secondary model: {secondary_model_path}")
             self.secondary_model = SecondaryDiffusionImageNet2()
             self.secondary_model.load_state_dict(
                 torch.load(secondary_model_path, map_location="cpu")
             )
             self.secondary_model.eval().requires_grad_(False).to(self.cuda_device)
+        else:
+            self.secondary_model = None
 
     def load_clip_models(self):
         """Load the clips"""
         import torchvision.transforms as T
         import lpips
         import clip
+        import open_clip
 
-        _clips = self._model.clip_models
+        _clips = self.config.models.clip_models
         clip_models = []
         for name, _use in _clips.items():
             if _use:
+                model_name = self.model_map.clip_models[name]
                 clip_models.append(
-                    clip.load(name, jit=False)[0]
+                    clip.load(model_name, jit=False)[0]
+                    .eval()
+                    .requires_grad_(False)
+                    .to(self.cuda_device)
+                )
+        _clips = self.config.models.openclip_models
+        for name, _use in _clips.items():
+            if _use:
+                model_args = self.model_map.clip_models[name]
+                clip_models.append(
+                    open_clip.create_model(**model_args)
                     .eval()
                     .requires_grad_(False)
                     .to(self.cuda_device)
@@ -497,8 +536,12 @@ class DiscoDiffusion(BaseTTIModel):
         check_model_SHA = download.check_model_SHA
         for name, model in download.models.items():
             if not isinstance(model, str):
-                log.info(f"Downloading model {name} from {model}")
-                _download_models(name, **model, check_model_SHA=check_model_SHA)
+                downloaded = model.get("downloaded", True)
+                if downloaded:
+                    log.info(f"Downloading model {name} from {model}")
+                    _download_models(name, **model, check_model_SHA=check_model_SHA)
+                else:
+                    log.info(f"Skipping download of {name}")
 
         if not os.path.exists(download.pretrained_symlink):
             os.symlink(download.pretrained_dir, download.pretrained_symlink)
@@ -662,7 +705,7 @@ class DiscoDiffusion(BaseTTIModel):
             init = create_perlin_noise(
                 args.side_x,
                 args.side_y,
-                octaves=[1.5 ** -i * 0.5 for i in range(12)],
+                octaves=[1.5**-i * 0.5 for i in range(12)],
                 width=1,
                 height=1,
                 grayscale=grayscale,
@@ -671,7 +714,7 @@ class DiscoDiffusion(BaseTTIModel):
             init2 = create_perlin_noise(
                 args.side_x,
                 args.side_y,
-                octaves=[1.5 ** -i * 0.5 for i in range(8)],
+                octaves=[1.5**-i * 0.5 for i in range(8)],
                 width=4,
                 height=4,
                 grayscale=grayscale2,
@@ -726,10 +769,12 @@ class DiscoDiffusion(BaseTTIModel):
         if isinstance(args.cut_overview, str):
             cut_overview = eval(args.cut_overview)
             cut_innercut = eval(args.cut_innercut)
+            cut_ic_pow = eval(args.cut_ic_pow)
             cut_icgray_p = eval(args.cut_icgray_p)
         else:
             cut_overview = args.cut_overview
             cut_innercut = args.cut_innercut
+            cut_ic_pow = args.cut_ic_pow
             cut_icgray_p = args.cut_icgray_p
 
         def cond_fn(x, t, y=None):
@@ -784,7 +829,7 @@ class DiscoDiffusion(BaseTTIModel):
                             args.skip_augs,
                             Overview=cut_overview[1000 - t_int],
                             InnerCrop=cut_innercut[1000 - t_int],
-                            IC_Size_Pow=args.cut_ic_pow,
+                            IC_Size_Pow=cut_ic_pow[1000 - t_int],
                             IC_Grey_P=cut_icgray_p[1000 - t_int],
                         )
                         clip_in = self.normalize(cuts(x_in.add(1).div(2)))
@@ -1251,7 +1296,7 @@ class DiscoDiffusion(BaseTTIModel):
         text_series, image_series = self._get_prompt_series(args, args.max_frames)
 
         if (args.animation_mode == AnimMode.ANIM_3D) and (args.midas_weight > 0.0):
-            midas = Midas(**self._midas)
+            midas = Midas(**self.midas_config)
             midas_model, midas_transform, _, _, _, _ = midas.init_midas_depth_model(
                 args.midas_depth_model
             )
@@ -1540,6 +1585,13 @@ class DiscoDiffusion(BaseTTIModel):
         args.text_prompts = text_prompts
         args.image_prompts = image_prompts
 
+        args.width_height = (
+            args.width_height_for_256x256_models
+            if args.models.diffusion_model
+            in self.model_map.diffusion_models_256x256_list
+            else args.width_height_for_512x512_models
+        )
+
         # Get corrected sizes
         args.side_x = (args.width_height[0] // 64) * 64
         args.side_y = (args.width_height[1] // 64) * 64
@@ -1579,7 +1631,7 @@ class DiscoDiffusion(BaseTTIModel):
                 self.angle_series = get_inbetweens(
                     parse_key_frames(args.angle), args.max_frames, args.interp_spline
                 )
-            except RuntimeError as e:
+            except RuntimeError:
                 log.warning(
                     "WARNING: You have selected to use key frames, but you have not "
                     "formatted `angle` correctly for key frames.\n"
@@ -1597,7 +1649,7 @@ class DiscoDiffusion(BaseTTIModel):
                 self.zoom_series = get_inbetweens(
                     parse_key_frames(args.zoom), args.max_frames, args.interp_spline
                 )
-            except RuntimeError as e:
+            except RuntimeError:
                 log.warning(
                     "WARNING: You have selected to use key frames, but you have not "
                     "formatted `zoom` correctly for key frames.\n"
@@ -1617,7 +1669,7 @@ class DiscoDiffusion(BaseTTIModel):
                     args.max_frames,
                     args.interp_spline,
                 )
-            except RuntimeError as e:
+            except RuntimeError:
                 log.warning(
                     "WARNING: You have selected to use key frames, but you have not "
                     "formatted `translation_x` correctly for key frames.\n"
@@ -1639,7 +1691,7 @@ class DiscoDiffusion(BaseTTIModel):
                     args.max_frames,
                     args.interp_spline,
                 )
-            except RuntimeError as e:
+            except RuntimeError:
                 log.warning(
                     "WARNING: You have selected to use key frames, but you have not "
                     "formatted `translation_y` correctly for key frames.\n"
@@ -1661,7 +1713,7 @@ class DiscoDiffusion(BaseTTIModel):
                     args.max_frames,
                     args.interp_spline,
                 )
-            except RuntimeError as e:
+            except RuntimeError:
                 log.warning(
                     "WARNING: You have selected to use key frames, but you have not "
                     "formatted `translation_z` correctly for key frames.\n"
@@ -1683,7 +1735,7 @@ class DiscoDiffusion(BaseTTIModel):
                     args.max_frames,
                     args.interp_spline,
                 )
-            except RuntimeError as e:
+            except RuntimeError:
                 log.warning(
                     "WARNING: You have selected to use key frames, but you have not "
                     "formatted `rotation_3d_x` correctly for key frames.\n"
@@ -1705,7 +1757,7 @@ class DiscoDiffusion(BaseTTIModel):
                     args.max_frames,
                     args.interp_spline,
                 )
-            except RuntimeError as e:
+            except RuntimeError:
                 log.warning(
                     "WARNING: You have selected to use key frames, but you have not "
                     "formatted `rotation_3d_y` correctly for key frames.\n"
@@ -1727,7 +1779,7 @@ class DiscoDiffusion(BaseTTIModel):
                     args.max_frames,
                     args.interp_spline,
                 )
-            except RuntimeError as e:
+            except RuntimeError:
                 log.warning(
                     "WARNING: You have selected to use key frames, but you have not "
                     "formatted `rotation_3d_z` correctly for key frames.\n"
@@ -1780,7 +1832,7 @@ class DiscoDiffusion(BaseTTIModel):
         diffusion_steps = (
             (1000 // args.steps) * args.steps if args.steps < 1000 else args.steps
         )
-        self.model_config.update(
+        self._model_and_diffusion_args.update(
             {
                 "timestep_respacing": timestep_respacing,
                 "diffusion_steps": diffusion_steps,
@@ -1856,7 +1908,7 @@ class DiscoDiffusion(BaseTTIModel):
 
         if args.set_seed == "random_seed":
             random.seed()
-            args.seed = random.randint(0, 2 ** 32)
+            args.seed = random.randint(0, 2**32)
         else:
             args.seed = int(args.set_seed)
         log.info(f"Using seed: {args.seed}")
@@ -1874,6 +1926,24 @@ class DiscoDiffusion(BaseTTIModel):
             args.skip_steps = args.video_init_skip_steps
             args.frames_scale = args.video_init_frames_scale
             args.frames_skip_steps = args.video_init_frames_skip_steps
+
+        if (
+            args.models.diffusion_model in self.model_map.kaliyuga_pixel_art_model_names
+        ) or (
+            args.models.diffusion_model in self.model_map.kaliyuga_pulpscifi_model_names
+        ):
+            args.cut_overview = args.pad_or_pulp_cut_overview
+            args.cut_innercut = args.pad_or_pulp_cut_innercut
+            args.cut_ic_pow = args.pad_or_pulp_cut_ic_pow
+            args.cut_icgray_p = args.pad_or_pulp_cut_icgray_p
+        elif (
+            args.models.diffusion_model
+            in self.model_map.kaliyuga_watercolor_model_names
+        ):
+            args.cut_overview = args.watercolor_cut_overview
+            args.cut_innercut = args.watercolor_cut_innercut
+            args.cut_ic_pow = args.watercolor_cut_ic_pow
+            args.cut_icgray_p = args.watercolor_cut_icgray_p
 
         return args
 

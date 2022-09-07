@@ -11,16 +11,21 @@ class BaseTTIModel:
         args = eKonf.to_config(args)
         self.args = args
         self.name = args.name
+        self._version = args.get("version", "0.0.0")
         self.verbose = args.get("verbose", True)
         self.auto = args.auto
         self._path = self.args.path
         self._output = self.args.output
         self._module = self.args.module
-        self._model = self.args.model
         self._config = self.args.config
+        self.model_config = self.args.model
 
         self.sample_imagepaths = []
 
+    @property
+    def version(self):
+        return self._version
+        
     @property
     def path(self):
         return self._path

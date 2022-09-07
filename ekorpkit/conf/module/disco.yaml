@@ -4,6 +4,11 @@ modules:
     libname: CLIP
     liburi: https://github.com/entelecheia/CLIP
     specname:
+  - name: open_clip
+    libname: open_clip
+    liburi: https://github.com/entelecheia/open_clip
+    specname: 
+    syspath: open_clip/src
   - name: guided_diffusion.script_util
     libname: guided-diffusion
     liburi: https://github.com/entelecheia/guided-diffusion
