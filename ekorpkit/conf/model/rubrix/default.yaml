@@ -1,6 +1,6 @@
 defaults:
   - /auto: init
-  - /columns: model_simple_classification
+  - /columns: model_rubrix_classification
 
 _target_: ekorpkit.models.rubrix.base.Rubrix
 name: Rubrix

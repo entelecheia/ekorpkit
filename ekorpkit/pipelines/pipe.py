@@ -99,7 +99,6 @@ def eval_columns(df, args):
 
 def combine_columns(df, args):
     args = eKonf.to_dict(args)
-    verbose = args.get("verbose", False)
     columns = args.get("columns", None)
     if columns is None:
         log.warning("No columns specified")
@@ -930,7 +929,7 @@ def filter_length(df, args, **kwargs):
         with elapsed_timer(format_time=True) as elapsed:
             _len_column = f"{key}_{len_column}"
             df[_len_column] = eKonf.apply(
-                len_func, df[key], description=f"Calculating length"
+                len_func, df[key], description="Calculating length"
             )
             if min_length and min_length > 0:
                 n_docs = df.shape[0]
@@ -1052,7 +1051,7 @@ def stdout_samples(df, args):
     args = eKonf.to_dict(args)
     verbose = args.get("verbose", False)
     apply_to = args.get("apply_to", "text")
-    sample_length_to_print = args.get("sample_length_to_print", 1000)
+    # sample_length_to_print = args.get("sample_length_to_print", 1000)
     if apply_to is None:
         if verbose:
             log.warning("No columns specified")
@@ -1275,7 +1274,7 @@ def summary_stats(df, args):
 
 def save_as_json(df, args):
     args = eKonf.to_dict(args)
-    verbose = args.get("verbose", False)
+    # verbose = args.get("verbose", False)
     corpus_name = args.get("corpus_name", eKonf.Keys.CORPUS)
     output_dir = args.get("output_dir", ".")
     output_file = args.get("output_file", None)
@@ -1295,7 +1294,7 @@ def save_as_json(df, args):
 
 def pipeline(data=None, **cfg):
     args = eKonf.to_dict(cfg)
-    verbose = args.get("verbose", False)
+    # verbose = args.get("verbose", False)
 
     if isinstance(data, pd.DataFrame):
         df = data.copy()

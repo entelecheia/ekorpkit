@@ -39,12 +39,15 @@ class Rubrix:
         prediction_agent=None,
     ):
         columns = columns or self.args.columns
+        text_col = columns["text"]
+        label_col = columns["labels"]
+        pred_col = columns["model_outputs"]
         records = []
         for i, row in cv_preds.iterrows():
             record = rb.TextClassificationRecord(
-                inputs={"text": row[columns["input"]]},
-                prediction=list(row[columns["model_outputs"]].items()),
-                annotation=row[columns["labels"]],
+                inputs={"text": row[text_col]},
+                prediction=list(row[pred_col].items()),
+                annotation=row[label_col] if label_col in cv_preds.columns else None,
                 metadata=row[meta_columns].to_dict(),
                 prediction_agent=prediction_agent,
             )
