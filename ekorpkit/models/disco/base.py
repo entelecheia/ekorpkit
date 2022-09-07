@@ -461,14 +461,12 @@ class DiscoDiffusion(BaseTTIModel):
         from .secondary import SecondaryDiffusionImageNet2
 
         DEVICE = torch.device(
-            f"cuda:{self.args.cuda_device}"
-            if (torch.cuda.is_available() and not self.args.use_cpu)
-            else "cpu"
+            f"cuda:{self.args.cuda_device}" if torch.cuda.is_available() else "cpu"
         )
         log.info(f"Using device:{DEVICE}")
         self.cuda_device = DEVICE
 
-        if not self.args.use_cpu:
+        if torch.cuda.is_available():
             # A100 fix thanks to Emad
             if torch.cuda.get_device_capability(self.cuda_device) == (8, 0):
                 log.info("Disabling CUDNN for A100 gpu")
@@ -484,7 +482,7 @@ class DiscoDiffusion(BaseTTIModel):
         self._model_and_diffusion_args.update(eKonf.to_dict(cfg))
         self.model_default = self._model_and_diffusion_args["image_size"]
 
-        if self.config.models.use_secondary_model:
+        if self.config.use_secondary_model:
             secondary_model_path = self.get_model_path("model_secondary")
             log.info(f"Loading secondary model: {secondary_model_path}")
             self.secondary_model = SecondaryDiffusionImageNet2()
@@ -1159,7 +1157,7 @@ class DiscoDiffusion(BaseTTIModel):
         )
         next_step_pil.save(prev_frame_scaled_path)
 
-        ### Turbo mode - skip some diffusions, use 3d morph for clarity and to save time
+        # Turbo mode - skip some diffusions, use 3d morph for clarity and to save time
         if args.turbo_mode:
             if frame_num == args.turbo_preroll:  # start tracking oldframe
                 # stash for later blending
@@ -1591,6 +1589,9 @@ class DiscoDiffusion(BaseTTIModel):
             in self.model_map.diffusion_models_256x256_list
             else args.width_height_for_512x512_models
         )
+        log.info(
+            f"width_height: {args.width_height}, diffusion_model: {args.models.diffusion_model}"
+        )
 
         # Get corrected sizes
         args.side_x = (args.width_height[0] // 64) * 64
@@ -1874,7 +1875,7 @@ class DiscoDiffusion(BaseTTIModel):
                 start_frame = len(glob(_frame_file))
                 if (
                     args.animation_mode != AnimMode.ANIM_3D
-                    and args.turbo_mode == True
+                    and args.turbo_mode
                     and start_frame > args.turbo_preroll
                     and start_frame % int(args.turbo_steps) != 0
                 ):
@@ -1883,7 +1884,7 @@ class DiscoDiffusion(BaseTTIModel):
                 start_frame = int(args.resume_from_frame) + 1
                 if (
                     args.animation_mode != AnimMode.ANIM_3D
-                    and args.turbo_mode == True
+                    and args.turbo_mode
                     and start_frame > args.turbo_preroll
                     and start_frame % int(args.turbo_steps) != 0
                 ):
@@ -2030,7 +2031,7 @@ class DiscoDiffusion(BaseTTIModel):
         flo_out_dir = self._output.flo_out_dir
         blend_out_dir = self._output.blend_out_dir
 
-        if _video.skip_video_for_run_all == True:
+        if _video.skip_video_for_run_all:
             print(
                 "Skipping video creation, set skip_video_for_run_all=False if you want to run it"
             )

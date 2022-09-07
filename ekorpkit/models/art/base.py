@@ -25,7 +25,7 @@ class BaseTTIModel:
     @property
     def version(self):
         return self._version
-        
+
     @property
     def path(self):
         return self._path
@@ -94,7 +94,7 @@ class BaseTTIModel:
             if os.path.exists(_path):
                 log.info(f"Loading config from {_path}")
                 batch_args = eKonf.load(_path)
-                log.info(f"Merging config with diffuse defaults")
+                log.info("Merging config with diffuse defaults")
                 _config = eKonf.merge(_config, batch_args)
                 # return _config
 
