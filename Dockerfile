@@ -23,9 +23,9 @@ WORKDIR $WORK_DIR
 
 RUN pip install --upgrade --no-cache-dir pip && \
     pip install --no-cache-dir \
-        ekorpkit[all] wandb transformers simpletransformers hydra-core hydra-colorlog \
-        imageio pyspng==0.1.0 lpips timm pytorch-lightning>=1.0.8 torch-fidelity \
-        einops ftfy seaborn flax unidecode opencv-python==4.5.5.64
+        "ekorpkit[all]" wandb transformers simpletransformers hydra-core hydra-colorlog \
+        imageio "pyspng==0.1.0" lpips timm "pytorch-lightning>=1.0.8" torch-fidelity \
+        einops ftfy seaborn flax unidecode "opencv-python==4.5.5.64"
 
 COPY ./scripts/tests ./scripts
 

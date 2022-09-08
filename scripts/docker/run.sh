@@ -12,7 +12,7 @@ docker run -it --rm \
   --ulimit memlock=-1 \
   --ulimit stack=67108864 \
   --env-file .env.test \
-  --volume ${PWD}:/ekorpkit \
-  --volume ${PWD}/workspace/data/archive/disco-imagen:/workspace/data/archive/disco-imagen \
+  --volume ${PWD}/scripts/tests:/tests/scripts \
+  --volume ${HOME}/workspace/data/archive/disco-imagen:/workspace/data/archive/disco-imagen \
   --name $EKORPKIT_TEST_DOCKER_CONTAINER_NAME \
   $EKORPKIT_TEST_DOCKER_IMAGE_NAME:latest $CMD
