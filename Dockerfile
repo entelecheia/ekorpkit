@@ -7,8 +7,8 @@ RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y tzdata imagemag
     && rm -rf /var/lib/apt/lists/*
 
 # Set up environment variables
-ENV WORK_DIR=/ekorpkit
-ENV EKORPKIT_CONFIG_DIR=$WORK_DIR/tests/config
+ENV WORK_DIR=/tests
+ENV EKORPKIT_CONFIG_DIR=$WORK_DIR/ekorpkit/tests/config
 ENV EKORPKIT_WORKSPACE_ROOT=/workspace
 ENV EKORPKIT_PROJECT=ekorpkit-test
 ENV KMP_DUPLICATE_LIB_OK TRUE
@@ -27,6 +27,6 @@ RUN pip install --upgrade --no-cache-dir pip && \
         imageio pyspng==0.1.0 lpips timm pytorch-lightning>=1.0.8 torch-fidelity \
         einops ftfy seaborn flax unidecode opencv-python==4.5.5.64
 
-COPY . .
+COPY ./scripts/tests ./scripts
 
-CMD ["bash", "./tests/run-test.sh"]
+CMD ["bash"]
