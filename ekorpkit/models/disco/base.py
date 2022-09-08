@@ -293,6 +293,8 @@ class DiscoDiffusion(BaseTTIModel):
         batch_num=None,
         animation_mode: AnimMode = None,
         run_to_resume=None,
+        show_collage=True,
+        show_losses=False,
         **args,
     ):
 
@@ -304,6 +306,10 @@ class DiscoDiffusion(BaseTTIModel):
             args.update(dict(animation_mode=animation_mode))
         if run_to_resume is not None:
             args.update(dict(run_to_resume=run_to_resume))
+        if show_collage is not None:
+            args.update(dict(show_collage=show_collage))
+        if show_losses is not None:
+            args.update(dict(show_losses=show_losses))
 
         log.info("> loading settings...")
         args = self.load_config(batch_name=batch_name, batch_num=batch_num, **args)
@@ -332,9 +338,10 @@ class DiscoDiffusion(BaseTTIModel):
 
             gc.collect()
             torch.cuda.empty_cache()
+            loss_values = []
             try:
                 if args.animation_mode == AnimMode.NONE:
-                    self._run(args)
+                    loss_values = self._run(args)
                 else:
                     self._run_anim(args)
             except KeyboardInterrupt:
@@ -353,12 +360,14 @@ class DiscoDiffusion(BaseTTIModel):
                     print(p)
 
                 if args.show_collage:
+                    eKonf.clear_output()
                     self.collage(image_filepaths=self.sample_imagepaths)
 
         results = {
             "image_filepaths": self.sample_imagepaths,
             "config_file": self.save_settings(args),
             "config": eKonf.to_dict(args),
+            "loss_values": loss_values,
         }
         return results
 
@@ -1392,7 +1401,8 @@ class DiscoDiffusion(BaseTTIModel):
                 args,
             )
 
-            plt.plot(np.array(loss_values), "r")
+            if args.get("show_losses", False):
+                plt.plot(np.array(loss_values), "r")
 
         if batchBar is not None:
             batchBar.n = frame_num + 1
@@ -1498,7 +1508,9 @@ class DiscoDiffusion(BaseTTIModel):
         if batchBar is not None:
             batchBar.n = sample_num + 1
             batchBar.refresh()
-            plt.plot(np.array(loss_values), "r")
+            if args.get("show_losses", False):
+                plt.plot(np.array(loss_values), "r")
+        return loss_values
 
     def _generator(self, args):
         """Run the simulation"""

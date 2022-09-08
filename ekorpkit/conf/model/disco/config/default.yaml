@@ -7,7 +7,6 @@ resume_run: false
 run_to_resume: latest
 resume_from_frame: latest
 retain_overwritten_frames: true
-show_collage: true
 diffusion_sampling_mode: ddim # ['plms','ddim']
 use_secondary_model: true
 

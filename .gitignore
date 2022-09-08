@@ -149,3 +149,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.env*
+!.env.project
+!.env.vault
