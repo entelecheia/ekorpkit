@@ -37,11 +37,11 @@ evaluate: all, transformers, model
 simpletransformers>=0.63: all, transformers, model
 datasets: all, transformers, dataset, model
 # torch: transformers
-tensorflow: all, transformers, model
+tensorflow: all, model
 # tf-nightly: transformers, model
 flaml: automl, model, all
 yellowbrick: yellowbrick
-scipy: automl, model, all, transformers
+scipy: automl, model, all
 
 boto3>=1.0,<2.0: aws, cached-path
 google-api-python-client: google
@@ -68,7 +68,7 @@ kaleido: all, doc, visualize
 rich: all, doc, visualize
 matplotlib: all, doc, visualize
 seaborn: all, doc, visualize
-Pillow>=9.1.0: all, doc, visualize
+Pillow>=9.0.0: all, doc, visualize
 
 tensorflow-datasets: dataset
 # tensorflow-io: dataset
