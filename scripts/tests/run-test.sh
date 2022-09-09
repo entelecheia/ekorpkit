@@ -11,6 +11,6 @@ cd ekorpkit
 pip install -r requirements-test.txt
 pip install -U -e .[all]
 pytest
-# ./codecov -t ${CODECOV_TOKEN}
+../codecov -t ${CODECOV_TOKEN}
 
 cd ..

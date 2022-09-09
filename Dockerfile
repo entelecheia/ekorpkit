@@ -1,8 +1,8 @@
 FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y fontconfig fonts-nanum
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y fontconfig fonts-nanum curl git
 # for disco-diffusion
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y tzdata imagemagick ffmpeg git \ 
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y tzdata imagemagick ffmpeg \ 
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -28,5 +28,8 @@ RUN pip install --upgrade --no-cache-dir pip && \
         einops ftfy seaborn flax unidecode "opencv-python==4.5.5.64"
 
 COPY ./scripts/tests ./scripts
+
+RUN curl -Os https://uploader.codecov.io/latest/linux/codecov
+RUN chmod +x codecov
 
 CMD ["bash"]
