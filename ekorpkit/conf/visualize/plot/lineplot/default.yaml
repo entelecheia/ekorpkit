@@ -19,9 +19,7 @@ size_norm:
 dashes: true
 markers:
 style_order:
-units:
 estimator: mean
-ci: 95
 n_boot: 1000
 seed:
 sort: true

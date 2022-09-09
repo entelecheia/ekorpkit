@@ -39,12 +39,6 @@ markers:
 style_order:
 # list
 # Specified order for appearance of the style variable levels otherwise they are determined from the data. Not relevant when the style variable is numeric.
-units:
-# vector or key in data
-# Grouping variable identifying sampling units. When used, a separate line will be drawn for each unit with appropriate semantics, but no legend entry will be added. Useful for showing distribution of experimental replicates when exact identities are not needed. Currently non-functional.
-ci: 95
-# int or “sd” or None
-# Size of the confidence interval to draw when aggregating with an estimator. “sd” means to draw the standard deviation of the data. Setting to None will skip bootstrapping. Currently non-functional.
 alpha:
 # float
 # Proportional opacity of the points.
