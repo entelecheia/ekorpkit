@@ -52,9 +52,9 @@ def test_eval_sentiments():
     eval_cfg.columns.actual = 'labels'
     eval_cfg.columns.predicted = 'polarity_label'
     eval_cfg.labels = ['positive', 'negative', 'neutral']
-    eval_cfg.data_dir = "/tests/tmp/predict"
+    eval_cfg.data_dir = "./.tmp/predict"
     eval_cfg.data_file = "financial_phrasebank*.parquet"
-    eval_cfg.output_dir = "/tests/tmp/eval"
+    eval_cfg.output_dir = "./.tmp/eval"
     eKonf.instantiate(eval_cfg)
 
     assert os.path.exists(eval_cfg.output_dir)
@@ -83,7 +83,7 @@ def test_eval_fomc_sentiments():
     cfg = eKonf.compose(config_group="pipeline/predict")
     cfg.name = "fomc_sentiments"
     cfg.model = model_cfg
-    cfg.output_dir = "/tests/tmp/predict"
+    cfg.output_dir = "./.tmp/predict"
     cfg.output_file = f"{cfg.name}-lm.parquet"
     cfg.num_workers = 100
     eKonf.pipe(fomc_statements, cfg)
