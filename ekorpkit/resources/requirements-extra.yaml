@@ -13,6 +13,7 @@ soynlp: all, tokenize, soynlp
 nltk: all, tokenize, nltk, tokenize-en
 sacremoses: all, tokenize
 emoji<2.0: all, tokenize, dataset
+spacy: tokenize
 # sentencepiece: tokenize
 
 tomotopy: all, topic
@@ -99,5 +100,6 @@ unidecode: art, disco
 opencv-python==4.5.5.64: art, disco
 
 cleanlab: label, all
-snorkel: label
+# snorkel: label
 rubrix: label
+

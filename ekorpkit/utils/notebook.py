@@ -33,7 +33,11 @@ def _is_colab():
 
 
 def _get_display():
-    from ipywidgets import Output
+    try:
+        from ipywidgets import Output
+    except ImportError:
+        logger.info("ipywidgets not installed.")
+        return None
 
     if _is_notebook():
         return Output()
