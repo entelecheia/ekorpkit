@@ -6,6 +6,6 @@ default_models:
   dpt_large: ${..model_dir}/dpt_large-midas-2f21e586.pt
   dpt_hybrid: ${..model_dir}/dpt_hybrid-midas-501f0c75.pt
   dpt_hybrid_nyu: ${..model_dir}/dpt_hybrid_nyu-2ce69ec7.pt
-use_cpu: ${oc.select:..use_cpu, false}
+use_cpu: false
 cuda_device: ${oc.select:..cuda_device, 0}
 verbose: ${oc.select:..verbose, false}

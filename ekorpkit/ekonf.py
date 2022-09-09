@@ -1,18 +1,27 @@
 from pathlib import Path
 from omegaconf import SCMode, DictConfig, ListConfig
 from typing import Any, List, IO, Dict, Union, Tuple
+from ekorpkit.utils.notebook import (
+    _clear_output,
+    _cprint,
+    _display,
+    _display_image,
+    _get_display,
+    _hide_code_in_slideshow,
+    _is_notebook,
+    _is_colab,
+)
 from .base import (
     __ekorpkit_path__,
     __home_path__,
     __version__,
     _apply,
-    _clear_output,
     _compose,
     _config,
     _Defaults,
     _dependencies,
-    _display,
-    _display_image,
+    _dict_product,
+    _dict_to_dataframe,
     _ensure_kwargs,
     _ensure_list,
     _env_set,
@@ -22,13 +31,11 @@ from .base import (
     _getsource,
     _init_env_,
     _instantiate,
-    _is_colab,
     _is_config,
     _is_dir,
     _is_file,
     _is_instantiatable,
     _is_list,
-    _is_notebook,
     _join_path,
     _Keys,
     _load_dotenv,
@@ -42,6 +49,7 @@ from .base import (
     _path,
     _pipe,
     _print,
+    _records_to_dataframe,
     _run,
     _save,
     _select,
@@ -536,6 +544,13 @@ class eKonf:
         fontname=None,
         fontsize=12,
         fontcolor=None,
+        xlabel=None,
+        ylabel=None,
+        xticklabels=None,
+        yticklabels=None,
+        xlabel_fontsize=12,
+        ylabel_fontsize=12,
+        **kwargs,
     ):
         from ekorpkit.visualize.collage import collage as _collage
 
@@ -555,6 +570,13 @@ class eKonf:
             fontname=fontname,
             fontsize=fontsize,
             fontcolor=fontcolor,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            xticklabels=xticklabels,
+            yticklabels=yticklabels,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            **kwargs,
         )
 
     @staticmethod
@@ -688,3 +710,70 @@ class eKonf:
             metadata=metadata,
             **kwargs,
         )
+
+    @staticmethod
+    def pip(
+        name,
+        upgrade=False,
+        prelease=False,
+        editable=False,
+        quiet=False,
+        find_links=None,
+        requirement=None,
+        force_reinstall=False,
+        verbose=False,
+        **kwargs,
+    ):
+        from ekorpkit.utils.lib import pip as _pip
+
+        return _pip(
+            name,
+            upgrade,
+            prelease,
+            editable,
+            quiet,
+            find_links,
+            requirement,
+            force_reinstall,
+            verbose,
+            **kwargs,
+        )
+
+    @staticmethod
+    def upgrade(prelease=False, quiet=False, force_reinstall=False, **kwargs):
+        from ekorpkit.utils.lib import pip
+
+        return pip(
+            name="ekorpkit",
+            upgrade=True,
+            prelease=prelease,
+            quiet=quiet,
+            force_reinstall=force_reinstall,
+            **kwargs,
+        )
+
+    @staticmethod
+    def dict_product(dicts):
+        return _dict_product(dicts)
+
+    @staticmethod
+    def get_display():
+        return _get_display()
+
+    @staticmethod
+    def hide_code_in_slideshow():
+        return _hide_code_in_slideshow()
+
+    @staticmethod
+    def cprint(str_color_tuples, **kwargs):
+        return _cprint(str_color_tuples)
+
+    @staticmethod
+    def dict_to_dataframe(data, orient="columns", dtype=None, columns=None):
+        return _dict_to_dataframe(data, orient, dtype, columns)
+
+    @staticmethod
+    def records_to_dataframe(
+        data, index=None, exclude=None, columns=None, coerce_float=False, nrows=None
+    ):
+        return _records_to_dataframe(data, index, exclude, columns, coerce_float, nrows)

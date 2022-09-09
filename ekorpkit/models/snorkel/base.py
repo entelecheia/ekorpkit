@@ -123,9 +123,9 @@ class BaseSnorkel:
             worker_lfs = self._worker_lfs
         applier = PandasLFApplier(worker_lfs)
         self.applier = applier
-        log.info(f"Applying worker lfs to train data")
+        log.info("Applying worker lfs to train data")
         self.L_train = applier.apply(self.train_data)
-        log.info(f"Applying worker lfs to test data")
+        log.info("Applying worker lfs to test data")
         self.L_test = applier.apply(self.test_data)
         self.Y_train = self.train_data[self.columns.classes].values
         self.Y_test = self.test_data[self.columns.classes].values

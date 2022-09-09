@@ -1,0 +1,11 @@
+defaults:
+  - /auto: init
+  - /columns: model_rubrix_classification
+
+_target_: ekorpkit.models.rubrix.base.Rubrix
+name: Rubrix
+api_url: 
+api_key:
+workspace:
+auto:
+  init: false

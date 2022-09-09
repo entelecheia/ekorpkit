@@ -11,15 +11,20 @@ class BaseTTIModel:
         args = eKonf.to_config(args)
         self.args = args
         self.name = args.name
+        self._version = args.get("version", "0.0.0")
         self.verbose = args.get("verbose", True)
         self.auto = args.auto
         self._path = self.args.path
         self._output = self.args.output
         self._module = self.args.module
-        self._model = self.args.model
         self._config = self.args.config
+        self.model_config = self.args.model
 
         self.sample_imagepaths = []
+
+    @property
+    def version(self):
+        return self._version
 
     @property
     def path(self):
@@ -68,11 +73,11 @@ class BaseTTIModel:
 
     def save_settings(self, args):
         """Save the settings"""
-        _path = os.path.join(
-            self._output.batch_dir, f"{args.batch_name}({args.batch_num})_settings.yaml"
-        )
+        _filename = f"{args.batch_name}({args.batch_num})_settings.yaml"
+        _path = os.path.join(self._output.batch_dir, _filename)
         log.info(f"Saving config to {_path}")
         eKonf.save(args, _path)
+        return _filename
 
     def load_config(self, batch_name=None, batch_num=None, **args):
         """Load the settings"""
@@ -89,7 +94,7 @@ class BaseTTIModel:
             if os.path.exists(_path):
                 log.info(f"Loading config from {_path}")
                 batch_args = eKonf.load(_path)
-                log.info(f"Merging config with diffuse defaults")
+                log.info("Merging config with diffuse defaults")
                 _config = eKonf.merge(_config, batch_args)
                 # return _config
 
@@ -157,6 +162,7 @@ class BaseTTIModel:
             fontname=fontname,
             fontsize=fontsize,
             fontcolor=fontcolor,
+            **kwargs,
         )
 
     def _prepare_folders(self, batch_name):

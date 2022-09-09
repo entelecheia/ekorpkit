@@ -33,6 +33,11 @@ def load_data(split_name=None, **loader_cfg):
     documents = []
     num_workers = num_workers if num_workers else 1
     num_files = len(filepaths)
+    if num_files < 1:
+        log.warning("No files to load")
+        df = pd.DataFrame(documents)
+        return df
+
     processes = min(num_workers, num_files)
     if multiprocessing_at == "load_data" and num_files < processes // 2:
         multiprocessing_at = "_load_archive"
@@ -90,7 +95,7 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
             if len(documents) > 0:
                 print(documents[0])
             break
-        default_items["filename"] = filename
+        # default_items["filename"] = filename
 
         try:
             if open_func is not None:
@@ -109,11 +114,11 @@ def _load_archive(filepath, filetype, default_items, loader_args, num_workers):
         if executor is not None:
             pbar.set_description(f"{filename}")
             results.append(
-                executor.submit(parse_data, contents, loader_args, default_items, 1)
+                executor.submit(parse_data, contents, loader_args, default_items, filename, 1)
             )
             pbar.update(1)
         else:
-            documents += parse_data(contents, loader_args, default_items, num_workers)
+            documents += parse_data(contents, loader_args, default_items, filename, num_workers)
 
     if arch_handle is not None:
         arch_handle.close()

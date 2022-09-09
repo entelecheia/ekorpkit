@@ -19,28 +19,80 @@ def gitclone(url, targetdir=None, verbose=False):
         res = subprocess.run(
             ["git", "clone", url], stdout=subprocess.PIPE
         ).stdout.decode("utf-8")
-    log.info(res)
+    if verbose:
+        print(res)
+    else:
+        log.info(res)
+
+
+def pip(
+    name,
+    upgrade=False,
+    prelease=False,
+    editable=False,
+    quiet=True,
+    find_links=None,
+    requirement=None,
+    force_reinstall=False,
+    verbose=False,
+    **kwargs,
+):
+    _cmd = ["pip", "install"]
+    if upgrade:
+        _cmd.append("--upgrade")
+    if prelease:
+        _cmd.append("--pre")
+    if editable:
+        _cmd.append("--editable")
+    if quiet:
+        _cmd.append("--quiet")
+    if find_links:
+        _cmd += ["--find-links", find_links]
+    if requirement:
+        _cmd.append("--requirement")
+    if force_reinstall:
+        _cmd.append("--force-reinstall")
+    for k in kwargs:
+        k = k.replace("_", "-")
+        _cmd.append(f"--{k}")
+    _cmd.append(name)
+    if verbose:
+        log.info(f"Installing: {' '.join(_cmd)}")
+    res = subprocess.run(_cmd, stdout=subprocess.PIPE).stdout.decode("utf-8")
+    if verbose:
+        print(res)
+    else:
+        log.info(res)
 
 
 def pipi(name, verbose=False):
     res = subprocess.run(
         ["pip", "install", name], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
-    log.info(res)
+    if verbose:
+        print(res)
+    else:
+        log.info(res)
 
 
 def pipie(name, verbose=False):
     res = subprocess.run(
         ["git", "install", "-e", name], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
-    log.info(res)
+    if verbose:
+        print(res)
+    else:
+        log.info(res)
 
 
 def apti(name, verbose=False):
     res = subprocess.run(
         ["apt", "install", name], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
-    log.info(res)
+    if verbose:
+        print(res)
+    else:
+        log.info(res)
 
 
 def load_module_from_file(name, libpath, specname=None):

@@ -1,7 +1,6 @@
 import os
 import logging
-import pandas as pd
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from sklearn import preprocessing
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit import eKonf
@@ -119,10 +118,6 @@ class BaseSet:
         return self.COLUMN.IDs
 
     @property
-    def IDs(self):
-        return self.COLUMN.IDs
-
-    @property
     def DATA(self):
         return self.COLUMN.DATA
 
@@ -182,6 +177,19 @@ class BaseSet:
         if self.summary_info is not None:
             self.summary_info.save(info={"column_info": self.COLUMN.INFO})
 
+    def save_as(self, name):
+        if not self._loaded:
+            log.info(f"Dataset {self.name} is not loaded")
+            return
+        self.data_dir = self.data_dir.replace(self.name, name)
+        self.name = name
+        self.args.data_files = None
+        self._info_cfg.data_dir = self.data_dir
+        self._info_cfg.name = self.name
+        self._summary_info = None
+        self.load_info()
+        self.persist()
+
     def load(self):
         if self._loaded:
             return
@@ -237,10 +245,10 @@ class BaseSet:
             log.info(f"Dataset {self.name} is not loaded")
             return data
         if data is None:
-            log.info(f"Data is None")
+            log.info("Data is None")
             return data
         if self._le is None:
-            log.info(f"Label encoder is not fitted")
+            log.info("Label encoder is not fitted")
             self.fit_labelencoder(data)
         _data = self._le.transform(data)
         return _data
@@ -250,10 +258,10 @@ class BaseSet:
             log.info(f"Dataset {self.name} is not loaded")
             return data
         if data is None:
-            log.info(f"Data is None")
+            log.info("Data is None")
             return data
         if self._le is None:
-            log.info(f"Label encoder is not fitted")
+            log.info("Label encoder is not fitted")
             self.fit_labelencoder(data)
         _data = self._le.inverse_transform(data)
         return _data

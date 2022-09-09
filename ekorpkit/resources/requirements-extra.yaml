@@ -13,6 +13,7 @@ soynlp: all, tokenize, soynlp
 nltk: all, tokenize, nltk, tokenize-en
 sacremoses: all, tokenize
 emoji<2.0: all, tokenize, dataset
+spacy: tokenize
 # sentencepiece: tokenize
 
 tomotopy: all, topic
@@ -36,11 +37,11 @@ evaluate: all, transformers, model
 simpletransformers>=0.63: all, transformers, model
 datasets: all, transformers, dataset, model
 # torch: transformers
-tensorflow: all, transformers, model
+tensorflow: all, model
 # tf-nightly: transformers, model
 flaml: automl, model, all
 yellowbrick: yellowbrick
-scipy: automl, model, all, transformers
+scipy: automl, model, all
 
 boto3>=1.0,<2.0: aws, cached-path
 google-api-python-client: google
@@ -67,7 +68,7 @@ kaleido: all, doc, visualize
 rich: all, doc, visualize
 matplotlib: all, doc, visualize
 seaborn: all, doc, visualize
-Pillow>=9.1.0: all, doc, visualize
+Pillow<9.1.0: all, doc, visualize
 
 tensorflow-datasets: dataset
 # tensorflow-io: dataset
@@ -96,7 +97,9 @@ einops: disco, art
 jax: dalle-mini, art
 flax: art, dalle-mini
 unidecode: art, disco
-opencv-python: art, disco
+opencv-python==4.5.5.64: art, disco
 
-cleanlab: label
-snorkel: snorkel, label
+cleanlab: label, all
+# snorkel: label
+rubrix: label
+

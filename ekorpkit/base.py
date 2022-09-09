@@ -1,3 +1,4 @@
+import itertools
 import logging
 import warnings
 import os
@@ -15,11 +16,17 @@ from enum import Enum
 from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
-from typing import Any, List, IO, Dict, Union, Tuple
+from typing import Any, List, IO, Dict, Union, Tuple, Type
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
+from ekorpkit.utils.notebook import _is_notebook
 from . import _version
+
+
+class Dummy:
+    def __call__(self, *args, **kwargs):
+        return Dummy()
 
 
 def _setLogger(level=None, force=True, filterwarnings_action="ignore", **kwargs):
@@ -80,6 +87,8 @@ def _mkdir(_path: str):
 
 
 def _exists(a, *p):
+    if a is None:
+        return False
     _path = os.path.join(a, *p)
     return os.path.exists(_path)
 
@@ -97,6 +106,8 @@ def _is_dir(a, *p):
 def _join_path(a, *p):
     if p and p[0] is not None:
         p = [str(_p) for _p in p]
+        if a is None:
+            return os.path.join(*p)
         return os.path.join(a, *p)
     else:
         return a
@@ -664,7 +675,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     verbose = config.get(_Keys.VERBOSE, False)
     if not _is_instantiatable(config):
         if verbose:
-            logger.info(f"Config is not instantiatable, returning config")
+            logger.info("Config is not instantiatable, returning config")
         return config
     _recursive_ = config.get(_Keys.RECURSIVE, False)
     if _Keys.RECURSIVE not in kwargs:
@@ -687,6 +698,7 @@ def _load_dotenv(verbose=False):
 
 
 def _osenv(key: str = None) -> Any:
+    _load_dotenv()
     if key:
         return os.environ.get(key)
     return os.environ
@@ -887,27 +899,6 @@ def _apply(
     return series.progress_apply(func)
 
 
-def _is_colab():
-    is_colab = "google.colab" in sys.modules
-    if is_colab:
-        logger.info("Google Colab detected.")
-    else:
-        logger.info("Google Colab not detected.")
-    return is_colab
-
-
-def _is_notebook():
-    is_notebook = "ipykernel" in sys.modules
-    if is_notebook:
-        ip = sys.modules["ipykernel"]
-        ip_version = ip.version_info
-        ip_client = ip.write_connection_file.__module__.split(".")[0]
-        # logger.info(f"IPython version: {ip_version}, client: {ip_client}")
-    else:
-        logger.info("IPython not detected.")
-    return is_notebook
-
-
 def _nvidia_smi():
     import subprocess
 
@@ -938,7 +929,7 @@ def _set_cuda(device=0):
             ids = [str(device)]
         for id in ids:
             _device_name = torch.cuda.get_device_name(int(id))
-            _names.append(_device_name)
+            _names.append(f"{_device_name} (id:{id})")
         logger.info(f"Setting cuda device to {_names}")
         device = ", ".join(ids)
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -970,70 +961,50 @@ def _viewsource(obj):
     """Print the source code of the object."""
     print(_getsource(obj))
 
-    # from ipywidgets import Output
+
+def _human_readable_type_name(t: Type) -> str:
+    """
+    Generates a useful-for-humans label for a type. For builtin types, it's just the class name (eg "str" or "int"). For other types, it includes the module (eg "pathlib.Path").
+    """
+    module = t.__module__
+    if module == "builtins":
+        return t.__qualname__
+    elif module.split(".")[0] == "ekorpkit":
+        module = "ekorpkit"
+
+    try:
+        return module + "." + t.__qualname__
+    except AttributeError:
+        return str(t)
 
 
-def _clear_output(wait=False):
-    from IPython import display
-
-    if _is_notebook():
-        display.clear_output(wait=True)
+def _readable_types_list(type_list: List[Type]) -> str:
+    return ", ".join(_human_readable_type_name(t) for t in type_list)
 
 
-def _display(
-    *objs,
-    include=None,
-    exclude=None,
-    metadata=None,
-    transient=None,
-    display_id=None,
-    raw=False,
-    clear=False,
-    **kwargs,
+def _dict_product(dicts):
+    """
+    >>> list(dict_product(dict(number=[1,2], character='ab')))
+    [{'character': 'a', 'number': 1},
+     {'character': 'a', 'number': 2},
+     {'character': 'b', 'number': 1},
+     {'character': 'b', 'number': 2}]
+    """
+    return (dict(zip(dicts, x)) for x in itertools.product(*dicts.values()))
+
+
+def _dict_to_dataframe(data, orient="columns", dtype=None, columns=None):
+    return pd.DataFrame.from_dict(data, orient=orient, dtype=dtype, columns=columns)
+
+
+def _records_to_dataframe(
+    data, index=None, exclude=None, columns=None, coerce_float=False, nrows=None
 ):
-    from IPython import display
-
-    if _is_notebook():
-        return display.display(
-            *objs,
-            include=include,
-            exclude=exclude,
-            metadata=metadata,
-            transient=transient,
-            display_id=display_id,
-            raw=raw,
-            clear=clear,
-            **kwargs,
-        )
-
-
-def _display_image(
-    data=None,
-    url=None,
-    filename=None,
-    format=None,
-    embed=None,
-    width=None,
-    height=None,
-    retina=False,
-    unconfined=False,
-    metadata=None,
-    **kwargs,
-):
-    from IPython import display
-
-    if _is_notebook():
-        img = display.Image(
-            data=data,
-            url=url,
-            filename=filename,
-            format=format,
-            embed=embed,
-            width=width,
-            height=height,
-            retina=retina,
-            unconfined=unconfined,
-            metadata=metadata,
-            **kwargs,
-        )
-        return display.display(img)
+    return pd.DataFrame.from_records(
+        data,
+        index=index,
+        exclude=exclude,
+        columns=columns,
+        coerce_float=coerce_float,
+        nrows=nrows,
+    )

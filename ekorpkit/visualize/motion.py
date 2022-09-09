@@ -3,7 +3,7 @@ import logging
 import subprocess
 from pathlib import Path
 from ekorpkit.io.file import get_filepaths
-from ekorpkit.base import _display, _display_image
+from ekorpkit.utils.notebook import _display, _display_image
 
 
 log = logging.getLogger(__name__)
@@ -70,10 +70,14 @@ def extract_frames(
     except:
         log.info(f"No video frames found in {extracted_frame_dir}")
     vf = f"select=not(mod(n\,{extract_nth_frame}))"
+
+    ffmpeg_path = "/usr/bin/ffmpeg"
+    if not os.path.exists(ffmpeg_path):
+        ffmpeg_path = "ffmpeg"
     if os.path.exists(video_path):
         subprocess.run(
             [
-                "ffmpeg",
+                ffmpeg_path,
                 "-i",
                 f"{video_path}",
                 "-vf",

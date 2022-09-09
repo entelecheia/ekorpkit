@@ -285,11 +285,15 @@ class SimpleClassification(SimpleTrainer):
 
         predictions, raw_outputs = self.model.predict(data)
         log.info(f"type of raw_outputs: {type(raw_outputs)}")
-        raw_outputs = [output.flatten().tolist() for output in raw_outputs]
-        pred_probs = [softmax(output).max() for output in raw_outputs]
+        prob_outputs = [softmax(output.flatten().tolist()) for output in raw_outputs]
+        model_outputs = [
+            dict(zip(self.labels_list, output))
+            for output in prob_outputs
+        ]
+        pred_probs = [output.max() for output in prob_outputs]
         log.info(f"raw_output: {raw_outputs[0]}")
         return {
             self.Keys.PREDICTED.value: predictions,
             self.Keys.PRED_PROBS.value: pred_probs,
-            self.Keys.MODEL_OUTPUTS.value: raw_outputs,
+            self.Keys.MODEL_OUTPUTS.value: model_outputs,
         }
