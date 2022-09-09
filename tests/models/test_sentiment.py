@@ -35,7 +35,7 @@ def test_predict_sentiments():
     ds_cfg.use_name_as_subdir = True
 
     cfg = eKonf.compose(config_group="pipeline")
-    cfg.output_dir = "/tests/tmp/predict"
+    cfg.output_dir = "./.tmp/predict"
     cfg.data.dataset = ds_cfg
     cfg._pipeline_ = ["subset", "predict"]
     cfg.subset.sample_frac = 0.5

@@ -10,7 +10,7 @@ def test_build_financial_phrasebank():
     cfg.io.data_dir = cfg.data_dir
     cfg.io.force.build = True
     cfg.io.force.summarize = True
-    db = eKonf.instantiate(cfg)
+    eKonf.instantiate(cfg)
     assert True
 
 
@@ -32,9 +32,10 @@ def test_build_datasets():
     assert len(ds.datasets) == 1
 
 
+@pytest.mark.skip(reason="for local testing only")
 def test_datafame_pipeline():
     cfg = eKonf.compose("pipeline")
-    # cfg.data_dir = "/workspace/data/datasets/simple/sst2"
+    cfg.data_dir = "/workspace/data/datasets/simple/sst2"
     cfg.data_file = "sst2-train.parquet"
     cfg._pipeline_ = ["summary_stats"]
     cfg.summary_stats.output_file = "stats.yaml"
