@@ -146,3 +146,163 @@ def _cprint(str_tuples):
     from IPython.display import display
 
     display(html_print(" ".join([colored_str(ti, color=ci) for ti, ci in str_tuples])))
+
+
+def _create_dropdown(
+    options,
+    value,
+    description,
+    disabled=False,
+    style={"description_width": "initial"},
+    layout=None,
+    **kwargs,
+):
+    import ipywidgets as widgets
+
+    layout = (
+        widgets.Layout(width="auto") if layout is None else widgets.Layout(**layout)
+    )
+    dropdown = widgets.Dropdown(
+        options=options,
+        value=value,
+        description=description,
+        disabled=disabled,
+        style=style,
+        layout=layout,
+        **kwargs,
+    )
+    return dropdown
+
+
+def _create_textarea(
+    value,
+    description,
+    placeholder="",
+    disabled=False,
+    style={"description_width": "initial"},
+    layout=None,
+    **kwargs,
+):
+    import ipywidgets as widgets
+
+    layout = (
+        widgets.Layout(width="auto") if layout is None else widgets.Layout(**layout)
+    )
+    textarea = widgets.Textarea(
+        value=value,
+        placeholder=placeholder,
+        description=description,
+        disabled=disabled,
+        style=style,
+        layout=layout,
+        **kwargs,
+    )
+    return textarea
+
+
+def _create_button(description, button_style="", icon="check", layout=None, **kwargs):
+    import ipywidgets as widgets
+
+    layout = (
+        widgets.Layout(width="auto") if layout is None else widgets.Layout(**layout)
+    )
+    button = widgets.Button(
+        description=description,
+        button_style=button_style,
+        icon=icon,
+        layout=layout,
+        **kwargs,
+    )
+    return button
+
+
+def _create_radiobutton(
+    options,
+    description,
+    value=None,
+    disabled=False,
+    style={"description_width": "initial"},
+    layout=None,
+    **kwargs,
+):
+    import ipywidgets as widgets
+
+    layout = (
+        widgets.Layout(width="auto") if layout is None else widgets.Layout(**layout)
+    )
+    radiobutton = widgets.RadioButtons(
+        options=options,
+        value=value,
+        description=description,
+        disabled=disabled,
+        style=style,
+        layout=layout,
+        **kwargs,
+    )
+    return radiobutton
+
+
+def _create_image(
+    filename=None,
+    format=None,
+    width=None,
+    height=None,
+    **kwargs,
+):
+    import ipywidgets as widgets
+    from urllib.request import urlopen
+
+    if filename is None:
+        url = "https://github.com/entelecheia/ekorpkit-book/raw/main/assets/figs/placeholder.png"
+        img = urlopen(url).read()
+        format = "png"
+    else:
+        file = open(filename, "rb")
+        img = file.read()
+        format = format or filename.split(".")[-1]
+    image = widgets.Image(
+        value=img,
+        format=format,
+        width=width,
+        height=height,
+        **kwargs,
+    )
+    return image
+
+
+def _create_floatslider(
+    min=0.0,
+    max=1.0,
+    step=0.1,
+    value=None,
+    description="",
+    disabled=False,
+    continuous_update=False,
+    orientation="horizontal",
+    readout=True,
+    readout_format=".1f",
+    style={"description_width": "initial"},
+    layout=None,
+    **kwargs,
+):
+    import ipywidgets as widgets
+
+    layout = (
+        widgets.Layout(width="auto") if layout is None else widgets.Layout(**layout)
+    )
+    slider = widgets.FloatSlider(
+        min=min,
+        max=max,
+        step=step,
+        value=value,
+        description=description,
+        disabled=disabled,
+        continuous_update=continuous_update,
+        orientation=orientation,
+        readout=readout,
+        readout_format=readout_format,
+        style=style,
+        layout=layout,
+        **kwargs,
+    )
+    return slider

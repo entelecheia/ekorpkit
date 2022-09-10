@@ -4,6 +4,8 @@ defaults:
 _target_: ekorpkit.models.bloom.demo.BloomDemo
 name: BloomDemo
 model_uri: bigscience/bloom-1b3
+device: 0
+hf_user_access_token: 
 seed: 43
 auto:
   load: false
