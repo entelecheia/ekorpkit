@@ -154,3 +154,4 @@ dmypy.json
 .env*
 !.env.project
 !.env.vault
+!.env.example

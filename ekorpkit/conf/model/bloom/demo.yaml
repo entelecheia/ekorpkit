@@ -3,7 +3,7 @@ defaults:
 
 _target_: ekorpkit.models.bloom.demo.BloomDemo
 name: BloomDemo
-model_uri: bigscience/bloom
+model_uri: bigscience/bloom-1b3
 seed: 43
 auto:
   load: false
