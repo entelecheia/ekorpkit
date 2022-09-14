@@ -1,0 +1,63 @@
+defaults:
+  - _build
+  - /preprocessor/normalizer: formal_en
+  - /preprocessor/segmenter: pysbd_merge_article_filter_len
+  - override /io/loader/parser: plaintext
+
+name: joco
+fullname: Jena Organization Corpus (JOCo)
+description: JOCo is a corpus of annual reports and corporate social responsibility reports of American, British and German enterprises.
+license: All users of JOCo must apply for a license in order to receive a copy.
+homepage: https://www.orga.uni-jena.de/en/corp
+version: 1.0.0
+lang: en
+category: formal
+domain: econ
+column_info:
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    filename: str
+    Index: str
+    Organisation: str
+    First_Year: int
+    Last_Year: int
+    Report_Type: str
+io:
+  data_sources:
+    train: joco.zip
+  loader:
+    multiprocessing_at: _load_archive
+    decode_before_parse: true
+    filetype: .txt
+    data:
+      field:
+      item:
+        filename: filename
+        text: text
+    parser:
+      split: false
+      meta_line:
+      meta_key:
+
+pipeline:
+  _transform_:
+    - merge_dataframe
+    - reset_index
+  _preprocess_:
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  merge_dataframe:
+    data_dir: ${corpus.builtin.io.data_dir}
+    data_file: meta.tsv
+    how: inner
+    left_on: filename
+    right_on: File
+
+  filter_length:
+    min_length: 10
