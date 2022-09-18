@@ -6,7 +6,7 @@ from ekorpkit import eKonf
 def test_ngram_trainer():
     corpus_cfg = eKonf.compose("corpus")
     corpus_cfg.path.cache.uri = (
-        "https://github.com/entelecheia/ekorpkit-book/raw/main/data/bok_minutes.zip"
+        "https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/bok_minutes.zip"
     )
     corpus_cfg.data_dir = corpus_cfg.path.cached_path
     corpus_cfg.name = "bok_minutes"
