@@ -141,7 +141,6 @@ def colored_str(s, color="black"):
 
 
 def _cprint(str_tuples):
-    # src: https://stackoverflow.com/questions/16816013/is-it-possible-to-print-using-different-colors-in-ipythons-notebook
     from IPython.display import HTML as html_print
     from IPython.display import display
 
@@ -250,15 +249,16 @@ def _create_image(
     **kwargs,
 ):
     import ipywidgets as widgets
-    from urllib.request import urlopen
+
+    # from urllib.request import urlopen
 
     if filename is None:
         url = "https://github.com/entelecheia/ekorpkit-book/raw/main/assets/figs/placeholder.png"
-        img = urlopen(url).read()
+        # img = urlopen(url).read()
+        img = _read(url)
         format = "png"
     else:
-        file = open(filename, "rb")
-        img = file.read()
+        img = _read(filename)
         format = format or filename.split(".")[-1]
     image = widgets.Image(
         value=img,
@@ -306,3 +306,20 @@ def _create_floatslider(
         **kwargs,
     )
     return slider
+
+
+def _read(uri, mode="rb", encoding=None, **kwargs):
+    if uri.startswith("http"):
+        import requests
+
+        return requests.get(uri, **kwargs).content
+    # elif uri.startswith("s3://"):
+    #     import boto3
+
+    #     s3 = boto3.resource("s3")
+    #     bucket, key = uri.replace("s3://", "").split("/", 1)
+    #     obj = s3.Object(bucket, key)
+    #     return obj.get()["Body"].read()
+    else:
+        with open(uri, mode=mode, encoding=encoding) as f:
+            return f.read()

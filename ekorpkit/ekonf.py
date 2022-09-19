@@ -16,6 +16,7 @@ from ekorpkit.utils.notebook import (
     _hide_code_in_slideshow,
     _is_notebook,
     _is_colab,
+    _read,
 )
 from .base import (
     __ekorpkit_path__,
@@ -88,6 +89,10 @@ class eKonf:
     __ekorpkit_path__ = __ekorpkit_path__()
     __home_path__ = __home_path__()
     config = _config
+    book_repo = "https://github.com/entelecheia/ekorpkit-book/raw/main/"
+    book_repo_assets = book_repo + "assets/"
+    book_url = "https://entelecheia.github.io/ekorpkit-book/"
+    book_assets_url = book_url + "assets/"
     Keys = _Keys
     Defaults = _Defaults
     SPLITS = _SPLITS
@@ -897,3 +902,7 @@ class eKonf:
         from ekorpkit.visualize.collage import _get_imagefont
 
         return _get_imagefont(fontname, fontsize)
+
+    @staticmethod
+    def read(uri, mode="rb", encoding=None, **kwargs):
+        return _read(uri, mode, encoding, **kwargs)
