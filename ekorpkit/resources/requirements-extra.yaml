@@ -103,3 +103,4 @@ cleanlab: label, all
 # snorkel: label
 rubrix: label
 
+dicttoxml: all, xml
