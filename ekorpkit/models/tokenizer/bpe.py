@@ -1,5 +1,3 @@
-# original source:
-# https://gist.githubusercontent.com/Jmkernes/5b312f8df21b4bd49fbb827765921cd5/raw/27b3e4ae28c921f06a31a3a458b4722e93d24100/byte_pair_encoder.py
 import re
 import collections
 
@@ -16,17 +14,13 @@ class BytePairEncoder:
         self.unknown_token = unknown_token
 
     def format_word(self, word):
-        return " ".join(list(word)) + " " + self.whitespace_token
+        return " ".join(list(word))
 
     def initialize_vocab(self, texts):
-
         vocab = {}
         for text in texts:
-            if self.lowercase:
-                text = text.lower()
-            text = re.sub(r"\s+", " ", text)
-            all_words = text.split()
-            for word in all_words:
+            words = self.pre_tokenize(text)
+            for word in words:
                 word = self.format_word(word)
                 vocab[word] = vocab.get(word, 0) + 1
         return vocab
