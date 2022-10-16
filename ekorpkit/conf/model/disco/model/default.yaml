@@ -1,4 +1,15 @@
 diffusion_model: 512x512_diffusion_uncond_finetune_008100
+diffusion_models:
+  - 256x256_diffusion_uncond
+  - 512x512_diffusion_uncond_finetune_008100
+  - portrait_generator_v001
+  - pixelartdiffusion_expanded
+  - pixel_art_diffusion_hard_256
+  - pixel_art_diffusion_soft_256
+  - pixelartdiffusion4k
+  - watercolordiffusion
+  - watercolordiffusion_2
+  - PulpSciFiDiffusion
 clip_models:
   ViTB32: true
   ViTB16: true

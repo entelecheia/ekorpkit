@@ -51,6 +51,10 @@ class DiscoDiffusion(BaseTTIModel):
         self._parameters = self.args.parameters
         self.midas_config = self.args.midas
         # self.model_config = self.args.model
+        self.diffusion_models = self.args.model.diffusion_models
+        self.clip_models = list(self.args.model.clip_models.keys()) + list(
+            self.args.model.openclip_models.keys()
+        )
         self.model_map = self.args.model_map
         self.model_map.diffusion_models_256x256_list += (
             self.model_map.kaliyuga_pixel_art_model_names
@@ -712,7 +716,7 @@ class DiscoDiffusion(BaseTTIModel):
             init = create_perlin_noise(
                 args.side_x,
                 args.side_y,
-                octaves=[1.5**-i * 0.5 for i in range(12)],
+                octaves=[1.5 ** -i * 0.5 for i in range(12)],
                 width=1,
                 height=1,
                 grayscale=grayscale,
@@ -721,7 +725,7 @@ class DiscoDiffusion(BaseTTIModel):
             init2 = create_perlin_noise(
                 args.side_x,
                 args.side_y,
-                octaves=[1.5**-i * 0.5 for i in range(8)],
+                octaves=[1.5 ** -i * 0.5 for i in range(8)],
                 width=4,
                 height=4,
                 grayscale=grayscale2,
@@ -1921,7 +1925,7 @@ class DiscoDiffusion(BaseTTIModel):
 
         if args.set_seed == "random_seed":
             random.seed()
-            args.seed = random.randint(0, 2**32)
+            args.seed = random.randint(0, 2 ** 32)
         else:
             args.seed = int(args.set_seed)
         log.info(f"Using seed: {args.seed}")

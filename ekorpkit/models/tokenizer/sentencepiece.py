@@ -50,6 +50,7 @@ class SentencePieceTokenizer:
         percent_to_prune=0.2,
         whitespace_token="▁",
         lowercase=True,
+        **kwargs,
     ):
         self.trie = None
         self.maxlen = None
@@ -60,7 +61,7 @@ class SentencePieceTokenizer:
         self.whitespace_token = whitespace_token
         self.lowercase = lowercase
 
-    def _initialize_trie(self, tokens):
+    def initialize_trie(self, tokens):
         trie = Trie()
         norm = sum(list(tokens.values()))
         logsum = digamma(norm)
@@ -237,7 +238,7 @@ class SentencePieceTokenizer:
             raise ValueError(
                 f"Vocab size is larger than the availble number of tokens {len(tokens)}."
             )
-        self.trie, self.maxlen = self._initialize_trie(tokens)
+        self.trie, self.maxlen = self.initialize_trie(tokens)
         for i in range(1, max_rounds + 1):
             print(f"--- Round {i}. Vocab size: {len(tokens)} ---")
             self.EM_round(text, tokens, delta, max_iter)
