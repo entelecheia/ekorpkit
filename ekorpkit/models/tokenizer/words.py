@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import collections
 from scipy.special import digamma
 from .base import Trie
+from ekorpkit.visualize.base import _configure_font
 
 
 log = logging.getLogger(__name__)
@@ -37,9 +38,9 @@ class WordSegmenter:
 
     def normalize_word(self, word):
         # replace all non-alphanumeric characters at the end of the word with a space
-        word = re.sub(r"[^a-zA-Z0-9]+$", " ", word)
+        word = re.sub(r"[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9]+$", " ", word)
         # replace all non-alphanumeric characters at the beginning of the word with a space
-        word = re.sub(r"^[^a-zA-Z0-9]+", " ", word)
+        word = re.sub(r"^[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9]+", " ", word)
         return word.strip()
 
     def pre_tokenize(self, text):
@@ -130,6 +131,8 @@ class WordSegmenter:
 
     # plot entropies
     def plot_local_entropy(self, word, direction="forward", figsize=(12, 5)):
+        _configure_font()
+
         results = self.find_local_entropy(word, direction=direction)
         chars, entropies, diffs = zip(*results)
         plt.figure(figsize=figsize)
@@ -169,7 +172,7 @@ class WordSegmenter:
 
         return tuple(segments)
 
-    def segment_text(self, text, direction="forward", flatten=True):
+    def segment_words(self, text, direction="forward", flatten=True):
         segments = []
         words = self.pre_tokenize(text)
         for word in words:
@@ -178,5 +181,48 @@ class WordSegmenter:
             segments = [seg for word in segments for seg in word]
         return segments
 
-    def segment_texts(self, texts, direction="forward"):
-        return [self.segment_text(text, direction=direction) for text in texts]
+    def segment(self, texts, direction="forward"):
+        return [self.segment_words(text, direction=direction) for text in texts]
+
+    def extract_words(self, text, direction="forward"):
+        words = []
+
+        _start, _pos = 0, 0
+        # iterate over the text until we reach the end
+        while _pos < len(text):
+            _sentencepiece = text[_pos : _pos + self.max_sentencepiece_length]
+            # print(_start, _pos, _sentencepiece)
+            if len(_sentencepiece) < 1:
+                break
+            results = self.find_local_entropy(_sentencepiece, direction=direction)
+            _, entropies, _ = zip(*results)
+
+            if entropies[0] == 0:
+                if _pos == len(text) - 1:
+                    words.append(text[_start : _pos + 1])
+                    _start = _pos + 1
+                    break
+                _pos += 1
+            else:
+                if _pos > _start:
+                    words.append(text[_start:_pos])
+                    _start = _pos
+                    _pos += 1
+                if len(entropies) > 1:
+                    _pos += 1
+                    for i in range(1, len(entropies)):
+                        if entropies[i] == 0:
+                            words.append(text[_start : _start + i])
+                            # print(_start, words)
+                            _start += i
+                            _pos = _start
+                            break
+                        elif _pos == len(text) - 1:
+                            words.append(text[_start : _pos + 1])
+                        _pos += 1
+                else:
+                    if _pos == len(text) - 1:
+                        words.append(text[_start : _pos + 1])
+                    _pos += 1
+
+        return words
