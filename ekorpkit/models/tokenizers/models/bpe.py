@@ -1,7 +1,8 @@
-import re
+import json
+import os
 import collections
 import logging
-from typing import Iterator, List, Optional, Union
+from typing import Iterator, List, Optional, Union, Dict
 from tokenizers import AddedToken
 from tokenizers.pre_tokenizers import PreTokenizer
 from tokenizers.normalizers import Normalizer
@@ -168,6 +169,7 @@ class BpeTrainer:
         vocab, merges = self.fit(iterator, vocab_size=self.vocab_size)
         self.vocab = vocab
         self.merges = merges
+        return vocab, merges
 
 
 class BPE:
@@ -226,8 +228,12 @@ class BPE:
         self.pre_tokenizer = None
         self.decoder = None
 
-    @staticmethod
-    def from_file(cls, vocab, merge, **kwargs):
+        self.id2token = {}
+        if self.vocab is not None:
+            self.id2token = {v: k for k, v in self.vocab.items()}
+
+    @classmethod
+    def from_file(cls, vocab, merges, **kwargs):
         """
         Instantiate a BPE model from the given files.
 
@@ -250,7 +256,8 @@ class BPE:
         Returns:
             :class:`~tokenizers.models.BPE`: An instance of BPE loaded from these files
         """
-        pass
+        vocab, merges = cls.read_file(vocab, merges)
+        return cls(vocab, merges, **kwargs)
 
     def id_to_token(self, id):
         """
@@ -263,10 +270,10 @@ class BPE:
         Returns:
             :obj:`str`: The token associated to the ID
         """
-        pass
+        return self.id2token[id]
 
     @staticmethod
-    def read_file(self, vocab, merges):
+    def read_file(vocab, merges):
         """
         Read a :obj:`vocab.json` and a :obj:`merges.txt` files
 
@@ -285,9 +292,14 @@ class BPE:
             A :obj:`Tuple` with the vocab and the merges:
                 The vocabulary and merges loaded into memory
         """
-        pass
+        with open(vocab, "r") as f:
+            vocab = json.load(f)
+        with open(merges, "r") as f:
+            merges = [tuple(line.rstrip().split()) for line in f]
+            merges = {merge: merge[0] + merge[1] for merge in merges}
+        return vocab, merges
 
-    def save(self, folder, prefix):
+    def save(self, folder, prefix=None, pretty: bool = False):
         """
         Save the current model
 
@@ -305,9 +317,33 @@ class BPE:
         Returns:
             :obj:`List[str]`: The list of saved files
         """
-        pass
+        if prefix is not None:
+            folder = os.path.join(folder, prefix)
+        vocab_filename = os.path.join(folder, "vocab.json")
+        merges_filename = os.path.join(folder, "merges.txt")
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        indent = 2 if pretty else None
+        json.dump(self.vocab, open(vocab_filename, "w"), indent=indent)
+        with open(merges_filename, "w") as f:
+            for merge in self.merges:
+                f.write(f"{merge[0]} {merge[1]}" + os.linesep)
+        print(f"Model files saved in {folder}")
+        return [vocab_filename, merges_filename]
 
-    def token_to_id(self, tokens):
+    def to_str(self, pretty: bool = False):
+        """Get a serialized JSON version of the Tokenizer as a str
+
+        Args:
+            pretty: bool:
+                Whether the JSON string should be prettified
+
+        Returns:
+            str
+        """
+        return json.dumps(self.vocab, indent=2 if pretty else None)
+
+    def token_to_id(self, token):
         """
         Get the ID associated to a token
 
@@ -318,7 +354,71 @@ class BPE:
         Returns:
             :obj:`int`: The ID associated to the token
         """
-        pass
+        return self.vocab[token]
+
+    def encode(
+        self,
+        sequence: str,
+        pair: Optional[str] = None,
+        is_pretokenized: bool = False,
+        add_special_tokens: bool = True,
+    ):
+        """Encode the given sequence and pair. This method can process raw text sequences as well
+        as already pre-tokenized sequences.
+
+        Args:
+            sequence: InputSequence:
+                The sequence we want to encode. This sequence can be either raw text or
+                pre-tokenized, according to the `is_pretokenized` argument:
+
+                - If `is_pretokenized=False`: `InputSequence` is expected to be `str`
+                - If `is_pretokenized=True`: `InputSequence` is expected to be
+                    `Union[List[str], Tuple[str]]`
+
+            is_pretokenized: bool:
+                Whether the input is already pre-tokenized.
+
+            add_special_tokens: bool:
+                Whether to add the special tokens while encoding.
+
+        Returns:
+            An Encoding
+        """
+        sequence_ids = [self.token_to_id(token) for token in self.tokenize(sequence)]
+        # if add_special_tokens:
+        #     sequence_ids = (
+        #         [self.token_to_id("[CLS]")] + sequence_ids + [self.token_to_id("[SEP]")]
+        #     )
+
+        pair_ids = []
+        if pair is not None:
+            pair_ids = [self.token_to_id(token) for token in self.tokenize(pair)]
+            # if add_special_tokens:
+            #     pair_ids += [self.token_to_id("[SEP]")]
+
+        return sequence_ids + pair_ids
+
+    def decode(self, ids: List[int], skip_special_tokens: Optional[bool] = True) -> str:
+        """Decode the given list of ids to a string sequence
+
+        Args:
+            ids: List[unsigned int]:
+                A list of ids to be decoded
+
+            skip_special_tokens: (`optional`) boolean:
+                Whether to remove all the special tokens from the output string
+
+        Returns:
+            The decoded string
+        """
+        if ids is None:
+            raise ValueError("None input is not valid. Should be a list of integers.")
+
+        tokens = [self.id_to_token(id) for id in ids]
+        # if skip_special_tokens:
+        #     tokens = [token for token in tokens if token not in self.special_tokens]
+
+        return "".join(tokens).replace(self.end_of_word_suffix, " ").strip()
 
     def tokenize(self, sequence):
         """
@@ -334,7 +434,10 @@ class BPE:
         sequence = self.normalize(sequence)
         pre_tokenize_result = self.pre_tokenize(sequence)
         pre_tokenized_text = [word for word, _ in pre_tokenize_result]
-        splits = [[char for char in word] + [self.end_of_word_suffix] for word in pre_tokenized_text]
+        splits = [
+            [char for char in word] + [self.end_of_word_suffix]
+            for word in pre_tokenized_text
+        ]
         for pair, merge in self.merges.items():
             for idx, split in enumerate(splits):
                 i = 0
@@ -370,23 +473,56 @@ class BPE:
 
         trainer.normalizer = self.normalizer
         trainer.pre_tokenizer = self.pre_tokenizer
-        trainer.train(iterator, length=length)
-        self.trainer = trainer
-        self.vocab = trainer.vocab
-        self.merges = trainer.merges
+        vocab, merges = trainer.train(iterator, length=length)
 
-    # def encode(
-    #     self,
-    #     sequence,
-    #     pair=None,
-    #     is_pretokenized: bool = False,
-    #     add_special_tokens: bool = True,
-    # ):
+        self.vocab = vocab
+        self.merges = merges
+        self.id2token = {v: k for k, v in self.vocab.items()}
 
-    # def get_vocab(self, with_added_tokens: bool = True) -> Dict[str, int]:
+    def get_vocab(self, with_added_tokens: bool = True) -> Dict[str, int]:
+        """Returns the vocabulary
 
-    def normalize(self, sequence: str):
+        Args:
+            with_added_tokens: boolean:
+                Whether to include the added tokens in the vocabulary
+
+        Returns:
+            The vocabulary
+        """
+        return self.vocab
+
+    def get_vocab_size(self, with_added_tokens: bool = True) -> int:
+        """Return the size of vocabulary, with or without added tokens.
+
+        Args:
+            with_added_tokens: (`optional`) bool:
+                Whether to count in added special tokens or not
+
+        Returns:
+            Size of vocabulary
+        """
+        return len(self.vocab)
+
+    def normalize(self, sequence: str) -> str:
+        """Normalize the given sequence
+
+        Args:
+            sequence: str:
+                The sequence to normalize
+
+        Returns:
+            The normalized string
+        """
         return self.normalizer.normalize_str(sequence)
 
     def pre_tokenize(self, sequence: str):
+        """Pre-tokenize the given sequence
+
+        Args:
+            sequence: str:
+                The sequence to pre-tokenize
+
+        Returns:
+            A list of tuple (str, offsets)
+        """
         return self.pre_tokenizer.pre_tokenize_str(sequence)

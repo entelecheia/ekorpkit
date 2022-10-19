@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 from tokenizers import AddedToken, decoders, pre_tokenizers
@@ -54,8 +55,8 @@ class BPETokenizer(BaseTokenizer):
         else:
             tokenizer = BPE()
 
-        if tokenizer.token_to_id(str(unk_token)) is not None:
-            tokenizer.add_special_tokens([str(unk_token)])
+        # if tokenizer.token_to_id(str(unk_token)) is not None:
+        #     tokenizer.add_special_tokens([str(unk_token)])
 
         # Check for Unicode normalization first (before everything else)
         normalizers = []
@@ -163,3 +164,19 @@ class BPETokenizer(BaseTokenizer):
             trainer=trainer,
             length=length,
         )
+
+    @classmethod
+    def load(cls, folder, prefix=None, **kwargs):
+        """Load a model from the given files
+
+        Args:
+            folder (str): Path to the folder containing the vocab and merges files
+            prefix (:obj:`str`, `optional`):
+                An optional prefix, used to prefix each file name
+        """
+        if prefix is not None:
+            folder = os.path.join(folder, prefix)
+        vocab = os.path.join(folder, "vocab.json")
+        merges = os.path.join(folder, "merges.txt")
+
+        return cls(*BPE.read_file(vocab, merges), **kwargs)
