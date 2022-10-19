@@ -4,42 +4,7 @@ import re
 import collections
 import numpy as np
 from scipy.special import digamma
-
-
-# To efficiently determine the next possible words
-# We need a Trie data structure
-class Trie:
-    def __init__(self, end_symbol="<END>"):
-        self.root = {}
-        self.end_symbol = end_symbol
-
-    def add(self, word, value):
-        node = self.root
-        for ch in word:
-            if ch not in node:
-                node[ch] = {}
-            node = node[ch]
-        node[self.end_symbol] = value
-
-    def get_value(self, word):
-        node = self.root
-        for ch in word:
-            if ch not in node:
-                return 0
-            node = node[ch]
-        if self.end_symbol not in node:
-            return 0
-        return node[self.end_symbol]
-
-    def set_value(self, word, value):
-        node = self.root
-        for ch in word:
-            if ch not in node:
-                raise ValueError("word not in trie")
-            node = node[ch]
-        if self.end_symbol not in node:
-            raise ValueError("word not in trie")
-        node[self.end_symbol] = value
+from .base import Trie
 
 
 class SentencePieceTokenizer:

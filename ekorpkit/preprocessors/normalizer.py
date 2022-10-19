@@ -534,7 +534,11 @@ def word_shape(text):
         elif c in {",", "$", "&", "-"}:
             m = c  # Stay the same
         else:
-            m = "*"  # Everything else, symbols etc: {'=', '+', '*', '_', '|', '@', '×', '÷', '±', '<', '≤', '>', '≥', '≦', '≡', '≅', '≈', '≃', '≲', '→', '←', '⇄', '≪', '≫', '↔', '≠', '∝', '∈', '⇌', '⇋', '⋯', '~', '·', '•', '√', '⊃', '∑', '∏', '®', '∞', '∂', '∫', '∇', '∧', '⟨', '⟩'}
+            m = "*"
+            # Everything else, symbols etc:
+            # {'=', '+', '*', '_', '|', '@', '×', '÷', '±', '<', '≤', '>', '≥', '≦', '≡', '≅', '≈', '≃', '≲',
+            # '→', '←', '⇄', '≪', '≫', '↔', '≠', '∝', '∈', '⇌', '⇋', '⋯', '~', '·', '•', '√', '⊃', '∑', '∏',
+            # '®', '∞', '∂', '∫', '∇', '∧', '⟨', '⟩'}
         if m == prev_m:
             seq += 1
         else:
@@ -933,31 +937,3 @@ strict_normalize = Normalizer(
     fix_ellipsis=True,
     fix_tildes=True,
 )
-
-
-# class ExcessNormalizer(Normalizer):
-#     """Excessive string normalization.
-#     This is useful when doing fuzzy string comparisons. A common use case is to run this before calculating the
-#     Levenshtein distance between two strings, so that only "important" differences are counted.
-#     """
-
-#     def __init__(self, form='NFKC', strip=True, collapse=False, hyphens=True, quotes=True, ellipsis=True, tildes=True, lower=True):
-#         """"""
-#         super(ExcessNormalizer, self).__init__(form, strip=strip, fix_whitespaces=collapse, fix_hyphens=hyphens, uncurl_quotes=quotes,
-#                                             fix_ellipsis=ellipsis, fix_tildes=tildes)
-#         self.lower = lower
-
-#     def normalize(self, text):
-#         # Lowercase and normalize unicode
-#         text = super(ExcessNormalizer, self).normalize(text.lower() if self.lower else text)
-#         # Remove all whitespace
-#         # text = ''.join(text.split())
-#         # Convert all apostrophes, quotes, accents, primes to single ascii apostrophe
-#         for quote in QUOTES:
-#             text = text.replace(quote, "'")
-#         # Convert all brackets to regular parentheses
-#         for ob in {'(', '<', '[', '{', '&lt;'}:
-#             text = text.replace(ob, '(')
-#         for cb in {')', '>', ']', '}', '&gt;'}:
-#             text = text.replace(cb, ')')
-#         return text

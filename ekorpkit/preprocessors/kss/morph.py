@@ -26,7 +26,7 @@ class MorphExtractor(object):
 
     def pos(self, text):
         if self.backend in ["mecab-python3", "fugashi"]:
-            from ekorpkit.models.tokenizer.mecab import MeCab
+            from ekorpkit.models.tokenizers.mecab import MeCab
 
             try:
                 self.mecab = MeCab(
@@ -37,7 +37,8 @@ class MorphExtractor(object):
             except ImportError:
                 raise ImportError(
                     "\n"
-                    "You must install [`fugashi` or `mecab-python3`] and `mecab_ko_dic` if you want to use `fugashi` backend.\n"
+                    "You must install [`fugashi` or `mecab-python3`] and `mecab_ko_dic` "
+                    "if you want to use `fugashi` backend.\n"
                 )
         else:
             raise AttributeError(

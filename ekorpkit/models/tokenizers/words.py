@@ -24,7 +24,10 @@ def entropy(trie, word):
 
 class WordSegmenter:
     def __init__(
-        self, lowercase=True, whitespace_token="▁", max_sentencepiece_length=20
+        self,
+        lowercase=True,
+        whitespace_token="▁",
+        max_sentencepiece_length=20,
     ):
         self.lowercase = lowercase
         self.whitespace_token = whitespace_token
@@ -32,6 +35,9 @@ class WordSegmenter:
 
         self.word_freqs = None
         self.subwords = None
+        self.characters = None
+        self.text = None
+
         self.fwd_trie = None
         self.bwd_trie = None
         self.max_subword_len = None
@@ -56,6 +62,7 @@ class WordSegmenter:
         ]
 
     def initialize_subwords(self, texts):
+        character_freqs = collections.defaultdict(int)
         subwords_freqs = collections.defaultdict(int)
         all_words = []
 
@@ -63,8 +70,11 @@ class WordSegmenter:
             words = self.pre_tokenize(text)
             all_words.extend(words)
             for word in words:
+                # word = self.whitespace_token + word
                 word = self.whitespace_token + word + self.whitespace_token
                 for i in range(len(word)):
+                    if word[i] != self.whitespace_token:
+                        character_freqs[word[i]] += 1
                     for j in range(
                         i + 1, min(i + self.max_sentencepiece_length + 1, len(word) + 1)
                     ):
@@ -78,7 +88,7 @@ class WordSegmenter:
 
         word_freqs = collections.Counter(all_words)
         subwords = collections.Counter(subwords_freqs)
-        return word_freqs, subwords
+        return word_freqs, subwords, character_freqs, all_words
 
     def initialize_trie(self, tokens, direction="forward"):
         trie = Trie(direction=direction)
@@ -91,14 +101,23 @@ class WordSegmenter:
         return trie, maxlen
 
     def fit(self, texts):
-        word_freqs, subwords = self.initialize_subwords(texts)
+        word_freqs, subwords, characters, all_words = self.initialize_subwords(texts)
         self.word_freqs = word_freqs
         self.subwords = subwords
+        self.characters = characters
+        self.text = self.whitespace_token.join(all_words)
 
         self.fwd_trie, self.max_subword_len = self.initialize_trie(
             subwords, direction="forward"
         )
         self.bwd_trie, _ = self.initialize_trie(subwords, direction="backward")
+
+    def get_entropy(self, word, direction="forward"):
+        if direction == "forward":
+            _trie = self.fwd_trie
+        else:
+            _trie = self.bwd_trie
+        return entropy(_trie, word)
 
     def find_local_entropy(self, word, direction="forward"):
         entropies = []
