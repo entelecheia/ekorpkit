@@ -4,8 +4,8 @@ import logging
 import matplotlib.pyplot as plt
 import collections
 from scipy.special import digamma
-from .utils.trie import Trie
 from ekorpkit.visualize.base import _configure_font
+from ..utils.trie import Trie
 
 
 log = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ def entropy(trie, word):
     return -1 * entropy
 
 
-class WordSegmenter:
+class BranchingEntropy:
     def __init__(
         self,
         lowercase=True,
@@ -33,14 +33,8 @@ class WordSegmenter:
         self.whitespace_token = whitespace_token
         self.max_sentencepiece_length = max_sentencepiece_length
 
-        self.word_freqs = None
-        self.subwords = None
-        self.characters = None
-        self.text = None
-
         self.fwd_trie = None
         self.bwd_trie = None
-        self.max_subword_len = None
 
     def normalize_word(self, word):
         # replace all non-alphanumeric characters at the end of the word with a space
@@ -72,6 +66,7 @@ class WordSegmenter:
             for word in words:
                 # word = self.whitespace_token + word
                 word = self.whitespace_token + word + self.whitespace_token
+                # word = word + self.whitespace_token
                 for i in range(len(word)):
                     if word[i] != self.whitespace_token:
                         character_freqs[word[i]] += 1
@@ -88,7 +83,7 @@ class WordSegmenter:
 
         word_freqs = collections.Counter(all_words)
         subwords = collections.Counter(subwords_freqs)
-        return word_freqs, subwords, character_freqs, all_words
+        return word_freqs, subwords, character_freqs
 
     def initialize_trie(self, tokens, direction="forward"):
         trie = Trie(direction=direction)
@@ -101,16 +96,13 @@ class WordSegmenter:
         return trie, maxlen
 
     def fit(self, texts):
-        word_freqs, subwords, characters, all_words = self.initialize_subwords(texts)
-        self.word_freqs = word_freqs
-        self.subwords = subwords
-        self.characters = characters
-        self.text = self.whitespace_token.join(all_words)
+        word_freqs, subwords, characters = self.initialize_subwords(texts)
 
         self.fwd_trie, self.max_subword_len = self.initialize_trie(
             subwords, direction="forward"
         )
         self.bwd_trie, _ = self.initialize_trie(subwords, direction="backward")
+        return word_freqs, subwords, characters
 
     def get_entropy(self, word, direction="forward"):
         if direction == "forward":
@@ -119,20 +111,25 @@ class WordSegmenter:
             _trie = self.bwd_trie
         return entropy(_trie, word)
 
-    def find_local_entropy(self, word, direction="forward"):
+    def score(self, word, direction="forward"):
+        return self.get_entropy(word, direction=direction)
+
+    def find_local_entropy(self, word, direction="forward", verbose=False):
         entropies = []
-        if direction == "forward":
-            _word = self.whitespace_token + word
-            _trie = self.fwd_trie
-        else:
-            _word = word + self.whitespace_token
-            _trie = self.bwd_trie
-        for i in range(2, len(word) + 2):
+        _word = word
+        # if direction == "forward":
+        #     _word = self.whitespace_token + word
+        # else:
+        #     _word = word + self.whitespace_token
+        for i in range(1, len(_word) + 1):
             if direction == "forward":
                 subword = _word[:i]
             else:
                 subword = _word[-i:]
-            entropies.append(entropy(_trie, subword))
+            _score = self.get_entropy(subword, direction=direction)
+            entropies.append(_score)
+            if verbose:
+                print(subword, _score)
         if direction == "backward":
             entropies = entropies[::-1]
 
@@ -165,7 +162,7 @@ class WordSegmenter:
         plt.legend(loc="upper right")
         plt.show()
 
-    def segment_word(self, word, direction="forward"):
+    def branching_word(self, word, direction="forward"):
         # if there is a spike in entropy, then we should segment
         # Here the spike means that there is a sudden increase in entropy followed by a decrease.
         # We can use the difference in entropy to detect the spike.
@@ -191,19 +188,19 @@ class WordSegmenter:
 
         return tuple(segments)
 
-    def segment_words(self, text, direction="forward", flatten=True):
+    def branching_words(self, text, direction="forward", flatten=True):
         segments = []
         words = self.pre_tokenize(text)
         for word in words:
-            segments.append(self.segment_word(word, direction=direction))
+            segments.append(self.branching_word(word, direction=direction))
         if flatten:
             segments = [seg for word in segments for seg in word]
         return segments
 
-    def segment(self, texts, direction="forward"):
-        return [self.segment_words(text, direction=direction) for text in texts]
+    def branching(self, texts, direction="forward"):
+        return [self.branching_words(text, direction=direction) for text in texts]
 
-    def extract_words(self, text, direction="forward"):
+    def naive_segment(self, text, direction="forward"):
         words = []
 
         _start, _pos = 0, 0
