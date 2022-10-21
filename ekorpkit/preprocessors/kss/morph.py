@@ -26,7 +26,7 @@ class MorphExtractor(object):
 
     def pos(self, text):
         if self.backend in ["mecab-python3", "fugashi"]:
-            from ekorpkit.models.tokenizers.mecab import MeCab
+            from ekorpkit.tokenizers.mecab import MeCab
 
             try:
                 self.mecab = MeCab(

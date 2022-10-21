@@ -1,3 +1,18 @@
+import math
+from scipy.special import digamma
+
+
+def entropy(trie, word):
+    leafs = trie.get_leafs(word)
+    val = trie.get_value(word)
+    logsum = digamma(sum(leafs) + val)
+    entropy = 0
+    for freq in leafs:
+        logprob = digamma(freq) - logsum
+        entropy += math.exp(logprob) * logprob
+    return -1 * entropy
+
+
 class Trie:
     def __init__(self, end_symbol="<END>", direction="forward"):
         self.root = {}

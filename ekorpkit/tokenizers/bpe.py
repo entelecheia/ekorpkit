@@ -9,7 +9,7 @@ from tokenizers.normalizers import (
     unicode_normalizer_from_str,
 )
 from .models.bpe import BPE, BpeTrainer
-from .base_tokenizer import BaseTokenizer
+from .base import BaseTokenizer
 
 
 log = logging.getLogger(__name__)
@@ -39,9 +39,10 @@ class BPETokenizer(BaseTokenizer):
         suffix: str = "</w>",
         dropout: Optional[float] = None,
         lowercase: bool = True,
-        unicode_normalizer: Optional[str] = "nfd",
+        unicode_normalizer: Optional[str] = "nfkc",
         bert_normalizer: bool = True,
         split_on_whitespace_only: bool = False,
+        **kwargs,
     ):
         if vocab is not None and merges is not None:
             tokenizer = BPE(
@@ -96,11 +97,6 @@ class BPETokenizer(BaseTokenizer):
         }
 
         super().__init__(tokenizer, parameters)
-
-    @staticmethod
-    def from_file(vocab_filename: str, merges_filename: str, **kwargs):
-        vocab, merges = BPE.read_file(vocab_filename, merges_filename)
-        return BPETokenizer(vocab, merges, **kwargs)
 
     def train(
         self,
@@ -165,9 +161,9 @@ class BPETokenizer(BaseTokenizer):
             length=length,
         )
 
-    @classmethod
-    def load(cls, folder, prefix=None, **kwargs):
-        """Load a model from the given files
+    @staticmethod
+    def load(folder, prefix=None, **kwargs):
+        """Load a model from the given folder
 
         Args:
             folder (str): Path to the folder containing the vocab and merges files
@@ -178,5 +174,14 @@ class BPETokenizer(BaseTokenizer):
             folder = os.path.join(folder, prefix)
         vocab = os.path.join(folder, "vocab.json")
         merges = os.path.join(folder, "merges.txt")
+        config = os.path.join(folder, "config.json")
+        return BPETokenizer.from_file(vocab, merges, config, **kwargs)
 
-        return cls(*BPE.read_file(vocab, merges), **kwargs)
+    @staticmethod
+    def from_file(
+        vocab_filename: str, merges_filename: str, config_filename: str, **kwargs
+    ):
+        vocab, merges = BPE.read_file(vocab_filename, merges_filename)
+        config = BaseTokenizer.read_config(config_filename)
+        config.update(kwargs)
+        return BPETokenizer(vocab, merges, **config)

@@ -1,30 +1,114 @@
-# original source:
-# https://gist.githubusercontent.com/Jmkernes/01da3b560eb12218119f00a0969787e8/raw/2cc222706bdd8b15f2807b6fbd2c0612d7ce17ea/sentence_piece_trainer.py
-import re
 import collections
+import logging
 import numpy as np
+from typing import Iterator, Optional, Union
+from tqdm.auto import tqdm
 from scipy.special import digamma
-from .base import Trie
+from .base import Trainer
+from ..utils.trie import Trie
 
 
-class SentencePieceTokenizer:
+log = logging.getLogger(__name__)
+
+
+class UnigramTrainer(Trainer):
+    """
+    Trainer capable of training a Unigram model
+    Args:
+        vocab_size (:obj:`int`):
+            The size of the final vocabulary, including all tokens and alphabet.
+        show_progress (:obj:`bool`):
+            Whether to show progress bars while training.
+        special_tokens (:obj:`List[Union[str, AddedToken]]`):
+            A list of special tokens the model should know of.
+        initial_alphabet (:obj:`List[str]`):
+            A list of characters to include in the initial alphabet, even
+            if not seen in the training dataset.
+            If the strings contain more than one character, only the first one
+            is kept.
+        shrinking_factor (:obj:`float`):
+            The shrinking factor used at each step of the training to prune the
+            vocabulary.
+        unk_token (:obj:`str`):
+            The token used for out-of-vocabulary tokens.
+        max_piece_length (:obj:`int`):
+            The maximum length of a given token.
+        n_sub_iterations (:obj:`int`):
+            The number of iterations of the EM algorithm to perform before
+            pruning the vocabulary.
+    """
+
     def __init__(
         self,
-        initial_vocab_size=2000,
-        vocab_size=1000,
-        percent_to_prune=0.2,
-        whitespace_token="▁",
-        lowercase=True,
-        **kwargs,
+        vocab_size=8000,
+        show_progress=True,
+        special_tokens=[],
+        initial_alphabet=[],
+        shrinking_factor=0.75,
+        unk_token=None,
+        max_piece_length=16,
+        n_sub_iterations=5,
+        max_rounds=5,
+        delta=0.01,
+        min_frequency: int = 2,
+        verbose=False,
     ):
-        self.trie = None
-        self.maxlen = None
-
-        self.initial_vocab_size = initial_vocab_size
         self.vocab_size = vocab_size
-        self.percent_to_prune = percent_to_prune
-        self.whitespace_token = whitespace_token
-        self.lowercase = lowercase
+        self.show_progress = show_progress
+        self.special_tokens = special_tokens
+        self.initial_alphabet = initial_alphabet
+        self.shrinking_factor = shrinking_factor
+        self.unk_token = unk_token
+        self.max_piece_length = max_piece_length
+        self.n_sub_iterations = n_sub_iterations
+        self.max_rounds = max_rounds
+        self.delta = delta
+        self.min_frequency = min_frequency
+        self.verbose = verbose
+
+        super().__init__()
+
+    def get_word_freqs(self, words):
+        word_freqs = collections.Counter(words)
+        # Remove words that are too rare
+        word_freqs = {
+            word: freq
+            for word, freq in word_freqs.items()
+            if freq >= self.min_frequency
+        }
+        return word_freqs
+
+    def initialize_subwords(self, word_freqs):
+        character_freqs = collections.defaultdict(int)
+        subwords_freqs = collections.defaultdict(int)
+        for word, freq in word_freqs.items():
+            # word = self.whitespace_token + word
+            for i in range(len(word)):
+                character_freqs[word[i]] += freq
+                # Loop through the subwords of length at least 2
+                for j in range(i + 2, len(word) + 1):
+                    subwords_freqs[word[i:j]] += freq
+        # Sort subwords by frequency
+        sorted_subwords = sorted(
+            subwords_freqs.items(), key=lambda x: x[1], reverse=True
+        )
+
+        return sorted_subwords, character_freqs
+
+    def initialize_vocab(self, words):
+        word_freqs = self.get_word_freqs(words)
+        sorted_subwords, characters = self.initialize_subwords(word_freqs)
+
+        alphabet = {
+            char: self.min_frequency
+            for char in self.initial_alphabet
+            if char not in characters
+        }
+        characters.update(alphabet)
+        tokens = list(characters.items()) + sorted_subwords
+        tokens = {token: freq for token, freq in tokens}
+        tokens = collections.Counter(tokens)
+        return tokens, characters
 
     def initialize_trie(self, tokens):
         trie = Trie()
@@ -37,45 +121,6 @@ class SentencePieceTokenizer:
             maxlen = max(maxlen, len(tok))
 
         return trie, maxlen
-
-    def pre_tokenize(self, text):
-        if self.lowercase:
-            text = text.lower()
-        text = re.sub(r"\s+", self.whitespace_token, text)
-        return text
-
-    def initialize_vocab(self, texts, initial_vocab_size=None):
-        if initial_vocab_size is None:
-            initial_vocab_size = self.initial_vocab_size
-        text = self.pre_tokenize(" ".join(texts))
-        word_freqs = collections.Counter(text.split(self.whitespace_token))
-        sorted_subwords, characters = self.initialize_subwords(word_freqs)
-        tokens = (
-            list(characters.items())
-            + sorted_subwords[: self.initial_vocab_size - len(characters)]
-        )
-        tokens = {token: freq for token, freq in tokens}
-        tokens = collections.Counter(tokens)
-        return text, tokens, characters
-
-    def initialize_subwords(self, word_freqs, verbose=True):
-        character_freqs = collections.defaultdict(int)
-        subwords_freqs = collections.defaultdict(int)
-        for word, freq in word_freqs.items():
-            word = self.whitespace_token + word
-            for i in range(len(word)):
-                character_freqs[word[i]] += freq
-                # Loop through the subwords of length at least 2
-                for j in range(i + 2, len(word) + 1):
-                    subwords_freqs[word[i:j]] += freq
-
-        # Sort subwords by frequency
-        sorted_subwords = sorted(
-            subwords_freqs.items(), key=lambda x: x[1], reverse=True
-        )
-        if verbose:
-            print("Top 10 subwords: {}".format(sorted_subwords[:10]))
-        return sorted_subwords, character_freqs
 
     def forward_step(self, text, trie):
         N = len(text)
@@ -129,8 +174,6 @@ class SentencePieceTokenizer:
         counts = collections.Counter(tokenization)
         norm = sum(list(counts.values()))
 
-        # Bayesianify them: https://cs.stanford.edu/~pliang/papers/tutorial-acl2007-talk.pdf
-        # https://github.com/google/sentencepiece/blob/master/src/unigram_model_trainer.cc
         # we are returning the log probabilties here (alpha=0 prior)
         logsum = digamma(norm)
         for k, v in counts.items():
@@ -150,9 +193,9 @@ class SentencePieceTokenizer:
         tokenization, loss = self.M_step(text, trie)
         return loss, tokenization, trie
 
-    def EM_round(self, text, tokens, delta=0.01, max_iter=10):
+    def EM_round(self, text, tokens, delta=0.01, n_iterations=10):
         tokenization, old_loss = self.M_step(text, self.trie)
-        for step in range(max_iter):
+        for step in range(n_iterations):
             print(f"EM iter {step}: ", end="")
             loss, tokenization, trie = self.EM_step(text, tokenization, self.trie)
             print(f"Loss={loss:.2f}")
@@ -160,7 +203,7 @@ class SentencePieceTokenizer:
                 break
             old_loss = loss
 
-    def prune_tokens(self, tokens, characters, vocab_size, percent_to_prune=None):
+    def prune_tokens(self, tokens, characters, vocab_size, shrinking_factor=None):
         """Tokens are passed by reference and modified in place.
         Returns:
             True: to indicate to caller that more rounds are needed
@@ -168,9 +211,9 @@ class SentencePieceTokenizer:
             ValueError: if the vocab size cannot be reached."""
         sorted_tokens = tokens.most_common()
         N = len(sorted_tokens)
-        if percent_to_prune is None:
-            percent_to_prune = self.percent_to_prune
-        n_trim = int(percent_to_prune * N)
+        if shrinking_factor is None:
+            shrinking_factor = self.shrinking_factor
+        n_trim = int((1 - shrinking_factor) * N)
         for i in reversed(range(N)):
             if N <= vocab_size:
                 return False
@@ -192,62 +235,34 @@ class SentencePieceTokenizer:
             )
         return False
 
-    def fit(self, texts, vocab_size=None, delta=0.01, max_iter=5, max_rounds=5):
+    def fit(self, texts):
         """To turn off pruning, just set max_rounds=1"""
-        # text = re.sub(" ", "_", text)
-        text, tokens, characters = self.initialize_vocab(texts)
-        if vocab_size is None:
-            vocab_size = self.vocab_size
+        words = []
+        iterator = tqdm(texts) if self.show_progress else texts
+        for text in iterator:
+            words += self.pre_tokenize(text)
+        text = "".join(words)
+        tokens, characters = self.initialize_vocab(words)
+        vocab_size = self.vocab_size
 
         if vocab_size > len(tokens):
             raise ValueError(
                 f"Vocab size is larger than the availble number of tokens {len(tokens)}."
             )
         self.trie, self.maxlen = self.initialize_trie(tokens)
-        for i in range(1, max_rounds + 1):
+        for i in range(1, self.max_rounds + 1):
             print(f"--- Round {i}. Vocab size: {len(tokens)} ---")
-            self.EM_round(text, tokens, delta, max_iter)
+            self.EM_round(text, tokens, self.delta, self.n_sub_iterations)
             if not self.prune_tokens(tokens, characters, vocab_size):
                 break
         self.vocab_size = len(tokens)
+        return tokens
 
-    def generalized_forward_step(self, text, trie, nbest_size=1):
-        N = len(text)
-        d = [-np.inf] * (N + 1)
-        p = [None] * (N + 1)
-        d[0] = 0
-        for i in range(1, N + 1):
-            d_queue = []
-            p_queue = []
-            for j in range(max(i - self.maxlen, 0), i):
-                final_token = text[j:i]
-                final_value = trie.get_value(final_token)
-                if final_value:
-                    curr_d = d[j] + final_value
-                    curr_p = len(final_token)
-                    d[i] = max(d[i], curr_d)
-                    d_queue.append(curr_d)
-                    p_queue.append(curr_p)
-            ids = np.argsort(d_queue)[-nbest_size:]
-            p[i] = [p_queue[z] for z in ids]
-        return p
+    def train(
+        self,
+        iterator: Union[Iterator[str], Iterator[Iterator[str]]],
+        length: Optional[int] = None,
+    ):
+        """Train the model using the given iterator"""
 
-    def generalized_backward_step(self, text, p):
-        idx = len(p)
-        tokenization = []
-        while idx > 1:
-            back_steps = np.random.choice(p[idx - 1])
-            next_idx = idx - back_steps
-            tok = text[next_idx - 1 : idx - 1]
-            tokenization.append(tok)
-            idx = next_idx
-        tokenization = list(reversed(tokenization))
-        return tokenization
-
-    def tokenize(self, text, nbest_size=1):
-        text = self.pre_tokenize(text)
-        if self.trie is None:
-            raise ValueError("Trainer has not yet been fit. Cannot tokenize.")
-        p = self.generalized_forward_step(text, self.trie, nbest_size)
-        tokenization = self.generalized_backward_step(text, p)
-        return tokenization
+        return self.fit(iterator)

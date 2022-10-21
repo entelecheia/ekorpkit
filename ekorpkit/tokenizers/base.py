@@ -1,3 +1,6 @@
+import os
+import json
+import logging
 from typing import Dict, List, Optional, Tuple, Union
 from tokenizers import AddedToken, EncodeInput, Encoding, InputSequence
 from tokenizers.decoders import Decoder
@@ -6,6 +9,8 @@ from tokenizers.pre_tokenizers import PreTokenizer
 from tokenizers.normalizers import Normalizer
 from tokenizers.processors import PostProcessor
 
+
+log = logging.getLogger(__name__)
 
 Offsets = Tuple[int, int]
 
@@ -187,7 +192,7 @@ class BaseTokenizer:
         """
         return self._tokenizer.normalize(sequence)
 
-    def tokenize(self, sequence):
+    def tokenize(self, sequence, **kwargs):
         """
         Tokenize a sequence
 
@@ -198,7 +203,7 @@ class BaseTokenizer:
         Returns:
             A :obj:`List` of :class:`~tokenizers.Token`: The generated tokens
         """
-        return self._tokenizer.tokenize(sequence)
+        return self._tokenizer.tokenize(sequence, **kwargs)
 
     def encode(
         self,
@@ -348,7 +353,23 @@ class BaseTokenizer:
             prefix: (Optional) str:
                 An optional prefix, used to prefix each file name
         """
-        return self._tokenizer.save(directory, prefix=prefix, pretty=pretty)
+        if prefix is not None:
+            folder = os.path.join(directory, prefix)
+        else:
+            folder = directory
+        config_filename = os.path.join(folder, "config.json")
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        indent = 2 if pretty else None
+        json.dump(
+            self._parameters,
+            open(config_filename, "w"),
+            indent=indent,
+            ensure_ascii=False,
+        )
+        return self._tokenizer.save(directory, prefix=prefix, pretty=pretty) + [
+            config_filename
+        ]
 
     def to_str(self, pretty: bool = False):
         """Get a serialized JSON version of the Tokenizer as a str
@@ -429,3 +450,21 @@ class BaseTokenizer:
     @decoder.setter
     def decoder(self, decoder: Decoder):
         self._tokenizer.decoder = decoder
+
+    @staticmethod
+    def read_config(config_filename):
+        """
+        Read a :obj:`config.json`
+
+        Args:
+            config (:obj:`str`):
+                The path to a :obj:`config.json` file
+        Returns:
+            A :obj:`Dictionary` containing the configuration
+        """
+        if os.path.exists(config_filename):
+            with open(config_filename, "r") as f:
+                return json.load(f)
+        else:
+            log.warning(f"File {config_filename} not found")
+            return {}

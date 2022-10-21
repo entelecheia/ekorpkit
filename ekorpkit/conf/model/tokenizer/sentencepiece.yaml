@@ -1,7 +1,0 @@
-_target_: ekorpkit.models.tokenizer.sentencepiece.SentencePieceTokenizer
-name: SentencePieceTokenizer
-initial_vocab_size: 2000
-vocab_size: 1000
-percent_to_prune: 0.2
-whitespace_token: ▁
-lowercase: true
