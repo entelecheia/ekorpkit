@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
 from typing import Iterator, Optional, Union
 from ekorpkit.visualize.base import _configure_font
 from .base import Model
@@ -20,7 +21,7 @@ class BranchingEntropy(Model):
         whitespace_token="▁",
         whitespace_token_as_prefix=True,
         verbose=False,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(vocab)
         self.branching_threshold = branching_threshold
@@ -46,7 +47,7 @@ class BranchingEntropy(Model):
         trie = Trie(direction=direction)
 
         maxlen = 0
-        for tok, val in tokens.items():
+        for tok, val in tqdm(tokens.items(), desc=f"Building {direction} trie"):
             trie.add(tok, val)
             maxlen = max(maxlen, len(tok))
 
@@ -68,9 +69,15 @@ class BranchingEntropy(Model):
         entropies = []
         for i in range(1, len(word) + 1):
             if direction == "forward":
-                subword = word[:i]
+                if word.startswith(self.whitespace_token):
+                    subword = word[:i]
+                else:
+                    subword = self.whitespace_token + word[:i]
             else:
-                subword = word[-i:]
+                if word.endswith(self.whitespace_token):
+                    subword = word[-i:]
+                else:
+                    subword = word[-i:] + self.whitespace_token
             _score = self.get_entropy(subword, direction=direction)
             entropies.append(_score)
             if self.verbose:
@@ -98,13 +105,13 @@ class BranchingEntropy(Model):
         chars, entropies, diffs = zip(*results)
         plt.figure(figsize=figsize)
         plt.plot(entropies, label="entropy", marker="o")
+        plt.xticks(range(len(chars)), chars)
         plt.legend(loc="upper left")
 
         # plot diffs on the right y-axis
-        plt.twinx()
-        plt.plot(diffs, label="diffs", color="red", linestyle="--", marker="o")
-        plt.xticks(range(len(chars)), chars)
-        plt.legend(loc="upper right")
+        # plt.twinx()
+        # plt.plot(diffs, label="diffs", color="red", linestyle="--", marker="o")
+        # plt.legend(loc="upper right")
         plt.show()
 
     def tokenize_word(self, word, direction="forward"):
@@ -112,8 +119,8 @@ class BranchingEntropy(Model):
         # Here the spike means that there is a sudden increase in entropy followed by a decrease.
         # We can use the difference in entropy to detect the spike.
 
-        if word.startswith(self.whitespace_token):
-            word = word[len(self.whitespace_token) :]
+        # if word.startswith(self.whitespace_token):
+        #     word = word[len(self.whitespace_token) :]
         # get the local entropy and the difference in entropy
         results = self.find_local_entropy(word, direction=direction)
         _, _, diffs = zip(*results)
@@ -132,11 +139,13 @@ class BranchingEntropy(Model):
             start = spike + 1
         if start < len(word):
             segments.append(word[start:])
-        if self.whitespace_token_as_prefix and len(segments) > 0:
-            segments[0] = self.whitespace_token + segments[0]
+        # if self.whitespace_token_as_prefix and len(segments) > 0:
+        #     segments[0] = self.whitespace_token + segments[0]
         return tuple(segments)
 
-    def tokenize(self, sequence, direction="forward", flatten=True, branching_threshold=None):
+    def tokenize(
+        self, sequence, direction="forward", flatten=True, branching_threshold=None
+    ):
         if branching_threshold is not None:
             self.branching_threshold = branching_threshold
         segments = []

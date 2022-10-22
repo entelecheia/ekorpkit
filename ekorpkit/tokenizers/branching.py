@@ -154,8 +154,15 @@ class BranchingEntropyTokenizer(BaseTokenizer):
     def plot_local_entropy(self, word, direction="forward", figsize=(12, 5)):
         self._tokenizer.plot_local_entropy(word, direction=direction, figsize=figsize)
 
-    def tokenize(self, sequence, direction="forward", flatten=True):
-        return self._tokenizer.tokenize(sequence, direction=direction, flatten=flatten)
+    def tokenize(
+        self, sequence, direction="forward", flatten=True, branching_threshold=None
+    ):
+        return self._tokenizer.tokenize(
+            sequence,
+            direction=direction,
+            flatten=flatten,
+            branching_threshold=branching_threshold,
+        )
 
     def naive_segment(self, text, direction="forward"):
         return self._tokenizer.naive_segment(text, direction=direction)
