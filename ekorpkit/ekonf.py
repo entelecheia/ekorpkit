@@ -4,12 +4,19 @@ from typing import Any, List, IO, Dict, Union, Tuple
 from ekorpkit.utils.notebook import (
     _clear_output,
     _cprint,
+    _create_button,
+    _create_dropdown,
+    _create_floatslider,
+    _create_image,
+    _create_radiobutton,
+    _create_textarea,
     _display,
     _display_image,
     _get_display,
     _hide_code_in_slideshow,
     _is_notebook,
     _is_colab,
+    _read,
 )
 from .base import (
     __ekorpkit_path__,
@@ -82,6 +89,10 @@ class eKonf:
     __ekorpkit_path__ = __ekorpkit_path__()
     __home_path__ = __home_path__()
     config = _config
+    book_repo = "https://github.com/entelecheia/ekorpkit-book/raw/main/"
+    book_repo_assets = book_repo + "assets/"
+    book_url = "https://entelecheia.github.io/ekorpkit-book/"
+    book_assets_url = book_url + "assets/"
     Keys = _Keys
     Defaults = _Defaults
     SPLITS = _SPLITS
@@ -777,3 +788,121 @@ class eKonf:
         data, index=None, exclude=None, columns=None, coerce_float=False, nrows=None
     ):
         return _records_to_dataframe(data, index, exclude, columns, coerce_float, nrows)
+
+    @staticmethod
+    def create_dropdown(
+        options,
+        value,
+        description,
+        disabled=False,
+        style={"description_width": "initial"},
+        layout=None,
+        **kwargs,
+    ):
+        return _create_dropdown(
+            options,
+            value,
+            description,
+            disabled,
+            style,
+            layout,
+            **kwargs,
+        )
+
+    @staticmethod
+    def create_textarea(
+        value,
+        description,
+        placeholder="",
+        disabled=False,
+        style={"description_width": "initial"},
+        layout=None,
+        **kwargs,
+    ):
+        return _create_textarea(
+            value,
+            description,
+            placeholder,
+            disabled,
+            style,
+            layout,
+            **kwargs,
+        )
+
+    @staticmethod
+    def create_button(
+        description, button_style="", icon="check", layout=None, **kwargs
+    ):
+        return _create_button(description, button_style, icon, layout, **kwargs)
+
+    @staticmethod
+    def create_radiobutton(
+        options,
+        description,
+        value=None,
+        disabled=False,
+        style={"description_width": "initial"},
+        layout=None,
+        **kwargs,
+    ):
+        return _create_radiobutton(
+            options,
+            description,
+            value,
+            disabled,
+            style,
+            layout,
+            **kwargs,
+        )
+
+    @staticmethod
+    def create_image(
+        filename=None,
+        format=None,
+        width=None,
+        height=None,
+        **kwargs,
+    ):
+        return _create_image(filename, format, width, height, **kwargs)
+
+    @staticmethod
+    def create_floatslider(
+        min=0.0,
+        max=1.0,
+        step=0.1,
+        value=None,
+        description="",
+        disabled=False,
+        continuous_update=False,
+        orientation="horizontal",
+        readout=True,
+        readout_format=".1f",
+        style={"description_width": "initial"},
+        layout=None,
+        **kwargs,
+    ):
+        return _create_floatslider(
+            min,
+            max,
+            step,
+            value,
+            description,
+            disabled,
+            continuous_update,
+            orientation,
+            readout,
+            readout_format,
+            style,
+            layout,
+            **kwargs,
+        )
+
+    @staticmethod
+    def get_imagefont(fontname=None, fontsize=12):
+        from ekorpkit.visualize.collage import _get_imagefont
+
+        return _get_imagefont(fontname, fontsize)
+
+    @staticmethod
+    def read(uri, mode="rb", encoding=None, **kwargs):
+        return _read(uri, mode, encoding, **kwargs)

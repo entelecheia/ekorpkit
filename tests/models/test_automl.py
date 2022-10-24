@@ -5,7 +5,7 @@ def test_automl():
 
     fs_cfg = eKonf.compose("dataset=feature")
     fs_cfg.name = "fomc_features_small"
-    fs_cfg.path.cache.uri = "https://github.com/entelecheia/ekorpkit-book/raw/main/data/fomc_features_small.zip"
+    fs_cfg.path.cache.uri = "https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/fomc_features_small.zip"
     fs_cfg.data_dir = fs_cfg.path.cached_path
 
     model_cfg = eKonf.compose("model/automl=classification")

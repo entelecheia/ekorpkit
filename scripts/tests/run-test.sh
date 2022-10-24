@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BRANCH=${1:-dev/0.1.39}
+BRANCH=${1:-dev/0.1.40}
 
 rm -rf /workspace/projects/ekorpkit-test
 rm -rf ekorpkit

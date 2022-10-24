@@ -113,3 +113,18 @@ class Rubrix:
                     )
                 ]
         return original_data
+
+    def remove_label_errors(self, original_data, error_records, id="id", split="train"):
+        log.info(f"Removing {len(error_records)} records")
+        for record in error_records:
+            metadata = record.metadata
+            if split and metadata["split"] != split:
+                continue
+            original_data = original_data[
+                ~(
+                    (original_data[id] == metadata[id])
+                    & (original_data["split"] == split)
+                )
+            ]
+
+        return original_data

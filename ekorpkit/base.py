@@ -964,7 +964,9 @@ def _viewsource(obj):
 
 def _human_readable_type_name(t: Type) -> str:
     """
-    Generates a useful-for-humans label for a type. For builtin types, it's just the class name (eg "str" or "int"). For other types, it includes the module (eg "pathlib.Path").
+    Generates a useful-for-humans label for a type.
+    For builtin types, it's just the class name (eg "str" or "int").
+    For other types, it includes the module (eg "pathlib.Path").
     """
     module = t.__module__
     if module == "builtins":

@@ -1,8 +1,9 @@
 import codecs
 import logging
 from abc import ABCMeta
-from ekorpkit.io.load.list import load_wordlist
 from ekorpkit import eKonf
+
+# from ekorpkit.io.load.list import load_wordlist
 
 
 log = logging.getLogger(__name__)
@@ -478,12 +479,12 @@ class MecabTokenizer(Tokenizer):
         super().__init__(**kwargs)
         self.mecab = mecab
         try:
-            from ..models.tokenizer.mecab import MeCab
+            from ..tokenizers.mecab import MeCab
 
             if self.mecab is None:
-                _tokenizer = MeCab()
+                _ = MeCab()
             else:
-                _tokenizer = MeCab(**self.mecab)
+                _ = MeCab(**self.mecab)
         except ImportError:
             raise ImportError(
                 "\n"
@@ -492,7 +493,7 @@ class MecabTokenizer(Tokenizer):
             )
 
     def parse(self, text):
-        from ..models.tokenizer.mecab import MeCab
+        from ..tokenizers.mecab import MeCab
 
         if self.mecab is None:
             self._tokenizer = MeCab()

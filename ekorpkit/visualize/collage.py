@@ -20,13 +20,7 @@ def convert_image(
 ):
     img = Image.open(img_file)
     if show_filename:
-        fontname, fontpath = _configure_font(
-            set_font_for_matplot=False, fontname=fontname
-        )
-        if fontpath:
-            font = ImageFont.truetype(fontpath, fontsize)
-        else:
-            font = None
+        font = _get_imagefont(fontname, fontsize)
         draw = ImageDraw.Draw(img)
         draw.text(
             filename_offset, os.path.basename(img_file), font=font, fill=fontcolor
@@ -35,6 +29,15 @@ def convert_image(
     img = img.convert("RGB")
     img = np.asarray(img)
     return img
+
+
+def _get_imagefont(fontname=None, fontsize=12):
+    fontname, fontpath = _configure_font(set_font_for_matplot=False, fontname=fontname)
+    if fontpath:
+        font = ImageFont.truetype(fontpath, fontsize)
+    else:
+        font = None
+    return font
 
 
 def gallery(array, ncols=7):
