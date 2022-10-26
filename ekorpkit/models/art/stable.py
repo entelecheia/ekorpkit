@@ -72,6 +72,7 @@ class StableDiffusion(BaseModel):
                 if show_collage:
                     eKonf.clear_output(wait=True)
                     eKonf.display_image(stitched_image_path)
+                show_collage = False
 
             log.info(" >> elapsed time to imagine: {}".format(elapsed()))
 
@@ -80,8 +81,7 @@ class StableDiffusion(BaseModel):
             return results
 
         if show_collage:
-            if mode != DiffuseMode.STITCH:
-                eKonf.clear_output(wait=True)
+            eKonf.clear_output(wait=True)
             self.collage(image_filepaths=sample_imagepaths, resize_ratio=resize_ratio)
 
         results.update(
