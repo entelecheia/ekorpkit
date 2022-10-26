@@ -1,0 +1,4 @@
+defaults:
+  - disco_imagen
+
+name: stable-diffusions

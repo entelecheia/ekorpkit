@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import io
 
 
 logger = logging.getLogger(__name__)
@@ -323,3 +324,14 @@ def _read(uri, mode="rb", encoding=None, **kwargs):
     else:
         with open(uri, mode=mode, encoding=encoding) as f:
             return f.read()
+
+
+def _load_image(uri, mode="RGB", resize=None, crop=None, **kwargs):
+    from PIL import Image
+
+    img = Image.open(io.BytesIO(_read(uri, **kwargs))).convert(mode)
+    if resize is not None:
+        img = img.resize(resize)
+    if crop is not None:
+        img = img.crop(crop)
+    return img

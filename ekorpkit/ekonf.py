@@ -16,6 +16,7 @@ from ekorpkit.utils.notebook import (
     _hide_code_in_slideshow,
     _is_notebook,
     _is_colab,
+    _load_image,
     _read,
 )
 from .base import (
@@ -561,6 +562,7 @@ class eKonf:
         yticklabels=None,
         xlabel_fontsize=12,
         ylabel_fontsize=12,
+        resize_ratio=1,
         **kwargs,
     ):
         from ekorpkit.visualize.collage import collage as _collage
@@ -587,6 +589,7 @@ class eKonf:
             yticklabels=yticklabels,
             xlabel_fontsize=xlabel_fontsize,
             ylabel_fontsize=ylabel_fontsize,
+            resize_ratio=resize_ratio,
             **kwargs,
         )
 
@@ -906,3 +909,7 @@ class eKonf:
     @staticmethod
     def read(uri, mode="rb", encoding=None, **kwargs):
         return _read(uri, mode, encoding, **kwargs)
+
+    @staticmethod
+    def load_image(uri, mode="RGB", resize=None, crop=None, **kwargs):
+        return _load_image(uri, mode=mode, resize=resize, crop=crop, **kwargs)

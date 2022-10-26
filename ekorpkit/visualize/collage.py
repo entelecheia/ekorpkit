@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from .base import _configure_font
 from PIL import Image, ImageDraw, ImageFont
 from ekorpkit.io.file import get_filepaths
+from ekorpkit.utils.notebook import _load_image
 
 
 log = logging.getLogger(__name__)
@@ -17,8 +18,13 @@ def convert_image(
     fontname=None,
     fontsize=12,
     fontcolor=None,
+    resize_ratio=1,
 ):
-    img = Image.open(img_file)
+    img = _load_image(img_file)
+    if resize_ratio != 1:
+        img = img.resize(
+            (int(img.size[0] * resize_ratio), int(img.size[1] * resize_ratio))
+        )
     if show_filename:
         font = _get_imagefont(fontname, fontsize)
         draw = ImageDraw.Draw(img)
@@ -76,9 +82,10 @@ def collage(
     yticklabels=None,
     xlabel_fontsize=12,
     ylabel_fontsize=12,
+    resize_ratio=1,
     **kwargs,
 ):
-    verbose = kwargs.get("verbose", False)
+    # verbose = kwargs.get("verbose", False)
     if image_filepaths is None:
         image_filepaths = sorted(get_filepaths(filename_patterns, base_dir=base_dir))
     if not image_filepaths:
@@ -89,7 +96,13 @@ def collage(
     for filepath in image_filepaths:
         img_arr.append(
             convert_image(
-                filepath, show_filename, filename_offset, fontname, fontsize, fontcolor
+                filepath,
+                show_filename,
+                filename_offset,
+                fontname,
+                fontsize,
+                fontcolor,
+                resize_ratio,
             )
         )
     if num_images is not None:

@@ -13,13 +13,13 @@ from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key, shard
 from PIL import Image
 from tqdm.auto import trange
-from .base import BaseTTIModel
+from .base import BaseModel
 
 
 log = logging.getLogger(__name__)
 
 
-class DalleMini(BaseTTIModel):
+class DalleMini(BaseModel):
     def __init__(self, **args):
         super().__init__(**args)
 

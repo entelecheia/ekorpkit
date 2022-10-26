@@ -1,0 +1,17 @@
+# Model references
+
+generate:
+  pretrained_model_name_or_path: CompVis/stable-diffusion-v1-4
+  revision: fp16 
+  use_auth_token: true
+  device: cuda
+
+inpaint:
+  pretrained_model_name_or_path: runwayml/stable-diffusion-inpainting
+  revision: fp16 
+  use_auth_token: true
+  device: cuda
+
+generator:
+  device: cuda
+  seed: 0

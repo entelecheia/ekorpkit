@@ -6,7 +6,7 @@ from ekorpkit import eKonf
 log = logging.getLogger(__name__)
 
 
-class BaseTTIModel:
+class BaseModel:
     def __init__(self, **args):
         args = eKonf.to_config(args)
         self.args = args
@@ -51,6 +51,9 @@ class BaseTTIModel:
 
     def load_modules(self):
         """Load the modules"""
+        if self._module.get("modules") is None:
+            log.info("No modules to load")
+            return
         library_dir = self._module.library_dir
         for module in self._module.modules:
             name = module.name
@@ -135,6 +138,7 @@ class BaseTTIModel:
         fontname=None,
         fontsize=12,
         fontcolor=None,
+        resize_ratio=1.0,
         **kwargs,
     ):
         args = self.load_config(batch_name, batch_num, **kwargs)
@@ -143,7 +147,7 @@ class BaseTTIModel:
             batch_num = args.batch_num
 
         filename_patterns = filename_patterns or f"{batch_name}({batch_num})_*.png"
-        num_images = num_images or args.n_samples
+        num_images = num_images or args.get("n_samples")
         prompt = None
         if show_prompt:
             prompt = self.get_text_prompt(args.text_prompts)
@@ -162,6 +166,7 @@ class BaseTTIModel:
             fontname=fontname,
             fontsize=fontsize,
             fontcolor=fontcolor,
+            resize_ratio=resize_ratio,
             **kwargs,
         )
 

@@ -26,7 +26,7 @@ from .utils import (
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.visualize.motion import create_video as _create_video
 from ekorpkit.visualize.motion import extract_frames
-from ..art.base import BaseTTIModel
+from ..art.base import BaseModel
 from enum import Enum
 
 log = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class AnimMode(str, Enum):
     VIDEO_INPUT = "Video Input"
 
 
-class DiscoDiffusion(BaseTTIModel):
+class DiscoDiffusion(BaseModel):
 
     TRANSLATION_SCALE = 1.0 / 200.0
 

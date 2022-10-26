@@ -1,0 +1,17 @@
+batch_name: stable-batch
+mode: generate
+text_prompts:
+batch_num:
+num_samples: 6
+num_images_per_prompt: 1
+width: 768
+height: 512
+num_inference_steps: 100
+guidance_scale:
+init_image:
+mask_image:
+inpaint_strength: 0.75
+set_seed: random_seed
+seed:
+resume_run: false
+run_to_resume: latest

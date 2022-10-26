@@ -98,6 +98,7 @@ jax: dalle-mini, art
 flax: art, dalle-mini
 unidecode: art, disco
 opencv-python==4.5.5.64: art, disco
+diffusers: art, stable, all
 
 cleanlab: label, all
 # snorkel: label
