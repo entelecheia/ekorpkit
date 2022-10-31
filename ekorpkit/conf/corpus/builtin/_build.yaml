@@ -10,6 +10,7 @@ name:
 data_dir: ${dir.corpus}/${.name}
 # data_dir: ${dir.archive}/datasets/lmdata/${.name}
 filetype: .parquet
+num_workers: ${oc.select:num_workers, 1}
 verbose: ${oc.select:..verbose, true}
 
 pipeline:

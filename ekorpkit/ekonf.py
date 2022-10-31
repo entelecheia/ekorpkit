@@ -62,6 +62,7 @@ from .base import (
     _save,
     _select,
     _set_cuda,
+    _set_workspace,
     _setLogger,
     _SPLITS,
     _stop_env_,
@@ -907,9 +908,13 @@ class eKonf:
         return _get_imagefont(fontname, fontsize)
 
     @staticmethod
-    def read(uri, mode="rb", encoding=None, **kwargs):
-        return _read(uri, mode, encoding, **kwargs)
+    def read(uri, mode="rb", encoding=None, head=None, **kwargs):
+        return _read(uri, mode, encoding, head, **kwargs)
 
     @staticmethod
     def load_image(uri, mode="RGB", resize=None, crop=None, **kwargs):
         return _load_image(uri, mode=mode, resize=resize, crop=crop, **kwargs)
+
+    @staticmethod
+    def set_workspace(workspace=None, project=None):
+        return _set_workspace(workspace, project)

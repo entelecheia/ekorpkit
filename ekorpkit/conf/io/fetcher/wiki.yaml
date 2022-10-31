@@ -1,0 +1,14 @@
+defaults:
+  - _default
+
+_target_: ekorpkit.io.fetch.loader.wiki.Wiki
+lang: en
+name: ${.lang}wiki
+output_file:
+extract:
+  _target_: extract_wiki
+dump:
+  _target_: web_download
+  url: https://dumps.wikimedia.org/${..lang}wiki/latest/${..lang}wiki-latest-pages-articles.xml.bz2
+  dump_dir: ${dir.cache}/corpus/${..name}
+  dump_file: ${..name}.xml.bz2

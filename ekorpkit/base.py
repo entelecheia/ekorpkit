@@ -310,7 +310,7 @@ def dotenv_values(dotenv_path=None, **kwargs):
 def getcwd():
     try:
         return hydra.utils.get_original_cwd()
-    except:
+    except Exception:
         return os.getcwd()
 
 
@@ -934,7 +934,7 @@ def _set_cuda(device=0):
         device = ", ".join(ids)
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = device
-    except:
+    except ImportError:
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
         raise Exception("Cuda device not found")
 
@@ -953,7 +953,8 @@ def _getsource(obj):
             mod = importlib.import_module(mod_name)
             obj = getattr(mod, object_name)
         return inspect.getsource(obj)
-    except:
+    except Exception as e:
+        logger.error(f"Error getting source: {e}")
         return ""
 
 
@@ -1010,3 +1011,16 @@ def _records_to_dataframe(
         coerce_float=coerce_float,
         nrows=nrows,
     )
+
+
+def _set_workspace(
+    workspace=None,
+    project=None,
+):
+    if isinstance(workspace, str):
+        _env_set("EKORPKIT_WORKSPACE_ROOT", workspace)
+        logger.info(f"Setting EKORPKIT_WORKSPACE_ROOT to {workspace}")
+    if isinstance(project, str):
+        _env_set("EKORPKIT_PROJECT", project)
+        logger.info(f"Setting EKORPKIT_PROJECT to {project}")
+    return _osenv("EKORPKIT_WORKSPACE_ROOT"), _osenv("EKORPKIT_PROJECT")

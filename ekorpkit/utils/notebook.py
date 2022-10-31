@@ -309,10 +309,14 @@ def _create_floatslider(
     return slider
 
 
-def _read(uri, mode="rb", encoding=None, **kwargs):
+def _read(uri, mode="rb", encoding=None, head=None, **kwargs):
     if uri.startswith("http"):
         import requests
 
+        if mode == "r" and head is not None and isinstance(head, int):
+            r = requests.get(uri, stream=True)
+            r.raw.decode_content = True
+            return r.raw.read(head)
         return requests.get(uri, **kwargs).content
     # elif uri.startswith("s3://"):
     #     import boto3
@@ -323,6 +327,8 @@ def _read(uri, mode="rb", encoding=None, **kwargs):
     #     return obj.get()["Body"].read()
     else:
         with open(uri, mode=mode, encoding=encoding) as f:
+            if mode == "r" and head is not None and isinstance(head, int):
+                return f.read(head)
             return f.read()
 
 

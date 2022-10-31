@@ -28,6 +28,10 @@ class StableDiffusion(BaseModel):
     def __init__(self, **args):
         super().__init__(**args)
         self._device = self.args.device
+        if self.args.hf_user_access_token:
+            self.hf_user_access_token = self.args.hf_user_access_token
+        else:
+            self.hf_user_access_token = eKonf.osenv("HF_USER_ACCESS_TOKEN")
         if self.auto.load:
             self.load()
 
@@ -189,7 +193,7 @@ class StableDiffusion(BaseModel):
         prompt,
         init_image,
         mask_image,
-        guidance_scale=0.75,
+        guidance_scale=7.5,
         num_images_per_prompt=1,
         num_inference_steps=50,
         **kwargs,
@@ -208,7 +212,7 @@ class StableDiffusion(BaseModel):
             mask_image=mask_image,
             width=width,
             height=height,
-            # guidance_scale=guidance_scale,
+            guidance_scale=guidance_scale,
             num_images_per_prompt=num_images_per_prompt,
             num_inference_steps=num_inference_steps,
             generator=self._generator,
@@ -256,7 +260,7 @@ class StableDiffusion(BaseModel):
         prompt,
         width=512,
         height=512,
-        inpaint_strength=0.75,
+        inpaint_strength=7.5,
         num_images_per_prompt=1,
         num_inference_steps=50,
         **kwargs,
@@ -304,17 +308,19 @@ class StableDiffusion(BaseModel):
         cfg = self.model_config.generate
         self._generate = StableDiffusionPipeline.from_pretrained(
             pretrained_model_name_or_path=cfg.pretrained_model_name_or_path,
-            use_auth_token=cfg.use_auth_token,
+            use_auth_token=self.hf_user_access_token,
             revision=cfg.revision,
             torch_dtype=torch.float16,
+            cache_dir=cfg.cache_dir,
         ).to(cfg.device)
 
         cfg = self.model_config.inpaint
         self._inpaint = StableDiffusionInpaintPipeline.from_pretrained(
             pretrained_model_name_or_path=cfg.pretrained_model_name_or_path,
-            use_auth_token=cfg.use_auth_token,
+            use_auth_token=self.hf_user_access_token,
             revision=cfg.revision,
             torch_dtype=torch.float16,
+            cache_dir=cfg.cache_dir,
         ).to(cfg.device)
 
     def load_config(self, batch_name=None, batch_num=None, **args):

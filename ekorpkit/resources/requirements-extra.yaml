@@ -55,6 +55,7 @@ ray: ddbackend
 
 # sysrsync: fetch
 wget: all, fetch, dataset
+pycurl: all, fetch, dataset
 py7zr: all, fetch, dataset
 zstandard: all, fetch, dataset
 # cached-path: fetch, dataset

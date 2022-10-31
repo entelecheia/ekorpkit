@@ -9,8 +9,12 @@ from ekorpkit.io.fetch.web import web_download, gdrive_download_un7z
 
 
 class Wiki:
-    def __init__(self, **args):
-        self.args = eKonf.to_config(args)
+    def __init__(self, lang="en", output_dir=None, **args):
+        cfg = eKonf.compose("io/fetcher=wiki")
+        cfg.lang = lang
+        if output_dir:
+            cfg.output_dir = output_dir
+        self.args = eKonf.merge(cfg, args)
         self.name = self.args.name
         self.autoload = self.args.get("autoload", True)
         self.url = self.args.dump.url
@@ -29,8 +33,12 @@ class Wiki:
     def fetch(self):
         if not os.listdir(self.output_dir) or self.force_download:
             self.download_dump()
-            if self.args.extract._target_:
-                getattr(self, self.args.extract._target_)()
+            if self.args.extract._target_ == "extract_wiki":
+                self.extract_wiki()
+            elif self.args.extract._target_ == "extract_namuwiki":
+                self.extract_namuwiki()
+            else:
+                raise Exception("Invalid target")
 
     def extract_namuwiki(self):
         extracted_dir = self.dump_file[:-3]
@@ -61,9 +69,14 @@ class Wiki:
         print(f"Extracted {self.name} from dump file {self.dump_file}")
 
     def download_dump(self):
-        globals()[self.args.dump._target_](
-            self.url, self.dump_file, self.name, self.force_download
-        )
+        if self.args.dump._target_ == "web_download":
+            web_download(self.url, self.dump_file, self.name, self.force_download)
+        elif self.args.dump._target_ == "gdrive_download_un7z":
+            gdrive_download_un7z(
+                self.url, self.dump_file, self.name, self.force_download
+            )
+        else:
+            raise Exception("Invalid target")
 
 
 def work(document):

@@ -21,7 +21,8 @@ def load_data(split_name=None, **loader_cfg):
         data_files = loader_cfg["data_sources"]
     filepaths = get_filepaths(data_files, data_dir)
 
-    num_workers = loader_cfg.get("num_workers", 1)
+    num_workers = loader_cfg.get("num_workers") or 1
+    num_workers = int(num_workers)
     filetype = loader_cfg.get("filetype", None)
     # data_items =  args['data']['item'].keys()
     multiprocessing_at = loader_cfg.get("multiprocessing_at", "load_data")

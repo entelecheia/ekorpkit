@@ -13,6 +13,7 @@ defaults:
   - preprocessor/normalizer: default
   - preprocessor/segmenter: default
   - preprocessor/tokenizer: default
+  - io: _default
 
   - override hydra/help: help
   - override hydra/hydra_logging: colorlog
