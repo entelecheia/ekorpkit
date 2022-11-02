@@ -310,6 +310,7 @@ def _create_floatslider(
 
 
 def _read(uri, mode="rb", encoding=None, head=None, **kwargs):
+    uri = str(uri)
     if uri.startswith("http"):
         import requests
 

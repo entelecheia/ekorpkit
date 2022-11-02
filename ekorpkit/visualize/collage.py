@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from .base import _configure_font
-from PIL import Image, ImageDraw, ImageFont
+from PIL import ImageDraw, ImageFont
 from ekorpkit.io.file import get_filepaths
 from ekorpkit.utils.notebook import _load_image
 

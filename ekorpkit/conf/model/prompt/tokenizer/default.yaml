@@ -1,0 +1,4 @@
+pretrained_model_name_or_path: ${..model.pretrained_model_name_or_path}
+start_token: <BOP>
+pad_token: <PAD>
+end_token: <EOP>

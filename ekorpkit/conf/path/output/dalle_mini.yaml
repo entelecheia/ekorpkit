@@ -1,0 +1,3 @@
+base_dir: ${..output_dir}/dalle-mini
+batch_name: demo
+batch_dir: ${.base_dir}/${.batch_name}

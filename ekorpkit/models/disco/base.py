@@ -94,7 +94,7 @@ class DiscoDiffusion(BaseModel):
     ):
         """Run a batch"""
         animation_mode = AnimMode.NONE
-        n_samples = 1
+        num_samples = 1
         args.update(dict(show_collage=False))
 
         if batch_args is None:
@@ -131,7 +131,7 @@ class DiscoDiffusion(BaseModel):
                     image_prompts=image_prompts,
                     batch_name=_batch_name,
                     animation_mode=animation_mode,
-                    n_samples=n_samples,
+                    num_samples=num_samples,
                     **_args,
                 )
                 batch_config["results"].append(
@@ -264,7 +264,7 @@ class DiscoDiffusion(BaseModel):
         log.info("> loading settings...")
         args = self.load_config(batch_name=batch_name, batch_num=batch_num, **args)
         args = self._prepare_config(args)
-        self.save_settings(args)
+        self.save_config(args)
         self._config = args
 
         self._prepare_models()
@@ -321,9 +321,9 @@ class DiscoDiffusion(BaseModel):
         self._config = args
 
         if args.animation_mode == AnimMode.NONE:
-            if args.start_sample >= args.n_samples:
+            if args.start_sample >= args.num_samples:
                 log.warning(
-                    f"start_sample ({args.start_sample}) must be less than n_samples ({args.n_samples})"
+                    f"start_sample ({args.start_sample}) must be less than num_samples ({args.num_samples})"
                 )
                 return
         else:
@@ -357,7 +357,9 @@ class DiscoDiffusion(BaseModel):
 
             log.info(" >> elapsed time to diffuse: {}".format(elapsed()))
             if args.animation_mode == AnimMode.NONE:
-                print(f"{args.n_samples} samples generated to {self._output.batch_dir}")
+                print(
+                    f"{args.num_samples} samples generated to {self._output.batch_dir}"
+                )
                 print(f"text prompts: {text_prompts}")
                 print("sample image paths:")
                 for p in self.sample_imagepaths:
@@ -369,7 +371,7 @@ class DiscoDiffusion(BaseModel):
 
         results = {
             "image_filepaths": self.sample_imagepaths,
-            "config_file": self.save_settings(args),
+            "config_file": self.save_config(args),
             "config": eKonf.to_dict(args),
             "loss_values": loss_values,
         }
@@ -423,16 +425,19 @@ class DiscoDiffusion(BaseModel):
         else:
             flows = glob(flo_dir + "/*.*")
             if (len(flows) > 0) and not args.force_flow_generation:
-                log.info(
-                    f"Skipping flow generation:\nFound {len(flows)} existing flow files in current working folder: {self._output.flo_dir}.\nIf you wish to generate new flow files, set force_flow_generation=True and run again."
-                )
+                msg = "Skipping flow generation:\n"
+                msg += f"Found {len(flows)} existing flow files in current working folder: {self._output.flo_dir}.\n"
+                msg += "If you wish to generate new flow files, set force_flow_generation=True and run again."
+                log.info(msg)
 
             if (len(flows) == 0) or args.force_flow_generation:
                 frames = sorted(glob(video_frames_dir + "/*.*"))
                 if len(frames) < 2:
-                    log.warning(
-                        f"WARNING!\nCannot create flow maps: Found {len(frames)} frames extracted from your video input.\nPlease check your video path."
-                    )
+                    msg = "WARNING!\nCannot create flow maps: "
+                    msg += f"Found {len(frames)} frames extracted from your video input.\n"
+                    msg += "Please check your video path."
+                    log.warning(msg)
+
                 if len(frames) >= 2:
 
                     raft_model = torch.nn.DataParallel(RAFT(rsft_args))
@@ -826,12 +831,13 @@ class DiscoDiffusion(BaseModel):
                         t_int = (
                             int(t.item()) + 1
                         )  # errors on last step without +1, need to find source
-                        # when using SLIP Base model the dimensions need to be hard coded to avoid AttributeError: 'VisionTransformer' object has no attribute 'input_resolution'
+                        # when using SLIP Base model the dimensions need to be hard coded to avoid AttributeError: 
+                        # 'VisionTransformer' object has no attribute 'input_resolution'
                         try:
                             input_resolution = model_stat[
                                 "clip_model"
                             ].visual.input_resolution
-                        except:
+                        except AttributeError:
                             input_resolution = 224
 
                         cuts = MakeCutoutsDango(
@@ -883,13 +889,13 @@ class DiscoDiffusion(BaseModel):
                     init_losses = self.lpips_model(x_in, init)
                     loss = loss + init_losses.sum() * init_scale
                 x_in_grad += torch.autograd.grad(loss, x_in)[0]
-                if torch.isnan(x_in_grad).any() == False:
+                if not torch.isnan(x_in_grad).any():
                     grad = -torch.autograd.grad(x_in, x, x_in_grad)[0]
                 else:
                     # print("NaN'd")
                     x_is_NaN = True
                     grad = torch.zeros_like(x)
-            if args.clamp_grad and x_is_NaN == False:
+            if args.clamp_grad and not x_is_NaN:
                 magnitude = grad.square().mean().sqrt()
                 return (
                     grad * magnitude.clamp(max=args.clamp_max) / magnitude
@@ -976,7 +982,7 @@ class DiscoDiffusion(BaseModel):
                 for k, image in enumerate(samples["pred_xstart"]):
                     # tqdm.write(f'Batch {i}, step {j}, output {k}:')
                     res["ouput"] = k
-                    if args.n_samples > 0:
+                    if args.num_samples > 0:
                         # if intermediates are saved to the subfolder, don't append a step or percentage to the name
                         if cur_t == -1 and args.intermediates_in_subfolder:
                             filename = f"{args.batch_name}({args.batch_num})_{frame_num:04}.png"
@@ -1314,7 +1320,8 @@ class DiscoDiffusion(BaseModel):
 
         log.info(f"looping over range({args.start_frame}, {args.max_frames})")
         for frame_num in range(args.start_frame, args.max_frames):
-            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
+            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, 
+            # allow a full frame to complete
             if args.stop_on_next_loop:
                 break
 
@@ -1449,7 +1456,7 @@ class DiscoDiffusion(BaseModel):
         batchBar = None
         loss_values = []
 
-        text_series, image_series = self._get_prompt_series(args, args.n_samples)
+        text_series, image_series = self._get_prompt_series(args, args.num_samples)
 
         if eKonf.exists(args.init_image):
             init_image = args.init_image
@@ -1466,15 +1473,16 @@ class DiscoDiffusion(BaseModel):
             torch.backends.cudnn.deterministic = True
 
         image_display = eKonf.get_display()
-        log.info(f"looping over range({args.start_sample}, {args.n_samples})")
-        for sample_num in range(args.start_sample, args.n_samples):
-            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
+        log.info(f"looping over range({args.start_sample}, {args.num_samples})")
+        for sample_num in range(args.start_sample, args.num_samples):
+            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, 
+            # allow a full frame to complete
             if args.stop_on_next_loop:
                 break
 
             eKonf.clear_output(wait=True)
             batchBar = tqdm(
-                range(args.n_samples),
+                range(args.num_samples),
                 desc=f"{args.batch_name}({args.batch_num}) samples",
             )
             batchBar.n = sample_num
@@ -1527,7 +1535,7 @@ class DiscoDiffusion(BaseModel):
         cur_t = None
         loss_values = []
 
-        text_series, image_series = self._get_prompt_series(args, args.n_samples)
+        text_series, image_series = self._get_prompt_series(args, args.num_samples)
 
         if eKonf.exists(args.init_image):
             init_image = args.init_image
@@ -1543,8 +1551,9 @@ class DiscoDiffusion(BaseModel):
             torch.cuda.manual_seed_all(seed)
             torch.backends.cudnn.deterministic = True
 
-        for sample_num in range(args.start_sample, args.n_samples):
-            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
+        for sample_num in range(args.start_sample, args.num_samples):
+            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, 
+            # allow a full frame to complete
             if args.stop_on_next_loop:
                 break
 
@@ -1930,7 +1939,9 @@ class DiscoDiffusion(BaseModel):
             args.seed = int(args.set_seed)
         log.info(f"Using seed: {args.seed}")
 
-        args.n_samples = args.n_samples if args.animation_mode == AnimMode.NONE else 1
+        args.num_samples = (
+            args.num_samples if args.animation_mode == AnimMode.NONE else 1
+        )
         args.max_frames = args.max_frames if args.animation_mode != AnimMode.NONE else 1
 
         if args.animation_mode == AnimMode.VIDEO_INPUT:

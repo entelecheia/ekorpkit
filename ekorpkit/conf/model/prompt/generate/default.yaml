@@ -1,0 +1,12 @@
+prompt:
+check_start_token: true
+num_prompts_to_generate: 10
+# Maximum and min length of the generated prompts. Will cut off mid word. This is expected behavior
+max_prompt_length: 50
+min_prompt_length: 30
+# temperature: Default: 1.2. Turning up will inject more chaos.
+temperature: 1.2
+# top_k: Default 70. The number of top tokens returned by the AI. Will be randomly selected for generation.
+top_k: 70
+# top_p: Default 0.9. The total percent to consider from the `top_k` returned tokens. For more information refer to [this guide!]( https://docs.cohere.ai/token-picking/)
+top_p: 0.9

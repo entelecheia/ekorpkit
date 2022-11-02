@@ -1,38 +1,42 @@
 import os
 import logging
 from ekorpkit import eKonf
+from ekorpkit.batch import BatchConfig
 
 
 log = logging.getLogger(__name__)
 
 
-class BaseModel:
-    def __init__(self, **args):
-        args = eKonf.to_config(args)
-        self.args = args
-        self.name = args.name
-        self._version = args.get("version", "0.0.0")
-        self.verbose = args.get("verbose", True)
-        self.auto = args.auto
-        self._path = self.args.path
-        self._output = self.args.output
-        self._module = self.args.module
-        self._config = self.args.config
-        self.model_config = self.args.model
+class BaseModel(BatchConfig):
+    def __init__(self, root_dir=None, **args):
+        super().__init__(root_dir=root_dir, **args)
+        super().__init__(**args)
 
         self.sample_imagepaths = []
 
     @property
+    def autoload(self):
+        return self.config.get("autoload", False)
+
+    @property
+    def num_devices(self):
+        return self.config.get("num_devices")
+
+    @num_devices.setter
+    def num_devices(self, num_devices):
+        self.config.num_devices = num_devices
+
+    @property
     def version(self):
-        return self._version
+        return self.config.get("version", "0.0.0")
 
     @property
-    def path(self):
-        return self._path
+    def model_config(self):
+        return self.config.model
 
     @property
-    def config(self):
-        return self._config
+    def module_config(self):
+        return self.config.module
 
     def load(self):
         log.info("> downloading models...")
@@ -51,11 +55,11 @@ class BaseModel:
 
     def load_modules(self):
         """Load the modules"""
-        if self._module.get("modules") is None:
+        if self.module_config.get("modules") is None:
             log.info("No modules to load")
             return
-        library_dir = self._module.library_dir
-        for module in self._module.modules:
+        library_dir = self.path.library_dir
+        for module in self.module_config.modules:
             name = module.name
             libname = module.libname
             liburi = module.liburi
@@ -73,42 +77,6 @@ class BaseModel:
         # for name, model in download.models.items():
         #     if not isinstance(model, str):
         #         log.info(f"Downloading model {name} from {model}")
-
-    def save_settings(self, args):
-        """Save the settings"""
-        _filename = f"{args.batch_name}({args.batch_num})_settings.yaml"
-        _path = os.path.join(self._output.batch_dir, _filename)
-        log.info(f"Saving config to {_path}")
-        eKonf.save(args, _path)
-        return _filename
-
-    def load_config(self, batch_name=None, batch_num=None, **args):
-        """Load the settings"""
-        _config = self._config
-        if batch_name is None:
-            batch_name = _config.batch_name
-        else:
-            _config.batch_name = batch_name
-        self._prepare_folders(batch_name)
-        if batch_num is not None:
-            _path = os.path.join(
-                self._output.batch_dir, f"{batch_name}({batch_num})_settings.yaml"
-            )
-            if os.path.exists(_path):
-                log.info(f"Loading config from {_path}")
-                batch_args = eKonf.load(_path)
-                log.info("Merging config with diffuse defaults")
-                _config = eKonf.merge(_config, batch_args)
-                # return _config
-
-        log.info(f"Merging config with args: {args}")
-        args = eKonf.merge(_config, args)
-
-        return args
-
-    def show_config(self, batch_name=None, batch_num=None):
-        args = self.load_config(batch_name, batch_num)
-        eKonf.print(args)
 
     def get_text_prompt(self, prompts):
         prompts = eKonf.to_dict(prompts)
@@ -141,22 +109,22 @@ class BaseModel:
         resize_ratio=1.0,
         **kwargs,
     ):
-        args = self.load_config(batch_name, batch_num, **kwargs)
-        batch_name = batch_name or args.batch_name
-        if batch_num is None:
-            batch_num = args.batch_num
+        self.load_config(batch_name, batch_num, **kwargs)
+        batch_name = self.batch_name
+        batch_num = self.batch_num
+        cfg = self.config.imagine
 
         filename_patterns = filename_patterns or f"{batch_name}({batch_num})_*.png"
-        num_images = num_images or args.get("n_samples")
+        num_images = num_images or cfg.get("num_samples") or cfg.get("n_samples")
         prompt = None
         if show_prompt:
-            prompt = self.get_text_prompt(args.text_prompts)
+            prompt = self.get_text_prompt(cfg.text_prompts)
             log.info(f"Prompt: {prompt}")
 
         eKonf.collage(
             image_filepaths=image_filepaths,
             filename_patterns=filename_patterns,
-            base_dir=self._output.batch_dir,
+            base_dir=self.batch_dir,
             num_images=num_images,
             ncols=ncols,
             title=prompt,
@@ -169,9 +137,3 @@ class BaseModel:
             resize_ratio=resize_ratio,
             **kwargs,
         )
-
-    def _prepare_folders(self, batch_name):
-        self._output.batch_dir = os.path.join(self._output.root, batch_name)
-        for _name, _path in self._output.items():
-            if _name.endswith("_dir") and not os.path.exists(_path):
-                os.makedirs(_path)

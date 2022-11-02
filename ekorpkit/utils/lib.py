@@ -120,7 +120,7 @@ def ensure_import_module(name, libpath, liburi, specname=None, syspath=None):
         else:
             importlib.import_module(name)
         log.info(f"{name} imported")
-    except:
+    except ImportError:
         if not os.path.exists(libpath):
             log.info(f"{libpath} not found, cloning from {liburi}")
             gitclone(liburi, libpath)

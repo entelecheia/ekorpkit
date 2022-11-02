@@ -54,6 +54,7 @@ def get_filepaths(
     if isinstance(filename_patterns, str):
         filename_patterns = [filename_patterns]
     filepaths = []
+    base_dir = str(base_dir) if base_dir else None
     for file in filename_patterns:
         filepath = os.path.join(base_dir, file) if base_dir else file
         if os.path.exists(filepath):

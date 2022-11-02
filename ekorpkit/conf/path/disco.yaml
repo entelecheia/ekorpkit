@@ -1,3 +1,6 @@
+defaults:
+  - output: disco
+
 name: disco-imagen
 root: ${join_path:${dir.project},${.name}}
 verbose: ${oc.select:..verbose,false}

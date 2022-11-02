@@ -3,31 +3,17 @@ from pydantic import (
     BaseModel,
     BaseSettings,
     SecretStr,
-    Field,
-    PositiveInt,
-    conint,
-    constr,
-    schema,
-    validator,
-    create_model,
 )
-from pydantic.dataclasses import dataclass
 from pydantic.env_settings import SettingsSourceCallable
 from pydantic.utils import ROOT_KEY
 from typing import (
-    AbstractSet,
     Any,
-    Callable,
-    Dict,
-    List,
-    Mapping,
     Optional,
     Tuple,
-    Union,
 )
 
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class DynamicBaseModel(BaseModel):
@@ -61,6 +47,7 @@ class LabelStudioSecrets(BaseSettings):
                 init_settings,
                 file_secret_settings,
             )
+
 
 class Secrets(BaseSettings):
     api_key: Optional[str] = SecretStr

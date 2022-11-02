@@ -1,0 +1,10 @@
+name: disco-imagen
+root: ${join_path:${oc.select:dir.project,${oc.env:EKORPKIT_PROJECT_DIR,./}},${.name}}
+batch_name: demo
+library_dir: ${mkdir:${join_path:${.root},libs}}
+cache_dir: ${mkdir:${join_path:${.root},cache}}
+model_dir: ${mkdir:${join_path:${.root},models}}
+output_dir: ${mkdir:${join_path:${.root},outputs/batch}}
+batch_dir: ${mkdir:${.output_dir}/${.batch_name}}
+tmp_dir: ${mkdir:${join_path:${.root},tmp}}
+verbose: ${oc.select:..verbose,false}

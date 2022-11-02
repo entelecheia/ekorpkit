@@ -6,31 +6,43 @@ import datetime
 import chardet
 from contextlib import contextmanager
 from timeit import default_timer
+from functools import partial
 
 
 def unescape_dict(d):
     return ast.literal_eval(repr(d).encode("utf-8").decode("unicode-escape"))
 
 
+def _elapser_timer(start):
+    return default_timer() - start
+
+
+def _elapser(start, end):
+    return end - start
+
+
 @contextmanager
 def elapsed_timer(format_time=False):
     start = default_timer()
-    elapser = lambda: default_timer() - start
+    # elapser = lambda: default_timer() - start
+    elapser = partial(_elapser_timer, start)
     yield lambda: str(
         datetime.timedelta(seconds=elapser())
     ) if format_time else elapser()
     end = default_timer()
-    elapser = lambda: end - start
+    # elapser = lambda: end - start
+    elapser = partial(_elapser, start, end)
 
 
 def lower_case_with_underscores(s):
     return re.sub(r"\s+", "_", s.lower()).replace("-", "_")
 
 
-ordinal = lambda n: "%d%s" % (
-    n,
-    "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4],
-)
+def ordinal(n):
+    return "%d%s" % (
+        n,
+        "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4],
+    )
 
 
 def get_offset_ranges(count, num_workers):

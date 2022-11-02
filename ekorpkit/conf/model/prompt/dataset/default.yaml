@@ -1,0 +1,4 @@
+path: Gustavosta/Stable-Diffusion-Prompts
+download_mode: 
+prompt_column: Prompt
+split: train

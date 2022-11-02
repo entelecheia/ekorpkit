@@ -1,4 +1,5 @@
 defaults:
   - disco_imagen
+  - output: stable_diffusion
 
 name: stable-diffusions

@@ -1,11 +1,8 @@
-import os
 import logging
-import random
 import numpy as np
 import jax
 import jax.numpy as jnp
 from functools import partial
-from glob import glob
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from transformers import CLIPProcessor, FlaxCLIPModel
@@ -20,10 +17,11 @@ log = logging.getLogger(__name__)
 
 
 class DalleMini(BaseModel):
-    def __init__(self, **args):
-        super().__init__(**args)
+    def __init__(self, root_dir=None, config_name="default", **args):
+        cfg = eKonf.compose(f"model/dalle_mini={config_name}")
+        cfg = eKonf.merge(cfg, args)
+        super().__init__(root_dir=root_dir, **cfg)
 
-        self._num_devices = self.args.num_devices
         self.model = None
         self.model_params = None
         self.processor = None
@@ -34,44 +32,55 @@ class DalleMini(BaseModel):
         self.clip_processor = None
         self.devices = None
 
-        if self.auto.load:
+        if self.autoload:
             self.load()
 
-    def imagine(self, text_prompts=None, **args):
+    def imagine(
+        self,
+        text_prompts=None,
+        batch_name=None,
+        batch_num=None,
+        show_collage=None,
+        **args,
+    ):
 
         """Diffuse the model"""
 
         log.info("> loading settings...")
-        args = self.load_config(**args)
+        config = self.load_config(
+            batch_name=batch_name,
+            batch_num=batch_num,
+            show_collage=show_collage,
+            imagine=args,
+        )
 
-        text_prompts = text_prompts or eKonf.to_dict(args.text_prompts)
+        cfg = config.imagine
+        text_prompts = text_prompts or eKonf.to_dict(cfg.text_prompts)
         if isinstance(text_prompts, str):
             text_prompts = [text_prompts]
-        args.text_prompts = text_prompts
+        cfg.text_prompts = text_prompts
 
         self.sample_imagepaths = []
 
-        tokenized_prompts = self.processor(args.text_prompts)
-        print(f"Prompts: {args.text_prompts}\n")
+        tokenized_prompts = self.processor(cfg.text_prompts)
+        print(f"Prompts: {cfg.text_prompts}\n")
 
-        _batch_dir = self._output.batch_dir
-        # _num_devices = min(self._num_devices, args.n_samples)
-        _num_devices = self._num_devices
-        _devices = self.devices[:_num_devices]
-        log.info(f"Using {_num_devices} devices")
-        log.info(f"Devices: {_devices}")
-        args.num_samples = max(args.n_samples // _num_devices, 1) * _num_devices
-        self._config = args
-        self.save_settings(args)
+        batch_dir = self.batch_dir
+        num_devices = self.num_devices
+        # _num_devices = min(_num_devices, args.num_samples)
+        devices = self.devices[:num_devices]
+        log.info(f"Using {num_devices} devices")
+        log.info(f"Devices: {devices}")
+        cfg.num_samples = max(cfg.num_samples // num_devices, 1) * num_devices
 
         # Keys are passed to the model on each device to generate unique inference per device.
         # create a random key
-        log.info(f"Seed used: {args.seed}")
-        key = jax.random.PRNGKey(args.seed)
+        log.info(f"Seed used: {self.seed}")
+        key = jax.random.PRNGKey(self.seed)
         # Model parameters are replicated on each device for faster inference.
-        _model_params = replicate(self.model_params, devices=_devices)
-        _vqgan_params = replicate(self.vqgan_params, devices=_devices)
-        _tokenized_prompts = replicate(tokenized_prompts, devices=_devices)
+        model_params = replicate(self.model_params, devices=devices)
+        vqgan_params = replicate(self.vqgan_params, devices=devices)
+        tokenized_prompts = replicate(tokenized_prompts, devices=devices)
 
         # Model functions are compiled and parallelized to take advantage of multiple devices.
         # model inference
@@ -79,7 +88,7 @@ class DalleMini(BaseModel):
             jax.pmap,
             axis_name="batch",
             static_broadcasted_argnums=(3, 4, 5, 6),
-            devices=_devices,
+            devices=devices,
         )
         def p_generate(
             tokenized_prompt, key, params, top_k, top_p, temperature, condition_scale
@@ -95,7 +104,7 @@ class DalleMini(BaseModel):
             )
 
         # decode image
-        @partial(jax.pmap, axis_name="batch", devices=_devices)
+        @partial(jax.pmap, axis_name="batch", devices=devices)
         def p_decode(indices, params):
             return self.vqgan.decode_code(indices, params=params)
 
@@ -104,24 +113,24 @@ class DalleMini(BaseModel):
             # generate images
             # sample_images = []
             sample_num = 0
-            for i in trange(max(args.n_samples // _num_devices, 1)):
+            for i in trange(max(cfg.num_samples // num_devices, 1)):
                 eKonf.clear_output(wait=True)
                 # get a new key
                 key, subkey = jax.random.split(key)
                 # generate images
                 encoded_images = p_generate(
-                    _tokenized_prompts,
+                    tokenized_prompts,
                     shard_prng_key(subkey),
-                    _model_params,
-                    args.gen_top_k,
-                    args.gen_top_p,
-                    args.temperature,
-                    args.cond_scale,
+                    model_params,
+                    cfg.gen_top_k,
+                    cfg.gen_top_p,
+                    cfg.temperature,
+                    cfg.cond_scale,
                 )
                 # remove BOS
                 encoded_images = encoded_images.sequences[..., 1:]
                 # decode images
-                decoded_images = p_decode(encoded_images, _vqgan_params)
+                decoded_images = p_decode(encoded_images, vqgan_params)
                 decoded_images = decoded_images.clip(0.0, 1.0).reshape(
                     (-1, 256, 256, 3)
                 )
@@ -130,24 +139,31 @@ class DalleMini(BaseModel):
                     eKonf.display(img)
                     # sample_images.append(img)
                     filename = (
-                        f"{args.batch_name}({args.batch_num})_{sample_num:04}.png"
+                        f"{self.batch_name}({self.batch_num})_{sample_num:04}.png"
                     )
-                    _img_path = os.path.join(_batch_dir, filename)
-                    img.save(_img_path)
-                    self.sample_imagepaths.append(_img_path)
+                    img_path = str(batch_dir / filename)
+                    img.save(img_path)
+                    self.sample_imagepaths.append(img_path)
                     log.info(f"Saved {filename}")
                     sample_num += 1
 
             eKonf.clear_output(wait=True)
+            cfg.num_samples = sample_num
             log.info(" >> elapsed time to diffuse: {}".format(elapsed()))
-            print(f"{args.n_samples} samples generated to {_batch_dir}")
+            print(f"{cfg.num_samples} samples generated to {batch_dir}")
             print(f"text prompts: {text_prompts}")
-            print("sample image paths:")
-            for p in self.sample_imagepaths:
-                print(p)
 
-            if args.show_collage:
+            if config.show_collage:
                 self.collage(image_filepaths=self.sample_imagepaths)
+
+        config.imagine = cfg
+        self.config = config
+        results = {
+            "image_filepaths": self.sample_imagepaths,
+            "config_file": self.save_config(),
+            "config": eKonf.to_dict(config),
+        }
+        return results
 
     def load_models(self):
         from dalle_mini import DalleBart, DalleBartProcessor
@@ -155,12 +171,12 @@ class DalleMini(BaseModel):
 
         # check how many devices are available
         log.info(f"Available devices: {jax.local_device_count()}")
-        if self._num_devices:
-            self._num_devices = min(self._num_devices, jax.local_device_count())
+        if self.num_devices:
+            self.num_devices = min(self.num_devices, jax.local_device_count())
         else:
-            self._num_devices = jax.local_device_count()
+            self.num_devices = jax.local_device_count()
         self.devices = jax.local_devices()
-        log.info(f"Using {self._num_devices} devices")
+        log.info(f"Using {self.num_devices} devices")
         log.info(f"Devices: {self.devices}")
 
         # Load dalle-mini
@@ -201,7 +217,7 @@ class DalleMini(BaseModel):
         if self.clip is None:
             self.load_clip_models()
 
-        _num_devices = self._num_devices
+        _num_devices = self.num_devices
         _devices = self.devices[:_num_devices]
         log.info(f"Using {_num_devices} devices")
         log.info(f"Devices: {_devices}")
@@ -237,29 +253,3 @@ class DalleMini(BaseModel):
                 eKonf.display(images[idx * p + i])
                 print(f"Score: {jnp.asarray(logits[i][idx], dtype=jnp.float32):.2f}\n")
             print()
-
-    def load_config(self, batch_name=None, batch_num=None, **args):
-        """Load the settings"""
-        args = super().load_config(batch_name=batch_name, batch_num=batch_num, **args)
-
-        if args.set_seed == "random_seed":
-            random.seed()
-            args.seed = random.randint(0, 2 ** 32 - 1)
-        else:
-            args.seed = int(args.set_seed)
-
-        batch_arg_file = os.path.join(
-            self._output.batch_dir, f"{args.batch_name}(*)_settings.yaml"
-        )
-        if args.resume_run:
-            if args.run_to_resume == "latest":
-                try:
-                    args.batch_num
-                except:
-                    args.batch_num = len(glob(batch_arg_file)) - 1
-            else:
-                args.batch_num = int(args.run_to_resume)
-        else:
-            args.batch_num = len(glob(batch_arg_file))
-
-        return args

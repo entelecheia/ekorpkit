@@ -16,6 +16,6 @@ num_devices:
 use_cpu: false
 hf_user_access_token: 
 
-output:
-  root: ${..path.output_dir}/${..name}
-  batch_dir: ${.root}/${..config.batch_name}
+# output:
+#   root: ${..path.output_dir}/${..name}
+#   batch_dir: ${.root}/${..config.batch_name}

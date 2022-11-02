@@ -1,0 +1,4 @@
+shuffle_prompts: true
+num_shuffles: 4
+batch_size: 10000
+padding: max_length

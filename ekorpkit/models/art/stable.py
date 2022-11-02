@@ -11,17 +11,9 @@ from PIL import Image, ImageDraw
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.models.disco.utils import split_prompts
-
+from .settings import DiffuseMode, ImageFormat, Prompt, RunSettings, SchedulerType
 
 log = logging.getLogger(__name__)
-
-
-class DiffuseMode(str, Enum):
-    """Diffuse mode"""
-
-    GENERATE = "generate"
-    INPAINT = "inpaint"
-    STITCH = "Stitch"
 
 
 class StableDiffusion(BaseModel):
@@ -91,7 +83,7 @@ class StableDiffusion(BaseModel):
         results.update(
             {
                 "image_filepaths": sample_imagepaths,
-                "config_file": self.save_settings(args),
+                "config_file": self.save_config(args),
                 "config": eKonf.to_dict(args),
             }
         )
@@ -127,7 +119,7 @@ class StableDiffusion(BaseModel):
         prompt,
         width=512,
         height=512,
-        guidance_scale=0.75,
+        guidance_scale=7.5,
         num_images_per_prompt=1,
         num_inference_steps=50,
         **kwargs,
@@ -141,7 +133,7 @@ class StableDiffusion(BaseModel):
             prompt=prompt,
             width=width,
             height=height,
-            # guidance_scale=guidance_scale,
+            guidance_scale=guidance_scale,
             num_images_per_prompt=num_images_per_prompt,
             num_inference_steps=num_inference_steps,
             generator=self._generator,
