@@ -1,5 +1,6 @@
 defaults:
   - /path: prompt
+  - batch: default
   - dataset: default
   - model: default
   - tokenizer: default
@@ -9,10 +10,7 @@ defaults:
 
 _target_: ekorpkit.models.art.prompt.PromptGenerator
 name: prompt-generator
-batch_name: prompt-batch
-batch_num: 
 device: "cuda:7"
-seed:
 verbose: ${oc.select:..verbose, false}
 wandb_project: ${project.name}-${.name}
 generated_prompts:

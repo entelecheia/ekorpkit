@@ -1,5 +1,6 @@
 defaults:
-  - disco_imagen
-  - output: stable_diffusion
+  - _batch_
+  - batch: stable_diffusion
 
-name: stable-diffusions
+name: disco-imagen
+output_dir: ${mkdir:${join_path:${.root},outputs/stable-diffusion}}

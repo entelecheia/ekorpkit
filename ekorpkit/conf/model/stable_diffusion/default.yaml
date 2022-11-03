@@ -1,21 +1,14 @@
 defaults:
   - /module: stable_diffusion
   - /path: stable_diffusion
+  - batch: default
   - model: default
-  - config: default
-  - /auto: load
+  - imagine: default
+  - collage: default
 
 _target_: ekorpkit.models.art.stable.StableDiffusion
+autoload: true
 name: stable-diffusion
-auto:
-  load: true
 verbose: ${oc.select:..verbose, false}
-device: cuda
-cuda_device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
-num_devices:
-use_cpu: false
+device: "cuda:7"
 hf_user_access_token: 
-
-# output:
-#   root: ${..path.output_dir}/${..name}
-#   batch_dir: ${.root}/${..config.batch_name}

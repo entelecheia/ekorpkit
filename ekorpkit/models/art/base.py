@@ -1,13 +1,14 @@
 import os
 import logging
+from pathlib import Path
 from ekorpkit import eKonf
-from ekorpkit.batch import BatchConfig
+from ekorpkit.batch import BaseConfig
 
 
 log = logging.getLogger(__name__)
 
 
-class BaseModel(BatchConfig):
+class BaseModel(BaseConfig):
     def __init__(self, root_dir=None, **args):
         super().__init__(root_dir=root_dir, **args)
         super().__init__(**args)
@@ -17,6 +18,10 @@ class BaseModel(BatchConfig):
     @property
     def autoload(self):
         return self.config.get("autoload", False)
+
+    @property
+    def device(self):
+        return self.config.get("device", "cpu")
 
     @property
     def num_devices(self):
@@ -91,6 +96,24 @@ class BaseModel(BatchConfig):
                 prompts = prompts.values()[0]
             return self.get_text_prompt(prompts)
 
+    def get_image_path(
+        self,
+        sample_suffix,
+        batch_name: str = None,
+        batch_num: int = None,
+        batch_dir: str = None,
+        image_ext: str = "png",
+    ) -> str:
+        batch_dir = batch_dir or self.batch_dir
+        batch_name = batch_name or self.batch_name
+        batch_num = batch_num or self.batch_num
+        if isinstance(sample_suffix, int):
+            sample_suffix = f"{sample_suffix:04d}"
+        else:
+            sample_suffix = str(sample_suffix)
+        filename = f"{batch_name}({batch_num})_{sample_suffix}.{image_ext}"
+        return str(Path(batch_dir) / filename)
+
     def collage(
         self,
         image_filepaths=None,
@@ -115,7 +138,7 @@ class BaseModel(BatchConfig):
         cfg = self.config.imagine
 
         filename_patterns = filename_patterns or f"{batch_name}({batch_num})_*.png"
-        num_images = num_images or cfg.get("num_samples") or cfg.get("n_samples")
+        # num_images = num_images or cfg.get("num_samples") or cfg.get("n_samples")
         prompt = None
         if show_prompt:
             prompt = self.get_text_prompt(cfg.text_prompts)

@@ -40,7 +40,7 @@ class DalleMini(BaseModel):
         text_prompts=None,
         batch_name=None,
         batch_num=None,
-        show_collage=None,
+        show_collage=False,
         **args,
     ):
 
@@ -50,7 +50,6 @@ class DalleMini(BaseModel):
         config = self.load_config(
             batch_name=batch_name,
             batch_num=batch_num,
-            show_collage=show_collage,
             imagine=args,
         )
 
@@ -153,7 +152,7 @@ class DalleMini(BaseModel):
             print(f"{cfg.num_samples} samples generated to {batch_dir}")
             print(f"text prompts: {text_prompts}")
 
-            if config.show_collage:
+            if show_collage:
                 self.collage(image_filepaths=self.sample_imagepaths)
 
         config.imagine = cfg

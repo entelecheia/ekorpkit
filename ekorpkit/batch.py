@@ -8,15 +8,19 @@ from ekorpkit import eKonf
 log = logging.getLogger(__name__)
 
 
-class BatchConfig:
+class BaseConfig:
     _config_file_ = "config.yaml"
+    _config_dir_ = "config"
     _batch_name_ = "demo"
     _batch_num_ = None
     _config_ = None
     _path_ = None
 
-    def __init__(self, root_dir=None, config_file="config.yaml", **args):
+    def __init__(
+        self, root_dir=None, config_file="config.yaml", config_dir="config", **args
+    ):
         self._config_file_ = config_file
+        self._config_dir_ = config_dir
         self.config = args
         self.verbose = args.get("verbose", False)
         self._init_path(root_dir=root_dir, **args)
@@ -51,25 +55,28 @@ class BatchConfig:
         return self._config_file_
 
     @property
+    def config_dir(self):
+        return self._config_dir_
+
+    @property
     def set_seed(self):
-        return self.config.get("set_seed") or "random_seed"
+        return self.config.batch.get("set_seed") or "random_seed"
 
     @property
     def seed(self):
-        return self.config.get("seed")
+        return self.config.batch.get("seed")
 
     @seed.setter
     def seed(self, value):
-        self.update("seed", value)
-        self.config.seed = value
+        self.config.batch.seed = value
 
     @property
     def resume_run(self):
-        return self.config.get("resume_run") or False
+        return self.config.batch.get("resume_run") or False
 
     @property
     def run_to_resume(self):
-        return self.config.get("run_to_resume") or "latest"
+        return self.config.batch.get("run_to_resume") or "latest"
 
     @property
     def root_dir(self):
@@ -80,28 +87,42 @@ class BatchConfig:
         return Path(self.path.batch_dir)
 
     @property
+    def batch_config_dir(self):
+        _dir = self.batch_dir / self.config_dir
+        _dir.mkdir(exist_ok=True, parents=True)
+        return _dir
+
+    @property
     def batch_name(self):
-        return self.config.batch_name
+        return self.config.batch.batch_name
 
     @batch_name.setter
     def batch_name(self, value):
-        self.config.batch_name = value
+        self.config.batch.batch_name = value
 
     @property
     def batch_num(self):
-        return self.config.batch_num
+        return self.config.batch.batch_num
 
     @batch_num.setter
     def batch_num(self, value):
-        self.config.batch_num = value
+        self.config.batch.batch_num = value
+
+    @property
+    def batch_file_prefix(self):
+        return f"{self.batch_name}({self.batch_num})"
 
     @property
     def batch_config_file(self):
-        return f"{self.batch_name}({self.batch_num})_{self.config_file}"
+        return f"{self.batch_file_prefix}_{self.config_file}"
+
+    @property
+    def batch_config_pattern(self):
+        return f"{self.batch_name}(*)_{self.config_file}"
 
     @property
     def batch_config_filepath(self):
-        return self.batch_dir / self.batch_config_file
+        return self.batch_config_dir / self.batch_config_file
 
     def _init_path(self, path=None, batch_name=None, root_dir=None, **kwargs):
         if path is None and self.path is not None:
@@ -111,7 +132,7 @@ class BatchConfig:
             path = self.config.get("path")
             log.info(f"Using config path: {path.root}")
         if path is None:
-            path = eKonf.compose("path")
+            path = eKonf.compose("path=_batch_")
             log.info(f"There is no path in the config, using default path: {path.root}")
         if batch_name is None:
             batch_name = self.batch_name
@@ -143,8 +164,7 @@ class BatchConfig:
         if batch_num is not None:
             self.batch_num = batch_num
         else:
-            batch_config_files = f"{self.batch_name}(*)_{self.config_file}"
-            num_files = len(list(self.batch_dir.glob(batch_config_files)))
+            num_files = len(list(self.batch_config_dir.glob(self.batch_config_pattern)))
             if self.resume_run:
                 if (
                     isinstance(self.run_to_resume, str)
@@ -157,8 +177,10 @@ class BatchConfig:
                 self.batch_num = num_files
         log.info(f"Batch name: {self.batch_name}, Batch num: {self.batch_num}")
 
-    def save_config(self, exclude=["path", "module"], selected=None):
+    def save_config(self, config=None, exclude=["path", "module"], selected=None):
         """Save the batch config"""
+        if config is not None:
+            self.config = config
         log.info(f"Saving config to {self.batch_config_filepath}")
         cfg = eKonf.to_dict(self.config)
         if selected:
@@ -202,13 +224,12 @@ class BatchConfig:
                 cfg = eKonf.merge(cfg, batch_cfg)
 
         log.info(f"Merging config with args: {args}")
-        args = eKonf.merge(cfg, args)
-        self.config = cfg
+        self.config = eKonf.merge(cfg, args)
 
         seed = self.seed
         if isinstance(self.set_seed, str) and self.set_seed.lower() == "random_seed":
             random.seed()
-            seed = random.randint(0, 2 ** 32 - 1)
+            seed = random.randint(0, 2**32 - 1)
         else:
             seed = int(self.set_seed)
         self.seed = seed

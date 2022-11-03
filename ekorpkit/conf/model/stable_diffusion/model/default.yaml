@@ -1,21 +1,10 @@
-# Model references
-archive_dir: ${..path.archive_dir}
-model_dir: ${..path.model_dir}
-
 generate:
   pretrained_model_name_or_path: CompVis/stable-diffusion-v1-4
   revision: fp16 
   use_auth_token: true
   device: cuda:6
-  cache_dir: ${..model_dir}
-
 inpaint:
   pretrained_model_name_or_path: runwayml/stable-diffusion-inpainting
   revision: fp16 
   use_auth_token: true
   device: cuda:5
-  cache_dir: ${..model_dir}
-
-generator:
-  device: cuda
-  seed: 0

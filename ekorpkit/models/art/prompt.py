@@ -13,7 +13,7 @@ from transformers import (
 from ekorpkit import eKonf
 from tqdm.auto import tqdm
 from functools import partialmethod
-from ekorpkit.batch import BatchConfig
+from ekorpkit.batch import BaseConfig
 
 
 def disable_tqdm():
@@ -25,7 +25,7 @@ def disable_tqdm():
 log = logging.getLogger(__name__)
 
 
-class PromptGenerator(BatchConfig):
+class PromptGenerator(BaseConfig):
     start_token = "<BOP>"
     pad_token = "<PAD>"
     end_token = "<EOP>"

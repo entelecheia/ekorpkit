@@ -1,0 +1,8 @@
+retain_dir: retained
+partial_dir: partials
+video_frames_dir: video_frames
+flo_dir: video_frames/out_flo_fwd
+temp_flo_dir: video_frames/temp_flo
+flo_fwd_dir: video_frames/out_flo_fwd
+flo_out_dir: flow
+blend_out_dir: blend

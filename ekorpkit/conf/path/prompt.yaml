@@ -1,5 +1,5 @@
 defaults:
-  - _batch
+  - _batch_
   - batch: prompt
 
 name: disco-imagen

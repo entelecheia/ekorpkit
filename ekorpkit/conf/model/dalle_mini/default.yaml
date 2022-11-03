@@ -1,19 +1,13 @@
 defaults:
   - /module: dalle_mini
   - /path: dalle_mini
+  - batch: default
   - model: default
   - imagine: default
 
 _target_: ekorpkit.models.art.mini.DalleMini
 autoload: true
 name: dalle-mini
-batch_name: mini-batch
-batch_num:
-set_seed: random_seed
-seed:
-resume_run: false
-run_to_resume: latest
-show_collage: true
 verbose: ${oc.select:..verbose, false}
 device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
 num_devices:

@@ -1,5 +1,5 @@
 defaults:
-  - _batch
+  - _batch_
   - batch: dalle_mini
 
 name: disco-imagen
