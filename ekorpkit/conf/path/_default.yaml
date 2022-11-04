@@ -9,8 +9,6 @@ data_file: ${oc.select:..data_file, null}
 concat_data: ${oc.select:..concat_data, false}
 data_columns: ${oc.select:..data_columns, null}
 columns: ${.data_columns}
-output_dir: ${mkdir:${oc.select:..output_dir, ${.root}/outputs}}
+output_dir: ${oc.select:..output_dir, ${.root}/outputs}
 output_file: ${oc.select:..output_file, null}
 suffix: ${oc.select:..suffix, null}
-batch_name: demo
-batch_dir: ${mkdir:${.output_dir}/${.batch_name}}

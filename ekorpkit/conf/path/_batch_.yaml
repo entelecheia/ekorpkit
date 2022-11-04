@@ -6,6 +6,6 @@ cache_dir: ${mkdir:${join_path:${.root},cache}}
 model_dir: ${mkdir:${join_path:${.root},models}}
 output_dir: ${mkdir:${join_path:${.root},outputs/batch}}
 batch_dir: ${mkdir:${.output_dir}/${.batch_name}}
-batch_configs_dir: ${mkdir:${.output_dir}/batch_configs}
+batch_pair_dir: ${mkdir:${.output_dir}/batch_pairs}
 tmp_dir: ${mkdir:${join_path:${.root},tmp}}
 verbose: ${oc.select:..verbose,false}

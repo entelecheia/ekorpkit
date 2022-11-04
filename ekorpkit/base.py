@@ -1023,4 +1023,7 @@ def _set_workspace(
     if isinstance(project, str):
         _env_set("EKORPKIT_PROJECT", project)
         logger.info(f"Setting EKORPKIT_PROJECT to {project}")
-    return _osenv("EKORPKIT_WORKSPACE_ROOT"), _osenv("EKORPKIT_PROJECT")
+    if workspace is not None and project is not None:
+        project_dir = os.path.join(workspace, "projects", project)
+        _env_set("EKORPKIT_PROJECT_DIR", project_dir)
+    return _osenv("EKORPKIT_PROJECT_DIR")

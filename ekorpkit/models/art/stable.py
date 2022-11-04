@@ -5,11 +5,11 @@ from diffusers.schedulers.scheduling_ddim import DDIMScheduler
 from diffusers.schedulers.scheduling_lms_discrete import LMSDiscreteScheduler
 from diffusers.schedulers.scheduling_pndm import PNDMScheduler
 from tqdm.auto import tqdm
-from .base import BaseModel
 from PIL import Image, ImageDraw
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
-from .config import DiffuseMode, StableImagineConfig, StableRunConfig, SchedulerType
+from .base import BaseModel
+from .config import ImagineMode, StableImagineConfig, StableRunConfig, SchedulerType
 
 
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class StableDiffusion(BaseModel):
         text_prompts=None,
         batch_name=None,
         batch_num=None,
-        mode: DiffuseMode = None,
+        mode: ImagineMode = None,
         num_samples=None,
         resize_ratio=0.5,
         return_including_init_image=False,
@@ -57,6 +57,7 @@ class StableDiffusion(BaseModel):
             batch_num=batch_num,
             imagine=args,
         )
+        config_file = self.save_config(config)
         cfg = StableImagineConfig(**config.imagine)
         rc = StableRunConfig(
             batch_name=self.batch_name,
@@ -69,11 +70,11 @@ class StableDiffusion(BaseModel):
         results = {}
         sample_imagepaths = []
         with elapsed_timer(format_time=True) as elapsed:
-            if cfg.mode == DiffuseMode.GENERATE:
+            if cfg.mode == ImagineMode.GENERATE:
                 sample_imagepaths = self.generate_images(rc)
-            elif cfg.mode == DiffuseMode.INPAINT:
+            elif cfg.mode == ImagineMode.INPAINT:
                 sample_imagepaths = self.inpaint_images(rc, return_including_init_image)
-            elif cfg.mode == DiffuseMode.STITCH:
+            elif cfg.mode == ImagineMode.STITCH:
                 cfg.num_images_per_prompt = 1
                 sample_imagepaths = self.generate_images(rc)
                 stitched_image_path = self.stitch_images(sample_imagepaths, rc)
@@ -93,8 +94,7 @@ class StableDiffusion(BaseModel):
         results.update(
             {
                 "image_filepaths": sample_imagepaths,
-                "config_file": self.save_config(config),
-                "config": eKonf.to_dict(config),
+                "config_file": config_file,
             }
         )
         return results

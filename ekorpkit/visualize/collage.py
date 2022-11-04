@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from .base import _configure_font
-from PIL import ImageDraw, ImageFont
+from PIL import ImageDraw, ImageFont, Image
 from ekorpkit.io.file import get_filepaths
 from ekorpkit.utils.notebook import _load_image
 
@@ -156,3 +156,20 @@ def collage(
         ax.figure.savefig(output_filepath, dpi=dpi)
 
     return output_filepath
+
+
+def fig2img(fig):
+    """Convert a Matplotlib figure to a PIL Image and return it"""
+    img = Image.frombytes(
+        "RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb()
+    )
+    return img
+
+
+def scale_image(image, max_pixels):
+    """Scale image to have at most `max_pixels` pixels."""
+    w, h = image.size
+    scale = np.sqrt(max_pixels / (w * h))
+    if scale < 1.0:
+        image = image.resize((int(w * scale), int(h * scale)), resample=Image.LANCZOS)
+    return image

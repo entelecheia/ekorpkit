@@ -119,7 +119,10 @@ def parse_key_frames(string, prompt_parser=None):
     >>> parse_key_frames("10:(Apple: 1| Orange: 0), 20: (Apple: 0| Orange: 1| Peach: 1)")
     {10: 'Apple: 1| Orange: 0', 20: 'Apple: 0| Orange: 1| Peach: 1'}
 
-    >>> parse_key_frames("10:(Apple: 1| Orange: 0), 20: (Apple: 0| Orange: 1| Peach: 1)", prompt_parser=lambda x: x.lower()))
+    >>> parse_key_frames(
+            "10:(Apple: 1| Orange: 0), 20: (Apple: 0| Orange: 1| Peach: 1)",
+            prompt_parser=lambda x: x.lower())
+        )
     {10: 'apple: 1| orange: 0', 20: 'apple: 0| orange: 1| peach: 1'}
     """
     import re

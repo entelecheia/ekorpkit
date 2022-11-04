@@ -3,6 +3,7 @@ defaults:
   - /path: cache
   - /auto: load_merge
   - /force: _build
+  - /info: _build_corpus
 
 _target_: ekorpkit.datasets.corpus.Corpus
 name: ${oc.select:.builtin.name, null}

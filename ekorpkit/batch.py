@@ -10,14 +10,14 @@ log = logging.getLogger(__name__)
 
 class BaseConfig:
     _config_file_ = "config.yaml"
-    _config_dir_ = "config"
+    _config_dir_ = "configs"
     _batch_name_ = "demo"
     _batch_num_ = None
     _config_ = None
     _path_ = None
 
     def __init__(
-        self, root_dir=None, config_file="config.yaml", config_dir="config", **args
+        self, root_dir=None, config_file="config.yaml", config_dir="configs", **args
     ):
         self._config_file_ = config_file
         self._config_dir_ = config_dir
@@ -83,14 +83,20 @@ class BaseConfig:
         return Path(self.path.root)
 
     @property
+    def ouput_dir(self):
+        return Path(self.path.output_dir)
+
+    @property
     def batch_dir(self):
-        return Path(self.path.batch_dir)
+        batch_dir = self.ouput_dir / self.batch_name
+        batch_dir.mkdir(parents=True, exist_ok=True)
+        return batch_dir
 
     @property
     def batch_config_dir(self):
-        _dir = self.batch_dir / self.config_dir
-        _dir.mkdir(exist_ok=True, parents=True)
-        return _dir
+        batch_config_dir = self.batch_dir / self.config_dir
+        batch_config_dir.mkdir(parents=True, exist_ok=True)
+        return batch_config_dir
 
     @property
     def batch_name(self):
@@ -124,7 +130,7 @@ class BaseConfig:
     def batch_config_filepath(self):
         return self.batch_config_dir / self.batch_config_file
 
-    def _init_path(self, path=None, batch_name=None, root_dir=None, **kwargs):
+    def _init_path(self, path=None, root_dir=None, **kwargs):
         if path is None and self.path is not None:
             path = self.path
             log.info(f"Using existing path: {path.root}")
@@ -134,23 +140,20 @@ class BaseConfig:
         if path is None:
             path = eKonf.compose("path=_batch_")
             log.info(f"There is no path in the config, using default path: {path.root}")
-        if batch_name is None:
-            batch_name = self.batch_name
         if root_dir is not None:
             path.root = root_dir
-        path.batch_name = batch_name
-        path.root = Path(path.root)
-        for _name, _path in path.items():
-            if _name.endswith("_dir") or _name.endswith("_path"):
-                _path = Path(_path)
-                if _path.is_absolute():
-                    path[_name] = _path
-                else:
-                    path[_name] = path.root / _path
-            if _name.endswith("_dir") and not _path.is_dir():
-                _path.mkdir(parents=True, exist_ok=True)
+        # path.root = Path(path.root)
+        # for _name, _path in path.items():
+        #     if _name.endswith("_dir") or _name.endswith("_path"):
+        #         _path = Path(_path)
+        #         if _path.is_absolute():
+        #             path[_name] = _path
+        #         else:
+        #             path[_name] = path.root / _path
+        #     if _name.endswith("_dir") and not _path.is_dir():
+        #         _path.mkdir(parents=True, exist_ok=True)
+        # path.batch.base_dir = path.batch_dir
 
-        path.batch.base_dir = path.batch_dir
         if path.verbose:
             eKonf.print(path)
         self.path = path
@@ -212,7 +215,7 @@ class BaseConfig:
             self.batch_name = batch_name
 
         cfg = self.config
-        self._init_path(batch_name=batch_name)
+        self._init_path()
         self._init_batch(batch_name=batch_name, batch_num=batch_num)
 
         if batch_num is not None:

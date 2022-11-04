@@ -11,7 +11,7 @@ from pydantic import BaseModel, validator, PrivateAttr
 log = logging.getLogger(__name__)
 
 
-class DiffuseMode(str, Enum):
+class ImagineMode(str, Enum):
     """Diffuse mode"""
 
     GENERATE = "generate"
@@ -92,7 +92,7 @@ class ImagineConfig(BaseModel):
 
 
 class StableImagineConfig(ImagineConfig):
-    mode: DiffuseMode = DiffuseMode.GENERATE
+    mode: ImagineMode = ImagineMode.GENERATE
     scheduler: SchedulerType = SchedulerType.K_LMS
     NSFW_retry: int = 0
     mask_image: str = None
