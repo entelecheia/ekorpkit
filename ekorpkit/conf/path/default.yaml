@@ -1,6 +1,5 @@
 defaults:
   - _default
-  - batch: default
   - data: default
   - output: default
   - /cache: archive
