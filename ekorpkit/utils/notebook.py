@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-import io
+from ekorpkit.io.file import read
 
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ def _is_notebook():
     except NameError:
         return False
     shell_type = get_ipython().__class__.__name__
-    logger.info(f"shell type: {shell_type}")
+    # logger.info(f"shell type: {shell_type}")
     if shell_type == "ZMQInteractiveShell":
         return True  # Jupyter notebook or qtconsole
     elif shell_type == "Shell":
@@ -256,10 +256,10 @@ def _create_image(
     if filename is None:
         url = "https://github.com/entelecheia/ekorpkit-book/raw/main/assets/figs/placeholder.png"
         # img = urlopen(url).read()
-        img = _read(url)
+        img = read(url)
         format = "png"
     else:
-        img = _read(filename)
+        img = read(filename)
         format = format or filename.split(".")[-1]
     image = widgets.Image(
         value=img,
@@ -307,38 +307,3 @@ def _create_floatslider(
         **kwargs,
     )
     return slider
-
-
-def _read(uri, mode="rb", encoding=None, head=None, **kwargs):
-    uri = str(uri)
-    if uri.startswith("http"):
-        import requests
-
-        if mode == "r" and head is not None and isinstance(head, int):
-            r = requests.get(uri, stream=True)
-            r.raw.decode_content = True
-            return r.raw.read(head)
-        return requests.get(uri, **kwargs).content
-    # elif uri.startswith("s3://"):
-    #     import boto3
-
-    #     s3 = boto3.resource("s3")
-    #     bucket, key = uri.replace("s3://", "").split("/", 1)
-    #     obj = s3.Object(bucket, key)
-    #     return obj.get()["Body"].read()
-    else:
-        with open(uri, mode=mode, encoding=encoding) as f:
-            if mode == "r" and head is not None and isinstance(head, int):
-                return f.read(head)
-            return f.read()
-
-
-def _load_image(uri, mode="RGB", resize=None, crop=None, **kwargs):
-    from PIL import Image
-
-    img = Image.open(io.BytesIO(_read(uri, **kwargs))).convert(mode)
-    if resize is not None:
-        img = img.resize(resize)
-    if crop is not None:
-        img = img.crop(crop)
-    return img

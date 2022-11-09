@@ -4,7 +4,7 @@ import logging
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
 from typing import Iterator, Optional, Union
-from ekorpkit.visualize.base import _configure_font
+from ekorpkit.visualize.base import get_plot_font
 from .base import Model
 from ..trainers.branching import BranchingEntropyTrainer
 from ..utils.trie import Trie, entropy
@@ -99,7 +99,7 @@ class BranchingEntropy(Model):
 
     # plot entropies
     def plot_local_entropy(self, word, direction="forward", figsize=(12, 5)):
-        _configure_font()
+        get_plot_font()
 
         results = self.find_local_entropy(word, direction=direction)
         chars, entropies, diffs = zip(*results)

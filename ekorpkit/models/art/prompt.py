@@ -167,7 +167,7 @@ class PromptGenerator(BaseConfig):
             return None
         self.config.model.model_name = model_name
 
-        model_path = self.path.model_dir / model_name
+        model_path = self.model_dir / model_name
         log.info(f"Loading model from {model_path}")
         self.model = AutoModelForCausalLM.from_pretrained(model_path, **kwargs)
         self.model.to(self.config.device)

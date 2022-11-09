@@ -281,3 +281,27 @@ def save_data(
                 log.info(" >> elapsed time to save data: {}".format(elapsed()))
     else:
         raise ValueError(f"Unsupported data type: {type(data)}")
+
+
+def read(uri, mode="rb", encoding=None, head=None, **kwargs):
+    uri = str(uri)
+    if uri.startswith("http"):
+        import requests
+
+        if mode == "r" and head is not None and isinstance(head, int):
+            r = requests.get(uri, stream=True)
+            r.raw.decode_content = True
+            return r.raw.read(head)
+        return requests.get(uri, **kwargs).content
+    # elif uri.startswith("s3://"):
+    #     import boto3
+
+    #     s3 = boto3.resource("s3")
+    #     bucket, key = uri.replace("s3://", "").split("/", 1)
+    #     obj = s3.Object(bucket, key)
+    #     return obj.get()["Body"].read()
+    else:
+        with open(uri, mode=mode, encoding=encoding) as f:
+            if mode == "r" and head is not None and isinstance(head, int):
+                return f.read(head)
+            return f.read()

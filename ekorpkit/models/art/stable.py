@@ -9,7 +9,15 @@ from PIL import Image, ImageDraw
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
 from .base import BaseModel
-from .config import ImagineMode, StableImagineConfig, StableRunConfig, SchedulerType
+from .config import (
+    ImagineMode,
+    BatchConfig,
+    StableImagineConfig,
+    StableRunConfig,
+    SchedulerType,
+    CollageConfig,
+    ImagineResult,
+)
 
 
 log = logging.getLogger(__name__)
@@ -21,12 +29,24 @@ class StableDiffusion(BaseModel):
         cfg = eKonf.merge(cfg, args)
         super().__init__(root_dir=root_dir, **cfg)
 
-        self.pipe = None
+        self.pipes = {}
         self.inpaint_pipe = None
         self.generator = None
 
+        if not self.hf_user_access_token:
+            self.check_hf_access_token()
         if self.autoload:
-            self.load()
+            self.load_diffusers()
+
+    def login_hf_hub(self):
+        from huggingface_hub import notebook_login
+
+        if eKonf.is_notebook():
+            notebook_login()
+        else:
+            raise ValueError(
+                "huggingface_hub.notebook_login() is only available in notebook, set hf_user_access_token manually"
+            )
 
     @property
     def hf_user_access_token(self):
@@ -39,65 +59,68 @@ class StableDiffusion(BaseModel):
         batch_num=None,
         mode: ImagineMode = None,
         num_samples=None,
-        resize_ratio=0.5,
         return_including_init_image=False,
-        **args,
+        **imagine_args,
     ):
         """Generate images"""
 
         if text_prompts is not None:
-            args.update(dict(text_prompts=text_prompts))
+            imagine_args.update(dict(text_prompts=text_prompts))
         if mode is not None:
-            args.update(dict(mode=mode))
+            imagine_args.update(dict(mode=mode))
         if num_samples is not None:
-            args.update(dict(num_samples=num_samples))
+            imagine_args.update(dict(num_samples=num_samples))
         log.info("> loading config...")
         config = self.load_config(
             batch_name=batch_name,
             batch_num=batch_num,
-            imagine=args,
+            imagine=imagine_args,
         )
         config_file = self.save_config(config)
-        cfg = StableImagineConfig(**config.imagine)
-        rc = StableRunConfig(
-            batch_name=self.batch_name,
-            batch_num=self.batch_num,
-            batch_dir=self.batch_dir,
-            imagine=cfg,
-        )
-        rc.set_seed(self.seed)
+        rc = self.get_run_config(config)
+        # run_cfg.set_seed()
 
-        results = {}
+        imagine_rst = ImagineResult(batch_num=rc.batch.batch_num)
         sample_imagepaths = []
         with elapsed_timer(format_time=True) as elapsed:
-            if cfg.mode == ImagineMode.GENERATE:
+            if rc.imagine.mode == ImagineMode.GENERATE:
                 sample_imagepaths = self.generate_images(rc)
-            elif cfg.mode == ImagineMode.INPAINT:
+            elif rc.imagine.mode == ImagineMode.INPAINT:
                 sample_imagepaths = self.inpaint_images(rc, return_including_init_image)
-            elif cfg.mode == ImagineMode.STITCH:
-                cfg.num_images_per_prompt = 1
+            elif rc.imagine.mode == ImagineMode.STITCH:
+                rc.imagine.num_images_per_prompt = 1
                 sample_imagepaths = self.generate_images(rc)
                 stitched_image_path = self.stitch_images(sample_imagepaths, rc)
-                results["stitched_image_path"] = stitched_image_path
-                cfg.make_collage = False
+                imagine_rst.stitched_image_path = stitched_image_path
+                rc.imagine.save_collage = False
+                rc.imagine.display_collage = False
 
             log.info(" >> elapsed time to imagine: {}".format(elapsed()))
 
         if len(sample_imagepaths) == 0:
             log.info(" >> no images generated")
-            return results
+            return imagine_rst
 
-        if cfg.make_collage and cfg.display_collage:
-            eKonf.clear_output(wait=True)
-            self.collage(image_filepaths=sample_imagepaths, resize_ratio=resize_ratio)
+        if rc.imagine.save_collage or rc.imagine.display_collage:
+            if rc.imagine.clear_output:
+                eKonf.clear_output(wait=True)
+            self.collage(
+                images_or_uris=sample_imagepaths,
+                save_collage=rc.imagine.save_collage,
+                display_collage=rc.imagine.display_collage,
+                **rc.collage.dict(),
+            )
 
-        results.update(
-            {
-                "image_filepaths": sample_imagepaths,
-                "config_file": config_file,
-            }
-        )
-        return results
+        imagine_rst.image_filepaths = sample_imagepaths
+        imagine_rst.config_file = config_file
+        return imagine_rst
+
+    def get_run_config(self, config):
+        batch = BatchConfig(output_dir=config.path.output_dir, **config.batch)
+        imagine = StableImagineConfig(**config.imagine)
+        collage = CollageConfig(**config.collage)
+        rc = StableRunConfig(batch=batch, imagine=imagine, collage=collage)
+        return rc
 
     def generate_images(self, rc: StableRunConfig):
         # Generate images
@@ -108,7 +131,7 @@ class StableDiffusion(BaseModel):
             for i in tqdm(range(cfg.num_iterations)):
                 log.info(f"> generating image {image_num+1}/{cfg.num_samples}")
                 imgs = self.generating(
-                    prompt=rc.get_prompt(i),
+                    prompt=cfg.get_prompt(i),
                     width=cfg.width,
                     height=cfg.height,
                     guidance_scale=cfg.guidance_scale,
@@ -119,7 +142,12 @@ class StableDiffusion(BaseModel):
                 for img in imgs:
                     img_path = rc.save(img, image_num, seed=cfg.seed)
                     if cfg.display_image:
-                        eKonf.clear_output(wait=True)
+                        if cfg.clear_output:
+                            eKonf.clear_output(wait=True)
+                        if rc.batch.max_display_image_width is not None:
+                            img = eKonf.scale_image(
+                                img, max_width=rc.batch.max_display_image_width
+                            )
                         eKonf.display(img)
                     images.append(img_path)
                     image_num += 1
@@ -138,7 +166,8 @@ class StableDiffusion(BaseModel):
         **kwargs,
     ):
         """Generate images from a prompt"""
-        images = self.pipe(
+        pipe = self.get_pipe("generate")
+        images = pipe(
             prompt=prompt,
             width=width,
             height=height,
@@ -167,7 +196,7 @@ class StableDiffusion(BaseModel):
             for i in tqdm(range(cfg.num_iterations)):
                 log.info(f"> generating image {image_num+1}/{cfg.num_samples}")
                 imgs = self.inpainting(
-                    prompt=rc.get_prompt(i),
+                    prompt=cfg.get_prompt(i),
                     init_image=init_image,
                     mask_image=mask_image,
                     guidance_scale=cfg.inpaint_strength,
@@ -178,7 +207,12 @@ class StableDiffusion(BaseModel):
                 for img in imgs:
                     img_path = rc.save(img, image_num, seed=cfg.seed)
                     if cfg.display_image:
-                        eKonf.clear_output(wait=True)
+                        if cfg.clear_output:
+                            eKonf.clear_output(wait=True)
+                        if rc.batch.max_display_image_width is not None:
+                            img = eKonf.scale_image(
+                                img, max_width=rc.batch.max_display_image_width
+                            )
                         eKonf.display(img)
                     images.append(img_path)
                     image_num += 1
@@ -207,7 +241,8 @@ class StableDiffusion(BaseModel):
             init_image = init_image.crop((0, 0, width, height))
             mask_image = mask_image.crop((0, 0, width, height))
 
-        images = self.inpaint_pipe(
+        pipe = self.get_pipe("inpaint")
+        images = pipe(
             prompt=prompt,
             image=init_image,
             mask_image=mask_image,
@@ -236,13 +271,14 @@ class StableDiffusion(BaseModel):
         with torch.autocast("cuda"):
             output = self.stitching(
                 images,
-                prompt=rc.get_prompt(0),
+                prompt=cfg.get_prompt(0),
                 width=cfg.width,
                 height=cfg.height,
                 inpaint_strength=cfg.inpaint_strength,
                 num_images_per_prompt=cfg.num_images_per_prompt,
                 num_inference_steps=cfg.num_inference_steps,
                 seed=cfg.seed,
+                max_display_image_width=rc.batch.max_display_image_width,
             )
 
         # add borders
@@ -251,7 +287,12 @@ class StableDiffusion(BaseModel):
         panorama.paste(output, (0, h))
         img_path = rc.save(panorama, "panorama")
         if cfg.display_image:
-            eKonf.clear_output(wait=True)
+            if cfg.clear_output:
+                eKonf.clear_output(wait=True)
+            if rc.batch.max_display_image_width is not None:
+                panorama = eKonf.scale_image(
+                    panorama, max_width=rc.batch.max_display_image_width
+                )
             eKonf.display(panorama)
         return img_path
 
@@ -264,11 +305,13 @@ class StableDiffusion(BaseModel):
         inpaint_strength=7.5,
         num_images_per_prompt=1,
         num_inference_steps=50,
+        max_display_image_width=None,
         **kwargs,
     ):
         """Stitching images"""
 
         output = images[0]
+        pipe = self.get_pipe("inpaint")
 
         for img in tqdm(images[1:] + [images[0]]):
             w, h = output.size
@@ -280,7 +323,7 @@ class StableDiffusion(BaseModel):
             drw = ImageDraw.Draw(msk)
             drw.rectangle((width // 4, 0, 3 * width // 4, height), fill=255)
             _width, _height = new.size
-            merged = self.inpaint_pipe(
+            merged = pipe(
                 prompt=prompt,
                 image=new,
                 mask_image=msk,
@@ -292,6 +335,9 @@ class StableDiffusion(BaseModel):
                 generator=self.generator,
                 **kwargs,
             ).images[0]
+            eKonf.clear_output(wait=True)
+            _img = eKonf.scale_image(merged, max_width=max_display_image_width)
+            eKonf.display(_img)
 
             new = Image.new("RGB", (w + width, height))
             new.paste(output, (0, 0))
@@ -304,26 +350,38 @@ class StableDiffusion(BaseModel):
         output = output.crop((width // 2, 0, w - width // 2, h))
         return output
 
-    def load_models(self):
+    def get_pipe(self, name: str):
+        pipe = self.pipes.get(name)
+        if pipe is None:
+            self.load_diffusers(name)
+            pipe = self.pipes.get(name)
+        if pipe is None:
+            raise ValueError(f"pipe {name} not found")
+        return pipe
+
+    def load_diffusers(self, models=None):
         torch.set_grad_enabled(False)
 
-        cfg = self.model_config.generate
-        self.pipe = StableDiffusionPipeline.from_pretrained(
-            pretrained_model_name_or_path=cfg.pretrained_model_name_or_path,
-            use_auth_token=self.hf_user_access_token,
-            revision=cfg.revision,
-            torch_dtype=torch.float16,
-            cache_dir=self.path.cache_dir,
-        ).to(cfg.device)
+        if models is None:
+            models = self.model_config.keys()
+        if isinstance(models, str):
+            models = [models]
+        for model in models:
+            cfg = self.model_config[model]
+            if cfg.pipeline == "StableDiffusionPipeline":
+                DiffusionPipeline = StableDiffusionPipeline
+            elif cfg.pipeline == "StableDiffusionInpaintPipeline":
+                DiffusionPipeline = StableDiffusionInpaintPipeline
+            else:
+                raise ValueError(f"pipeline {cfg.pipeline} not found")
 
-        cfg = self.model_config.inpaint
-        self.inpaint_pipe = StableDiffusionInpaintPipeline.from_pretrained(
-            pretrained_model_name_or_path=cfg.pretrained_model_name_or_path,
-            use_auth_token=self.hf_user_access_token,
-            revision=cfg.revision,
-            torch_dtype=torch.float16,
-            cache_dir=self.path.cache_dir,
-        ).to(cfg.device)
+            self.pipes[model] = DiffusionPipeline.from_pretrained(
+                pretrained_model_name_or_path=cfg.name,
+                use_auth_token=self.hf_user_access_token,
+                revision=cfg.revision,
+                torch_dtype=torch.float16,
+                cache_dir=self.path.cache_dir,
+            ).to(cfg.device)
 
     def load_config(self, batch_name=None, batch_num=None, **kwargs):
         """Load the settings"""

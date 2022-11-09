@@ -74,7 +74,7 @@ Pillow<9.1.0: all, doc, visualize
 tensorflow-datasets: dataset
 # tensorflow-io: dataset
 lsh: all, dataset
-orjson: all, dataset, parser
+orjson: all, dataset, parser, fetch
 datasketch: all, dataset
 pysimdjson: all, dataset, parser
 p_tqdm: all, dataset, parser

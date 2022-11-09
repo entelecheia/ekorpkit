@@ -1,18 +1,30 @@
 import os
 import logging
-from pathlib import Path
 from ekorpkit import eKonf
 from ekorpkit.batch import BaseConfig
+from ekorpkit.visualize.collage import collage, label_collage
+from .config import (
+    BatchRunConfig,
+    BatchConfig,
+    ImagineConfig,
+    RunConfig,
+    CollageConfig,
+    BatchRunCfg,
+    BatchImagineResult,
+)
 
 
 log = logging.getLogger(__name__)
 
 
 class BaseModel(BaseConfig):
+    config_to_save = ["batch", "imagine"]
+
     def __init__(self, root_dir=None, **args):
         super().__init__(root_dir=root_dir, **args)
         super().__init__(**args)
 
+        self.load_modules()
         self.sample_imagepaths = []
 
     @property
@@ -41,17 +53,17 @@ class BaseModel(BaseConfig):
 
     @property
     def module_config(self):
-        return self.config.module
+        if "module" in self.config:
+            return self.config.module
+        return {}
 
     def load(self):
         log.info("> downloading models...")
         self.download_models()
-        log.info("> loading modules...")
-        self.load_modules()
         log.info("> loading models...")
         self.load_models()
 
-    def imagine(self, text_prompts=None, **args):
+    def imagine(self, **args):
         """Imagine the text prompts"""
         raise NotImplementedError
 
@@ -83,80 +95,258 @@ class BaseModel(BaseConfig):
         #     if not isinstance(model, str):
         #         log.info(f"Downloading model {name} from {model}")
 
-    def get_text_prompt(self, prompts):
-        prompts = eKonf.to_dict(prompts)
-        if isinstance(prompts, str):
-            return prompts
-        elif isinstance(prompts, list):
-            return ", ".join(prompts)
-        elif isinstance(prompts, dict):
-            if 0 in prompts:
-                prompts = prompts[0]
-            else:
-                prompts = prompts.values()[0]
-            return self.get_text_prompt(prompts)
-
-    def get_image_path(
-        self,
-        sample_suffix,
-        batch_name: str = None,
-        batch_num: int = None,
-        batch_dir: str = None,
-        image_ext: str = "png",
-    ) -> str:
-        batch_dir = batch_dir or self.batch_dir
-        batch_name = batch_name or self.batch_name
-        batch_num = batch_num or self.batch_num
-        if isinstance(sample_suffix, int):
-            sample_suffix = f"{sample_suffix:04d}"
-        else:
-            sample_suffix = str(sample_suffix)
-        filename = f"{batch_name}({batch_num})_{sample_suffix}.{image_ext}"
-        return str(Path(batch_dir) / filename)
+    def get_run_config(self, config):
+        batch = BatchConfig(output_dir=config.path.output_dir, **config.batch)
+        imagine = ImagineConfig(**config.imagine)
+        collage = CollageConfig(**config.collage)
+        rc = RunConfig(batch=batch, imagine=imagine, collage=collage)
+        return rc
 
     def collage(
         self,
-        image_filepaths=None,
+        images_or_uris=None,
         batch_name=None,
         batch_num=None,
-        ncols=2,
-        num_images=None,
-        filename_patterns=None,
+        display_collage=True,
+        save_collage=True,
+        clear_output=True,
         show_prompt=True,
-        prompt_fontsize=18,
+        ncols=3,
+        max_images=12,
+        collage_width=1200,
+        padding: int = 10,
+        bg_color: str = "black",
+        crop_to_min_size=False,
         show_filename=False,
         filename_offset=(5, 5),
         fontname=None,
         fontsize=12,
-        fontcolor=None,
-        resize_ratio=1.0,
+        fontcolor="#000",
         **kwargs,
     ):
-        self.load_config(batch_name, batch_num, **kwargs)
-        batch_name = self.batch_name
-        batch_num = self.batch_num
-        cfg = self.config.imagine
+        config = self.load_config(batch_name, batch_num, **kwargs)
+        rc = self.get_run_config(config)
 
-        filename_patterns = filename_patterns or f"{batch_name}({batch_num})_*.png"
-        # num_images = num_images or cfg.get("num_samples") or cfg.get("n_samples")
-        prompt = None
-        if show_prompt:
-            prompt = self.get_text_prompt(cfg.text_prompts)
-            log.info(f"Prompt: {prompt}")
+        if images_or_uris is None:
+            images_or_uris = rc.image_filepaths
+        collage_filepath = rc.batch.collage_filepath if save_collage else None
 
-        eKonf.collage(
-            image_filepaths=image_filepaths,
-            filename_patterns=filename_patterns,
-            base_dir=self.batch_dir,
-            num_images=num_images,
+        collage_result = collage(
+            images_or_uris=images_or_uris,
+            collage_filepath=collage_filepath,
             ncols=ncols,
-            title=prompt,
-            title_fontsize=prompt_fontsize,
+            max_images=max_images,
+            collage_width=collage_width,
+            padding=padding,
+            bg_color=bg_color,
+            crop_to_min_size=crop_to_min_size,
             show_filename=show_filename,
             filename_offset=filename_offset,
             fontname=fontname,
             fontsize=fontsize,
             fontcolor=fontcolor,
-            resize_ratio=resize_ratio,
             **kwargs,
         )
+        if display_collage and collage_result is not None:
+            if clear_output:
+                eKonf.clear_output(wait=True)
+            if show_prompt:
+                prompt = rc.imagine.get_str_prompt()
+                if prompt:
+                    print(f"Prompt: {prompt}")
+            img = collage_result.image
+            if rc.batch.max_display_image_width is not None:
+                img = eKonf.scale_image(img, max_width=rc.batch.max_display_image_width)
+            eKonf.display(img)
+
+    def batch_imagine(
+        self,
+        batch_name,
+        batch_run_params,
+        batch_run_pairs=None,
+        num_samples=1,
+        max_display_image_width=800,
+        **imagine_args,
+    ):
+        """Run a batch"""
+        if num_samples is not None:
+            imagine_args.update(dict(num_samples=num_samples))
+
+        batch = BatchRunConfig(
+            output_dir=self.output_dir,
+            batch_name=batch_name,
+            batch_run_params=batch_run_params,
+            batch_run_pairs=batch_run_pairs,
+        )
+
+        run_configs = {}
+        collage_filepaths = {}
+        batch_prompts = {}
+        for batch_run_cfg in batch.batch_run_configs:
+            batch_run_pair = batch_run_cfg.batch_run_pair
+            batch_run_name = batch_run_cfg.batch_name
+            for batch_args in batch.get_run_args(batch_run_pair):
+                imgn_args = batch.get_imagine_config(batch_args, **imagine_args)
+                batch_prompts[batch_run_name] = None
+                if "text_prompts" in imgn_args:
+                    batch_args["text_prompts"] = imgn_args["text_prompts"]
+                    batch_prompts[batch_run_name] = imgn_args["text_prompts"]
+                log.info(f"batch: {batch_run_name} with {batch_args}")
+                imagine_rst = self.imagine(
+                    batch_name=batch_run_name,
+                    **imgn_args,
+                )
+                batch_run_cfg.append(batch_args, imagine_rst)
+
+            run_config_path = batch.save_run_config(batch_run_cfg)
+            run_configs[batch_run_name] = run_config_path
+
+        if batch.display_collage or batch.save_collage:
+            eKonf.clear_output(wait=True)
+            for batch_run_name, run_config_path in batch.run_configs.items():
+                collage_filepaths[batch_run_name] = self.batch_collage(
+                    run_config_path, max_display_image_width=max_display_image_width
+                )
+        return BatchImagineResult(
+            run_configs=run_configs,
+            collage_filepaths=collage_filepaths,
+            batch_prompts=batch_prompts,
+        )
+
+    def batch_collage(
+        self,
+        run_config_path,
+        max_collages=5,
+        display_collage=True,
+        clear_output=False,
+        xlabel=None,
+        ylabel=None,
+        zlabel=None,
+        ncols=3,
+        max_images_per_collage=20,
+        prompt_fontsize=12,
+        show_filename=False,
+        filename_offset=(5, 5),
+        fontname=None,
+        fontsize=18,
+        fontcolor=None,
+        max_display_image_width=800,
+        dpi=100,
+        **kwargs,
+    ):
+        cfg = BatchRunCfg(run_config_path=run_config_path)
+        batch_name = cfg.batch_name
+        batch_run_pair = cfg.batch_run_pair
+        arg_names = list(batch_run_pair.keys())
+
+        if "text_prompts" in arg_names:
+            zlabel = "text_prompts"
+            zvalues = batch_run_pair[zlabel]
+            arg_names.remove(zlabel)
+        else:
+            zvalues = [None]
+
+        if ylabel is None and len(arg_names) > 0:
+            ylabel = arg_names[0]
+        if ylabel in arg_names:
+            yticklabels = batch_run_pair[ylabel]
+            # reverse yticklabels so that the first image is the top left
+            yticklabels = yticklabels[::-1]
+            arg_names.remove(ylabel)
+        else:
+            yticklabels = None
+            # raise ValueError(f"{ylabel} not in {arg_names}")
+
+        if xlabel is None and len(arg_names) > 0:
+            xlabel = arg_names[0]
+        if xlabel in arg_names:
+            xticklabels = batch_run_pair[xlabel]
+            arg_names.remove(xlabel)
+        else:
+            xticklabels = None
+
+        if zlabel is None and len(arg_names) > 0:
+            zlabel = arg_names[0]
+        if zlabel in arg_names:
+            zvalues = batch_run_pair[zlabel]
+            arg_names.remove(zlabel)
+
+        if xticklabels is None and zlabel is not None and zlabel != "text_prompts":
+            ncols = 1
+        elif xticklabels:
+            ncols = len(xticklabels)
+
+        collage_filepaths = []
+        prompt = ""
+        if len(zvalues) > max_collages:
+            zvalues = zvalues[:max_collages]
+        for z, zvalue in enumerate(zvalues):
+
+            title = f"batch name: {batch_name}"
+            if zvalue is not None:
+                if zlabel == "text_prompts":
+                    sfx = f"{zlabel}({z})"
+                else:
+                    sfx = f"{zlabel}({zvalue})"
+                    title += f"\n{zlabel}: {zvalue}"
+                output_filepath = cfg.collage_filepath(sfx)
+            else:
+                output_filepath = cfg.collage_filepath()
+            collage_filepaths.append(output_filepath)
+            image_filepaths = []
+            for result in cfg.imagine_results:
+                if zvalue is not None and zlabel == "text_prompts" and xlabel is None:
+                    if result.batch_args[zlabel] == zvalue:
+                        image_filepaths = result.image_filepaths
+                        prompt = zvalue
+                        break
+                if zlabel is None or result.batch_args[zlabel] == zvalue:
+                    image_filepaths.append(result.image_filepaths[0])
+                    prompt = result.batch_args.get("text_prompts", None)
+
+            if len(image_filepaths) == 0:
+                continue
+            # if prompt:
+            #     title += f"Prompt: {prompt}\n"
+
+            collage_result = collage(
+                images_or_uris=image_filepaths,
+                collage_filepath=output_filepath,
+                ncols=ncols,
+                max_images=max_images_per_collage,
+                show_filename=show_filename,
+                filename_offset=filename_offset,
+                fontname=fontname,
+                fontsize=fontsize,
+                fontcolor=fontcolor,
+                **kwargs,
+            )
+
+            collage_result = label_collage(
+                collage_result,
+                collage_filepath=output_filepath,
+                title=title,
+                title_fontsize=prompt_fontsize,
+                xlabel=xlabel,
+                ylabel=ylabel,
+                xticklabels=xticklabels,
+                yticklabels=yticklabels,
+                xlabel_fontsize=fontsize,
+                ylabel_fontsize=fontsize,
+                dpi=dpi,
+                **kwargs,
+            )
+            if display_collage and collage_result is not None:
+                if clear_output:
+                    eKonf.clear_output(wait=True)
+                if prompt:
+                    print(f"Prompt: {prompt}")
+                img = collage_result.image
+                if max_display_image_width is not None:
+                    img = eKonf.scale_image(img, max_width=max_display_image_width)
+                eKonf.display(img)
+
+        return collage_filepaths
+
+    def save_config(self, config=None):
+        super().save_config(config=config, selected=self.config_to_save)

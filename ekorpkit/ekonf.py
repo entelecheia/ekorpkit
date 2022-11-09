@@ -16,8 +16,6 @@ from ekorpkit.utils.notebook import (
     _hide_code_in_slideshow,
     _is_notebook,
     _is_colab,
-    _load_image,
-    _read,
 )
 from .base import (
     __ekorpkit_path__,
@@ -542,55 +540,37 @@ class eKonf:
 
     @staticmethod
     def collage(
-        image_filepaths=None,
-        filename_patterns=None,
-        base_dir=None,
-        output_filepath=None,
-        ncols=2,
-        num_images=None,
-        figsize=(30, 20),
-        dpi=300,
-        title=None,
-        title_fontsize=12,
+        images_or_uris,
+        collage_filepath=None,
+        ncols=3,
+        max_images=12,
+        collage_width=1200,
+        padding: int = 10,
+        bg_color: str = "black",
+        crop_to_min_size=False,
         show_filename=False,
         filename_offset=(5, 5),
         fontname=None,
         fontsize=12,
-        fontcolor=None,
-        xlabel=None,
-        ylabel=None,
-        xticklabels=None,
-        yticklabels=None,
-        xlabel_fontsize=12,
-        ylabel_fontsize=12,
-        resize_ratio=1,
+        fontcolor="#000",
         **kwargs,
     ):
         from ekorpkit.visualize.collage import collage as _collage
 
         return _collage(
-            image_filepaths=image_filepaths,
-            filename_patterns=filename_patterns,
-            base_dir=base_dir,
-            output_filepath=output_filepath,
+            images_or_uris,
+            collage_filepath=collage_filepath,
             ncols=ncols,
-            num_images=num_images,
-            figsize=figsize,
-            dpi=dpi,
-            title=title,
-            title_fontsize=title_fontsize,
+            max_images=max_images,
+            collage_width=collage_width,
+            padding=padding,
+            bg_color=bg_color,
+            crop_to_min_size=crop_to_min_size,
             show_filename=show_filename,
             filename_offset=filename_offset,
             fontname=fontname,
             fontsize=fontsize,
             fontcolor=fontcolor,
-            xlabel=xlabel,
-            ylabel=ylabel,
-            xticklabels=xticklabels,
-            yticklabels=yticklabels,
-            xlabel_fontsize=xlabel_fontsize,
-            ylabel_fontsize=ylabel_fontsize,
-            resize_ratio=resize_ratio,
             **kwargs,
         )
 
@@ -902,19 +882,65 @@ class eKonf:
         )
 
     @staticmethod
-    def get_imagefont(fontname=None, fontsize=12):
-        from ekorpkit.visualize.collage import _get_imagefont
+    def get_image_font(fontname=None, fontsize=12):
+        from ekorpkit.visualize.collage import get_image_font
 
-        return _get_imagefont(fontname, fontsize)
+        return get_image_font(fontname, fontsize)
 
     @staticmethod
     def read(uri, mode="rb", encoding=None, head=None, **kwargs):
+        from ekorpkit.io.file import read as _read
+
         return _read(uri, mode, encoding, head, **kwargs)
 
     @staticmethod
-    def load_image(uri, mode="RGB", resize=None, crop=None, **kwargs):
-        return _load_image(uri, mode=mode, resize=resize, crop=crop, **kwargs)
+    def load_image(
+        image_or_uri,
+        max_width: int = None,
+        max_height: int = None,
+        max_pixels: int = None,
+        scale: float = 1.0,
+        resize_to_multiple_of: int = None,
+        crop_box=None,
+        mode="RGB",
+        **kwargs,
+    ):
+        from ekorpkit.visualize.utils import load_image as _load_image
+
+        return _load_image(
+            image_or_uri,
+            max_width,
+            max_height,
+            max_pixels,
+            scale,
+            resize_to_multiple_of,
+            crop_box,
+            mode,
+            **kwargs,
+        )
 
     @staticmethod
     def set_workspace(workspace=None, project=None):
         return _set_workspace(workspace, project)
+
+    @staticmethod
+    def scale_image(
+        image,
+        max_width: int = None,
+        max_height: int = None,
+        max_pixels: int = None,
+        scale: float = 1.0,
+        resize_to_multiple_of: int = 8,
+        resample: int = None,
+    ):
+        from ekorpkit.visualize.utils import scale_image as _scale_image
+
+        return _scale_image(
+            image,
+            max_width,
+            max_height,
+            max_pixels,
+            scale,
+            resize_to_multiple_of,
+            resample,
+        )

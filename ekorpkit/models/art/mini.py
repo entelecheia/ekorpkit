@@ -153,7 +153,7 @@ class DalleMini(BaseModel):
             print(f"text prompts: {text_prompts}")
 
             if show_collage:
-                self.collage(image_filepaths=self.sample_imagepaths)
+                self.collage(images_or_uris=self.sample_imagepaths)
 
         config.imagine = cfg
         self.config = config

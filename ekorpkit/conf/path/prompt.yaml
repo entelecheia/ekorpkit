@@ -1,6 +1,5 @@
 defaults:
   - _batch_
-  - batch: prompt
 
 name: disco-imagen
 output_dir: ${mkdir:${join_path:${.root},outputs/stable-prompt}}

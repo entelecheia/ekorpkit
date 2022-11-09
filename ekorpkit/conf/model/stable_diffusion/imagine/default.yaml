@@ -11,9 +11,9 @@ mask_image:
 inpaint_strength: 7.5
 seed:
 increase_seed_by: 1
+clear_output: true
 display_image: true
 save_image: true
 save_image_config: true
-make_collage: true
 display_collage: true
 save_collage: true

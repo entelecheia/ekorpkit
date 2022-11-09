@@ -7,8 +7,8 @@ defaults:
   - collage: default
 
 _target_: ekorpkit.models.art.stable.StableDiffusion
-autoload: true
+autoload: false
 name: stable-diffusion
 verbose: ${oc.select:..verbose, false}
 device: "cuda:7"
-hf_user_access_token: 
+hf_user_access_token:

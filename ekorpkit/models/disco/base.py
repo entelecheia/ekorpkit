@@ -27,18 +27,10 @@ from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.visualize.motion import create_video as _create_video
 from ekorpkit.visualize.motion import extract_frames
 from ..art.base import BaseModel
-from enum import Enum
+from ..art.config import AnimMode
+
 
 log = logging.getLogger(__name__)
-
-
-class AnimMode(str, Enum):
-    """Animation mode"""
-
-    NONE = "None"
-    ANIM_2D = "2D"
-    ANIM_3D = "3D"
-    VIDEO_INPUT = "Video Input"
 
 
 class DiscoDiffusion(BaseModel):
@@ -367,7 +359,7 @@ class DiscoDiffusion(BaseModel):
 
                 if args.show_collage:
                     eKonf.clear_output()
-                    self.collage(image_filepaths=self.sample_imagepaths)
+                    self.collage(images_or_uris=self.sample_imagepaths)
 
         results = {
             "image_filepaths": self.sample_imagepaths,
@@ -434,7 +426,9 @@ class DiscoDiffusion(BaseModel):
                 frames = sorted(glob(video_frames_dir + "/*.*"))
                 if len(frames) < 2:
                     msg = "WARNING!\nCannot create flow maps: "
-                    msg += f"Found {len(frames)} frames extracted from your video input.\n"
+                    msg += (
+                        f"Found {len(frames)} frames extracted from your video input.\n"
+                    )
                     msg += "Please check your video path."
                     log.warning(msg)
 
@@ -721,7 +715,7 @@ class DiscoDiffusion(BaseModel):
             init = create_perlin_noise(
                 args.side_x,
                 args.side_y,
-                octaves=[1.5 ** -i * 0.5 for i in range(12)],
+                octaves=[1.5**-i * 0.5 for i in range(12)],
                 width=1,
                 height=1,
                 grayscale=grayscale,
@@ -730,7 +724,7 @@ class DiscoDiffusion(BaseModel):
             init2 = create_perlin_noise(
                 args.side_x,
                 args.side_y,
-                octaves=[1.5 ** -i * 0.5 for i in range(8)],
+                octaves=[1.5**-i * 0.5 for i in range(8)],
                 width=4,
                 height=4,
                 grayscale=grayscale2,
@@ -831,7 +825,7 @@ class DiscoDiffusion(BaseModel):
                         t_int = (
                             int(t.item()) + 1
                         )  # errors on last step without +1, need to find source
-                        # when using SLIP Base model the dimensions need to be hard coded to avoid AttributeError: 
+                        # when using SLIP Base model the dimensions need to be hard coded to avoid AttributeError:
                         # 'VisionTransformer' object has no attribute 'input_resolution'
                         try:
                             input_resolution = model_stat[
@@ -1320,7 +1314,7 @@ class DiscoDiffusion(BaseModel):
 
         log.info(f"looping over range({args.start_frame}, {args.max_frames})")
         for frame_num in range(args.start_frame, args.max_frames):
-            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, 
+            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through,
             # allow a full frame to complete
             if args.stop_on_next_loop:
                 break
@@ -1475,7 +1469,7 @@ class DiscoDiffusion(BaseModel):
         image_display = eKonf.get_display()
         log.info(f"looping over range({args.start_sample}, {args.num_samples})")
         for sample_num in range(args.start_sample, args.num_samples):
-            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, 
+            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through,
             # allow a full frame to complete
             if args.stop_on_next_loop:
                 break
@@ -1552,7 +1546,7 @@ class DiscoDiffusion(BaseModel):
             torch.backends.cudnn.deterministic = True
 
         for sample_num in range(args.start_sample, args.num_samples):
-            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, 
+            # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through,
             # allow a full frame to complete
             if args.stop_on_next_loop:
                 break
@@ -1934,7 +1928,7 @@ class DiscoDiffusion(BaseModel):
 
         if args.set_seed == "random_seed":
             random.seed()
-            args.seed = random.randint(0, 2 ** 32)
+            args.seed = random.randint(0, 2**32)
         else:
             args.seed = int(args.set_seed)
         log.info(f"Using seed: {args.seed}")

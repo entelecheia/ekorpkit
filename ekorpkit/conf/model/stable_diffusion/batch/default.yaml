@@ -1,6 +1,14 @@
 batch_name: stable-batch
 batch_num:
-set_seed: random_seed
+random_seed: true
 seed:
 resume_run: false
-run_to_resume: latest
+resume_latest: false
+display_collage: true
+save_collage: true
+num_samples: 1
+num_images_per_prompt: 1
+batch_run_params:
+batch_run_pairs:
+clear_output: true
+max_display_image_width: 1000

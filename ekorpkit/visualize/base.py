@@ -220,7 +220,7 @@ def set_figure(
 
 def set_style(style, rcParams, fontpath=None, language=None, **kwargs):
     if language or (fontpath and Path(fontpath).is_file()):
-        fontname, fontpath = _configure_font(fontpath=fontpath)
+        fontname, fontpath = get_plot_font(fontpath=fontpath)
         if fontname:
             rcParams["font.family"] = fontname
 
@@ -237,7 +237,7 @@ def find_font_file(query):
     return matches
 
 
-def _configure_font(
+def get_plot_font(
     set_font_for_matplot=True, fontpath=None, fontname=None, verbose=False
 ):
     if fontname and not fontname.endswith(".ttf"):
