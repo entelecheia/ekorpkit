@@ -37,24 +37,16 @@ class DiscoDiffusion(BaseModel):
 
     TRANSLATION_SCALE = 1.0 / 200.0
 
-    def __init__(self, **args):
-        super().__init__(**args)
+    def __init__(self, root_dir=None, config_name="default", **args):
+        cfg = eKonf.compose(f"model/disco={config_name}")
+        cfg = eKonf.merge(cfg, args)
+        super().__init__(root_dir=root_dir, **cfg)
 
-        self._parameters = self.args.parameters
-        self.midas_config = self.args.midas
-        # self.model_config = self.args.model
-        self.diffusion_models = self.args.model.diffusion_models
-        self.clip_models = list(self.args.model.clip_models.keys()) + list(
-            self.args.model.openclip_models.keys()
-        )
-        self.model_map = self.args.model_map
         self.model_map.diffusion_models_256x256_list += (
             self.model_map.kaliyuga_pixel_art_model_names
             + self.model_map.kaliyuga_watercolor_model_names
             + self.model_map.kaliyuga_pulpscifi_model_names
         )
-        self.diffusion_model_config = self.args.diffusion_model
-        self._download = self.args.download
 
         self._model_and_diffusion_args = {}
         self.clip_models = []
@@ -71,171 +63,38 @@ class DiscoDiffusion(BaseModel):
         self.text_prompts_series = None
         self.image_prompts_series = None
 
-        if self.auto.load:
+        if self.autoload:
             self.load()
 
-    def batch_imagine(
-        self,
-        text_prompts=None,
-        image_prompts=None,
-        batch_name=None,
-        batch_args=None,
-        batch_pairs=None,
-        show_collage=True,
-        **args,
-    ):
-        """Run a batch"""
-        animation_mode = AnimMode.NONE
-        num_samples = 1
-        args.update(dict(show_collage=False))
+    @property
+    def parameters(self, args):
+        return self.config.parameters
 
-        if batch_args is None:
-            batch_args = {}
-        if not isinstance(batch_args, dict):
-            raise ValueError("batch_args must be a dictionary")
-        if len(batch_args) < 1:
-            raise ValueError("batch_args must have at least 1 element")
-        for k, v in batch_args.items():
-            if not isinstance(v, (list, tuple)):
-                v = [v]
-        if batch_pairs is None:
-            batch_pairs = [[arg_name] for arg_name in batch_args.keys()]
+    @property
+    def midas_config(self):
+        return self.config.midas
 
-        _batch_results = []
-        for batch_pair in batch_pairs:
-            batch_pair_args = {}
-            for arg_name in batch_pair:
-                batch_pair_args[arg_name] = batch_args[arg_name]
-            _batch_name = batch_name + "_" + "_".join(batch_pair)
-            batch_config = dict(
-                batch_name=_batch_name,
-                batch_pair_args=batch_pair_args,
-                text_prompts=text_prompts,
-                image_prompts=image_prompts,
-                results=[],
-            )
-            for pair_args in eKonf.dict_product(batch_pair_args):
-                _args = args.copy()
-                _args.update(pair_args)
-                print(f"batch: {_batch_name} with {pair_args}")
-                results = self.imagine(
-                    text_prompts=text_prompts,
-                    image_prompts=image_prompts,
-                    batch_name=_batch_name,
-                    animation_mode=animation_mode,
-                    num_samples=num_samples,
-                    **_args,
-                )
-                batch_config["results"].append(
-                    dict(
-                        args=pair_args,
-                        config_file=results["config_file"],
-                        image_filepaths=results["image_filepaths"],
-                    )
-                )
+    @property
+    def diffusion_models(self):
+        return self.config.model.diffusion_models
 
-            _batch_config_path = self.save_batch_configs(batch_config)
-            _batch_results.append(_batch_config_path)
-            if show_collage:
-                self.batch_collage(_batch_config_path)
-        return _batch_results
+    @property
+    def clip_models(self):
+        return list(self.config.model.clip_models.keys()) + list(
+            self.config.model.openclip_models.keys()
+        )
 
-    def save_batch_configs(self, args):
-        """Save the settings"""
-        _batch_name = args["batch_name"]
-        _filename = f"{_batch_name}_batch_configs.yaml"
-        _path = os.path.join(self._output.batch_configs_dir, _filename)
-        log.info(f"Saving batch configs to {_path}")
-        eKonf.save(args, _path)
-        return _path
+    @property
+    def model_map(self):
+        return self.config.model_map
 
-    def batch_collage(
-        self,
-        batch_config_path,
-        xlabel=None,
-        ylabel=None,
-        zlabel=None,
-        prompt_fontsize=18,
-        show_filename=False,
-        filename_offset=(5, 5),
-        fontname=None,
-        fontsize=18,
-        fontcolor=None,
-        **kwargs,
-    ):
-        args = eKonf.load(batch_config_path)
-        args = eKonf.to_dict(args)
+    @property
+    def diffusion_model_config(self):
+        return self.config.diffusion_model
 
-        batch_name = args["batch_name"]
-        batch_pair_args = args["batch_pair_args"]
-        arg_names = list(batch_pair_args.keys())
-
-        if ylabel is None:
-            ylabel = arg_names[0]
-        if ylabel in arg_names:
-            yticklabels = batch_pair_args[ylabel]
-            arg_names.remove(ylabel)
-        else:
-            raise ValueError(f"{ylabel} not in {arg_names}")
-        # reverse yticklabels so that the first image is the top left
-        yticklabels = yticklabels[::-1]
-
-        if xlabel is None and len(arg_names) > 0:
-            xlabel = arg_names[0]
-        if xlabel in arg_names:
-            xticklabels = batch_pair_args[xlabel]
-            arg_names.remove(xlabel)
-        else:
-            xticklabels = None
-
-        if zlabel is None and len(arg_names) > 0:
-            zlabel = arg_names[0]
-        if zlabel in arg_names:
-            ztitles = batch_pair_args[zlabel]
-            arg_names.remove(zlabel)
-        else:
-            ztitles = [None]
-
-        results = args["results"]
-        prompt = args["text_prompts"]
-        ncols = 1 if xticklabels is None else len(xticklabels)
-
-        log.info(f"Prompt: {prompt}")
-        for ztitle in ztitles:
-            title = f"batch name: {batch_name}\nprompt: {prompt}\n"
-            if ztitle is not None:
-                output_filepath = batch_config_path.replace(
-                    ".yaml", f"_{zlabel}({ztitle}).png"
-                )
-                title += f"{zlabel}: {ztitle}\n"
-            else:
-                output_filepath = batch_config_path.replace(".yaml", ".png")
-
-            image_filepaths = []
-            for result in results:
-                if zlabel is None or result["args"][zlabel] == ztitle:
-                    image_filepaths.append(result["image_filepaths"][0])
-
-            eKonf.collage(
-                image_filepaths=image_filepaths,
-                output_filepath=output_filepath,
-                ncols=ncols,
-                title=title,
-                title_fontsize=prompt_fontsize,
-                show_filename=show_filename,
-                filename_offset=filename_offset,
-                fontname=fontname,
-                fontsize=fontsize,
-                fontcolor=fontcolor,
-                xlabel=xlabel,
-                ylabel=ylabel,
-                xticklabels=xticklabels,
-                yticklabels=yticklabels,
-                xlabel_fontsize=fontsize,
-                ylabel_fontsize=fontsize,
-                **kwargs,
-            )
-            print(f"Saved collage to {output_filepath}")
+    @property
+    def download_config(self):
+        return self.config.download
 
     def imagine_generator(
         self,
@@ -370,7 +229,7 @@ class DiscoDiffusion(BaseModel):
         return results
 
     def get_model_path(self, model_name):
-        model_filepath = self._download.models[model_name]["path"]
+        model_filepath = self.download_config.models[model_name]["path"]
         return model_filepath
 
     def _prepare_models(self):
@@ -473,7 +332,7 @@ class DiscoDiffusion(BaseModel):
         from .secondary import SecondaryDiffusionImageNet2
 
         DEVICE = torch.device(
-            f"cuda:{self.args.cuda_device}" if torch.cuda.is_available() else "cpu"
+            f"cuda:{self.config.device}" if torch.cuda.is_available() else "cpu"
         )
         log.info(f"Using device:{DEVICE}")
         self.cuda_device = DEVICE
@@ -542,7 +401,7 @@ class DiscoDiffusion(BaseModel):
 
     def download_models(self):
         """Download the models"""
-        download = self.args.download
+        download = self.config.download
         check_model_SHA = download.check_model_SHA
         for name, model in download.models.items():
             if not isinstance(model, str):
@@ -2012,7 +1871,6 @@ class DiscoDiffusion(BaseModel):
         )
 
     def _prepare_folders(self, batch_name):
-        super()._prepare_folders(batch_name)
         o = self._output
         batch_dir = o.batch_dir
         o.retain_dir = os.path.join(batch_dir, "retained")
@@ -2023,9 +1881,6 @@ class DiscoDiffusion(BaseModel):
         o.flo_fwd_dir = os.path.join(o.video_frames_dir, "out_flo_fwd")
         o.flo_out_dir = os.path.join(batch_dir, "flow")
         o.blend_out_dir = os.path.join(batch_dir, "blend")
-        for _name, _path in o.items():
-            if _name.endswith("_dir") and not os.path.exists(_path):
-                os.makedirs(_path)
         o.prev_frame_path = os.path.join(batch_dir, "prev_frame.png")
         o.prev_frame_scaled_path = os.path.join(batch_dir, "prev_frame_scaled.png")
         o.progress_path = os.path.join(batch_dir, "progress.png")
@@ -2149,15 +2004,15 @@ class DiscoDiffusion(BaseModel):
                 force=force,
             )
 
-    def parameters(self, name=None):
+    def show_parameters(self, name=None):
         if name is None:
-            eKonf.print(self._parameters)
+            eKonf.print(self.parameters)
         else:
-            if name in self._parameters:
-                eKonf.print(self._parameters[name])
+            if name in self.parameters:
+                eKonf.print(self.parameters[name])
             else:
-                for cfg in self._parameters:
-                    for k, v in self._parameters[cfg].items():
+                for cfg in self.parameters:
+                    for k, v in self.parameters[cfg].items():
                         if re.search(name, k):
                             print(f"[{k}]")
                             print(v)

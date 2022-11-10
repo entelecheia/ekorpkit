@@ -1,10 +1,10 @@
 defaults:
   - /module: stable_diffusion
   - /path: stable_diffusion
-  - batch: default
+  - /batch: stable_diffusion
   - model: default
   - imagine: default
-  - collage: default
+  - /collage: default
 
 _target_: ekorpkit.models.art.stable.StableDiffusion
 autoload: false

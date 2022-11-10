@@ -1,7 +1,7 @@
 defaults:
-  - /module: disco
-  - /path: disco
-  - batch: default
+  - /module: disco_diffusion
+  - /path: disco_diffusion
+  - /batch: disco_diffusion
   - imagine: default
   - parameters: default
   - model: default
@@ -9,13 +9,14 @@ defaults:
   - diffusion_model: default
   - midas: default
   - download: default
+  - /collage: default
 
 _target_: ekorpkit.models.disco.base.DiscoDiffusion
 name: disco-diffusion
 version: v5.61
 autoload: true
 verbose: ${oc.select:..verbose, false}
-cuda_device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
+device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
 text_prompts:
   0:
     - At a special meeting, hawkish central bankers are poised to raise the target rates, Trending on artstation.

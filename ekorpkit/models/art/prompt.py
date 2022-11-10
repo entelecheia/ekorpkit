@@ -2,6 +2,7 @@ import logging
 import random
 import wandb
 import datasets
+from pathlib import Path
 from datasets import DatasetDict
 from transformers import (
     AutoTokenizer,
@@ -14,6 +15,7 @@ from ekorpkit import eKonf
 from tqdm.auto import tqdm
 from functools import partialmethod
 from ekorpkit.batch import BaseConfig
+from .stable import StableDiffusion
 
 
 def disable_tqdm():
@@ -29,11 +31,6 @@ class PromptGenerator(BaseConfig):
     start_token = "<BOP>"
     pad_token = "<PAD>"
     end_token = "<EOP>"
-    special_tokens = {
-        "bos_token": start_token,
-        "eos_token": end_token,
-        "pad_token": pad_token,
-    }
 
     def __init__(self, root_dir=None, config_name="default", **args):
         cfg = eKonf.compose(f"model/prompt={config_name}")
@@ -41,20 +38,34 @@ class PromptGenerator(BaseConfig):
         super().__init__(root_dir=root_dir, **cfg)
         eKonf.env_set("WANDB_PROJECT", cfg.wandb_project)
 
-        self.model = None
-        self.dataset = None
-        self.tokenizer = None
+        self._model = None
+        self._dataset = None
+        self._tokenizer = None
+        self._diffuser = None
 
-    def generate_prompts(self, prompt=None, **kwargs):
+    @property
+    def generate_config(self):
+        return self.config.generate
+
+    @generate_config.setter
+    def generate_config(self, config):
+        self.config.generate = config
+
+    def generate_prompts(
+        self,
+        prompt=None,
+        num_prompts_to_generate=5,
+        batch_name=None,
+        generate_images=True,
+        num_samples=3,
+        **kwargs,
+    ):
         self.load_config()
-        cfg = self.config.generate
+        cfg = self.generate_config
+        cfg.num_prompts_to_generate = num_prompts_to_generate
         cfg = eKonf.merge(cfg, kwargs)
 
-        if self.tokenizer is None:
-            self.load_tokenizer()
         tokenizer = self.tokenizer
-        if self.model is None:
-            self.load_model()
         model = self.model
 
         if prompt is None:
@@ -65,8 +76,7 @@ class PromptGenerator(BaseConfig):
 
         encoded_prompt = tokenizer(
             prompt, add_special_tokens=False, return_tensors="pt"
-        ).input_ids
-        encoded_prompt = encoded_prompt.to(model.device)
+        ).input_ids.to(model.device)
 
         output_sequences = model.generate(
             input_ids=encoded_prompt,
@@ -104,75 +114,113 @@ class PromptGenerator(BaseConfig):
             if self.verbose:
                 log.info(f"Prompt {i}: {text}")
 
-        self.config.generated_prompts = generated_prompts
-        self.config.generate = cfg
+        self.generated_prompts = generated_prompts
+        self.generate_config = cfg
         self.save_config()
+
+        if generate_images:
+            self.generate_images(
+                generated_prompts, batch_name=batch_name, num_samples=num_samples
+            )
         return generated_prompts
 
-    def load_dataset(self, dset=None, **kwargs):
-        if dset is None:
-            dset = self.config.dataset
-        if dset is None:
-            log.warning("No dataset provided")
+    @property
+    def generated_prompts(self):
+        return self.config.generated_prompts
+
+    @generated_prompts.setter
+    def generated_prompts(self, value):
+        self.config.generated_prompts = value
+
+    def generate_images(
+        self,
+        prompts=None,
+        batch_name=None,
+        num_samples=3,
+        max_display_image_width=800,
+        **kwargs,
+    ):
+        if prompts is None:
+            prompts = list(self.generated_prompts)
+        if prompts is None:
+            log.warning("No prompts provided")
             return None
+        if not isinstance(prompts, list):
+            prompts = [prompts]
 
-        if isinstance(dset, str):
-            self.dataset = datasets.load_dataset(dset, **kwargs)
-        elif eKonf.is_config(dset):
-            self.dataset = datasets.load_dataset(
-                dset.path,
-                cache_dir=self.path.cache_dir,
-                download_mode=dset.download_mode,
-                **kwargs,
-            )
-        else:
-            self.dataset = dset
-        if self.verbose:
-            log.info(f"Dataset: {self.dataset}")
+        if batch_name is None:
+            batch_name = f"{self.name}_batch"
+        batch_run_params = {"text_prompts": prompts}
+        batch_run_pairs = [["text_prompts"]]
 
-    def load_tokenizer(self, tokenizer=None, **kwargs):
-        if tokenizer is None:
-            tokenizer = self.config.tokenizer
-        if tokenizer is None:
-            log.warning("No tokenizer provided")
-            return None
+        batch_results = self.diffuser.batch_imagine(
+            batch_name=batch_name,
+            batch_run_params=batch_run_params,
+            batch_run_pairs=batch_run_pairs,
+            num_samples=num_samples,
+            max_display_image_width=max_display_image_width,
+            **kwargs,
+        )
 
-        if isinstance(tokenizer, str):
-            self.tokenizer = AutoTokenizer.from_pretrained(tokenizer, **kwargs)
-        elif eKonf.is_config(tokenizer):
-            self.start_token = tokenizer.start_token
-            self.end_token = tokenizer.end_token
-            self.pad_token = tokenizer.pad_token
-            self.special_tokens = {
-                "bos_token": self.start_token,
-                "eos_token": self.end_token,
-                "pad_token": self.pad_token,
-            }
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                tokenizer.pretrained_model_name_or_path,
-                cache_dir=self.path.cache_dir,
-                **kwargs,
-            )
-        else:
-            self.tokenizer = tokenizer
-        self.tokenizer.add_special_tokens(self.special_tokens)
-        if self.verbose:
-            log.info(f"Tokenizer: {self.tokenizer}")
+        return batch_results
 
-    def load_model(self, model_name=None, **kwargs):
+    @property
+    def diffuser(self):
+        if self._diffuser is None:
+            self._diffuser = StableDiffusion()
+        return self._diffuser
+
+    def imagine(
+        self,
+        text_prompts=None,
+        batch_name=None,
+        num_samples=1,
+        **imagine_args,
+    ):
+        if batch_name is None:
+            batch_name = self.name
+        return self.diffuser.imagine(
+            text_prompts=text_prompts,
+            batch_name=batch_name,
+            num_samples=num_samples,
+            **imagine_args,
+        )
+
+    @property
+    def model(self):
+        if self._model is None:
+            self.load_model()
+        return self._model
+
+    @property
+    def model_name(self):
+        return self.config.model.model_name
+
+    @model_name.setter
+    def model_name(self, model_name):
+        self.config.model.model_name = model_name
+
+    def load_model(self, model_name: str = None, model_dir: str = None, **kwargs):
         if model_name is None:
-            model_name = self.config.model.model_name
+            model_name = self.model_name
+        if model_dir is None:
+            model_dir = self.model_dir
         if model_name is None:
             log.warning("No model provided")
             return None
-        self.config.model.model_name = model_name
 
-        model_path = self.model_dir / model_name
-        log.info(f"Loading model from {model_path}")
-        self.model = AutoModelForCausalLM.from_pretrained(model_path, **kwargs)
-        self.model.to(self.config.device)
-        if self.verbose:
-            log.info(f"Model: {self.model}")
+        if self._model is None or model_name != self.model_name:
+
+            model_path = Path(model_dir) / model_name
+            log.info(f"Loading model from {model_path}")
+            self._model = AutoModelForCausalLM.from_pretrained(model_path, **kwargs)
+            self._model.to(self.device)
+            if self.verbose:
+                log.info(f"Model: {self.model}")
+            self.model_name = model_name
+
+        else:
+            log.info("Model already loaded")
 
     def tokenize(
         self,
@@ -184,8 +232,6 @@ class PromptGenerator(BaseConfig):
         split="train",
         padding="max_length",
     ):
-        if self.tokenizer is None:
-            self.load_tokenizer()
         tokenizer = self.tokenizer
         if tokenizer is None:
             log.warning("No tokenizer provided")
@@ -253,31 +299,81 @@ class PromptGenerator(BaseConfig):
         )
         return tokenized_dataset
 
-    def train(self, model_name=None):
+    @property
+    def model_config(self):
+        return self.config.model
+
+    @model_config.setter
+    def model_config(self, value):
+        self.config.model = value
+
+    @property
+    def training_dir(self):
+        return self.output_dir / "training"
+
+    @property
+    def train_config(self):
+        return self.config.train
+
+    @train_config.setter
+    def train_config(self, value):
+        self.config.train = value
+
+    @property
+    def trainer_config(self):
+        return self.config.trainer
+
+    @trainer_config.setter
+    def trainer_config(self, value):
+        self.config.trainer = value
+
+    def train(
+        self,
+        model_name=None,
+        pretrained_model_name_or_path=None,
+        dataset=None,
+        prompt_column=None,
+        split=None,
+    ):
         if model_name is None:
-            model_name = self.config.model.model_name
+            model_name = self.model_name
+
         if model_name is None:
             log.warning("No model provided")
             return None
-        self.config.model.model_name = model_name
 
-        model_train_dir = self.path.training_dir / model_name
-        cache_dir = self.path.cache_dir
-        pretrained_model_name_or_path = self.config.model.pretrained_model_name_or_path
-        prompt_column = self.config.dataset.prompt_column
-        split = self.config.dataset.split
+        if pretrained_model_name_or_path is None:
+            pretrained_model_name_or_path = (
+                self.train_config.pretrained_model_name_or_path
+            )
+        else:
+            self.train_config.pretrained_model_name_or_path = (
+                pretrained_model_name_or_path
+            )
+        if prompt_column is None:
+            prompt_column = self.train_config.prompt_column
+        else:
+            self.train_config.prompt_column = prompt_column
+        if split is None:
+            split = self.train_config.split
+        else:
+            self.train_config.split = split
 
-        shuffle_prompts = self.config.tokenize.shuffle_prompts
-        num_shuffles = self.config.tokenize.num_shuffles
-        batch_size = self.config.tokenize.batch_size
-        padding = self.config.tokenize.padding
+        # load up the dataset
+        if dataset is None:
+            dataset = self.dataset
+
+        model_train_dir = self.training_dir / model_name
+        cache_dir = self.cache_dir
+
+        shuffle_prompts = self.tokenize_config.shuffle_prompts
+        num_shuffles = self.tokenize_config.num_shuffles
+        batch_size = self.tokenize_config.batch_size
+        padding = self.tokenize_config.padding
 
         tokenizer = self.tokenizer
-        # load up the dataset
-        if self.dataset is None:
-            self.load_dataset()
         tokenized_dataset = self.tokenize(
-            dataset=self.dataset,
+            dataset=dataset,
             prompt_column=prompt_column,
             shuffle_prompts=shuffle_prompts,
             num_shuffles=num_shuffles,
@@ -287,12 +383,13 @@ class PromptGenerator(BaseConfig):
         )
 
         # train the model
-        self.config.trainer.seed = self.seed
+        self.trainer_config.seed = self.seed
+        self.trainer_config.run_name = model_name
         training_args = TrainingArguments(
             output_dir=model_train_dir,
-            **self.config.trainer,
+            **self.trainer_config,
         )
-        self.model = None
+
         model = AutoModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path, cache_dir=cache_dir
         )
@@ -310,25 +407,104 @@ class PromptGenerator(BaseConfig):
         wandb.finish()
         trainer = None
 
-        self.model = model
-        self.model.to(self.config.device)
-        self.config.generated_prompts = None
-        self.save_model(model_name=model_name)
+        self.generated_prompts = None
+        self.save_model(model, model_name=model_name)
 
-    def save_model(self, model_name=None, **kwargs):
-        if self.model is None:
-            log.warning("Train model first")
+    def save_model(self, model, model_name=None, model_dir=None, **kwargs):
+        if model is None:
+            log.warning("No model provided")
             return None
 
         if model_name is None:
-            model_name = self.config.model.model_name
+            model_name = self.model_name
+        if model_dir is None:
+            model_dir = self.model_dir
+
         if model_name is None:
             log.warning("No model provided")
             return None
-        self.config.model.model_name = model_name
 
-        model_path = self.path.model_dir / model_name
+        model_path = Path(model_dir) / model_name
         model_path.mkdir(parents=True, exist_ok=True)
         log.info(f"Saving model to {model_path}")
-        self.model.save_pretrained(model_path, **kwargs)
+        model.save_pretrained(model_path, **kwargs)
+        self._model = model
+        self._model.to(self.config.device)
+        self.model_name = model_name
         self.save_config()
+
+    @property
+    def dataset_config(self):
+        return self.config.dataset
+
+    @dataset_config.setter
+    def dataset_config(self, value):
+        self.config.dataset = value
+
+    @property
+    def dataset(self):
+        if self._dataset is None:
+            self.load_dataset()
+        return self._dataset
+
+    def load_dataset(
+        self,
+        path=None,
+        download_mode=None,
+        **kwargs,
+    ):
+        if path is None:
+            path = self.dataset_config.path
+        else:
+            self.dataset_config.path = path
+        if download_mode is None:
+            download_mode = self.dataset_config.download_mode
+        else:
+            self.dataset_config.download_mode = download_mode
+
+        self._dataset = datasets.load_dataset(
+            path,
+            cache_dir=self.cache_dir,
+            download_mode=download_mode,
+            **kwargs,
+        )
+        if self.verbose:
+            log.info(f"Dataset: {self._dataset}")
+        return self._dataset
+
+    @property
+    def tokenize_config(self):
+        return self.config.tokenize
+
+    @property
+    def special_tokens(self):
+        return {
+            "bos_token": self.start_token,
+            "eos_token": self.end_token,
+            "pad_token": self.pad_token,
+        }
+
+    @property
+    def tokenizer(self):
+        if self._tokenizer is None:
+            self.load_tokenizer()
+        return self._tokenizer
+
+    def load_tokenizer(self, pretrained_model_name_or_path=None, **kwargs):
+        if pretrained_model_name_or_path is None:
+            pretrained_model_name_or_path = (
+                self.train_config.pretrained_model_name_or_path
+            )
+
+        self.start_token = self.tokenize_config.start_token
+        self.end_token = self.tokenize_config.end_token
+        self.pad_token = self.tokenize_config.pad_token
+
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            pretrained_model_name_or_path,
+            cache_dir=self.cache_dir,
+            **kwargs,
+        )
+        self._tokenizer.add_special_tokens(self.special_tokens)
+        if self.verbose:
+            log.info(f"Tokenizer: {self._tokenizer}")

@@ -1,9 +1,10 @@
 defaults:
   - /module: dalle_mini
   - /path: dalle_mini
-  - batch: default
+  - /batch: dalle_mini
   - model: default
   - imagine: default
+  - /collage: default
 
 _target_: ekorpkit.models.art.mini.DalleMini
 autoload: true

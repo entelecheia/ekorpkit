@@ -28,26 +28,6 @@ class BaseModel(BaseConfig):
         self.sample_imagepaths = []
 
     @property
-    def autoload(self):
-        return self.config.get("autoload", False)
-
-    @property
-    def device(self):
-        return self.config.get("device", "cpu")
-
-    @property
-    def num_devices(self):
-        return self.config.get("num_devices")
-
-    @num_devices.setter
-    def num_devices(self, num_devices):
-        self.config.num_devices = num_devices
-
-    @property
-    def version(self):
-        return self.config.get("version", "0.0.0")
-
-    @property
     def model_config(self):
         return self.config.model
 
@@ -203,7 +183,7 @@ class BaseModel(BaseConfig):
 
         if batch.display_collage or batch.save_collage:
             eKonf.clear_output(wait=True)
-            for batch_run_name, run_config_path in batch.run_configs.items():
+            for batch_run_name, run_config_path in run_configs.items():
                 collage_filepaths[batch_run_name] = self.batch_collage(
                     run_config_path, max_display_image_width=max_display_image_width
                 )

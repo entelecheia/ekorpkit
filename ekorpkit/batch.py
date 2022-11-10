@@ -88,6 +88,26 @@ class BaseConfig:
         self._init_batch()
 
     @property
+    def autoload(self):
+        return self.config.get("autoload", False)
+
+    @property
+    def device(self):
+        return self.config.get("device", "cpu")
+
+    @property
+    def num_devices(self):
+        return self.config.get("num_devices")
+
+    @num_devices.setter
+    def num_devices(self, num_devices):
+        self.config.num_devices = num_devices
+
+    @property
+    def version(self):
+        return self.config.get("version", "0.0.0")
+
+    @property
     def name(self):
         return self.config.name
 
@@ -126,6 +146,14 @@ class BaseConfig:
     @property
     def model_dir(self):
         return Path(self.path.get("model_dir"))
+
+    @property
+    def cache_dir(self):
+        cache_dir = self.path.get("cache_dir")
+        if cache_dir is None:
+            cache_dir = self.output_dir / "cache"
+            cache_dir.mkdir(parents=True, exist_ok=True)
+        return Path(cache_dir)
 
     @property
     def batch_name(self):

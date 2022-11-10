@@ -1,0 +1,8 @@
+defaults:
+  - _batch_
+
+name: disco-imagen
+output_dir: ${mkdir:${join_path:${.root},outputs/disco-diffusion}}
+archive_dir: ${mkdir:${join_path:${dir.archive},${.name}}}
+pretrained_dir: ${mkdir:${join_path:${.root},pretrained}}
+init_dir: ${mkdir:${join_path:${.root},init_images}}

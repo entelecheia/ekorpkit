@@ -24,8 +24,12 @@ log = logging.getLogger(__name__)
 
 
 class StableDiffusion(BaseModel):
-    def __init__(self, root_dir=None, config_name="default", **args):
+    def __init__(
+        self, hf_user_access_token=None, root_dir=None, config_name="default", **args
+    ):
         cfg = eKonf.compose(f"model/stable_diffusion={config_name}")
+        if hf_user_access_token is not None:
+            args["hf_user_access_token"] = hf_user_access_token
         cfg = eKonf.merge(cfg, args)
         super().__init__(root_dir=root_dir, **cfg)
 
@@ -34,7 +38,7 @@ class StableDiffusion(BaseModel):
         self.generator = None
 
         if not self.hf_user_access_token:
-            self.check_hf_access_token()
+            self.login_hf_hub()
         if self.autoload:
             self.load_diffusers()
 

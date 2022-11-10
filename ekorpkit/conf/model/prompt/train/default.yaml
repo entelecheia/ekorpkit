@@ -1,0 +1,3 @@
+pretrained_model_name_or_path: distilgpt2 # bigscience/bloom-560m
+prompt_column: Prompt
+split: train
