@@ -3,7 +3,6 @@ defaults:
   - /batch: prompt
   - dataset: default
   - model: default
-  - tokenize: default
   - train: default
   - trainer: default
   - generate: default

@@ -366,10 +366,10 @@ class PromptGenerator(BaseConfig):
         model_train_dir = self.training_dir / model_name
         cache_dir = self.cache_dir
 
-        shuffle_prompts = self.tokenize_config.shuffle_prompts
-        num_shuffles = self.tokenize_config.num_shuffles
-        batch_size = self.tokenize_config.batch_size
-        padding = self.tokenize_config.padding
+        shuffle_prompts = self.train_config.shuffle_prompts
+        num_shuffles = self.train_config.num_shuffles
+        batch_size = self.train_config.batch_size
+        padding = self.train_config.padding
 
         tokenizer = self.tokenizer
         tokenized_dataset = self.tokenize(
@@ -495,10 +495,6 @@ class PromptGenerator(BaseConfig):
             pretrained_model_name_or_path = (
                 self.train_config.pretrained_model_name_or_path
             )
-
-        self.start_token = self.tokenize_config.start_token
-        self.end_token = self.tokenize_config.end_token
-        self.pad_token = self.tokenize_config.pad_token
 
         self._tokenizer = AutoTokenizer.from_pretrained(
             pretrained_model_name_or_path,
