@@ -140,7 +140,7 @@ def label_collage(
     if xlabel is None and ylabel is None:
         plt.axis("off")
     if title is not None:
-        ax.set_title(title, fontsize=title_fontsize, color=fg_fontcolor)
+        ax.set_title(title, fontsize=title_fontsize, color=fg_fontcolor, wrap=True)
     if xlabel is not None:
         # plt.xlabel(xlabel, fontdict={"fontsize": xlabel_fontsize})
         ax.set_xlabel(xlabel, fontsize=xlabel_fontsize, color=fg_fontcolor)

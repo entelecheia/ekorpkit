@@ -67,9 +67,9 @@ pymongo: database
 plotly: all, doc, visualize
 kaleido: all, doc, visualize
 rich: all, doc, visualize
-matplotlib: all, doc, visualize
+matplotlib: all, doc, visualize, art
 seaborn: all, doc, visualize
-Pillow<9.1.0: all, doc, visualize
+Pillow<9.1.0: all, doc, visualize, art
 
 tensorflow-datasets: dataset
 # tensorflow-io: dataset

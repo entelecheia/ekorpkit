@@ -1,4 +1,3 @@
-import os
 import logging
 from ekorpkit import eKonf
 from ekorpkit.batch import BaseConfig
@@ -27,16 +26,6 @@ class BaseModel(BaseConfig):
         self.load_modules()
         self.sample_imagepaths = []
 
-    @property
-    def model_config(self):
-        return self.config.model
-
-    @property
-    def module_config(self):
-        if "module" in self.config:
-            return self.config.module
-        return {}
-
     def load(self):
         log.info("> downloading models...")
         self.download_models()
@@ -49,23 +38,6 @@ class BaseModel(BaseConfig):
 
     def load_models(self):
         raise NotImplementedError
-
-    def load_modules(self):
-        """Load the modules"""
-        if self.module_config.get("modules") is None:
-            log.info("No modules to load")
-            return
-        library_dir = self.path.library_dir
-        for module in self.module_config.modules:
-            name = module.name
-            libname = module.libname
-            liburi = module.liburi
-            specname = module.specname
-            libpath = os.path.join(library_dir, libname)
-            syspath = module.get("syspath")
-            if syspath is not None:
-                syspath = os.path.join(library_dir, syspath)
-            eKonf.ensure_import_module(name, libpath, liburi, specname, syspath)
 
     def download_models(self):
         """Download the models"""
@@ -286,8 +258,8 @@ class BaseModel(BaseConfig):
 
             if len(image_filepaths) == 0:
                 continue
-            # if prompt:
-            #     title += f"Prompt: {prompt}\n"
+            if prompt:
+                title += f"\nPrompt: {prompt}"
 
             collage_result = collage(
                 images_or_uris=image_filepaths,

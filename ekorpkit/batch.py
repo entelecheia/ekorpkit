@@ -144,6 +144,12 @@ class BaseConfig:
         return Path(self.path.output_dir)
 
     @property
+    def model_config(self):
+        if "model" in self.config:
+            return self.config.model
+        return {}
+
+    @property
     def model_dir(self):
         return Path(self.path.get("model_dir"))
 
@@ -249,3 +255,30 @@ class BaseConfig:
     def show_config(self, batch_name=None, batch_num=None):
         cfg = self.load_config(batch_name, batch_num)
         eKonf.print(cfg)
+
+    @property
+    def module_config(self):
+        if "module" in self.config:
+            return self.config.module
+        return {}
+
+    @property
+    def library_dir(self):
+        return Path(self.path.library_dir)
+
+    def load_modules(self):
+        """Load the modules"""
+        if self.module_config.get("modules") is None:
+            log.info("No modules to load")
+            return
+        library_dir = self.library_dir
+        for module in self.module_config.modules:
+            name = module.name
+            libname = module.libname
+            liburi = module.liburi
+            specname = module.specname
+            libpath = library_dir / libname
+            syspath = module.get("syspath")
+            if syspath is not None:
+                syspath = library_dir / syspath
+            eKonf.ensure_import_module(name, libpath, liburi, specname, syspath)

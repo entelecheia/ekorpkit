@@ -10,5 +10,5 @@ _target_: ekorpkit.models.art.stable.StableDiffusion
 autoload: false
 name: stable-diffusion
 verbose: ${oc.select:..verbose, false}
-device: "cuda:7"
+device: "cuda:0"
 hf_user_access_token:

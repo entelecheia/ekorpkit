@@ -60,8 +60,6 @@ def _display(
     metadata=None,
     transient=None,
     display_id=None,
-    raw=False,
-    clear=False,
     **kwargs,
 ):
     from IPython import display
@@ -74,8 +72,6 @@ def _display(
             metadata=metadata,
             transient=transient,
             display_id=display_id,
-            raw=raw,
-            clear=clear,
             **kwargs,
         )
 
@@ -93,6 +89,49 @@ def _display_image(
     metadata=None,
     **kwargs,
 ):
+    """
+    Display an image, which can be given as raw data or a URL.
+
+    Parameters
+    ----------
+    data : unicode, str or bytes
+        The raw image data or a URL or filename to load the data from.
+        This always results in embedded image data.
+    url : unicode
+        A URL to download the data from. If you specify `url=`,
+        the image data will not be embedded unless you also specify `embed=True`.
+    filename : unicode
+        Path to a local file to load the data from.
+        Images from a file are always embedded.
+    format : unicode
+        The format of the image data (png/jpeg/jpg/gif). If a filename or URL is given
+        for format will be inferred from the filename extension.
+    embed : bool
+        Should the image data be embedded using a data URI (True) or be
+        loaded using an <img> tag. Set this to True if you want the image
+        to be viewable later with no internet connection in the notebook.
+
+        Default is `True`, unless the keyword argument `url` is set, then
+        default value is `False`.
+
+        Note that QtConsole is not able to display images if `embed` is set to `False`
+    width : int
+        Width in pixels to which to constrain the image in html
+    height : int
+        Height in pixels to which to constrain the image in html
+    retina : bool
+        Automatically set the width and height to half of the measured
+        width and height.
+        This only works for embedded images because it reads the width/height
+        from image data.
+        For non-embedded images, you can just set the desired display width
+        and height directly.
+    unconfined: bool
+        Set unconfined=True to disable max-width confinement of the image.
+    metadata: dict
+        Specify extra metadata to attach to the image.
+
+    """
     from IPython import display
 
     if _is_notebook():
