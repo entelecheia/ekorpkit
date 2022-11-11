@@ -662,8 +662,6 @@ class eKonf:
         metadata=None,
         transient=None,
         display_id=None,
-        raw=False,
-        clear=False,
         **kwargs,
     ):
         return _display(
@@ -673,8 +671,6 @@ class eKonf:
             metadata=metadata,
             transient=transient,
             display_id=display_id,
-            raw=raw,
-            clear=clear,
             **kwargs,
         )
 
