@@ -34,13 +34,14 @@ cssutils: all, parser, edgar
 
 evaluate: all, transformers, model
 simpletransformers>=0.63: all, transformers, model
-datasets: all, transformers, dataset, model
+datasets: all, transformers, dataset, model, art
 # torch: transformers
 tensorflow: all, model
 # tf-nightly: transformers, model
 flaml: automl, model, all
 yellowbrick: yellowbrick
 scipy: automl, model, all
+wandb: all, model, art
 
 boto3>=1.0,<2.0: aws, cached-path
 google-api-python-client: google

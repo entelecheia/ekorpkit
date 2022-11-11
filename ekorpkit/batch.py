@@ -83,6 +83,7 @@ class BaseConfig:
 
     def __init__(self, root_dir=None, **args):
         self.config = args
+        self._config = args
         self.verbose = args.get("verbose", False)
         self._init_path(root_dir=root_dir, **args)
         self._init_batch()
@@ -234,7 +235,7 @@ class BaseConfig:
             self.batch_name = batch_name
         self.batch_num = batch_num
 
-        cfg = self.config
+        cfg = self._config
         self._init_path()
         self._init_batch(verbose=False)
         if batch_num is not None:
