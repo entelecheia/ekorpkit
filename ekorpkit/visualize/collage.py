@@ -3,6 +3,7 @@ import logging
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import textwrap
 from typing import List
 from PIL import ImageDraw, Image
 from pydantic import BaseModel
@@ -113,7 +114,7 @@ def label_collage(
     collage: Collage,
     collage_filepath=None,
     title=None,
-    title_fontsize=12,
+    title_fontsize=10,
     xlabel=None,
     ylabel=None,
     xticklabels=None,
@@ -140,7 +141,16 @@ def label_collage(
     if xlabel is None and ylabel is None:
         plt.axis("off")
     if title is not None:
-        ax.set_title(title, fontsize=title_fontsize, color=fg_fontcolor, wrap=True)
+        title = "\n".join(
+            sum(
+                [
+                    textwrap.wrap(t, width=int(collage.width / 15 * 12 / title_fontsize))
+                    for t in title.split("\n")
+                ],
+                [],
+            )
+        )
+        ax.set_title(title, fontsize=title_fontsize, color=fg_fontcolor)
     if xlabel is not None:
         # plt.xlabel(xlabel, fontdict={"fontsize": xlabel_fontsize})
         ax.set_xlabel(xlabel, fontsize=xlabel_fontsize, color=fg_fontcolor)

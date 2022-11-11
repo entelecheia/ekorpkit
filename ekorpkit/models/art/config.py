@@ -195,7 +195,7 @@ class ImagineResult(BaseModel):
     stitched_image_path: str = None
 
 
-class BatchRunCfg(BaseModel):
+class BatchRunConfig(BaseModel):
     batch_name: str
     batch_run_pair: dict
     imagine_results: list = []
@@ -231,7 +231,7 @@ class BatchRunCfg(BaseModel):
         return self.collage_dir / self.collage_filename(suffix)
 
 
-class BatchRunConfig(BatchConfig):
+class BatchImagineConfig(BatchConfig):
     batch_run_params: dict = None
     batch_run_pairs: list = None
     num_samples: int = 1
@@ -279,7 +279,7 @@ class BatchRunConfig(BatchConfig):
         for run_pair in self.batch_run_pairs:
             batch_run_pair = {name: self.batch_run_params[name] for name in run_pair}
             batch_run_name = self.batch_name + "_" + "_".join(run_pair)
-            yield BatchRunCfg(
+            yield BatchRunConfig(
                 batch_name=batch_run_name,
                 batch_run_pair=batch_run_pair,
                 results=[],
@@ -298,7 +298,7 @@ class BatchRunConfig(BatchConfig):
             args.update(arg_pair)
         return args
 
-    def save_run_config(self, run_config: BatchRunCfg):
+    def save_run_config(self, run_config: BatchRunConfig):
         """Save the settings"""
         batch_name = run_config.batch_name
         filename = f"{batch_name}({self.batch_num})_{self.run_config_file}"
@@ -311,7 +311,7 @@ class BatchRunConfig(BatchConfig):
         """Load the settings"""
         log.info(f"Loading batch run config from {run_config_path}")
         run_config = eKonf.load(run_config_path)
-        return BatchRunCfg(**run_config)
+        return BatchRunConfig(**run_config)
 
 
 class RunConfig(BaseModel):

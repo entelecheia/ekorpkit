@@ -3,12 +3,12 @@ from ekorpkit import eKonf
 from ekorpkit.batch import BaseConfig
 from ekorpkit.visualize.collage import collage, label_collage
 from .config import (
-    BatchRunConfig,
+    BatchImagineConfig,
     BatchConfig,
     ImagineConfig,
     RunConfig,
     CollageConfig,
-    BatchRunCfg,
+    BatchRunConfig,
     BatchImagineResult,
 )
 
@@ -124,7 +124,7 @@ class BaseModel(BaseConfig):
         if num_samples is not None:
             imagine_args.update(dict(num_samples=num_samples))
 
-        batch = BatchRunConfig(
+        batch = BatchImagineConfig(
             output_dir=self.output_dir,
             batch_name=batch_name,
             batch_run_params=batch_run_params,
@@ -176,7 +176,7 @@ class BaseModel(BaseConfig):
         zlabel=None,
         ncols=3,
         max_images_per_collage=20,
-        prompt_fontsize=12,
+        prompt_fontsize=10,
         show_filename=False,
         filename_offset=(5, 5),
         fontname=None,
@@ -186,7 +186,7 @@ class BaseModel(BaseConfig):
         dpi=100,
         **kwargs,
     ):
-        cfg = BatchRunCfg(run_config_path=run_config_path)
+        cfg = BatchRunConfig(run_config_path=run_config_path)
         batch_name = cfg.batch_name
         batch_run_pair = cfg.batch_run_pair
         arg_names = list(batch_run_pair.keys())
@@ -234,7 +234,7 @@ class BaseModel(BaseConfig):
             zvalues = zvalues[:max_collages]
         for z, zvalue in enumerate(zvalues):
 
-            title = f"batch name: {batch_name}"
+            title = f"Batch name: {batch_name}"
             if zvalue is not None:
                 if zlabel == "text_prompts":
                     sfx = f"{zlabel}({z})"
