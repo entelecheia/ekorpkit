@@ -168,7 +168,7 @@ class BaseModel(BaseConfig):
     def batch_collage(
         self,
         run_config_path,
-        max_collages=5,
+        max_collages=10,
         display_collage=True,
         clear_output=False,
         xlabel=None,
@@ -292,7 +292,7 @@ class BaseModel(BaseConfig):
                 if clear_output:
                     eKonf.clear_output(wait=True)
                 if prompt:
-                    print(f"Prompt: {prompt}")
+                    print(f"Prompt[{z}]: {prompt}")
                 img = collage_result.image
                 if max_display_image_width is not None:
                     img = eKonf.scale_image(img, max_width=max_display_image_width)
