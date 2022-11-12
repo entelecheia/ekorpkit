@@ -39,10 +39,13 @@ class BpeTrainer(Trainer):
 
     def get_word_freqs(self, texts):
         word_freqs = collections.defaultdict(int)
-        for text in texts:
-            words = self.pre_tokenize(text)
-            for word in words:
-                word_freqs[word] += 1
+        for text_batch in texts:
+            if isinstance(text_batch, str):
+                text_batch = [text_batch]
+            for text in text_batch:
+                words = self.pre_tokenize(text)
+                for word in words:
+                    word_freqs[word] += 1
         # Remove words that are too rare
         word_freqs = {
             word: freq

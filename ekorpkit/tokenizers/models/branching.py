@@ -1,9 +1,10 @@
 import os
-import json
+import ekorpkit.io.zjson as json
 import logging
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
 from typing import Iterator, Optional, Union
+from enum import Enum
 from ekorpkit.visualize.base import get_plot_font
 from .base import Model
 from ..trainers.branching import BranchingEntropyTrainer
@@ -13,6 +14,12 @@ from ..utils.trie import Trie, entropy
 log = logging.getLogger(__name__)
 
 
+class BranchingDirection(str, Enum):
+    FORWARD = "forward"
+    BACKWARD = "backward"
+    BOTH = "both"
+
+
 class BranchingEntropy(Model):
     def __init__(
         self,
@@ -20,14 +27,16 @@ class BranchingEntropy(Model):
         branching_threshold=0.2,
         whitespace_token="▁",
         whitespace_token_as_prefix=True,
+        direction: BranchingDirection = BranchingDirection.FORWARD,
         verbose=False,
         **kwargs,
     ):
-        super().__init__(vocab)
         self.branching_threshold = branching_threshold
         self.whitespace_token = whitespace_token
         self.whitespace_token_as_prefix = whitespace_token_as_prefix
+        self.direction = direction
         self.verbose = verbose
+        super().__init__(vocab)
 
     def initialize_vocab(self, vocab, **kwargs):
         self.vocab = {}
@@ -38,10 +47,20 @@ class BranchingEntropy(Model):
         self.max_piece_length = None
         if vocab:
             self.vocab = vocab
-            self.fwd_trie, self.max_piece_length = self.initialize_trie(
-                vocab, "forward"
-            )
-            self.bwd_trie, _ = self.initialize_trie(vocab, "backward")
+            if (
+                self.direction == BranchingDirection.FORWARD
+                or self.direction == BranchingDirection.BOTH
+            ):
+                self.fwd_trie, self.max_piece_length = self.initialize_trie(
+                    vocab, "forward"
+                )
+            if (
+                self.direction == BranchingDirection.BACKWARD
+                or self.direction == BranchingDirection.BOTH
+            ):
+                self.bwd_trie, self.max_piece_length = self.initialize_trie(
+                    vocab, "backward"
+                )
 
     def initialize_trie(self, tokens, direction="forward"):
         trie = Trie(direction=direction)
@@ -252,8 +271,7 @@ class BranchingEntropy(Model):
             A :obj:`Tuple` with the vocab and the merges:
                 The vocabulary and merges loaded into memory
         """
-        with open(vocab, "r") as f:
-            vocab = json.load(f)
+        vocab = json.load(vocab)
         return vocab
 
     def save(self, folder, prefix=None, pretty: bool = False):
@@ -276,11 +294,8 @@ class BranchingEntropy(Model):
         """
         if prefix is not None:
             folder = os.path.join(folder, prefix)
-        vocab_filename = os.path.join(folder, "vocab.json")
+        vocab_filename = os.path.join(folder, "vocab.json.zst")
         if not os.path.exists(folder):
             os.makedirs(folder)
-        indent = 2 if pretty else None
-        json.dump(
-            self.vocab, open(vocab_filename, "w"), indent=indent, ensure_ascii=False
-        )
+        json.dump(self.vocab, vocab_filename)
         return [vocab_filename]

@@ -83,8 +83,11 @@ class BranchingEntropyTrainer(Trainer):
     def fit(self, texts):
         words = []
         iterator = tqdm(texts) if self.show_progress else texts
-        for text in iterator:
-            words += self.pre_tokenize(text)
+        for text_batch in iterator:
+            if isinstance(text_batch, str):
+                text_batch = [text_batch]
+            for text in text_batch:
+                words += self.pre_tokenize(text)
         word_freqs = self.get_word_freqs(words)
         vocab = self.initialize_subwords(word_freqs)
 

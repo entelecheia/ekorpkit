@@ -11,9 +11,9 @@ from ..utils.trie import Trie
 log = logging.getLogger(__name__)
 
 
-class UnigramTrainer(Trainer):
+class BranchingGramTrainer(Trainer):
     """
-    Trainer capable of training a Unigram model
+    Trainer capable of training a Branching gram model
     Args:
         vocab_size (:obj:`int`):
             The size of the final vocabulary, including all tokens and alphabet.
@@ -239,11 +239,8 @@ class UnigramTrainer(Trainer):
         """To turn off pruning, just set max_rounds=1"""
         words = []
         iterator = tqdm(texts) if self.show_progress else texts
-        for text_batch in iterator:
-            if isinstance(text_batch, str):
-                text_batch = [text_batch]
-            for text in text_batch:
-                words += self.pre_tokenize(text)
+        for text in iterator:
+            words += self.pre_tokenize(text)
         text = "".join(words)
         tokens, characters = self.initialize_vocab(words)
         vocab_size = self.vocab_size

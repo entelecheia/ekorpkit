@@ -70,7 +70,7 @@ def tarfile_reader(file, streaming=False):
             # end of record
             break
 
-        fname = hdr[:100].split(b"\0")[0]
+        # fname = hdr[:100].split(b"\0")[0]
 
         # if the file is too big to fit in the size field, tarfiles will actually
         # include a PaxHeader with the size in it, applicable to the immediate next file.

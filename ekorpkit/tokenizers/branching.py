@@ -135,7 +135,7 @@ class BranchingEntropyTokenizer(BaseTokenizer):
         """
         if prefix is not None:
             folder = os.path.join(folder, prefix)
-        vocab = os.path.join(folder, "vocab.json")
+        vocab = os.path.join(folder, "vocab.json.zst")
         config = os.path.join(folder, "config.json")
 
         return BranchingEntropyTokenizer.from_file(vocab, config, **kwargs)
