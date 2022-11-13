@@ -61,6 +61,13 @@ def get_filepaths(
             if Path(filepath).is_file():
                 filepaths.append(filepath)
         else:
+            if os.path.dirname(file) != "":
+                _dir = os.path.dirname(file)
+                file = os.path.basename(file)
+                if base_dir:
+                    base_dir = os.path.join(base_dir, _dir)
+                else:
+                    base_dir = _dir
             filepaths += glob_re(file, base_dir, recursive=recursive)
     filepaths = [fp for fp in filepaths if Path(fp).is_file()]
     if verbose:

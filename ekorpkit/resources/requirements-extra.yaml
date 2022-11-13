@@ -14,7 +14,8 @@ nltk: all, tokenize, nltk, tokenize-en
 sacremoses: all, tokenize
 emoji<2.0: all, tokenize, dataset
 spacy: tokenize
-# sentencepiece: tokenize
+sentencepiece: tokenize
+tokenizers: tokenize
 
 tomotopy: all, topic
 wordcloud: all, topic, visualize
@@ -34,7 +35,7 @@ cssutils: all, parser, edgar
 
 evaluate: all, transformers, model
 simpletransformers>=0.63: all, transformers, model
-datasets: all, transformers, dataset, model, art
+datasets: all, transformers, dataset, model, art, tokenize
 # torch: transformers
 tensorflow: all, model
 # tf-nightly: transformers, model

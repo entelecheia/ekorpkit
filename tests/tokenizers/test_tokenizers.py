@@ -67,4 +67,12 @@ def test_sentencepiece():
     sequence = "Investment opportunities in the company."
     tokens = sp.tokenize(sequence, nbest_size=1)
 
-    assert tokens ==  ['▁investment', '▁opportunit', 'ies', '▁in', '▁the', '▁company', '.']
+    assert tokens == [
+        "▁investment",
+        "▁opportunit",
+        "ies",
+        "▁in",
+        "▁the",
+        "▁company",
+        ".",
+    ]

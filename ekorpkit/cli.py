@@ -23,7 +23,7 @@ def listup(**args):
 
 
 def about(**args):
-    from . import __version__
+    # from . import __version__
 
     name = args.get("name")
     print()
@@ -32,7 +32,9 @@ def about(**args):
     print(f"\nExecute `{name} --help` to see what eKorpkit provides")
 
 
-@hydra.main(config_path="conf", config_name="config", version_base=__hydra_version_base__)
+@hydra.main(
+    config_path="conf", config_name="config", version_base=__hydra_version_base__
+)
 def hydra_main(cfg) -> None:
     verbose = cfg.verbose
 

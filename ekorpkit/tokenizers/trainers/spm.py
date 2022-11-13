@@ -1,12 +1,13 @@
 import unicodedata
-import io
 import os
 import logging
 import nltk
 import glob
+import sentencepiece as spm
 from tqdm.auto import tqdm
 from random import sample
-import sentencepiece as spm
+from ..config import ModelType, TrainerType
+from ekorpkit.utils.func import change_directory
 
 
 log = logging.getLogger(__name__)
@@ -17,31 +18,31 @@ def train_spm(
     input,
     output_dir,
     vocab_size=30000,
-    model_type="unigram",
+    model_type: ModelType = ModelType.UNIGRAM,
     character_coverage=1.0,
     num_threads=1,
     train_extremely_large_corpus=False,
     **kwargs,
 ):
-    model_name = f"{model_prefix}_{model_type}_vocab_{vocab_size}.model"
-    model = io.BytesIO()
+    model_prefix = f"{model_prefix}_{model_type}_{TrainerType.SPM}_vocab_{vocab_size}"
+    model_name = f"{model_prefix}.model"
     log.info(f"Training SentencePiece model {model_name}")
-
-    spm.SentencePieceTrainer.train(
-        input=input,
-        model_writer=model,
-        vocab_size=vocab_size,
-        character_coverage=character_coverage,
-        num_threads=num_threads,
-        train_extremely_large_corpus=train_extremely_large_corpus,
-        model_type=model_type,
-        **kwargs,
-    )
+    # change context work dir to output_dir
+    # so that the model is saved to the correct location
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+    with change_directory(output_dir):
+        spm.SentencePieceTrainer.train(
+            input=input,
+            model_prefix=model_prefix,
+            vocab_size=vocab_size,
+            character_coverage=character_coverage,
+            num_threads=num_threads,
+            train_extremely_large_corpus=train_extremely_large_corpus,
+            model_type=model_type,
+            **kwargs,
+        )
     output_filepath = os.path.join(output_dir, model_name)
-    with open(output_filepath, "wb") as f:
-        f.write(model.getvalue())
     log.info(f"saved model to {output_filepath}")
     return output_filepath
 
@@ -136,7 +137,7 @@ def export_sentence_chunk_files(
 
         with open(filepath, "w") as f:
 
-            for line in tqdm(data_chunk, desc=f"Writing sentences to {filename}"):
+            for line in tqdm(data_chunk, desc=filename):
 
                 line = line.strip()
 

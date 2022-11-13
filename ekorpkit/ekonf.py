@@ -932,7 +932,7 @@ class eKonf:
         """
         Scale an image to a maximum width, height, or number of pixels.
 
-        resample:   Image.NEAREST (0), Image.LANCZOS (1), Image.BILINEAR (2), 
+        resample:   Image.NEAREST (0), Image.LANCZOS (1), Image.BILINEAR (2),
                     Image.BICUBIC (3), Image.BOX (4) or Image.HAMMING (5)
         """
         from ekorpkit.visualize.utils import scale_image as _scale_image

@@ -1,0 +1,25 @@
+_target_: ekorpkit.tokenizers.trainer.train_tokenizer
+model_prefix:
+# output model name prefix. <model_name>.model and <model_name>.vocab are generated.
+input_files:
+# one-sentence-per-line raw corpus file.
+# No need to run tokenizer, normalizer or preprocessor.
+# By default, SentencePiece normalizes the input with Unicode NFKC.
+# You can pass a comma-separated list of files.
+input_dir:
+output_dir: tokenizers
+vocab_size: 30000
+model_type: unigram
+# model type. Choose from unigram (default), bpe, char, or word.
+# The input sentence must be pretokenized when using word type.
+trainer_type: huggingface
+num_workers: ${oc.select:num_workers, 1}
+project_dir: ${oc.select:dir.project, null}
+verbose: ${oc.select:verbose, false}
+special_tokens:
+  - "[PAD]"
+  - "[UNK]"
+  - "[CLS]"
+  - "[SEP]"
+  - "[MASK]"
+unk_token: "[UNK]"

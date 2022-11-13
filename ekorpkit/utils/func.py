@@ -65,10 +65,16 @@ def change_directory(directory):
 
     fancy_print(" Change directory to {}".format(directory))
     os.chdir(directory)
-    yield
+    try:
+        yield
 
-    fancy_print(" Change directory back to {}".format(original))
-    os.chdir(original)
+    except Exception as e:
+        fancy_print(" Exception: {}".format(e))
+        raise e
+
+    finally:
+        fancy_print(" Change directory back to {}".format(original))
+        os.chdir(original)
 
 
 def fancy_print(*args, color=None, bold=False, **kwargs):
@@ -88,9 +94,9 @@ def humanbytes(B, units=None):
     "Return the given bytes as a human friendly KB, MB, GB, or TB string"
     B = float(B)
     KB = float(1024)
-    MB = float(KB ** 2)  # 1,048,576
-    GB = float(KB ** 3)  # 1,073,741,824
-    TB = float(KB ** 4)  # 1,099,511,627,776
+    MB = float(KB**2)  # 1,048,576
+    GB = float(KB**3)  # 1,073,741,824
+    TB = float(KB**4)  # 1,099,511,627,776
 
     if (B < KB and units is None) or units == "B":
         return "{0} {1}".format(B, "Bytes" if 0 == B > 1 else "Byte")
