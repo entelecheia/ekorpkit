@@ -58,7 +58,7 @@ ray: ddbackend
 wget: all, fetch, dataset
 pycurl: all, fetch, dataset
 py7zr: all, fetch, dataset
-zstandard: all, fetch, dataset
+zstandard: all, fetch, dataset, tokenize
 # cached-path: fetch, dataset
 
 pymongo: database
@@ -75,7 +75,7 @@ Pillow<9.1.0: all, doc, visualize, art
 tensorflow-datasets: dataset
 # tensorflow-io: dataset
 lsh: all, dataset
-orjson: all, dataset, parser, fetch
+orjson: all, dataset, parser, fetch, tokenize
 datasketch: all, dataset
 pysimdjson: all, dataset, parser
 p_tqdm: all, dataset, parser
