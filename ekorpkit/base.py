@@ -229,6 +229,7 @@ def _compose(
 
     :return: The composed config
     """
+    is_initialized = hydra.core.global_hydra.GlobalHydra.instance().is_initialized()
     if config_group:
         _task = config_group.split("=")
         if len(_task) == 2:
@@ -241,44 +242,51 @@ def _compose(
         key = None
         value = None
     if key and value:
+        if is_initialized:
+            cfg = hydra.compose(config_name=config_name, overrides=overrides)
+        else:
+            with hydra.initialize_config_module(
+                config_module="ekorpkit.conf", version_base=__hydra_version_base__
+            ):
+                cfg = hydra.compose(config_name=config_name, overrides=overrides)
+        cfg = _select(
+            cfg,
+            key=key,
+            default=None,
+            throw_on_missing=False,
+            throw_on_resolution_failure=False,
+        )
+        if cfg:
+            overide = config_group
+        else:
+            overide = f"+{config_group}"
+        if overrides:
+            overrides.append(overide)
+        else:
+            overrides = [overide]
+    if verbose:
+        print(f"compose config with overrides: {overrides}")
+    if is_initialized:
+        logging.info("Hydra is already initialized")
+        cfg = hydra.compose(config_name=config_name, overrides=overrides)
+    else:
         with hydra.initialize_config_module(
             config_module="ekorpkit.conf", version_base=__hydra_version_base__
         ):
             cfg = hydra.compose(config_name=config_name, overrides=overrides)
-            cfg = _select(
-                cfg,
-                key=key,
-                default=None,
-                throw_on_missing=False,
-                throw_on_resolution_failure=False,
-            )
-            if cfg:
-                overide = config_group
-            else:
-                overide = f"+{config_group}"
-            if overrides:
-                overrides.append(overide)
-            else:
-                overrides = [overide]
+    if key:
+        cfg = _select(
+            cfg,
+            key=key,
+            default=None,
+            throw_on_missing=throw_on_missing,
+            throw_on_resolution_failure=throw_on_resolution_failure,
+        )
     if verbose:
-        print(f"compose config with overrides: {overrides}")
-    with hydra.initialize_config_module(
-        config_module="ekorpkit.conf", version_base=__hydra_version_base__
-    ):
-        cfg = hydra.compose(config_name=config_name, overrides=overrides)
-        if key:
-            cfg = _select(
-                cfg,
-                key=key,
-                default=None,
-                throw_on_missing=throw_on_missing,
-                throw_on_resolution_failure=throw_on_resolution_failure,
-            )
-        if verbose:
-            print(cfg)
-        if return_as_dict and isinstance(cfg, DictConfig):
-            return _to_dict(cfg)
-        return cfg
+        print(cfg)
+    if return_as_dict and isinstance(cfg, DictConfig):
+        return _to_dict(cfg)
+    return cfg
 
 
 def _to_dict(

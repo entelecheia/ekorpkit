@@ -1,0 +1,3 @@
+# @package _global_
+_target_: ekorpkit.cli.cmd
+_config_: about.app

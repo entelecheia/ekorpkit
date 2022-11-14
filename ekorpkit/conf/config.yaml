@@ -4,13 +4,16 @@ defaults:
   - about: default
   - cmd: default
   - corpus: default
+  - corpus/builtin: __init__
   - dataset: default
   - dir: default
   - env: default
   - mode: default
   - model: default
   - project: default
-  - io: _default
+  - tokenizer: default
+  - io: default
+  - run: default
 
   - override hydra/help: help
   - override hydra/hydra_logging: colorlog

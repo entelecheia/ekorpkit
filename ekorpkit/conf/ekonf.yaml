@@ -2,7 +2,6 @@
 defaults:
   - _self_
   - about: default
-  - cmd: default
   - corpus: default
   - dataset: default
   - dir: default
@@ -13,7 +12,8 @@ defaults:
   - preprocessor/normalizer: default
   - preprocessor/segmenter: default
   - preprocessor/tokenizer: default
-  - io: _default
+  - tokenizer: default
+  - io: default
 
   - override hydra/help: help
   - override hydra/hydra_logging: colorlog

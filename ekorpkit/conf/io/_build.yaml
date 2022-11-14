@@ -1,5 +1,5 @@
 defaults:
-  - _default
+  - default
   - data: default
   - meta: default
   - sample: default
