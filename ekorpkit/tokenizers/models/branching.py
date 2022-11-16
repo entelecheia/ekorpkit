@@ -1,6 +1,7 @@
 import os
 import ekorpkit.io.zjson as json
 import logging
+import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
 from typing import Iterator, Optional, Union
@@ -8,7 +9,12 @@ from enum import Enum
 from ekorpkit.visualize.base import get_plot_font
 from .base import Model
 from ..trainers.branching import BranchingEntropyTrainer
-from ..utils.trie import Trie, entropy
+from ..utils.trie import Trie
+from ..utils.score import (
+    Scores,
+    ScoreResult,
+    scores,
+)
 
 
 log = logging.getLogger(__name__)
@@ -24,19 +30,21 @@ class BranchingEntropy(Model):
     def __init__(
         self,
         vocab=None,
-        branching_threshold=0.2,
+        branching_threshold=0.0,
+        cohesion_threshold=0.0,
         whitespace_token="▁",
         whitespace_token_as_prefix=True,
-        direction: BranchingDirection = BranchingDirection.FORWARD,
         verbose=False,
         **kwargs,
     ):
         self.branching_threshold = branching_threshold
+        self.cohesion_threshold = cohesion_threshold
         self.whitespace_token = whitespace_token
         self.whitespace_token_as_prefix = whitespace_token_as_prefix
-        self.direction = direction
         self.verbose = verbose
         super().__init__(vocab)
+        # self._fwd_scores = {}
+        # self._bwd_scores = {}
 
     def initialize_vocab(self, vocab, **kwargs):
         self.vocab = {}
@@ -47,108 +55,198 @@ class BranchingEntropy(Model):
         self.max_piece_length = None
         if vocab:
             self.vocab = vocab
-            if (
-                self.direction == BranchingDirection.FORWARD
-                or self.direction == BranchingDirection.BOTH
-            ):
-                self.fwd_trie, self.max_piece_length = self.initialize_trie(
-                    vocab, "forward"
-                )
-            if (
-                self.direction == BranchingDirection.BACKWARD
-                or self.direction == BranchingDirection.BOTH
-            ):
-                self.bwd_trie, self.max_piece_length = self.initialize_trie(
-                    vocab, "backward"
-                )
+            # if (
+            #     self.direction == BranchingDirection.FORWARD
+            #     or self.direction == BranchingDirection.BOTH
+            # ):
+            #     self.fwd_trie, self.max_piece_length = self.initialize_trie(
+            #         vocab, BranchingDirection.FORWARD
+            #     )
+            # if (
+            #     self.direction == BranchingDirection.BACKWARD
+            #     or self.direction == BranchingDirection.BOTH
+            # ):
+            #     self.bwd_trie, self.max_piece_length = self.initialize_trie(
+            #         vocab, BranchingDirection.BACKWARD
+            #     )
+            self.fwd_trie, self.bwd_trie, self.max_piece_length = self.initialize_trie(
+                vocab
+            )
 
-    def initialize_trie(self, tokens, direction="forward"):
-        trie = Trie(direction=direction)
+    def initialize_trie(self, tokens):
+        fwd_trie = Trie(direction=BranchingDirection.FORWARD)
+        bwd_trie = Trie(direction=BranchingDirection.BACKWARD)
 
         maxlen = 0
-        for tok, val in tqdm(tokens.items(), desc=f"Building {direction} trie"):
-            trie.add(tok, val)
+        # for tok, val in tqdm(tokens.items(), desc=f"Building {direction} trie"):
+        for tok, val in tqdm(tokens.items(), desc=f"Building tries"):
+            fwd_trie.add(tok, val)
+            bwd_trie.add(tok, val)
             maxlen = max(maxlen, len(tok))
 
-        return trie, maxlen
+        return fwd_trie, bwd_trie, maxlen
 
-    def get_entropy(self, word, direction="forward"):
-        if direction == "forward":
+    def get_scores(
+        self, word, direction: BranchingDirection = BranchingDirection.FORWARD
+    ) -> Scores:
+        if direction == BranchingDirection.FORWARD:
             _trie = self.fwd_trie
         else:
             _trie = self.bwd_trie
-        return entropy(_trie, word)
+        return scores(_trie, word, self.whitespace_token)
 
-    def score(self, word, direction="forward"):
-        return self.get_entropy(word, direction=direction)
+    def show_local_entropy(self, word):
+        results = self.find_local_entropy(word)
+        results = [r.dict() for r in results]
 
-    def find_local_entropy(self, word, direction="forward"):
+        df = pd.DataFrame(results)
+        df = pd.concat(
+            [
+                df.char,
+                pd.json_normalize(df["L_scores"]).add_prefix("L_"),
+                df.avg_coh,
+                pd.json_normalize(df["diffs"]).add_prefix("D_"),
+                pd.json_normalize(df["R_scores"]).add_prefix("R_"),
+            ],
+            axis=1,
+        )
+        return df
+
+    def find_local_entropy(self, word) -> Iterator[ScoreResult]:
         # get the local entropy and the difference in entropy
 
-        entropies = []
-        for i in range(1, len(word) + 1):
-            if direction == "forward":
-                if word.startswith(self.whitespace_token):
-                    subword = word[:i]
-                else:
-                    subword = self.whitespace_token + word[:i]
-            else:
-                if word.endswith(self.whitespace_token):
-                    subword = word[-i:]
-                else:
-                    subword = word[-i:] + self.whitespace_token
-            _score = self.get_entropy(subword, direction=direction)
-            entropies.append(_score)
+        results: Iterator[ScoreResult] = []
+        for i, char in enumerate(word):
+            L_subword = word[: i + 1]
+            R_subword = word[i + 1 :]
+            if not L_subword.startswith(self.whitespace_token):
+                L_subword = self.whitespace_token + L_subword
+            if not R_subword.endswith(self.whitespace_token):
+                R_subword += self.whitespace_token
+            l_scores = self.get_scores(L_subword, direction="forward")
+            r_scores = self.get_scores(R_subword, direction="backward")
+            result = ScoreResult(char=char)
+            result.L_scores = l_scores
+            result.R_scores = r_scores
+            result.avg_coh = (l_scores.cohesion + r_scores.cohesion) / 2
+
+            results.append(result)
             if self.verbose:
-                print(subword, _score)
-        if direction == "backward":
-            entropies = entropies[::-1]
+                print(L_subword, result)
 
-        # # get diffs
-        if direction == "forward":
-            diffs = [0.0] + [
-                (entropies[i] - entropies[i - 1]) for i in range(1, len(entropies))
-            ]
-        else:
-            diffs = [
-                (entropies[i + 1] - entropies[i]) for i in range(0, len(entropies) - 1)
-            ] + [0.0]
-
-        return list(zip(word, entropies, diffs))
+        # calculate the difference in entropy and cohesion
+        if len(results) > 1:
+            for i, result in enumerate(results):
+                if i == 0:
+                    result_prev: ScoreResult = None
+                    result_next: ScoreResult = results[i + 1]
+                    Lscores_prev: Scores = None
+                    Rscores_next: Scores = result_next.R_scores
+                elif i == len(results) - 1:
+                    result_prev: ScoreResult = results[i - 1]
+                    result_next: ScoreResult = None
+                    Lscores_prev: Scores = result_prev.L_scores
+                    Rscores_next: Scores = None
+                else:
+                    result_prev: ScoreResult = results[i - 1]
+                    result_next: ScoreResult = results[i + 1]
+                    Lscores_prev: Scores = result_prev.L_scores
+                    Rscores_next: Scores = result_next.R_scores
+                result.diffs.f_ent = (
+                    result.L_scores.entropy - Lscores_prev.entropy
+                    if Lscores_prev
+                    else 0
+                )
+                result.diffs.b_ent = (
+                    result.R_scores.entropy - Rscores_next.entropy
+                    if Rscores_next
+                    else 0
+                )
+                result.diffs.coh = (
+                    result_next.L_scores.cohesion - result.L_scores.cohesion
+                    if result_next
+                    else 0
+                )
+                result.diffs.avg_coh = (
+                    result_next.avg_coh - result.avg_coh if result_next else 0
+                )
+        return results
 
     # plot entropies
-    def plot_local_entropy(self, word, direction="forward", figsize=(12, 5)):
+    def plot_local_entropy(self, word, figsize=(12, 5)):
         get_plot_font()
 
-        results = self.find_local_entropy(word, direction=direction)
-        chars, entropies, diffs = zip(*results)
+        results = self.find_local_entropy(word)
+        chars = [result.char for result in results]
+        L_entropies = [result.L_scores.entropy for result in results]
+        R_entropies = [result.R_scores.entropy for result in results]
+        L_cohesions = [result.L_scores.cohesion for result in results]
+        # R_cohesions = [result.R_scores.cohesion for result in results]
+        # avg_cohesions = [result.avg_coh for result in results]
+
         plt.figure(figsize=figsize)
-        plt.plot(entropies, label="entropy", marker="o")
+        plt.plot(L_entropies, label="fwd. entropy", color="blue", marker="o")
+        plt.plot(R_entropies, label="bwd. entropy", color="green", marker="o")
         plt.xticks(range(len(chars)), chars)
         plt.legend(loc="upper left")
 
-        # plot diffs on the right y-axis
-        # plt.twinx()
-        # plt.plot(diffs, label="diffs", color="red", linestyle="--", marker="o")
-        # plt.legend(loc="upper right")
+        # plot cohesions on the right y-axis
+        plt.twinx()
+        plt.plot(
+            L_cohesions,
+            label="cohesions",
+            color="red",
+            linestyle="--",
+            marker="o",
+        )
+        # plt.plot(
+        #     R_cohesions, label="R cohesions", color="orange", linestyle="--", marker="o"
+        # )
+        plt.legend(loc="upper right")
         plt.show()
 
-    def tokenize_word(self, word, direction="forward"):
+    def tokenize_word(self, word):
         # if there is a spike in entropy, then we should segment
         # Here the spike means that there is a sudden increase in entropy followed by a decrease.
         # We can use the difference in entropy to detect the spike.
 
-        # if word.startswith(self.whitespace_token):
-        #     word = word[len(self.whitespace_token) :]
         # get the local entropy and the difference in entropy
-        results = self.find_local_entropy(word, direction=direction)
-        _, _, diffs = zip(*results)
+        results = self.find_local_entropy(word)
+        f_diffs = [result.diffs.f_ent for result in results]
+        b_diffs = [result.diffs.b_ent for result in results]
+        coh_diffs = [result.diffs.coh for result in results]
+
+        def check_entropy_threshold(f_diffs, b_diffs, pos, threshold):
+            if pos < len(f_diffs) - 2 and pos == 1:
+                return b_diffs[pos] > threshold
+            elif pos < len(f_diffs) - 2 and pos > 1:
+                return (f_diffs[pos] > threshold and f_diffs[pos + 1] < 0) or (
+                    b_diffs[pos] > threshold and b_diffs[pos - 1] < 0
+                )
+            elif pos == len(f_diffs) - 2 and pos > 1:
+                return f_diffs[pos] > threshold and f_diffs[pos + 1] < 0
+            elif pos == len(f_diffs) - 1 and pos > 1:
+                return f_diffs[pos] > threshold
+            else:
+                return False
+
+        def check_cohesion_threshold(coh_diffs, pos, threshold):
+            if threshold is None:
+                return False
+            if pos < len(coh_diffs) - 1 and pos > 1:
+                return coh_diffs[pos] < threshold
+            else:
+                return False
 
         # get the spikes
         spikes = []
-        for i in range(1, len(diffs) - 1):
-            if diffs[i] > self.branching_threshold and diffs[i + 1] < 0:
-                spikes.append(i)
+        start_idx = 1 if word[0] == self.whitespace_token else 0
+        if len(word) > 1:
+            for i in range(start_idx, len(f_diffs)):
+                if check_entropy_threshold(
+                    f_diffs, b_diffs, i, self.branching_threshold
+                ) or check_cohesion_threshold(coh_diffs, i, self.cohesion_threshold):
+                    spikes.append(i)
 
         # segment the word
         segments = []
@@ -163,61 +261,68 @@ class BranchingEntropy(Model):
         return tuple(segments)
 
     def tokenize(
-        self, sequence, direction="forward", flatten=True, branching_threshold=None
+        self,
+        sequence,
+        flatten=True,
+        branching_threshold=None,
+        cohesion_threshold=None,
+        **kwargs,
     ):
         if branching_threshold is not None:
             self.branching_threshold = branching_threshold
+        if cohesion_threshold is not None:
+            self.cohesion_threshold = cohesion_threshold
         segments = []
         words = self.pre_tokenize(sequence)
         for word in words:
-            segments.append(self.tokenize_word(word, direction=direction))
+            segments.append(self.tokenize_word(word))
         if flatten:
             segments = [seg for word in segments for seg in word]
         return segments
 
-    def tokenize_texts(self, texts, direction="forward"):
-        return [self.tokenize(text, direction=direction) for text in texts]
+    def tokenize_texts(self, texts):
+        return [self.tokenize(text) for text in texts]
 
-    def naive_segment(self, text, direction="forward"):
+    def naive_segment(self, text):
         words = []
+        # TODO: need to implement with a change in the tokenizer
+        # _start, _pos = 0, 0
+        # # iterate over the text until we reach the end
+        # while _pos < len(text):
+        #     _sentencepiece = text[_pos : _pos + self.max_piece_length]
+        #     # print(_start, _pos, _sentencepiece)
+        #     if len(_sentencepiece) < 1:
+        #         break
+        #     results = self.find_local_entropy(_sentencepiece)
+        #     _, entropies, _ = zip(*results)
 
-        _start, _pos = 0, 0
-        # iterate over the text until we reach the end
-        while _pos < len(text):
-            _sentencepiece = text[_pos : _pos + self.max_piece_length]
-            # print(_start, _pos, _sentencepiece)
-            if len(_sentencepiece) < 1:
-                break
-            results = self.find_local_entropy(_sentencepiece, direction=direction)
-            _, entropies, _ = zip(*results)
-
-            if entropies[0] == 0:
-                if _pos == len(text) - 1:
-                    words.append(text[_start : _pos + 1])
-                    _start = _pos + 1
-                    break
-                _pos += 1
-            else:
-                if _pos > _start:
-                    words.append(text[_start:_pos])
-                    _start = _pos
-                    _pos += 1
-                if len(entropies) > 1:
-                    _pos += 1
-                    for i in range(1, len(entropies)):
-                        if entropies[i] == 0:
-                            words.append(text[_start : _start + i])
-                            # print(_start, words)
-                            _start += i
-                            _pos = _start
-                            break
-                        elif _pos == len(text) - 1:
-                            words.append(text[_start : _pos + 1])
-                        _pos += 1
-                else:
-                    if _pos == len(text) - 1:
-                        words.append(text[_start : _pos + 1])
-                    _pos += 1
+        #     if entropies[0] == 0:
+        #         if _pos == len(text) - 1:
+        #             words.append(text[_start : _pos + 1])
+        #             _start = _pos + 1
+        #             break
+        #         _pos += 1
+        #     else:
+        #         if _pos > _start:
+        #             words.append(text[_start:_pos])
+        #             _start = _pos
+        #             _pos += 1
+        #         if len(entropies) > 1:
+        #             _pos += 1
+        #             for i in range(1, len(entropies)):
+        #                 if entropies[i] == 0:
+        #                     words.append(text[_start : _start + i])
+        #                     # print(_start, words)
+        #                     _start += i
+        #                     _pos = _start
+        #                     break
+        #                 elif _pos == len(text) - 1:
+        #                     words.append(text[_start : _pos + 1])
+        #                 _pos += 1
+        #         else:
+        #             if _pos == len(text) - 1:
+        #                 words.append(text[_start : _pos + 1])
+        #             _pos += 1
 
         return words
 
@@ -299,3 +404,26 @@ class BranchingEntropy(Model):
             os.makedirs(folder)
         json.dump(self.vocab, vocab_filename)
         return [vocab_filename]
+
+    def pre_tokenize(self, sequence: str):
+        """Pre-tokenize the given sequence
+
+        Args:
+            sequence: str:
+                The sequence to pre-tokenize
+
+        Returns:
+            A list of tuple (str, offsets)
+        """
+        sequence = self.normalize(sequence)
+        words_with_offsets = self.pre_tokenizer.pre_tokenize_str(sequence)
+        tokens_ = [token for (token, _) in words_with_offsets]
+        # if token value is replacement, concatenate with the next token
+        tokens = []
+        for i, token in enumerate(tokens_):
+            if token == self.whitespace_token:
+                continue
+            if i > 0 and tokens_[i - 1] == self.whitespace_token:
+                token = tokens_[i - 1] + token
+            tokens.append(token)
+        return tokens

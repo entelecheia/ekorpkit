@@ -1,18 +1,3 @@
-import math
-from scipy.special import digamma
-
-
-def entropy(trie, word):
-    leafs = trie.get_leafs(word)
-    val = trie.get_value(word)
-    logsum = digamma(sum(leafs) + val)
-    entropy = 0
-    for freq in leafs:
-        logprob = digamma(freq) - logsum
-        entropy += math.exp(logprob) * logprob
-    return -1 * entropy
-
-
 class Trie:
     def __init__(self, end_symbol="<END>", direction="forward"):
         self.root = {}
@@ -29,6 +14,13 @@ class Trie:
                 node[ch] = {}
             node = node[ch]
         node[self.end_symbol] = value
+
+    def get_value_pos(self, word, pos):
+        if self.direction == "backward":
+            # reverse the word
+            word = word[::-1]
+        char = word[pos]
+        return self.get_value(char)
 
     def get_value(self, word):
         if self.direction == "backward":

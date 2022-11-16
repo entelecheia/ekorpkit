@@ -34,15 +34,17 @@ class BranchingEntropyTrainer(Trainer):
         if self.verbose:
             print("Total words:", len(word_freqs))
             print("Top 10 words: {}".format(word_freqs.most_common(10)))
-        # Remove words that are too rare
-        word_freqs = {
-            word: freq
-            for word, freq in word_freqs.items()
-            if freq >= self.min_frequency
-        }
+        # word_freqs = {
+        #     word
+        #     if word[0] == self.whitespace_token
+        #     else self.whitespace_token + word: freq
+        #     for word, freq in word_freqs.items()
+        #     if word != self.whitespace_token
+        # }
         if self.verbose:
             print("Total words after filtering:", len(word_freqs))
-        return word_freqs
+        # return as dict
+        return dict(word_freqs)
 
     def initialize_subwords(self, word_freqs):
         subwords_freqs = collections.defaultdict(int)
@@ -52,6 +54,10 @@ class BranchingEntropyTrainer(Trainer):
         else:
             iterator = word_freqs.items()
         for word, freq in iterator:
+            if word == self.whitespace_token:
+                continue
+            if word[0] != self.whitespace_token:
+                word = self.whitespace_token + word
             word += self.whitespace_token
             for i in range(len(word)):
                 for j in range(
@@ -59,6 +65,12 @@ class BranchingEntropyTrainer(Trainer):
                 ):
                     subwords_freqs[word[i:j]] += freq
 
+        # Remove words that are too rare
+        subwords_freqs = {
+            subword: freq
+            for subword, freq in subwords_freqs.items()
+            if freq >= self.min_frequency
+        }
         # Sort subwords by frequency
         sorted_subwords = sorted(
             subwords_freqs.items(), key=lambda x: x[1], reverse=True
@@ -80,19 +92,20 @@ class BranchingEntropyTrainer(Trainer):
 
         return trie, maxlen
 
-    def fit(self, texts):
+    def fit(self, texts, length=None):
         words = []
-        iterator = tqdm(texts) if self.show_progress else texts
+        iterator = tqdm(texts, total=length) if self.show_progress else texts
         for text_batch in iterator:
             if isinstance(text_batch, str):
                 text_batch = [text_batch]
-            for text in text_batch:
+            batch_iterator = tqdm(text_batch) if self.show_progress else text_batch
+            for text in batch_iterator:
                 words += self.pre_tokenize(text)
         word_freqs = self.get_word_freqs(words)
         vocab = self.initialize_subwords(word_freqs)
 
-        self.fwd_trie, _ = self.initialize_trie(vocab, direction="forward")
-        self.bwd_trie, _ = self.initialize_trie(vocab, direction="backward")
+        # self.fwd_trie, _ = self.initialize_trie(vocab, direction="forward")
+        # self.bwd_trie, _ = self.initialize_trie(vocab, direction="backward")
         return vocab
 
     def train(
@@ -102,7 +115,7 @@ class BranchingEntropyTrainer(Trainer):
     ):
         """Train the model using the given iterator"""
 
-        return self.fit(iterator)
+        return self.fit(iterator, length)
 
     # def normalize_word(self, word):
     #     # replace all non-alphanumeric characters at the end of the word with a space
