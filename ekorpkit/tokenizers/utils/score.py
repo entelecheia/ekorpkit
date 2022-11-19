@@ -15,18 +15,20 @@ class ScoreDiffs(BaseModel):
     f_ent: float = 0.0
     b_ent: float = 0.0
     coh: float = 0.0
-    avg_coh: float = 0.0
+    # avg_coh: float = 0.0
 
 
 class ScoreResult(BaseModel):
     char: str = None
     L_scores: Scores = Scores()
-    avg_coh: float = 0.0
+    # avg_coh: float = 0.0
     diffs: ScoreDiffs = ScoreDiffs()
     R_scores: Scores = Scores()
 
 
-def entropy(trie: Trie, word):
+def entropy(trie: Trie, word, whitespace_token="▁"):
+    if word == whitespace_token:
+        return None, None
     leafs = trie.get_leafs(word)
     val = trie.get_value(word)
     logsum = digamma(sum(leafs) + val)
@@ -42,18 +44,20 @@ def cohesion(trie: Trie, word, whitespace_token="▁"):
         word = word[1:]
     word_len = len(word)
     if (not word) or (word_len <= 1):
-        return 0
+        return None
     if word[-1] == whitespace_token and len(word) > 1:
         word = word[:-1]
     word_len = len(word)
     if (not word) or (word_len <= 1):
-        return 0
+        return None
     val = trie.get_value(word)
     val0 = trie.get_value_pos(word, 0)
     # cohesion = np.power((val / val0), 1 / (word_len - 1)) if val0 and val else 0
     # using digamma
     cohesion = (
-        math.exp((digamma(val) - digamma(val0)) / (word_len)) if val0 and val else 0
+        math.exp((digamma(val) - digamma(val0)) / (word_len - 1))
+        if val0 and val
+        else None
     )
     return cohesion
 
@@ -64,7 +68,7 @@ def scores(trie: Trie, word, whitespace_token="▁") -> Scores:
         return scores_
 
     scores_.word = word
-    scores_.entropy, scores_.freq = entropy(trie, word)
+    scores_.entropy, scores_.freq = entropy(trie, word, whitespace_token)
     scores_.cohesion = cohesion(trie, word, whitespace_token)
 
     return scores_

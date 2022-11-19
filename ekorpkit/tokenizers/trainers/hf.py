@@ -3,16 +3,24 @@ import logging
 from tokenizers import Tokenizer
 from tokenizers.models import BPE, Unigram, WordLevel
 from tokenizers.trainers import BpeTrainer, UnigramTrainer, WordLevelTrainer
-from tokenizers.pre_tokenizers import Whitespace
-from tokenizers import normalizers
-from tokenizers.normalizers import StripAccents, NFKC
+from tokenizers import (
+    Regex,
+    normalizers,
+    pre_tokenizers,
+)
 from ..config import ModelType, TrainerType
 
 
 log = logging.getLogger(__name__)
 
-UNK_TOKEN = "<UNK>"  # token for unknown words
-SPECIAL_TOKENS = ["<UNK>", "<SEP>", "<MASK>", "<CLS>", "[MASK]"]  # special tokens
+UNK_TOKEN = "<unk>"  # token for unknown words
+SPECIAL_TOKENS = [
+    "<s>",
+    "<pad>",
+    "</s>",
+    "<unk>",
+    "<mask>",
+]  # special tokens
 
 
 def prepare_tokenizer_trainer(
@@ -20,6 +28,9 @@ def prepare_tokenizer_trainer(
     vocab_size=30000,
     unk_token=UNK_TOKEN,
     special_tokens=SPECIAL_TOKENS,
+    lowercase=True,
+    whitespace_token="▁",
+    add_prefix_space=True,
     **kwargs,
 ):
     """
@@ -30,6 +41,11 @@ def prepare_tokenizer_trainer(
         trainer = BpeTrainer(
             vocab_size=vocab_size, special_tokens=special_tokens, **kwargs
         )
+        pre_tokenizers_ = [
+            pre_tokenizers.Whitespace(),
+            pre_tokenizers.Punctuation(),
+            pre_tokenizers.UnicodeScripts(),
+        ]
     elif model_type == ModelType.UNIGRAM:
         tokenizer = Tokenizer(Unigram())
         trainer = UnigramTrainer(
@@ -38,15 +54,31 @@ def prepare_tokenizer_trainer(
             special_tokens=special_tokens,
             **kwargs,
         )
+        pre_tokenizers_ = [
+            pre_tokenizers.Metaspace(
+                replacement=whitespace_token, add_prefix_space=add_prefix_space
+            ),
+            pre_tokenizers.Punctuation(),
+            pre_tokenizers.UnicodeScripts(),
+            pre_tokenizers.Digits(individual_digits=True),
+        ]
     else:
         tokenizer = Tokenizer(WordLevel(unk_token=unk_token))
         trainer = WordLevelTrainer(
             vocab_size=vocab_size, special_tokens=special_tokens, **kwargs
         )
+        pre_tokenizers_ = [pre_tokenizers.Whitespace()]
+    normalizers_ = [
+        normalizers.Nmt(),
+        normalizers.NFKC(),
+        normalizers.Replace(Regex(" {2,}"), " "),
+        normalizers.StripAccents(),
+    ]
+    if lowercase:
+        normalizers_ += [normalizers.Lowercase()]
 
-    normalizer = normalizers.Sequence([NFKC(), StripAccents()])
-    tokenizer.normalizer = normalizer
-    tokenizer.pre_tokenizer = Whitespace()
+    tokenizer.normalizer = normalizers.Sequence(normalizers_)
+    tokenizer.pre_tokenizer = pre_tokenizers.Sequence(pre_tokenizers_)
 
     return tokenizer, trainer
 

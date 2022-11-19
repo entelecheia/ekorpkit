@@ -104,7 +104,7 @@ class BranchingEntropy(Model):
             [
                 df.char,
                 pd.json_normalize(df["L_scores"]).add_prefix("L_"),
-                df.avg_coh,
+                # df.avg_coh,
                 pd.json_normalize(df["diffs"]).add_prefix("D_"),
                 pd.json_normalize(df["R_scores"]).add_prefix("R_"),
             ],
@@ -128,7 +128,7 @@ class BranchingEntropy(Model):
             result = ScoreResult(char=char)
             result.L_scores = l_scores
             result.R_scores = r_scores
-            result.avg_coh = (l_scores.cohesion + r_scores.cohesion) / 2
+            # result.avg_coh = (l_scores.cohesion + r_scores.cohesion) / 2
 
             results.append(result)
             if self.verbose:
@@ -154,22 +154,24 @@ class BranchingEntropy(Model):
                     Rscores_next: Scores = result_next.R_scores
                 result.diffs.f_ent = (
                     result.L_scores.entropy - Lscores_prev.entropy
-                    if Lscores_prev
+                    if Lscores_prev and result.L_scores.entropy and Lscores_prev.entropy
                     else 0
                 )
                 result.diffs.b_ent = (
                     result.R_scores.entropy - Rscores_next.entropy
-                    if Rscores_next
+                    if Rscores_next and result.R_scores.entropy and Rscores_next.entropy
                     else 0
                 )
                 result.diffs.coh = (
                     result_next.L_scores.cohesion - result.L_scores.cohesion
                     if result_next
+                    and result_next.L_scores.cohesion
+                    and result.L_scores.cohesion
                     else 0
                 )
-                result.diffs.avg_coh = (
-                    result_next.avg_coh - result.avg_coh if result_next else 0
-                )
+                # result.diffs.avg_coh = (
+                #     result_next.avg_coh - result.avg_coh if result_next else 0
+                # )
         return results
 
     # plot entropies
@@ -183,6 +185,11 @@ class BranchingEntropy(Model):
         L_cohesions = [result.L_scores.cohesion for result in results]
         # R_cohesions = [result.R_scores.cohesion for result in results]
         # avg_cohesions = [result.avg_coh for result in results]
+        if chars[0] == self.whitespace_token:
+            chars = chars[1:]
+            L_entropies = L_entropies[1:]
+            R_entropies = R_entropies[1:]
+            L_cohesions = L_cohesions[1:]
 
         plt.figure(figsize=figsize)
         plt.plot(L_entropies, label="fwd. entropy", color="blue", marker="o")
@@ -216,24 +223,24 @@ class BranchingEntropy(Model):
         b_diffs = [result.diffs.b_ent for result in results]
         coh_diffs = [result.diffs.coh for result in results]
 
-        def check_entropy_threshold(f_diffs, b_diffs, pos, threshold):
-            if pos < len(f_diffs) - 2 and pos == 1:
-                return b_diffs[pos] > threshold
-            elif pos < len(f_diffs) - 2 and pos > 1:
+        def check_entropy_threshold(f_diffs, b_diffs, pos, threshold, start_idx):
+            if pos < len(f_diffs) - 2 and pos > start_idx:
+                return b_diffs[pos] > threshold and b_diffs[pos - 1] < 0
+            elif pos < len(f_diffs) - 2 and pos > start_idx:
                 return (f_diffs[pos] > threshold and f_diffs[pos + 1] < 0) or (
                     b_diffs[pos] > threshold and b_diffs[pos - 1] < 0
                 )
-            elif pos == len(f_diffs) - 2 and pos > 1:
+            elif pos == len(f_diffs) - 2 and pos > start_idx:
                 return f_diffs[pos] > threshold and f_diffs[pos + 1] < 0
-            elif pos == len(f_diffs) - 1 and pos > 1:
+            elif pos == len(f_diffs) - 1 and pos > start_idx:
                 return f_diffs[pos] > threshold
             else:
                 return False
 
-        def check_cohesion_threshold(coh_diffs, pos, threshold):
+        def check_cohesion_threshold(coh_diffs, pos, threshold, start_idx):
             if threshold is None:
                 return False
-            if pos < len(coh_diffs) - 1 and pos > 1:
+            if pos < len(coh_diffs) - 1 and pos > start_idx:
                 return coh_diffs[pos] < threshold
             else:
                 return False
@@ -244,8 +251,10 @@ class BranchingEntropy(Model):
         if len(word) > 1:
             for i in range(start_idx, len(f_diffs)):
                 if check_entropy_threshold(
-                    f_diffs, b_diffs, i, self.branching_threshold
-                ) or check_cohesion_threshold(coh_diffs, i, self.cohesion_threshold):
+                    f_diffs, b_diffs, i, self.branching_threshold, start_idx
+                ) or check_cohesion_threshold(
+                    coh_diffs, i, self.cohesion_threshold, start_idx
+                ):
                     spikes.append(i)
 
         # segment the word

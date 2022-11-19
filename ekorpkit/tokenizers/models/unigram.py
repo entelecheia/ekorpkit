@@ -27,7 +27,7 @@ class Unigram(Model):
         self.vocab = {}
         self.token2id = {}
         self.id2token = {}
-        self.trie = None
+        self.trie: Trie = None
         self.max_piece_length = None
         if vocab:
             self.vocab = vocab
@@ -47,7 +47,7 @@ class Unigram(Model):
 
         return trie, maxlen
 
-    def generalized_forward_step(self, text, trie, nbest_size=1):
+    def generalized_forward_step(self, text, trie: Trie, nbest_size=1):
         N = len(text)
         d = [-np.inf] * (N + 1)
         p = [None] * (N + 1)

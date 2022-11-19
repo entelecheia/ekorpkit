@@ -17,9 +17,9 @@ num_workers: ${oc.select:num_workers, 1}
 project_dir: ${oc.select:dir.project, null}
 verbose: ${oc.select:verbose, false}
 special_tokens:
-  - "[PAD]"
-  - "[UNK]"
-  - "[CLS]"
-  - "[SEP]"
-  - "[MASK]"
-unk_token: "[UNK]"
+  - "<s>"
+  - "<pad>"
+  - "</s>"
+  - "<unk>"
+  - "<mask>"
+unk_token: "[unk]"
