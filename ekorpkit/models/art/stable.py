@@ -367,11 +367,11 @@ class StableDiffusion(BaseModel):
         torch.set_grad_enabled(False)
 
         if models is None:
-            models = self.model_config.keys()
+            models = self.model_args.keys()
         if isinstance(models, str):
             models = [models]
         for model in models:
-            cfg = self.model_config[model]
+            cfg = self.model_args[model]
             if cfg.pipeline == "StableDiffusionPipeline":
                 DiffusionPipeline = StableDiffusionPipeline
             elif cfg.pipeline == "StableDiffusionInpaintPipeline":

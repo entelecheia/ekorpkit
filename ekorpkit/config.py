@@ -50,29 +50,32 @@ class LabelStudioSecrets(BaseSettings):
 
 
 class Secrets(BaseSettings):
-    api_key: Optional[str] = SecretStr
-    token: Optional[str] = SecretStr
-    password: Optional[str] = SecretStr
+    wandb_api_key: Optional[SecretStr]
+    hf_user_access_token: Optional[SecretStr]
+    ecos_api_key: Optional[SecretStr]
+    fred_api_key: Optional[SecretStr]
+    nasdaq_api_key: Optional[SecretStr]
 
     class Config:
         env_prefix = ""
-        env_nested_delimiter = "_"
+        env_nested_delimiter = "__"
         case_sentive = False
         env_file = ".env"
         env_file_encoding = "utf-8"
+        # extra = Extra.allow
 
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings,
-            env_settings,
-            file_secret_settings,
-        ):
-            return (
-                env_settings,
-                init_settings,
-                file_secret_settings,
-            )
+        # @classmethod
+        # def customise_sources(
+        #     cls,
+        #     init_settings: SettingsSourceCallable,
+        #     env_settings: SettingsSourceCallable,
+        #     file_secret_settings: SettingsSourceCallable,
+        # ) -> Tuple[SettingsSourceCallable, ...]:
+        #     return (
+        #         env_settings,
+        #         init_settings,
+        #         file_secret_settings,
+        #     )
 
 
 class Environments(BaseSettings):
@@ -81,9 +84,9 @@ class Environments(BaseSettings):
     EKORPKIT_PROJECT: Optional[str]
     EKORPKIT_WORKSPACE_ROOT: Optional[str]
     EKORPKIT_LOG_LEVEL: Optional[str]
-    FRED_API_KEY: Optional[str] = SecretStr
-    NASDAQ_API_KEY: Optional[str] = SecretStr
-    WANDB_API_KEY: Optional[str] = SecretStr
+    FRED_API_KEY: Optional[SecretStr]
+    NASDAQ_API_KEY: Optional[SecretStr]
+    WANDB_API_KEY: Optional[SecretStr]
     NUM_WORKERS: Optional[int]
     KMP_DUPLICATE_LIB_OK: Optional[str]
     CUDA_DEVICE_ORDER: Optional[str]

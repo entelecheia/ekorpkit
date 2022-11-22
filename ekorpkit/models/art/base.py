@@ -21,7 +21,6 @@ class BaseModel(BaseConfig):
 
     def __init__(self, root_dir=None, **args):
         super().__init__(root_dir=root_dir, **args)
-        super().__init__(**args)
 
         self.load_modules()
         self.sample_imagepaths = []

@@ -4,6 +4,7 @@ from omegaconf import OmegaConf
 from pathlib import Path
 from pydantic import BaseModel, validator
 from ekorpkit import eKonf
+from .config import Secrets
 
 
 log = logging.getLogger(__name__)
@@ -80,6 +81,7 @@ class BaseConfig:
     _config_ = None
     _path_ = None
     batch = None
+    secrets = None
 
     def __init__(self, root_dir=None, **args):
         self.config = args
@@ -87,6 +89,20 @@ class BaseConfig:
         self.verbose = args.get("verbose", False)
         self._init_path(root_dir=root_dir, **args)
         self._init_batch()
+        if eKonf.osenv("WANDB_PROJECT") is None:
+            eKonf.env_set("WANDB_PROJECT", self.project_name)
+        self._init_secrets()
+
+    @property
+    def project_name(self):
+        return eKonf.osenv("EKORPKIT_PROJECT", "ekorpkit")
+
+    def _init_secrets(self):
+        if self.config.get("secret") is not None:
+            for k, v in self.config.secret.items():
+                if v:
+                    eKonf.env_set(k, v)
+        self.secrets = Secrets()
 
     @property
     def autoload(self):
@@ -145,7 +161,7 @@ class BaseConfig:
         return Path(self.path.output_dir)
 
     @property
-    def model_config(self):
+    def model_args(self):
         if "model" in self.config:
             return self.config.model
         return {}

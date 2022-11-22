@@ -1,6 +1,4 @@
+defaults:
+  - default
+
 batch_name: prompt-batch
-batch_num:
-set_seed: random_seed
-seed:
-resume_run: false
-run_to_resume: latest

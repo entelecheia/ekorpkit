@@ -1,6 +1,7 @@
 batch_name: demo-batch
 batch_num:
-set_seed: random_seed
+random_seed: true
 seed:
 resume_run: false
+resume_latest: false
 run_to_resume: latest

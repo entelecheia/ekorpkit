@@ -16,10 +16,12 @@ log = logging.getLogger(__name__)
 UNK_TOKEN = "<unk>"  # token for unknown words
 SPECIAL_TOKENS = [
     "<s>",
-    "<pad>",
     "</s>",
-    "<unk>",
     "<mask>",
+    "<pad>",
+    "<cls>",
+    "<sep>",
+    "<unk>",
 ]  # special tokens
 
 
@@ -69,6 +71,8 @@ def prepare_tokenizer_trainer(
         )
         pre_tokenizers_ = [pre_tokenizers.Whitespace()]
     normalizers_ = [
+        normalizers.Replace("``", '"'),
+        normalizers.Replace("''", '"'),
         normalizers.Nmt(),
         normalizers.NFKC(),
         normalizers.Replace(Regex(" {2,}"), " "),

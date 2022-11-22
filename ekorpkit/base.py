@@ -705,15 +705,15 @@ def _load_dotenv(verbose=False):
         logger.info(f"No .env file found in {dotenv_path}")
 
 
-def _osenv(key: str = None) -> Any:
+def _osenv(key: str = None, default: str = None) -> Any:
     _load_dotenv()
     if key:
-        return os.environ.get(key)
+        return os.environ.get(key, default)
     return os.environ
 
 
 def _env_set(key: str, value: Any) -> None:
-    if _is_dir(value):
+    if value and _is_dir(value):
         value = os.path.abspath(value)
     os.environ[key] = value
 

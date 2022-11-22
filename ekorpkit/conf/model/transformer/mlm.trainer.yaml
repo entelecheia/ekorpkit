@@ -1,0 +1,17 @@
+defaults:
+  - /path: trasformer_trainer
+  - /batch: trasformer_trainer
+  - /secret: default
+  - model: mlm
+  - data: mlm
+  - training: mlm
+  - tokenizer: mlm
+
+_target_: ekorpkit.models.transformer.trainer.MlmTrainer
+autoload: false
+name: mlm-trainer
+verbose: ${oc.select:..verbose, false}
+device: "cuda"
+batch:
+  batch_name: ${..name}
+use_accelerator: false

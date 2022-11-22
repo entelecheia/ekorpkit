@@ -521,8 +521,8 @@ class eKonf:
         return _is_notebook()
 
     @staticmethod
-    def osenv(key):
-        return _osenv(key)
+    def osenv(key, default=None):
+        return _osenv(key, default)
 
     @staticmethod
     def env_set(key, value):

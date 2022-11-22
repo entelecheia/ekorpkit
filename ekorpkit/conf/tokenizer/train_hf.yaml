@@ -18,8 +18,10 @@ project_dir: ${oc.select:dir.project, null}
 verbose: ${oc.select:verbose, false}
 special_tokens:
   - "<s>"
-  - "<pad>"
   - "</s>"
-  - "<unk>"
   - "<mask>"
+  - "<pad>"
+  - "<cls>"
+  - "<sep>"
+  - "<unk>"
 unk_token: "[unk]"

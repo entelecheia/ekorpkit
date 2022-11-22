@@ -1,0 +1,20 @@
+output_dir:
+overwrite_output_dir: true
+do_train: true
+do_eval: true
+report_to: wandb
+run_name: ${..name} # name of the W&B run (optional)
+per_device_train_batch_size: 32
+per_device_eval_batch_size: 32
+evaluation_strategy: steps
+eval_steps: 1_000
+logging_steps: 1_000
+gradient_accumulation_steps: 8
+num_train_epochs: 1
+weight_decay: 0.1
+warmup_steps: 1_000
+lr_scheduler_type: cosine
+learning_rate: 5e-4
+save_steps: 5_000
+fp16: true
+push_to_hub: false

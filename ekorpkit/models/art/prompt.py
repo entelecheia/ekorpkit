@@ -36,7 +36,6 @@ class PromptGenerator(BaseConfig):
         cfg = eKonf.compose(f"model/prompt={config_name}")
         cfg = eKonf.merge(cfg, args)
         super().__init__(root_dir=root_dir, **cfg)
-        eKonf.env_set("WANDB_PROJECT", cfg.wandb_project)
 
         self._model = None
         self._dataset = None
@@ -300,11 +299,11 @@ class PromptGenerator(BaseConfig):
         return tokenized_dataset
 
     @property
-    def model_config(self):
+    def model_args(self):
         return self.config.model
 
-    @model_config.setter
-    def model_config(self, value):
+    @model_args.setter
+    def model_args(self, value):
         self.config.model = value
 
     @property
