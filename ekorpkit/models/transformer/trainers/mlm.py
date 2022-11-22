@@ -18,6 +18,7 @@ from transformers import (
     TrainingArguments,
     is_torch_tpu_available,
     set_seed,
+    pipeline,
 )
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version
@@ -677,3 +678,11 @@ class MlmTrainer(BaseConfig):
             trainer.push_to_hub(**kwargs)
         else:
             trainer.create_model_card(**kwargs)
+
+    def fill_mask(self, text, top_k=5):
+        """Fill the mask in a text"""
+        model = AutoModelForMaskedLM.from_pretrained(self.model_path)
+        tokenizer = AutoTokenizer.from_pretrained(self.model_path)
+
+        fill_mask = pipeline("fill-mask", model=model, tokenizer=tokenizer)
+        return fill_mask(text, top_k=top_k)

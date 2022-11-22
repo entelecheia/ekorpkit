@@ -7,7 +7,7 @@ defaults:
   - training: mlm
   - tokenizer: mlm
 
-_target_: ekorpkit.models.transformer.trainer.MlmTrainer
+_target_: ekorpkit.models.transformer.trainers.MlmTrainer
 autoload: false
 name: mlm-trainer
 verbose: ${oc.select:..verbose, false}
