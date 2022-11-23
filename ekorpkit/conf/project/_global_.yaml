@@ -1,0 +1,4 @@
+# @package _global_
+project:
+  name: ${oc.env:EKORPKIT_PROJECT,ekorpkit-project}
+project_name: ${project.name}

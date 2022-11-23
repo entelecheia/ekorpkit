@@ -1,4 +1,5 @@
 defaults:
+  - /project: disco-imagen
   - /path: prompt
   - /batch: prompt
   - dataset: default

@@ -8,7 +8,7 @@ defaults:
   - env: default
   - mode: default
   - model: default
-  - project: default
+  - project: _global_
   - preprocessor/normalizer: default
   - preprocessor/segmenter: default
   - preprocessor/tokenizer: default

@@ -89,13 +89,23 @@ class BaseConfig:
         self.verbose = args.get("verbose", False)
         self._init_path(root_dir=root_dir, **args)
         self._init_batch()
-        if eKonf.osenv("WANDB_PROJECT") is None:
-            eKonf.env_set("WANDB_PROJECT", self.project_name)
         self._init_secrets()
 
     @property
     def project_name(self):
-        return eKonf.osenv("EKORPKIT_PROJECT", "ekorpkit")
+        return self.project_config.project_name
+
+    @property
+    def project_dir(self):
+        return Path(self.project_config.root)
+
+    @property
+    def workspace_dir(self):
+        return Path(self.project_config.path.workspace)
+
+    @property
+    def project_config(self):
+        return self.config.project
 
     def _init_secrets(self):
         if self.config.get("secret") is not None:
@@ -103,6 +113,13 @@ class BaseConfig:
                 if v:
                     eKonf.env_set(k, v)
         self.secrets = Secrets()
+
+    @property
+    def auto_config(self):
+        return self.config.get("auto")
+
+    def autorun(self):
+        return eKonf.methods(self.auto_config, self)
 
     @property
     def autoload(self):
@@ -123,10 +140,6 @@ class BaseConfig:
     @property
     def version(self):
         return self.config.get("version", "0.0.0")
-
-    @property
-    def name(self):
-        return self.config.name
 
     @property
     def path(self):
@@ -179,12 +192,21 @@ class BaseConfig:
         return Path(cache_dir)
 
     @property
+    def name(self):
+        return self.config.name
+
+    @name.setter
+    def name(self, value):
+        self.batch_name = value
+
+    @property
     def batch_name(self):
         return self.config.batch.batch_name
 
     @batch_name.setter
     def batch_name(self, value):
         self.config.batch.batch_name = value
+        self.config.name = value
 
     @property
     def batch_num(self):
@@ -215,8 +237,15 @@ class BaseConfig:
         self.batch = BaseBatchConfig(
             output_dir=self.output_dir, **self.config.batch, verbose=verbose
         )
+        if eKonf.osenv("WANDB_PROJECT") is None:
+            eKonf.env_set("WANDB_PROJECT", self.project_name)
 
-    def save_config(self, config=None, exclude=["path", "module"], selected=None):
+    def save_config(
+        self,
+        config=None,
+        exclude=["path", "module", "secret", "auto", "project"],
+        selected=None,
+    ):
         """Save the batch config"""
         if config is not None:
             self.config = config

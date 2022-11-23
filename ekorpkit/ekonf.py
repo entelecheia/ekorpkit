@@ -244,7 +244,7 @@ class eKonf:
 
     @staticmethod
     def methods(cfg: Any, obj: object, return_function=False):
-        _methods(cfg, obj, return_function)
+        return _methods(cfg, obj, return_function)
 
     @staticmethod
     def function(cfg: Any, _name_, return_function=False, **parms):

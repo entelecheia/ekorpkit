@@ -438,8 +438,14 @@ def _methods(cfg: Any, obj: object, return_function=False):
 
     if isinstance(cfg, dict) and _Keys.METHOD in cfg:
         _method_ = cfg[_Keys.METHOD]
-    else:
+    elif isinstance(cfg, dict):
         _method_ = cfg
+    elif isinstance(cfg, str):
+        _method_ = cfg
+        cfg = {}
+    else:
+        raise ValueError(f"Invalid method: {cfg}")
+
     if isinstance(_method_, str):
         _fn = getattr(obj, _method_)
         if return_function:

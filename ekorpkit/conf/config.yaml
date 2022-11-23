@@ -10,7 +10,7 @@ defaults:
   - env: default
   - mode: default
   - model: default
-  - project: default
+  - project: _global_
   - tokenizer: default
   - io: default
   - run: default

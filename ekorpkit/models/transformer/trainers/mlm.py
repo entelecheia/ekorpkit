@@ -57,9 +57,11 @@ class MlmTrainer(BaseConfig):
         self._tokenizer = None
         # self.trainer = None
         self._tokenized_datasets = None
+        self._pipe = None
         self.last_checkpoint = None
 
         self._init_env()
+        self.autorun()
 
     @property
     def model_args(self):
@@ -111,7 +113,7 @@ class MlmTrainer(BaseConfig):
         # Log on each process the small summary:
         logger.warning(
             f"Process rank: {training_args.local_rank}, device: {training_args.device}, n_gpu: {training_args.n_gpu}"
-            + f"distributed training: {bool(training_args.local_rank != -1)}, 16-bits training: {training_args.fp16}"
+            + f", distributed training: {bool(training_args.local_rank != -1)}, 16-bits training: {training_args.fp16}"
         )
         # Set the verbosity to info of the Transformers logger (on main process only):
         logger.info(f"Training/evaluation parameters {training_args}")
@@ -679,10 +681,13 @@ class MlmTrainer(BaseConfig):
         else:
             trainer.create_model_card(**kwargs)
 
-    def fill_mask(self, text, top_k=5):
+    def fill_mask(self, text, top_k=5, reload=False, **kwargs):
         """Fill the mask in a text"""
-        model = AutoModelForMaskedLM.from_pretrained(self.model_path)
-        tokenizer = AutoTokenizer.from_pretrained(self.model_path)
+        if reload or self._pipe is None:
+            model = AutoModelForMaskedLM.from_pretrained(self.model_path)
+            tokenizer = AutoTokenizer.from_pretrained(self.model_path)
 
-        fill_mask = pipeline("fill-mask", model=model, tokenizer=tokenizer)
-        return fill_mask(text, top_k=top_k)
+            self._pipe = pipeline(
+                "fill-mask", model=model, tokenizer=tokenizer, **kwargs
+            )
+        return self._pipe(text, top_k=top_k)

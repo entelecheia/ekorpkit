@@ -1,4 +1,5 @@
 defaults:
+  - /project: disco-imagen
   - /module: stable_diffusion
   - /path: stable_diffusion
   - /batch: stable_diffusion

@@ -1,7 +1,9 @@
 defaults:
-  - /path: trasformer_trainer
-  - /batch: trasformer_trainer
+  - /auto: default
   - /secret: default
+  - /project: language-modeling
+  - /path: trasformer.trainer
+  - /batch: trasformer.trainer
   - model: mlm
   - data: mlm
   - training: mlm

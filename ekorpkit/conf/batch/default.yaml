@@ -1,4 +1,4 @@
-batch_name: demo-batch
+batch_name: ${oc.select:..name,demo-batch}
 batch_num:
 random_seed: true
 seed:
