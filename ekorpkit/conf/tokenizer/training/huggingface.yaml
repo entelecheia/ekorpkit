@@ -1,0 +1,4 @@
+defaults:
+  - default
+
+trainer_type: huggingface

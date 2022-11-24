@@ -12,3 +12,8 @@ class ModelType(str, Enum):
 class TrainerType(str, Enum):
     SPM = "spm"
     HF = "huggingface"
+
+
+class DatasetType(str, Enum):
+    DATASET = "dataset"
+    TEXT = "text"

@@ -1,7 +1,9 @@
 defaults:
+  - /auto: default
+  - /batch: default
+  - /secret: default
   - /project: disco-imagen
   - /path: prompt
-  - /batch: prompt
   - dataset: default
   - model: default
   - train: default

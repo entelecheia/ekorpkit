@@ -1,7 +1,10 @@
 defaults:
+  - /auto: default
+  - /batch: default
+  - /secret: default
+  - /project: disco-imagen
   - /module: dalle_mini
   - /path: dalle_mini
-  - /batch: dalle_mini
   - model: default
   - imagine: default
   - /collage: default

@@ -2,6 +2,6 @@ defaults:
   - /path: _project_
 
 name: ${oc.env:EKORPKIT_PROJECT,ekorpkit-project}
-root: ${.path.project}
 project_name: ${.name}
+project_dir: ${.path.project}
 task_name: default-task

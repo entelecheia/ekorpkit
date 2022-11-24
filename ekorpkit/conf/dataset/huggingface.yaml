@@ -1,0 +1,15 @@
+dataset_name: #The name of the dataset to use (via the datasets library.
+dataset_config_name: # The configuration name of the dataset to use (via the datasets library.
+train_file: # The input training data file (a text file).
+validation_file: # An optional input evaluation data file to evaluate the perplexity on (a text file.)
+overwrite_cache: false #Overwrite the cached training and evaluation sets
+validation_split_percentage: # The percentage of the train set used as validation set in case there's no validation split
+num_workers: # The number of processes to use for the preprocessing.
+max_train_samples: # For debugging purposes or quicker training, truncate the number of training examples to this value if set.
+max_eval_samples: # For debugging purposes or quicker training, truncate the number of evaluation examples to this value if set.
+cache_dir: ${oc.select:..path.cache_dir,null}
+use_auth_token: false
+filename_extension:
+text_column_name:
+shuffle: false
+seed:

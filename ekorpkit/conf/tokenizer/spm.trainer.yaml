@@ -1,15 +1,19 @@
 defaults:
   - /auto: default
-  - /batch: default
   - /secret: default
   - /project: language-modeling
-  - /path: _batch_
-  - /dataset: mlm
+  - /path: trasformer.trainer
+  - /batch: trasformer.trainer
   - model: mlm
+  - data: mlm
   - training: mlm
   - tokenizer: mlm
 
 _target_: ekorpkit.models.transformer.trainers.MlmTrainer
+autoload: false
 name: mlm-trainer
 verbose: ${oc.select:..verbose, false}
+device: "cuda"
+batch:
+  batch_name: ${..name}
 use_accelerator: false

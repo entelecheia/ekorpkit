@@ -1,0 +1,9 @@
+defaults:
+  - huggingface
+
+validation_split_percentage: 5 # The percentage of the train set used as validation set in case there's no validation split
+max_seq_length: # The maximum total input sequence length after tokenization. Sequences longer than this will be truncated.
+mlm_probability: 0.15 #Ratio of tokens to mask for masked language modeling loss
+line_by_line: false # Whether distinct lines of text in the dataset are to be handled as distinct sequences.
+pad_to_max_length: false
+# Whether to pad all samples to `max_seq_length`. If False, will pad the samples dynamically when batching to the maximum length in the batch.

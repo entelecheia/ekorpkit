@@ -12,7 +12,6 @@ defaults:
   - preprocessor/normalizer: default
   - preprocessor/segmenter: default
   - preprocessor/tokenizer: default
-  - tokenizer: default
   - io: default
 
   - override hydra/help: help

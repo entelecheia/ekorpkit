@@ -1,5 +1,6 @@
 name:
 path:
+model_dir:
 model_type: 
 truncation: true
 model_max_length:

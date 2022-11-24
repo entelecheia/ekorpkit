@@ -1,8 +1,10 @@
 defaults:
+  - /auto: default
+  - /secret: default
   - /project: disco-imagen
+  - /batch: stable_diffusion
   - /module: stable_diffusion
   - /path: stable_diffusion
-  - /batch: stable_diffusion
   - model: default
   - imagine: default
   - /collage: default

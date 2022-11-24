@@ -299,11 +299,11 @@ class PromptGenerator(BaseConfig):
         return tokenized_dataset
 
     @property
-    def model_args(self):
+    def model_config(self):
         return self.config.model
 
-    @model_args.setter
-    def model_args(self, value):
+    @model_config.setter
+    def model_config(self, value):
         self.config.model = value
 
     @property

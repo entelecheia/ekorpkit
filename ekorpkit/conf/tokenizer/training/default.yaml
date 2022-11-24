@@ -1,0 +1,3 @@
+trainer_type: huggingface
+dataset_type: text
+use_sampling: false

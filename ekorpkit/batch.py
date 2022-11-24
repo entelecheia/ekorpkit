@@ -18,6 +18,7 @@ class BaseBatchConfig(BaseModel):
     seed: int = None
     resume_run: bool = False
     resume_latest: bool = False
+    num_workers: int = 1
     config_filesfx = "config.yaml"
     config_dirname = "configs"
     verbose = False
@@ -86,10 +87,13 @@ class BaseConfig:
     def __init__(self, root_dir=None, **args):
         self.config = args
         self._config = args
-        self.verbose = args.get("verbose", False)
         self._init_path(root_dir=root_dir, **args)
         self._init_batch()
         self._init_secrets()
+
+    @property
+    def verbose(self):
+        return self.batch.verbose
 
     @property
     def project_name(self):
@@ -97,7 +101,7 @@ class BaseConfig:
 
     @property
     def project_dir(self):
-        return Path(self.project_config.root)
+        return Path(self.project_config.project_dir)
 
     @property
     def workspace_dir(self):
@@ -170,11 +174,15 @@ class BaseConfig:
         return Path(self.path.root)
 
     @property
+    def batch_dir(self):
+        return self.batch.batch_dir
+
+    @property
     def output_dir(self):
         return Path(self.path.output_dir)
 
     @property
-    def model_args(self):
+    def model_config(self):
         if "model" in self.config:
             return self.config.model
         return {}
@@ -233,10 +241,10 @@ class BaseConfig:
             eKonf.print(path)
         self.path = path
 
-    def _init_batch(self, verbose=True):
-        self.batch = BaseBatchConfig(
-            output_dir=self.output_dir, **self.config.batch, verbose=verbose
-        )
+    def _init_batch(
+        self,
+    ):
+        self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
         if eKonf.osenv("WANDB_PROJECT") is None:
             eKonf.env_set("WANDB_PROJECT", self.project_name)
 
