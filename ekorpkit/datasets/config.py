@@ -4,7 +4,7 @@ from random import sample
 from glob import glob
 from pathlib import Path
 from tqdm.auto import tqdm
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from typing import Optional
 from datasets import load_dataset, DatasetDict
 from ekorpkit import eKonf
@@ -91,25 +91,7 @@ class DatasetConfig(BaseModel):
         default=None,
         description="A seed for the shuffle.",
     )
-    _raw_datasets: Optional[DatasetDict] = None
-
-    @validator("data_dir")
-    def _data_dir_validator(cls, v):
-        if v is not None:
-            return os.path.abspath(os.path.expanduser(v))
-        return v
-
-    @validator("train_file")
-    def train_file_validator(cls, v, values):
-        if not Path(v).is_absolute() and values["data_dir"] is not None:
-            return os.path.join(values["data_dir"], v)
-        return v
-
-    @validator("validation_file")
-    def validation_file_validator(cls, v, values):
-        if not Path(v).is_absolute() and values["data_dir"] is not None:
-            return os.path.join(values["data_dir"], v)
-        return v
+    raw_datasets: Optional[DatasetDict] = None
 
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -122,7 +104,15 @@ class DatasetConfig(BaseModel):
                 "Need either a dataset name or a training/validation file."
             )
         else:
+            if self.data_dir is not None:
+                self.data_dir = os.path.abspath(os.path.expanduser(self.data_dir))
             if self.train_file is not None:
+                if (
+                    not Path(self.train_file).is_absolute()
+                    and self.data_dir is not None
+                ):
+                    self.train_file = os.path.join(self.data_dir, self.train_file)
+
                 if eKonf.is_file(self.train_file):
                     extension = self.train_file.split(".")[-1]
                     if extension not in ["csv", "json", "txt", "parquet"]:
@@ -144,6 +134,14 @@ class DatasetConfig(BaseModel):
                     )
 
             if self.validation_file is not None:
+                if (
+                    not Path(self.validation_file).is_absolute()
+                    and self.data_dir is not None
+                ):
+                    self.validation_file = os.path.join(
+                        self.data_dir, self.validation_file
+                    )
+
                 if eKonf.is_file(self.validation_file):
                     extension = self.validation_file.split(".")[-1]
                     if extension not in ["csv", "json", "txt", "parquet"]:
@@ -259,22 +257,22 @@ class DatasetConfig(BaseModel):
         # See more about loading any type of standard or custom dataset
         # (from files, python dict, pandas DataFrame, etc) at
         # https://huggingface.co/docs/datasets/loading_datasets.html.
-        self._raw_datasets = raw_datasets
+        self.raw_datasets = raw_datasets
         return raw_datasets
 
     @property
-    def raw_datasets(self):
-        if self._raw_datasets is None:
-            self._raw_datasets = self.load_datasets()
-        return self._raw_datasets
+    def datasets(self) -> DatasetDict:
+        if self.raw_datasets is None:
+            self.raw_datasets = self.load_datasets()
+        return self.raw_datasets
 
     def sample_dataset(self, dataset=None, sample_frac=0.1, split="train"):
         if dataset is None:
-            dataset = self.raw_datasets[split]
+            dataset = self.datasets[split]
         return dataset.select(range(int(len(dataset) * sample_frac)))
 
     def batch_iterator(self, batch_size=1000, split="train", text_column_name=None):
-        dataset = self.raw_datasets[split]
+        dataset = self.datasets[split]
         if text_column_name is None:
             text_column_name = self.text_column_name
         for i in range(0, len(dataset), batch_size):
@@ -292,7 +290,7 @@ class DatasetConfig(BaseModel):
         """
         Make a sentence per line files, chuncsize sentences per file
         """
-        dataset = self.raw_datasets[split]
+        dataset = self.datasets[split]
         num_files = len(list(glob(f"{output_dir}/*.txt")))
         if num_files > 0 and not overwrite:
             log.info("Exported files already exist, skipping")

@@ -129,8 +129,8 @@ class TokenizerTrainer(BaseConfig):
                     replacement=whitespace_token, add_prefix_space=add_prefix_space
                 ),
                 # pre_tokenizers.Punctuation(),
-                pre_tokenizers.UnicodeScripts(),
-                pre_tokenizers.Digits(individual_digits=True),
+                # pre_tokenizers.UnicodeScripts(),
+                pre_tokenizers.Digits(individual_digits=False),
             ]
         else:
             tokenizer = Tokenizer(WordLevel(unk_token=unk_token))
@@ -215,7 +215,7 @@ class TokenizerTrainer(BaseConfig):
     def dataset_config(self):
         if self._dataset_config is None:
             if self.config.dataset.data_dir is None:
-                self.config.dataset.data_dir = self.data_dir
+                self.config.dataset.data_dir = str(self.data_dir)
             cfg = DatasetConfig(**self.config.dataset)
             cfg.cache_dir = str(self.cache_dir)
             if cfg.seed is None:
@@ -225,7 +225,7 @@ class TokenizerTrainer(BaseConfig):
 
     @property
     def raw_datasets(self):
-        return self.dataset_config.raw_datasets
+        return self.dataset_config.datasets
 
     @property
     def sample_filepath(self):

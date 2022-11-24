@@ -42,9 +42,9 @@ logger = logging.getLogger(__name__)
 class MlmTrainer(BaseConfig):
     def __init__(self, root_dir=None, **args):
         self._model_args = None
-        self._dataset_args = None
-        self._training_args = None
-        self._tokenizer_args = None
+        self._dataset_config = None
+        self._training_config = None
+        self._tokenizer_config = None
         self._lm_config = None
 
         self._raw_datasets = None
@@ -100,23 +100,23 @@ class MlmTrainer(BaseConfig):
 
     @property
     def tokenizer_config(self):
-        if self._tokenizer_args is None:
+        if self._tokenizer_config is None:
             tk_args = PreTrainedTokenizerArguments(**self.config.tokenizer)
             tk_args.model_max_length = self.dataset_config.max_seq_length
             if self.model_type is not None:
                 tk_args.model_type = self.model_type
-            self._tokenizer_args = tk_args
-        return self._tokenizer_args
+            self._tokenizer_config = tk_args
+        return self._tokenizer_config
 
     @property
     def training_config(self):
-        if self._training_args is None:
+        if self._training_config is None:
             training_args = TrainingArguments(**self.config.training)
             if training_args.output_dir is None:
                 training_args.output_dir = self.model_path
             training_args.seed = self.seed
-            self._training_args = training_args
-        return self._training_args
+            self._training_config = training_args
+        return self._training_config
 
     def _init_env(self):
         training_args = self.training_config
@@ -221,19 +221,19 @@ class MlmTrainer(BaseConfig):
 
     @property
     def dataset_config(self):
-        if self._dataset_args is None:
-            self._dataset_args = DataTrainingArguments(**self.config.dataset)
-            self._dataset_args.cache_dir = str(self.cache_dir)
-        return self._dataset_args
-
-    def prepare_datasets(self):
-        self._raw_datasets = self.dataset_config.load_datasets()
+        if self._dataset_config is None:
+            if self.config.dataset.data_dir is None:
+                self.config.dataset.data_dir = str(self.data_dir)
+            cfg = DataTrainingArguments(**self.config.dataset)
+            cfg.cache_dir = str(self.cache_dir)
+            if cfg.seed is None:
+                cfg.seed = self.seed
+            self._dataset_config = cfg
+        return self._dataset_config
 
     @property
     def raw_datasets(self):
-        if self._raw_datasets is None:
-            self.prepare_datasets()
-        return self._raw_datasets
+        return self.dataset_config.datasets
 
     @property
     def tokenizer_name_or_path(self):
