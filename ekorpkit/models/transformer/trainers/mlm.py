@@ -457,7 +457,7 @@ class MlmTrainer(BaseConfig):
                 tokenized_datasets = tokenized_datasets.map(
                     group_texts,
                     batched=True,
-                    num_proc=data_args.preprocessing_num_workers,
+                    num_proc=data_args.num_workers,
                     load_from_cache_file=not data_args.overwrite_cache,
                     desc=f"Grouping texts in chunks of {max_seq_length}",
                 )
