@@ -83,7 +83,7 @@ class MlmTrainer(BaseConfig):
     def model_name(self):
         model_name = self.model_config.model_name
         if model_name is None:
-            model_name = "{}_{}".format(self.name, self.model_config_name)
+            model_name = "{}-{}".format(self.name, self.model_config_name)
         return model_name
 
     @property

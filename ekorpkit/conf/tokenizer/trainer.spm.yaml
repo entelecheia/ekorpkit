@@ -1,0 +1,4 @@
+defaults:
+  - trainer
+  - override model: spm
+  - override training: spm

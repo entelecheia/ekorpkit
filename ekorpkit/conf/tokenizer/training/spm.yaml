@@ -2,3 +2,4 @@ defaults:
   - default
 
 trainer_type: spm
+dataset_type: text

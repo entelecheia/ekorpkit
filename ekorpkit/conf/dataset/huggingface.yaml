@@ -1,5 +1,6 @@
 dataset_name: #The name of the dataset to use (via the datasets library.
 dataset_config_name: # The configuration name of the dataset to use (via the datasets library.
+data_dir:
 train_file: # The input training data file (a text file).
 validation_file: # An optional input evaluation data file to evaluate the perplexity on (a text file.)
 overwrite_cache: false #Overwrite the cached training and evaluation sets

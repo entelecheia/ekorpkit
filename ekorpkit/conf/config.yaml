@@ -12,6 +12,7 @@ defaults:
   - model: default
   - project: _global_
   - io: default
+  - tokenizer: default
   - run: default
 
   - override hydra/help: help

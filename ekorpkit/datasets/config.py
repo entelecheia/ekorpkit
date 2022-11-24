@@ -1,11 +1,16 @@
+import os
 import logging
-from pydantic import BaseModel, Field
+from random import sample
+from glob import glob
+from pathlib import Path
+from tqdm.auto import tqdm
+from pydantic import BaseModel, Field, validator
 from typing import Optional
 from datasets import load_dataset, DatasetDict
 from ekorpkit import eKonf
 
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class DatasetConfig(BaseModel):
@@ -20,6 +25,10 @@ class DatasetConfig(BaseModel):
     dataset_config_name: Optional[str] = Field(
         default=None,
         description="The configuration name of the dataset to use (via the datasets library).",
+    )
+    data_dir: Optional[str] = Field(
+        default=None,
+        description="The directory where the dataset is located.",
     )
     train_file: Optional[str] = Field(
         default=None,
@@ -82,6 +91,25 @@ class DatasetConfig(BaseModel):
         default=None,
         description="A seed for the shuffle.",
     )
+    _raw_datasets: Optional[DatasetDict] = None
+
+    @validator("data_dir")
+    def _data_dir_validator(cls, v):
+        if v is not None:
+            return os.path.abspath(os.path.expanduser(v))
+        return v
+
+    @validator("train_file")
+    def train_file_validator(cls, v, values):
+        if not Path(v).is_absolute() and values["data_dir"] is not None:
+            return os.path.join(values["data_dir"], v)
+        return v
+
+    @validator("validation_file")
+    def validation_file_validator(cls, v, values):
+        if not Path(v).is_absolute() and values["data_dir"] is not None:
+            return os.path.join(values["data_dir"], v)
+        return v
 
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -225,10 +253,122 @@ class DatasetConfig(BaseModel):
         self.text_column_name = "text" if "text" in column_names else column_names[0]
 
         if self.shuffle:
-            logger.info("Shuffling the dataset with seed %s", self.seed)
+            log.info("Shuffling the dataset with seed %s", self.seed)
             raw_datasets = raw_datasets.shuffle(seed=self.seed)
 
         # See more about loading any type of standard or custom dataset
         # (from files, python dict, pandas DataFrame, etc) at
         # https://huggingface.co/docs/datasets/loading_datasets.html.
+        self._raw_datasets = raw_datasets
         return raw_datasets
+
+    @property
+    def raw_datasets(self):
+        if self._raw_datasets is None:
+            self._raw_datasets = self.load_datasets()
+        return self._raw_datasets
+
+    def sample_dataset(self, dataset=None, sample_frac=0.1, split="train"):
+        if dataset is None:
+            dataset = self.raw_datasets[split]
+        return dataset.select(range(int(len(dataset) * sample_frac)))
+
+    def batch_iterator(self, batch_size=1000, split="train", text_column_name=None):
+        dataset = self.raw_datasets[split]
+        if text_column_name is None:
+            text_column_name = self.text_column_name
+        for i in range(0, len(dataset), batch_size):
+            yield dataset[i : i + batch_size][text_column_name]
+
+    def export_sentence_chunks(
+        self,
+        output_dir,
+        overwrite=False,
+        split="train",
+        chunk_size=10_000,
+        filename_fmt="sent_chunk_{:04d}.txt",
+        sent_tokenize=None,
+    ):
+        """
+        Make a sentence per line files, chuncsize sentences per file
+        """
+        dataset = self.raw_datasets[split]
+        num_files = len(list(glob(f"{output_dir}/*.txt")))
+        if num_files > 0 and not overwrite:
+            log.info("Exported files already exist, skipping")
+            return
+
+        log.info(f"Writing sentence chunks to {output_dir}")
+
+        # loop over the chunks
+        num_sentences = 0
+        for chunk_id, data_chunk in enumerate(batch_chunks(dataset, chunk_size)):
+            # new file for each chunk
+            filename = filename_fmt.format(chunk_id)
+            filepath = os.path.join(output_dir, filename)
+
+            with open(filepath, "w") as f:
+                for line in data_chunk:
+                    line = line.strip()
+                    # tokenize into sentences
+                    if sent_tokenize is None:
+                        sentences = line.split("\n")
+                    else:
+                        sentences = sent_tokenize(line)
+                    # do not save empty items such as
+                    if sentences != []:
+                        f.writelines(s + "\n" for s in sentences)
+                        num_sentences += len(sentences)
+        log.info(f"Saved {num_sentences} sentences to {output_dir}")
+
+    def export_sample(
+        self, input_dir, output_filepath, sample_frac=0.1, overwrite=False
+    ):
+        """
+        Use the set of files containing a sentence per line,
+        sample num_files out of those and save as one text file
+        """
+        if os.path.exists(output_filepath) and not overwrite:
+            log.info("Output file already exists, skipping")
+            return
+
+        sentence_files = list(list(glob(f"{input_dir}/*.txt")))
+        sample_size = int(len(sentence_files) * sample_frac)
+
+        # sample num_files
+        if sample_size <= len(sentence_files):
+            sentence_files = sample(sentence_files, sample_size)
+        else:
+            log.info(
+                f"Sample size {sample_size} is larger than number of files {len(sentence_files)}. ",
+                "Using all files",
+            )
+
+        filenames = [os.path.basename(f) for f in sentence_files]
+        log.info(f"Sampled files: {filenames}")
+
+        # read all the lines from sampled files and save to a list
+        all_lines = []
+        for fp in sentence_files:
+            with open(fp) as f:
+                lines = f.read().splitlines()
+            all_lines.extend(lines)
+        log.info(f"Number of lines sampled: {len(all_lines):,}")
+
+        num_sentences = 0
+        with open(output_filepath, "w") as f:
+            for sentence in tqdm(all_lines):
+                # remove newlines
+                sentence = sentence.strip()
+                # do not save empty items such as
+                if sentence != []:
+                    f.writelines(sentence + "\n")
+                    num_sentences += 1
+        log.info(f"Saved {num_sentences} sentences to {output_filepath}")
+
+
+def batch_chunks(dataset, batch_size, text_column="text"):
+    """Yield successive batch-sized chunks from dataset."""
+    for i in tqdm(range(0, len(dataset), batch_size)):
+        end_i = min(len(dataset), i + batch_size)
+        yield dataset[i:end_i][text_column]

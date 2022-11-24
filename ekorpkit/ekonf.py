@@ -946,3 +946,18 @@ class eKonf:
             resize_to_multiple_of,
             resample,
         )
+
+    @staticmethod
+    def copy(src, dst, *, follow_symlinks=True):
+        import shutil
+
+        _mkdir(dst)
+        shutil.copy(src, dst, follow_symlinks=follow_symlinks)
+        logger.info(f"copied {src} to {dst}")
+
+    @staticmethod
+    def copyfile(src, dst, *, follow_symlinks=True):
+        import shutil
+
+        shutil.copyfile(src, dst, follow_symlinks=follow_symlinks)
+        logger.info(f"copied {src} to {dst}")

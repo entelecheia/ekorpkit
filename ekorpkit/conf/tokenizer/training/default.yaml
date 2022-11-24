@@ -1,3 +1,4 @@
 trainer_type: huggingface
 dataset_type: text
-use_sampling: false
+use_sample: true
+dataset_split: train

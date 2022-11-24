@@ -1,9 +1,8 @@
-import os
 import logging
 import sentencepiece as spm
-from random import sample
+import random
+import pandas as pd
 from pathlib import Path
-from tqdm.auto import tqdm
 from tokenizers import Tokenizer
 from tokenizers.models import BPE, Unigram, WordLevel
 from tokenizers.trainers import BpeTrainer, UnigramTrainer, WordLevelTrainer
@@ -12,8 +11,6 @@ from tokenizers import (
     normalizers,
     pre_tokenizers,
 )
-from .trainers.spm import train_spm
-from .trainers.hf import train_hf_tokenizer
 from .config import ModelType, TrainerType, DatasetType
 from ekorpkit.batch import BaseConfig
 from ekorpkit.datasets.config import DatasetConfig
@@ -28,6 +25,7 @@ class TokenizerTrainer(BaseConfig):
     def __init__(self, root_dir=None, **args):
         self._dataset_config = None
         self._training_config = None
+        self._tokenizer = None
         super().__init__(root_dir=root_dir, **args)
         self.autorun()
 
@@ -70,6 +68,10 @@ class TokenizerTrainer(BaseConfig):
     @property
     def dataset_type(self) -> DatasetType:
         return self.training_config.dataset_type
+
+    @property
+    def use_sample(self):
+        return self.training_config.use_sample
 
     @property
     def model_filename(self):
@@ -126,7 +128,7 @@ class TokenizerTrainer(BaseConfig):
                 pre_tokenizers.Metaspace(
                     replacement=whitespace_token, add_prefix_space=add_prefix_space
                 ),
-                pre_tokenizers.Punctuation(),
+                # pre_tokenizers.Punctuation(),
                 pre_tokenizers.UnicodeScripts(),
                 pre_tokenizers.Digits(individual_digits=True),
             ]
@@ -152,23 +154,45 @@ class TokenizerTrainer(BaseConfig):
 
         return tokenizer, trainer
 
+    @property
+    def input_files(self):
+        if self.dataset_type == DatasetType.TEXT:
+            if self.use_sample:
+                if not self.sample_filepath.exists():
+                    self.export_sample()
+                input_files = [str(self.sample_filepath)]
+            else:
+                if self.num_exported_files == 0:
+                    self.export_sentence_chunks()
+                input_files = eKonf.get_filepaths("*.txt", self.export_dir)
+            return input_files
+        else:
+            return []
+
     def train_huggingface(self):
         """
         Takes the files and trains the tokenizer.
         """
         model_path = self.model_path
-        input_files = [str(self.sample_filepath)]
 
         tokenizer, trainer = self.prepare_trainer()
-        tokenizer.train(
-            input_files,
-            trainer=trainer,
-        )
+        if self.dataset_type == DatasetType.TEXT:
+            tokenizer.train(
+                files=self.input_files,
+                trainer=trainer,
+            )
+        else:
+            split = self.training_config.dataset_split
+            tokenizer.train_from_iterator(
+                self.dataset_config.batch_iterator(split=split),
+                lengths=len(self.raw_datasets[split]),
+                trainer=trainer,
+            )
         tokenizer.save(model_path)
         log.info(f"saved model to {model_path}")
 
     def train_spm(self):
-        input = str(self.sample_filepath)
+        input = self.input_files
         model_name = self.model_filename
         output_dir = self.model_dir
         log.info(f"Training SentencePiece model {model_name}")
@@ -183,7 +207,6 @@ class TokenizerTrainer(BaseConfig):
             spm.SentencePieceTrainer.train(
                 input=input,
                 model_prefix=self.model_name,
-                model_type=self.model_type,
                 **model_args,
             )
         log.info(f"Saved SentencePiece model to {output_dir}")
@@ -191,6 +214,8 @@ class TokenizerTrainer(BaseConfig):
     @property
     def dataset_config(self):
         if self._dataset_config is None:
+            if self.config.dataset.data_dir is None:
+                self.config.dataset.data_dir = self.data_dir
             cfg = DatasetConfig(**self.config.dataset)
             cfg.cache_dir = str(self.cache_dir)
             if cfg.seed is None:
@@ -198,14 +223,9 @@ class TokenizerTrainer(BaseConfig):
             self._dataset_config = cfg
         return self._dataset_config
 
-    def prepare_datasets(self):
-        self._raw_datasets = self.dataset_config.load_datasets()
-
     @property
     def raw_datasets(self):
-        if self._raw_datasets is None:
-            self.prepare_datasets()
-        return self._raw_datasets
+        return self.dataset_config.raw_datasets
 
     @property
     def sample_filepath(self):
@@ -219,44 +239,18 @@ class TokenizerTrainer(BaseConfig):
         Use the set of files containing a sentence per line,
         sample num_files out of those and save as one text file
         """
+        if self.num_exported_files == 0:
+            self.export_sentence_chunks()
+
         overwrite = self.export_config.overwrite_sample
-        if self.sample_filepath.exists() and not overwrite:
-            log.info("Sample file already exists, skipping")
-            return
-
-        sentence_files = list(self.export_dir.glob("*.txt"))
         sample_frac = self.export_config.sample_frac
-        sample_size = int(len(sentence_files) * sample_frac)
 
-        # sample num_files
-        if sample_size <= len(sentence_files):
-            sentence_files = sample(sentence_files, sample_size)
-        else:
-            log.info(
-                f"Sample size {sample_size} is larger than number of files {len(sentence_files)}"
-            )
-
-        filenames = [os.path.basename(f) for f in sentence_files]
-        log.info(f"sampled files: {filenames}")
-
-        # read all the lines from sampled files and save to a list
-        all_lines = []
-        for fp in sentence_files:
-            with open(fp) as f:
-                lines = f.read().splitlines()
-            all_lines.extend(lines)
-        log.info(f"number of lines sampled: {len(all_lines):,}")
-
-        num_sentences = 0
-        with open(self.sample_filepath, "w") as f:
-            for sentence in tqdm(all_lines):
-                # remove newlines
-                sentence = sentence.strip()
-                # do not save empty items such as
-                if sentence != []:
-                    f.writelines(sentence + "\n")
-                    num_sentences += 1
-        log.info(f"Saved {num_sentences} sentences to {self.sample_filepath}")
+        self.dataset_config.export_sample(
+            input_dir=self.export_dir,
+            output_filepath=self.sample_filepath,
+            sample_frac=sample_frac,
+            overwrite=overwrite,
+        )
 
     @property
     def export_config(self):
@@ -270,6 +264,10 @@ class TokenizerTrainer(BaseConfig):
             dir_.mkdir(parents=True)
         return dir_
 
+    @property
+    def num_exported_files(self):
+        return len(list(self.export_dir.glob("*.txt")))
+
     def export_sentence_chunks(
         self,
         sent_tokenize=None,
@@ -277,100 +275,59 @@ class TokenizerTrainer(BaseConfig):
         """
         Make a sentence per line files, chuncsize sentences per file
         """
-        dataset = self.raw_datasets["train"]
         output_dir = self.export_dir
         overwrite = self.export_config.overwrite_chunks
-        if len(list(output_dir.glob("*.txt"))) > 0 and not overwrite:
-            log.info("Exported files already exist, skipping")
-            return
-
-        log.info(f"Writing sentence chunks to {output_dir}")
         chunk_size = self.export_config.chunk_size
         filename_fmt = self.export_config.filename_fmt
 
-        # loop over the chunks
-        num_sentences = 0
-        for chunk_id, data_chunk in enumerate(batch_chunks(dataset, chunk_size)):
-            # new file for each chunk
-            filename = filename_fmt.format(chunk_id)
-            filepath = os.path.join(output_dir, filename)
+        self.dataset_config.export_sentence_chunks(
+            output_dir=output_dir,
+            overwrite=overwrite,
+            chunk_size=chunk_size,
+            filename_fmt=filename_fmt,
+            sent_tokenize=sent_tokenize,
+        )
 
-            with open(filepath, "w") as f:
-                for line in data_chunk:
-                    line = line.strip()
-                    # tokenize into sentences
-                    if sent_tokenize is None:
-                        sentences = line.split("\n")
-                    else:
-                        sentences = sent_tokenize(line)
-                    # do not save empty items such as
-                    if sentences != []:
-                        f.writelines(s + "\n" for s in sentences)
-                        num_sentences += len(sentences)
-        log.info(f"Saved {num_sentences} sentences to {output_dir}")
-
-
-def batch_chunks(dataset, batch_size, text_column="text"):
-    """Yield successive batch-sized chunks from dataset."""
-    for i in tqdm(range(0, len(dataset), batch_size)):
-        end_i = min(len(dataset), i + batch_size)
-        yield dataset[i:end_i][text_column]
-
-
-def train_tokenizer(
-    model_prefix,
-    input_files,
-    input_dir=None,
-    output_dir="tokenizers",
-    vocab_size=30000,
-    model_type: ModelType = ModelType.UNIGRAM,
-    trainer_type: TrainerType = TrainerType.SPM,
-    character_coverage=1.0,
-    num_workers=1,
-    train_extremely_large_corpus=False,
-    project_dir=None,
-    verbose=False,
-    **kwargs,
-):
-    if model_prefix is None:
-        raise ValueError("model_prefix must be specified")
-    if kwargs:
-        kwargs = eKonf.to_dict(kwargs)
-        log.info(f"Additional kwargs: {kwargs}")
-
-    if project_dir is not None:
-        log.info(f"Using project_dir {project_dir}")
-        output_dir = os.path.join(project_dir, output_dir)
-        if input_dir is not None:
-            input_dir = os.path.join(project_dir, input_dir)
+    def load_tokenizer(self):
+        if self.trainer_type == TrainerType.SPM:
+            return spm.SentencePieceProcessor(model_file=self.model_path)
         else:
-            input_dir = project_dir
+            return Tokenizer.from_file(self.model_path)
 
-    input_files = eKonf.get_filepaths(input_files, input_dir)
+    @property
+    def tokenizer(self):
+        if self._tokenizer is None:
+            self._tokenizer = self.load_tokenizer()
+        return self._tokenizer
 
-    if trainer_type == TrainerType.SPM:
-        model_path = train_spm(
-            model_prefix=model_prefix,
-            input=input_files,
-            output_dir=output_dir,
-            model_type=model_type,
-            vocab_size=vocab_size,
-            character_coverage=character_coverage,
-            num_threads=num_workers,
-            train_extremely_large_corpus=train_extremely_large_corpus,
-            **kwargs,
-        )
-    elif trainer_type == TrainerType.HF:
-        model_path = train_hf_tokenizer(
-            model_prefix=model_prefix,
-            input_files=input_files,
-            output_dir=output_dir,
-            vocab_size=vocab_size,
-            model_type=model_type,
-            **kwargs,
-        )
-    else:
-        raise ValueError(f"Invalid trainer type: {trainer_type}")
+    def tokenize(self, text):
+        if isinstance(self.tokenizer, spm.SentencePieceProcessor):
+            return self.tokenizer.encode(text, out_type=str)
+        return self.tokenizer.encode(text).tokens
 
-    if verbose:
-        print(f"saved model to {model_path}")
+
+def compare_tokens(tokenizers, sentences):
+    def tokenize(tokenizer, text):
+        """
+        Tokenizes the text using the tokenizer.
+        """
+        if isinstance(tokenizer, spm.SentencePieceProcessor):
+            return tokenizer.encode(text, out_type=str)
+        return tokenizer.encode(text).tokens
+
+    tokens = {}
+    text = random.choice(sentences).strip()
+    print(f"Text: {text}")
+    # tokenize the texts with the tokenizers
+    for name, tokenizer in tokenizers.items():
+        tokens[name] = tokenize(tokenizer, text)
+
+    max_len = max(len(tokens[name]) for name in tokenizers.keys())
+    diffs = {name: max_len - len(tokens[name]) for name in tokenizers.keys()}
+
+    padded_tokens = {
+        name: tokens[name] + [""] * diffs[name] for name in tokenizers.keys()
+    }
+
+    df = pd.DataFrame(padded_tokens)
+    return df

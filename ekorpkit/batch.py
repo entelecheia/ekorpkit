@@ -182,6 +182,10 @@ class BaseConfig:
         return Path(self.path.output_dir)
 
     @property
+    def data_dir(self):
+        return Path(self.path.data_dir)
+
+    @property
     def model_config(self):
         if "model" in self.config:
             return self.config.model
