@@ -708,7 +708,13 @@ def _load_dotenv(verbose=False):
         dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
         logger.info(f"Loaded .env from {dotenv_path}")
     else:
-        logger.info(f"No .env file found in {dotenv_path}")
+        logger.info(f"No .env file found in {dotenv_dir}, finding .env in parent dirs")
+        dotenv_path = dotenv.find_dotenv()
+        if dotenv_path:
+            dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+            logger.info(f"Loaded .env from {dotenv_path}")
+        else:
+            logger.info(f"No .env file found in {dotenv_path}")
 
 
 def _osenv(key: str = None, default: str = None) -> Any:

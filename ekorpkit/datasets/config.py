@@ -42,6 +42,10 @@ class DatasetConfig(BaseModel):
         default=None,
         description="An optional input evaluation data file to evaluate the perplexity on (or folder).",
     )
+    download_mode: Optional[str] = Field(
+        default=None,
+        description="Whether to download and prepare the dataset from the hub or only download it.",
+    )
     overwrite_cache: bool = Field(
         default=False,
         description="Overwrite the cached training and evaluation sets",
@@ -163,11 +167,14 @@ class DatasetConfig(BaseModel):
 
     @property
     def dataset_kwargs(self):
-        return dict(
+        kwargs = dict(
             path=self.dataset_name,
             cache_dir=self.cache_dir,
             use_auth_token=True if self.use_auth_token else None,
         )
+        if self.download_mode is not None:
+            kwargs["download_mode"] = self.download_mode
+        return kwargs
 
     @property
     def data_source(self):

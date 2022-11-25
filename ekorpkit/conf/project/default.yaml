@@ -1,7 +1,7 @@
 defaults:
   - /path: __project__
 
-project_name: ${oc.env:EKORPKIT_PROJECT,ekorpkit-project}
+project_name: ${oc.select:project_name,${oc.env:EKORPKIT_PROJECT,ekorpkit-project}}
 project_dir: ${.path.project}
 task_name: default-task
-workspace_dir: ${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.path.home}/.ekorpkit}
+workspace_dir: ${oc.select:workspace_dir,${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.path.home}/.ekorpkit}}
