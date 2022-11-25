@@ -2,7 +2,7 @@ defaults:
   - default
 
 name: ${oc.select:.t5.name, ''}
-data_dir: ${oc.select:.t5.data_dir, ${dir.dataset}/t5}
+data_dir: ${oc.select:.t5.data_dir, ${path.dataset}/t5}
 # column_info:
 #   columns: ${oc.select:..t5.column_info.columns:, ${.keys}}
 #   data: ${oc.select:..t5.column_info.data, null}

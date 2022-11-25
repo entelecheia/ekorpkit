@@ -1,5 +1,5 @@
 _target_: ekorpkit.models.topic.model.TopicModel
-base_model_dir: ${dir.model}/topic
+base_model_dir: ${path.model}/topic
 base_output_dir: ${dir.output}/topic
 model_name:
 model_dir: ${.base_model_dir}/${.model_name}

@@ -29,7 +29,7 @@ column_info:
     category: str
 
 io:    
-  data_dir: ${dir.archive}/datasets/source/nikl
+  data_dir: ${path.archive}/datasets/source/nikl
   data_sources: 
     train: 
       - NIKL_WRITTEN(v1.0).zip

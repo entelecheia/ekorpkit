@@ -32,7 +32,7 @@ column_info:
     author: str
 
 io:
-  data_dir:  ${dir.archive}/datasets/source/aihub/논문자료 요약
+  data_dir:  ${path.archive}/datasets/source/aihub/논문자료 요약
   data_sources: 
     train: Training/training_논문.zip
     test: Validation/validation_논문.zip

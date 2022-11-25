@@ -7,7 +7,7 @@ project:
   name: sample-nlp
 dir:
   data: /workspace/data/
-  project: /workspace/data/${project.name}
+  project: /workspace/data/${project_name}
   dataset: /workspace/data/datasets
   model: /workspace/data/models
 env:

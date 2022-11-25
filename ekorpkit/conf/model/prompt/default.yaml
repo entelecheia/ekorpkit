@@ -14,5 +14,5 @@ _target_: ekorpkit.models.art.prompt.PromptGenerator
 name: prompt-generator
 device: "cuda:0"
 verbose: ${oc.select:..verbose, false}
-wandb_project: ${project.name}-${.name}
+# wandb_project: ${oc.select:project_name,ekorpkit}-${.name}
 generated_prompts:

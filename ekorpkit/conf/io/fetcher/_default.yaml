@@ -6,7 +6,7 @@ defaults:
 _name_: fetcher
 name: ${oc.select:..name, _temp_fetched}
 # output_dir: ${oc.select:..data_dir, ${dir.tmp}/${._name_}/${.name}}
-output_dir: ${dir.archive}/datasets/source/${.name}
+output_dir: ${path.archive}/datasets/source/${.name}
 output_file: ${.name}.parquet
 limit: -1
 auto:

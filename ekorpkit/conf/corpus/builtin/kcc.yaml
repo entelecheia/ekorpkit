@@ -23,7 +23,7 @@ column_info:
     text: str
 
 io:
-  data_dir: ${dir.dataset}/source/${..name}
+  data_dir: ${path.dataset}/source/${..name}
   data_sources:
     train: '*.tar.gz'
   loader:

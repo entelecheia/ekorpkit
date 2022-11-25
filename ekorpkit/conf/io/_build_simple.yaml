@@ -2,4 +2,4 @@ defaults:
   - _build
   - loader: dataframe
 
-data_dir: ${dir.archive}/datasets/source/simple/${.name}
+data_dir: ${path.archive}/datasets/source/simple/${.name}

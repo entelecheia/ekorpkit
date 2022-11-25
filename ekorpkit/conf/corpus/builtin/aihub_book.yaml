@@ -33,7 +33,7 @@ column_info:
     chapter: str
 
 io:
-  data_dir:  ${dir.archive}/datasets/source/aihub/도서자료 요약
+  data_dir:  ${path.archive}/datasets/source/aihub/도서자료 요약
   data_sources: 
     train: Training/[원천]도서요약_train.zip
     test: Validation/[원천]도서요약_valid.zip

@@ -1,4 +1,4 @@
-workspace: ${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.home}/.ekorpkit}
+workspace: ${oc.select:..workspace_dir,${.home}/.ekorpkit}
 project: ${.workspace}/projects/${oc.select:..project_name,${oc.env:EKORPKIT_PROJECT,ekorpkit-default}}
 data: ${alt:${oc.env:EKORPKIT_DATA_DIR,null},${.workspace}/data}
 home: ${__home_path__:}

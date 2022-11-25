@@ -7,7 +7,7 @@ os:
   # MODIN_OUT_OF_CORE: 'true'
   # MALLOC_TRIM_THRESHOLD_: 65536
   # WANDB_API_KEY: ${oc.env:WANDB_API_KEY,null}
-  CACHED_PATH_CACHE_ROOT: ${dir.cache}/cached_path
+  CACHED_PATH_CACHE_ROOT: ${path.cache}/cached_path
   KMP_DUPLICATE_LIB_OK: "TRUE"
 distributed_framework:
   backend: joblib

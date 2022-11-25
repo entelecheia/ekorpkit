@@ -2,17 +2,22 @@
 defaults:
   - _self_
   - about: default
-  - corpus: default
-  - dataset: default
-  - dir: default
+  # - dir: default
   - env: default
   - mode: default
-  - model: default
-  - project: _global_
+  - path: __project__
+  - project: __global__
+  - corpus: __init__
+  - corpus/builtin: __init__
+  - dataset: __init__
+  - io: __init__
+  - model: __init__
+  - model/transformer: __init__
+  - tokenizer: __init__
+  - transformer: __init__
   - preprocessor/normalizer: default
   - preprocessor/segmenter: default
   - preprocessor/tokenizer: default
-  - io: default
 
   - override hydra/help: help
   - override hydra/hydra_logging: colorlog

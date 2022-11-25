@@ -30,7 +30,7 @@ column_info:
     english: str
 
 io:
-  data_dir:  ${dir.archive}/datasets/source/aihub/한국어-영어 번역 말뭉치(사회과학)
+  data_dir:  ${path.archive}/datasets/source/aihub/한국어-영어 번역 말뭉치(사회과학)
   data_sources: 
     train: Training/학습데이터.zip
     test: Validation/검증데이터.zip

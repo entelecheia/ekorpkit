@@ -3,9 +3,10 @@ defaults:
   - _self_
   - about: run
   - cmd: default
-  - dir: default
+  # - dir: default
   - env: run
   - mode: run
+  - path: __project__
   - run: null
   - workflow: null
 

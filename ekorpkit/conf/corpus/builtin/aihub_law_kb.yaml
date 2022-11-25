@@ -23,7 +23,7 @@ column_info:
     text: str
 
 io:
-  data_dir:  ${dir.archive}/datasets/source/aihub/법령지식
+  data_dir:  ${path.archive}/datasets/source/aihub/법령지식
   data_sources: 
     train: 
       - 법령지식_층간소음(Json).zip 

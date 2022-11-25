@@ -11,7 +11,7 @@ model_uri: ${.pretrained.model_uri}
 output_dir: ${dir.project}/outputs/${.name}/${.model_name}
 model_dir: ${.output_dir}
 pred_file: ${.name}_test_predictions.parquet
-wandb_project: ${project.name}-${.name}
+wandb_project: ${project_name}-${.name}
 wandb_kwargs:
   group: ${..model_name}
   dir: ${..output_dir}
