@@ -256,7 +256,7 @@ def _compose(
             throw_on_missing=False,
             throw_on_resolution_failure=False,
         )
-        if cfg:
+        if cfg is not None:
             overide = config_group
         else:
             overide = f"+{config_group}"
@@ -264,8 +264,7 @@ def _compose(
             overrides.append(overide)
         else:
             overrides = [overide]
-    if verbose:
-        print(f"compose config with overrides: {overrides}")
+    logging.info(f"compose config with overrides: {overrides}")
     if is_initialized:
         logging.info("Hydra is already initialized")
         cfg = hydra.compose(config_name=config_name, overrides=overrides)
