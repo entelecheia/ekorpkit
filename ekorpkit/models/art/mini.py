@@ -180,32 +180,32 @@ class DalleMini(BaseModel):
 
         # Load dalle-mini
         self.model, self.model_params = DalleBart.from_pretrained(
-            self.model_config.DALLE_MODEL,
-            revision=self.model_config.DALLE_COMMIT_ID,
+            self.model.DALLE_MODEL,
+            revision=self.model.DALLE_COMMIT_ID,
             dtype=jnp.float16,
-            _do_init=self.model_config.DALLE_INIT,
+            _do_init=self.model.DALLE_INIT,
         )
         self.processor = DalleBartProcessor.from_pretrained(
-            self.model_config.DALLE_MODEL,
-            revision=self.model_config.DALLE_COMMIT_ID,
+            self.model.DALLE_MODEL,
+            revision=self.model.DALLE_COMMIT_ID,
         )
         # Load VQGAN
         self.vqgan, self.vqgan_params = VQModel.from_pretrained(
-            self.model_config.VQGAN_REPO,
-            revision=self.model_config.VQGAN_COMMIT_ID,
-            _do_init=self.model_config.VQGAN_INIT,
+            self.model.VQGAN_REPO,
+            revision=self.model.VQGAN_COMMIT_ID,
+            _do_init=self.model.VQGAN_INIT,
         )
 
     def load_clip_models(self):
         self.clip, self.clip_params = FlaxCLIPModel.from_pretrained(
-            self.model_config.CLIP_REPO,
-            revision=self.model_config.CLIP_COMMIT_ID,
+            self.model.CLIP_REPO,
+            revision=self.model.CLIP_COMMIT_ID,
             dtype=jnp.float16,
-            _do_init=self.model_config.CLIP_INIT,
+            _do_init=self.model.CLIP_INIT,
         )
         self.clip_processor = CLIPProcessor.from_pretrained(
-            self.model_config.CLIP_REPO,
-            revision=self.model_config.CLIP_COMMIT_ID,
+            self.model.CLIP_REPO,
+            revision=self.model.CLIP_COMMIT_ID,
         )
 
     def rank_image_by_clip_score(self, prompts, images):

@@ -46,6 +46,7 @@ from .base import (
     _Keys,
     _load_dotenv,
     _load,
+    _load_json,
     _merge,
     _methods,
     _mkdir,
@@ -58,6 +59,7 @@ from .base import (
     _records_to_dataframe,
     _run,
     _save,
+    _save_json,
     _select,
     _set_cuda,
     _set_workspace,
@@ -74,9 +76,9 @@ from .base import (
     _update,
     _viewsource,
     DictKeyType,
+    Environments,
 )
 from ekorpkit.io.google import _mount_google_drive
-from ekorpkit.config import Environments
 
 
 logger = _getLogger(__name__)
@@ -233,6 +235,21 @@ class eKonf:
     @staticmethod
     def save(config: Any, f: Union[str, Path, IO[Any]], resolve: bool = False) -> None:
         _save(config, f, resolve)
+
+    @staticmethod
+    def save_json(
+        json_dict: dict,
+        f: Union[str, Path, IO[Any]],
+        indent=4,
+        ensure_ascii=False,
+        default=None,
+        **kwargs,
+    ):
+        _save_json(json_dict, f, indent, ensure_ascii, default, **kwargs)
+
+    @staticmethod
+    def load_json(f: Union[str, Path, IO[Any]], **kwargs) -> dict:
+        return _load_json(f, **kwargs)
 
     @staticmethod
     def pprint(cfg: Any, resolve: bool = True, **kwargs):

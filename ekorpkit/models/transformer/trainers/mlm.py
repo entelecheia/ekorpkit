@@ -40,27 +40,24 @@ logger = logging.getLogger(__name__)
 
 
 class MlmTrainer(BaseConfig):
+    _model_args = None
+    _dataset_config = None
+    _training_config = None
+    _tokenizer_config = None
+    _lm_config = None
+    _tokenized_datasets = None
+    _model_obj = None
+    _tokenizer_obj = None
+    _pipe_obj = None
+    last_checkpoint: str = None
+
     def __init__(self, root_dir=None, **args):
-        self._model_args = None
-        self._dataset_config = None
-        self._training_config = None
-        self._tokenizer_config = None
-        self._lm_config = None
-
-        self._raw_datasets = None
-        self._model = None
-        self._tokenizer = None
-        # self.trainer = None
-        self._tokenized_datasets = None
-        self._pipe = None
-        self.last_checkpoint = None
-
         super().__init__(root_dir=root_dir, **args)
         self._init_env()
         self.autorun()
 
     @property
-    def model_config(self):
+    def model(self):
         if self._model_args is None:
             self._model_args = ModelArguments(**self.config.model)
             self._model_args.cache_dir = str(self.cache_dir)
@@ -72,7 +69,7 @@ class MlmTrainer(BaseConfig):
 
     @property
     def model_dir(self):
-        model_dir = Path(self.model_config.model_dir)
+        model_dir = Path(self.model.model_dir)
         if not model_dir.is_absolute():
             model_dir = self.output_dir / model_dir / self.name
         if not model_dir.exists():
@@ -81,7 +78,7 @@ class MlmTrainer(BaseConfig):
 
     @property
     def model_name(self):
-        model_name = self.model_config.model_name
+        model_name = self.model.model_name
         if model_name is None:
             model_name = "{}-{}".format(self.name, self.model_config_name)
         return model_name
@@ -93,9 +90,9 @@ class MlmTrainer(BaseConfig):
     @property
     def model_config_name(self):
         return (
-            self.model_config.config_name
-            if self.model_config.config_name
-            else self.model_config.model_name_or_path
+            self.model.config_name
+            if self.model.config_name
+            else self.model.model_name_or_path
         )
 
     @property
@@ -222,9 +219,9 @@ class MlmTrainer(BaseConfig):
     @property
     def dataset_config(self):
         if self._dataset_config is None:
-            if self.config.dataset.data_dir is None:
-                self.config.dataset.data_dir = str(self.data_dir)
-            cfg = DataTrainingArguments(**self.config.dataset)
+            if self.config.data.data_dir is None:
+                self.config.data.data_dir = str(self.root_dir)
+            cfg = DataTrainingArguments(**self.config.data)
             cfg.cache_dir = str(self.cache_dir)
             if cfg.seed is None:
                 cfg.seed = self.seed
@@ -237,7 +234,7 @@ class MlmTrainer(BaseConfig):
 
     @property
     def tokenizer_name_or_path(self):
-        model_args = self.model_config
+        model_args = self.model
         if model_args.tokenizer_name:
             return model_args.tokenizer_name
         elif model_args.model_name_or_path:
@@ -259,7 +256,7 @@ class MlmTrainer(BaseConfig):
 
     def load_lm_config(self):
         # Load model config
-        model_args = self.model_config
+        model_args = self.model
 
         config_kwargs = {
             "cache_dir": model_args.cache_dir,
@@ -294,7 +291,7 @@ class MlmTrainer(BaseConfig):
         # Distributed training:
         # The .from_pretrained methods guarantee that only one local process can concurrently
         # download model & vocab.
-        model_args = self.model_config
+        model_args = self.model
         lm_config = self.lm_config
 
         if model_args.model_name_or_path:
@@ -309,11 +306,11 @@ class MlmTrainer(BaseConfig):
         else:
             logger.info("Training new model from scratch")
             model = AutoModelForMaskedLM.from_config(lm_config)
-        self._model = model
+        self._model_obj = model
 
     def load_tokenizer(self):
         # Load tokenizer
-        model_args = self.model_config
+        model_args = self.model
 
         tokenizer_kwargs = {
             "cache_dir": model_args.cache_dir,
@@ -337,11 +334,11 @@ class MlmTrainer(BaseConfig):
 
         # We resize the embeddings only when necessary to avoid index errors. If you are creating a model from scratch
         # on a small vocab and want a smaller embedding size, remove this test.
-        embedding_size = self.model.get_input_embeddings().weight.shape[0]
+        embedding_size = self.model_obj.get_input_embeddings().weight.shape[0]
         if len(tokenizer) > embedding_size:
-            self.model.resize_token_embeddings(len(tokenizer))
+            self.model_obj.resize_token_embeddings(len(tokenizer))
 
-        self._tokenizer = tokenizer
+        self._tokenizer_obj = tokenizer
 
     def preprocess_datasets(self):
         # Preprocessing the datasets.
@@ -350,7 +347,7 @@ class MlmTrainer(BaseConfig):
         training_args = self.training_config
 
         raw_datasets = self.raw_datasets
-        tokenizer = self.tokenizer
+        tokenizer = self.tokenizer_obj
 
         if training_args.do_train:
             column_names = raw_datasets["train"].column_names
@@ -469,18 +466,18 @@ class MlmTrainer(BaseConfig):
         return self.config.get("use_accelerator", False)
 
     @property
-    def tokenizer(self):
-        if self._tokenizer is None:
+    def tokenizer_obj(self):
+        if self._tokenizer_obj is None:
             if self.pretrained_tokenizer_path is not None:
                 self.prepare_tokenizer()
             self.load_tokenizer()
-        return self._tokenizer
+        return self._tokenizer_obj
 
     @property
-    def model(self):
-        if self._model is None:
+    def model_obj(self):
+        if self._model_obj is None:
             self.load_model()
-        return self._model
+        return self._model_obj
 
     @property
     def tokenized_datasets(self):
@@ -489,12 +486,12 @@ class MlmTrainer(BaseConfig):
         return self._tokenized_datasets
 
     def train(self):
-        model_args = self.model_config
+        model_args = self.model
         data_args = self.dataset_config
         training_args = self.training_config
 
-        tokenizer = self.tokenizer
-        model = self.model
+        tokenizer = self.tokenizer_obj
+        model = self.model_obj
         tokenized_datasets = self.tokenized_datasets
         last_checkpoint = self.last_checkpoint
 
@@ -635,11 +632,11 @@ class MlmTrainer(BaseConfig):
 
     def fill_mask(self, text, top_k=5, reload=False, **kwargs):
         """Fill the mask in a text"""
-        if reload or self._pipe is None:
+        if reload or self._pipe_obj is None:
             model = AutoModelForMaskedLM.from_pretrained(self.model_path)
             tokenizer = AutoTokenizer.from_pretrained(self.model_path)
 
-            self._pipe = pipeline(
+            self._pipe_obj = pipeline(
                 "fill-mask", model=model, tokenizer=tokenizer, **kwargs
             )
-        return self._pipe(text, top_k=top_k)
+        return self._pipe_obj(text, top_k=top_k)

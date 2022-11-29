@@ -300,4 +300,4 @@ class BaseModel(BaseConfig):
         return collage_filepaths
 
     def save_config(self, config=None):
-        super().save_config(config=config, selected=self.config_to_save)
+        super().save_config(config=config, include=self.config_to_save)

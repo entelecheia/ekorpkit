@@ -1,115 +1,59 @@
 import logging
-import random
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, DictConfig
 from pathlib import Path
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 from ekorpkit import eKonf
-from .config import Secrets
+from .config import Secrets, BaseBatchConfig
 
 
 log = logging.getLogger(__name__)
 
 
-class BaseBatchConfig(BaseModel):
-    output_dir: Path
-    batch_name: str
-    batch_num: int = None
-    random_seed: bool = True
-    seed: int = None
-    resume_run: bool = False
-    resume_latest: bool = False
-    num_workers: int = 1
-    config_filesfx = "config.yaml"
-    config_dirname = "configs"
-    verbose = False
-
-    def __init__(self, **values):
-        super().__init__(**values)
-        self.init_batch_num()
-
-    def init_batch_num(self):
-        if self.batch_num is None:
-            num_files = len(list(self.config_dir.glob(self.config_filepattern)))
-            if self.resume_latest:
-                self.batch_num = num_files - 1
-            else:
-                self.batch_num = num_files
-        if self.verbose:
-            log.info(f"Batch name: {self.batch_name}, Batch num: {self.batch_num}")
-
-    @validator("seed")
-    def _validate_seed(cls, v, values):
-        if values["random_seed"] or v is None or v < 0:
-            random.seed()
-            seed = random.randint(0, 2**32 - 1)
-            if values.get("verbose"):
-                log.info(f"Setting seed to {seed}")
-            return seed
-        return v
-
-    @property
-    def batch_dir(self):
-        batch_dir = self.output_dir / self.batch_name
-        batch_dir.mkdir(parents=True, exist_ok=True)
-        return batch_dir
-
-    @property
-    def config_dir(self):
-        config_dir = self.batch_dir / self.config_dirname
-        config_dir.mkdir(parents=True, exist_ok=True)
-        return config_dir
-
-    @property
-    def file_prefix(self):
-        return f"{self.batch_name}({self.batch_num})"
-
-    @property
-    def config_filename(self):
-        return f"{self.file_prefix}_{self.config_filesfx}"
-
-    @property
-    def config_filepattern(self):
-        return f"{self.batch_name}(*)_{self.config_filesfx}"
-
-    @property
-    def config_filepath(self):
-        return self.config_dir / self.config_filename
-
-
 class BaseConfig:
-    _batch_name_ = "demo"
-    _batch_num_ = None
-    _config_ = None
-    _path_ = None
-    batch = None
-    secrets = None
+    config: DictConfig = None
+    _initial_config: DictConfig = None
+    path: DictConfig = None
+    batch: BaseBatchConfig = None
+    secrets: Secrets = None
 
     def __init__(self, root_dir=None, **args):
-        self.config = args
-        self._config = args
+        self.config = eKonf.to_config(args)
+        self._initial_config = self.config.copy()
         self._init_path(root_dir=root_dir, **args)
         self._init_batch()
         self._init_secrets()
 
-    @property
-    def verbose(self):
-        return self.batch.verbose
+    class Config:
+        arbitrary_types_allowed = True
+
+    def update(self, key, value, merge=True, force_add=True):
+        OmegaConf.update(self.config, key, value, merge=merge, force_add=force_add)
 
     @property
-    def project_name(self):
-        return self.project_config.project_name
+    def root_dir(self):
+        return Path(self.path.root)
 
-    @property
-    def project_dir(self):
-        return Path(self.project_config.project_dir)
+    def _init_path(self, path=None, root_dir=None, **kwargs):
+        if path is None and self.path is not None:
+            path = self.path
+            log.info(f"Using existing path: {path.root}")
+        if path is None:
+            path = self.config.get("path")
+            log.info(f"Using config path: {path.root}")
+        if path is None:
+            path = eKonf.compose("path=_batch_")
+            log.info(f"There is no path in the config, using default path: {path.root}")
+        if root_dir is not None:
+            path.root = root_dir
 
-    @property
-    def workspace_dir(self):
-        return Path(self.project_config.path.workspace)
+        if path.verbose:
+            eKonf.print(path)
+        self.path = path
 
-    @property
-    def project_config(self):
-        return self.config.project
+    def _init_batch(
+        self,
+    ):
+        self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
 
     def _init_secrets(self):
         if self.config.get("secret") is not None:
@@ -119,11 +63,31 @@ class BaseConfig:
         self.secrets = Secrets()
 
     @property
-    def auto_config(self):
+    def verbose(self):
+        return self.batch.verbose
+
+    @property
+    def project_name(self):
+        return self.project.project_name
+
+    @property
+    def project_dir(self):
+        return Path(self.project.project_dir)
+
+    @property
+    def workspace_dir(self):
+        return Path(self.project.path.workspace)
+
+    @property
+    def project(self):
+        return self.config.project
+
+    @property
+    def auto(self):
         return self.config.get("auto")
 
     def autorun(self):
-        return eKonf.methods(self.auto_config, self)
+        return eKonf.methods(self.auto, self)
 
     @property
     def autoload(self):
@@ -146,32 +110,8 @@ class BaseConfig:
         return self.config.get("version", "0.0.0")
 
     @property
-    def path(self):
-        return self._path_
-
-    @path.setter
-    def path(self, value):
-        # self.update("path", value)
-        self._path_ = value
-
-    @property
-    def config(self):
-        return self._config_
-
-    @config.setter
-    def config(self, cfg):
-        self._config_ = eKonf.to_config(cfg)
-
-    def update(self, key, value, merge=True, force_add=True):
-        OmegaConf.update(self._config_, key, value, merge=merge, force_add=force_add)
-
-    @property
     def seed(self):
         return self.batch.seed
-
-    @property
-    def root_dir(self):
-        return Path(self.path.root)
 
     @property
     def batch_dir(self):
@@ -186,7 +126,7 @@ class BaseConfig:
         return Path(self.path.data_dir)
 
     @property
-    def model_config(self):
+    def model(self):
         if "model" in self.config:
             return self.config.model
         return {}
@@ -228,46 +168,22 @@ class BaseConfig:
     def batch_num(self, value):
         self.config.batch.batch_num = value
 
-    def _init_path(self, path=None, root_dir=None, **kwargs):
-        if path is None and self.path is not None:
-            path = self.path
-            log.info(f"Using existing path: {path.root}")
-        if path is None:
-            path = self.config.get("path")
-            log.info(f"Using config path: {path.root}")
-        if path is None:
-            path = eKonf.compose("path=_batch_")
-            log.info(f"There is no path in the config, using default path: {path.root}")
-        if root_dir is not None:
-            path.root = root_dir
-
-        if path.verbose:
-            eKonf.print(path)
-        self.path = path
-
-    def _init_batch(
-        self,
-    ):
-        self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
-        if eKonf.osenv("WANDB_PROJECT") is None:
-            eKonf.env_set("WANDB_PROJECT", self.project_name)
-
     def save_config(
         self,
         config=None,
         exclude=["path", "module", "secret", "auto", "project"],
-        selected=None,
+        include=None,
     ):
         """Save the batch config"""
         if config is not None:
             self.config = config
         log.info(f"Saving config to {self.batch.config_filepath}")
         cfg = eKonf.to_dict(self.config)
-        if selected:
+        if include:
             args = {}
-            if isinstance(selected, str):
-                selected = [selected]
-            for key in selected:
+            if isinstance(include, str):
+                include = [include]
+            for key in include:
                 args[key] = cfg[key]
         else:
             args = cfg
@@ -277,7 +193,18 @@ class BaseConfig:
                 for key in exclude:
                     args.pop(key, None)
         eKonf.save(args, self.batch.config_filepath)
+        self.save_settings()
         return self.batch.config_filename
+
+    def save_settings(self):
+        # interate self variables and combine basemodel objects into a dict
+        # then save to json
+        config = {}
+        for key, value in self.__dict__.items():
+            if isinstance(value, BaseModel):
+                config[key] = value.dict()
+        log.info(f"Saving config to {self.batch.config_jsonpath}")
+        eKonf.save_json(config, self.batch.config_jsonpath, default=str)
 
     def load_config(
         self,
@@ -292,9 +219,9 @@ class BaseConfig:
             self.batch_name = batch_name
         self.batch_num = batch_num
 
-        cfg = self._config
+        cfg = self._initial_config
         self._init_path()
-        self._init_batch(verbose=False)
+        self._init_batch()
         if batch_num is not None:
             _path = self.batch.config_filepath
             if _path.is_file():
@@ -307,6 +234,8 @@ class BaseConfig:
         self.config = eKonf.merge(cfg, args)
         # reinit the batch config to update the config
         self._init_batch()
+        if eKonf.osenv("WANDB_PROJECT") is None:
+            eKonf.env_set("WANDB_PROJECT", self.project_name)
 
         return self.config
 
@@ -315,7 +244,7 @@ class BaseConfig:
         eKonf.print(cfg)
 
     @property
-    def module_config(self):
+    def module(self):
         if "module" in self.config:
             return self.config.module
         return {}
@@ -326,11 +255,11 @@ class BaseConfig:
 
     def load_modules(self):
         """Load the modules"""
-        if self.module_config.get("modules") is None:
+        if self.module.get("modules") is None:
             log.info("No modules to load")
             return
         library_dir = self.library_dir
-        for module in self.module_config.modules:
+        for module in self.module.modules:
             name = module.name
             libname = module.libname
             liburi = module.liburi

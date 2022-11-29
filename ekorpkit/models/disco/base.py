@@ -116,7 +116,7 @@ class DiscoDiffusion(BaseModel):
         args = self.load_config(batch_name=batch_name, batch_num=batch_num, **args)
         args = self._prepare_config(args)
         self.save_config(args)
-        self._config = args
+        self._initial_config = args
 
         self._prepare_models()
         self.sample_imagepaths = []
@@ -169,7 +169,7 @@ class DiscoDiffusion(BaseModel):
         log.info("> loading settings...")
         args = self.load_config(batch_name=batch_name, batch_num=batch_num, **args)
         args = self._prepare_config(args)
-        self._config = args
+        self._initial_config = args
 
         if args.animation_mode == AnimMode.NONE:
             if args.start_sample >= args.num_samples:

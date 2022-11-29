@@ -24,6 +24,10 @@ log = logging.getLogger(__name__)
 
 
 class StableDiffusion(BaseModel):
+    pipes = {}
+    inpaint_pipe = None
+    generator = None
+
     def __init__(
         self, hf_user_access_token=None, root_dir=None, config_name="default", **args
     ):
@@ -32,10 +36,6 @@ class StableDiffusion(BaseModel):
             args["hf_user_access_token"] = hf_user_access_token
         cfg = eKonf.merge(cfg, args)
         super().__init__(root_dir=root_dir, **cfg)
-
-        self.pipes = {}
-        self.inpaint_pipe = None
-        self.generator = None
 
         if not self.hf_user_access_token:
             self.login_hf_hub()
@@ -367,11 +367,11 @@ class StableDiffusion(BaseModel):
         torch.set_grad_enabled(False)
 
         if models is None:
-            models = self.model_config.keys()
+            models = self.model.keys()
         if isinstance(models, str):
             models = [models]
         for model in models:
-            cfg = self.model_config[model]
+            cfg = self.model[model]
             if cfg.pipeline == "StableDiffusionPipeline":
                 DiffusionPipeline = StableDiffusionPipeline
             elif cfg.pipeline == "StableDiffusionInpaintPipeline":

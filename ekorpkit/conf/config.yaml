@@ -15,8 +15,10 @@ defaults:
   - io: __init__
   - model: __init__
   - model/transformer: __init__
+  - pipeline: __init__
   - tokenizer: __init__
   - transformer: __init__
+  - visualize: __init__
 
   - override hydra/help: help
   - override hydra/hydra_logging: colorlog

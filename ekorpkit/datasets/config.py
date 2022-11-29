@@ -95,10 +95,15 @@ class DatasetConfig(BaseModel):
         default=None,
         description="A seed for the shuffle.",
     )
-    raw_datasets: Optional[DatasetDict] = None
+    raw_datasets: Optional[DatasetDict] = Field(
+        default=None,
+        description="The raw datasets loaded from the data sources.",
+    )
 
-    def __init__(self, **kw):
-        super().__init__(**kw)
+    class Config:
+        fields = {"raw_datasets": {"exclude": True}}
+
+    def _check_data_sources(self):
         if (
             self.dataset_name is None
             and self.train_file is None
@@ -239,8 +244,10 @@ class DatasetConfig(BaseModel):
         #
         # In distributed training, the load_dataset function guarantee that only one local process can concurrently
         # download the dataset.
+        self._check_data_sources()
         if self.dataset_name is not None:
             # Downloading and loading a dataset from the hub.
+            logging.info(f"Loading dataset {self.dataset_name}")
             raw_datasets = load_dataset(**self.data_source)
             if (
                 self.validation_split_percentage
@@ -250,8 +257,10 @@ class DatasetConfig(BaseModel):
                 raw_datasets["train"] = load_dataset(**self.train_data_source)
         else:
             raw_datasets = DatasetDict()
-            if self.validation_split_percentage:
+            if self.validation_split_percentage or self.validation_file is not None:
+                logging.info(f"Loading validation dataset {self.validation_file}")
                 raw_datasets["validation"] = load_dataset(**self.validation_data_source)
+            logging.info(f"Loading training dataset {self.train_file}")
             raw_datasets["train"] = load_dataset(**self.train_data_source)
 
         column_names = raw_datasets["train"].column_names

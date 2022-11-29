@@ -3,6 +3,7 @@ import logging
 import warnings
 import os
 import sys
+import json
 import random
 import hydra
 import dotenv
@@ -16,7 +17,9 @@ from enum import Enum
 from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
-from typing import Any, List, IO, Dict, Union, Tuple, Type
+from pydantic import BaseSettings, SecretStr
+from pydantic.env_settings import SettingsSourceCallable
+from typing import Any, List, IO, Dict, Union, Tuple, Type, Optional
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
@@ -27,6 +30,36 @@ from . import _version
 class Dummy:
     def __call__(self, *args, **kwargs):
         return Dummy()
+
+
+class Environments(BaseSettings):
+    EKORPKIT_CONFIG_DIR: Optional[str]
+    EKORPKIT_DATA_DIR: Optional[str]
+    EKORPKIT_PROJECT: Optional[str]
+    EKORPKIT_WORKSPACE_ROOT: Optional[str]
+    EKORPKIT_LOG_LEVEL: Optional[str]
+    FRED_API_KEY: Optional[SecretStr]
+    NASDAQ_API_KEY: Optional[SecretStr]
+    WANDB_API_KEY: Optional[SecretStr]
+    NUM_WORKERS: Optional[int]
+    KMP_DUPLICATE_LIB_OK: Optional[str]
+    CUDA_DEVICE_ORDER: Optional[str]
+    CUDA_VISIBLE_DEVICES: Optional[str]
+
+    class Config:
+        env_prefix = ""
+        case_sentive = False
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> Tuple[SettingsSourceCallable, ...]:
+            return env_settings, file_secret_settings
 
 
 def _setLogger(level=None, force=True, filterwarnings_action="ignore", **kwargs):
@@ -577,6 +610,31 @@ def _load(file_: Union[str, Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
 def _save(config: Any, f: Union[str, Path, IO[Any]], resolve: bool = False) -> None:
     os.makedirs(os.path.dirname(f), exist_ok=True)
     OmegaConf.save(config, f, resolve=resolve)
+
+
+def _save_json(
+    json_dict: dict,
+    f: Union[str, Path, IO[Any]],
+    indent=4,
+    ensure_ascii=False,
+    default=None,
+    **kwargs,
+):
+    os.makedirs(os.path.dirname(f), exist_ok=True)
+    with open(f, "w") as f:
+        json.dump(
+            json_dict,
+            f,
+            indent=indent,
+            ensure_ascii=ensure_ascii,
+            default=default,
+            **kwargs,
+        )
+
+
+def _load_json(f: Union[str, Path, IO[Any]], **kwargs) -> dict:
+    with open(f, "r") as f:
+        return json.load(f, **kwargs)
 
 
 def _update(_dict, _overrides):
