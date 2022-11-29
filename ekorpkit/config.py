@@ -34,7 +34,7 @@ class Secrets(BaseSettings):
         case_sentive = False
         env_file = ".env"
         env_file_encoding = "utf-8"
-        # extra = Extra.allow
+        extra = "allow"
 
         # @classmethod
         # def customise_sources(
@@ -126,6 +126,7 @@ class BaseBatchConfig(BaseModel):
 
 
 class BaseBatchModel(BaseModel):
+    config_group: str = None
     name: str
     path: DictConfig = None
     root_dir: Path = None
@@ -143,8 +144,11 @@ class BaseBatchModel(BaseModel):
     _config: DictConfig = None
     _initial_config: DictConfig = None
 
-    def __init__(self, **args):
-        args = eKonf.to_config(args)
+    def __init__(self, config_group=None, **args):
+        if config_group is not None:
+            args = eKonf.merge(eKonf.compose(config_group), args)
+        else:
+            args = eKonf.to_config(args)
         super().__init__(**args)
 
         object.__setattr__(self, "_config", args)
@@ -159,7 +163,7 @@ class BaseBatchModel(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-        extra = "ignore"
+        extra = "allow"
         validate_assignment = False
         exclude = {
             "_config",
@@ -262,7 +266,7 @@ class BaseBatchModel(BaseModel):
 
     @property
     def workspace_dir(self):
-        return Path(self.project.path.workspace)
+        return Path(self.project.workspace_dir)
 
     @property
     def seed(self):
@@ -331,16 +335,10 @@ class BaseBatchModel(BaseModel):
         return self.batch.config_filename
 
     def save_settings(self, exclude=None):
-        # interate self variables and combine basemodel objects into a dict
-        # then save to json
         def dumper(obj):
             if isinstance(obj, DictConfig):
                 return eKonf.to_dict(obj)
             return str(obj)
-            # try:
-            #     return obj.__dict__
-            # except AttributeError:
-            #     return str(obj)
 
         if exclude is None:
             exclude = self.__config__.exclude

@@ -28,8 +28,8 @@ class TokenizerTrainer(BaseBatchModel):
     dataset: DatasetConfig = None
     _tokenizer_obj = None
 
-    def __init__(self, **args):
-        super().__init__(**args)
+    def __init__(self, config_group: str = "tokenizer=trainer", **args):
+        super().__init__(config_group, **args)
         self._init_dataset()
         self.autorun()
 

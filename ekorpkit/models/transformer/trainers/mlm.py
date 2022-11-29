@@ -54,8 +54,8 @@ class MlmTrainer(BaseBatchModel):
     _tokenizer_obj = None
     _pipe_obj = None
 
-    def __init__(self, **args):
-        super().__init__(**args)
+    def __init__(self, config_group: str = "transformer=mlm.trainer", **args):
+        super().__init__(config_group, **args)
         self._init_configs()
         self._init_env()
         self.autorun()
