@@ -4,6 +4,7 @@ import os
 import evaluate
 import transformers
 import datasets
+from omegaconf import DictConfig
 from itertools import chain
 from pathlib import Path
 from tokenizers import Tokenizer
@@ -25,7 +26,7 @@ from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
 from accelerate import Accelerator
 from .config import ModelArguments, DataTrainingArguments, PreTrainedTokenizerArguments
-from ekorpkit.batch import BaseConfig
+from ekorpkit.config import BaseBatchModel
 
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
@@ -39,84 +40,51 @@ require_version(
 logger = logging.getLogger(__name__)
 
 
-class MlmTrainer(BaseConfig):
-    _model_args = None
-    _dataset_config = None
-    _training_config = None
-    _tokenizer_config = None
+class MlmTrainer(BaseBatchModel):
+    model: ModelArguments = None
+    training: DictConfig = None
+    dataset: DataTrainingArguments = None
+    tokenizer: PreTrainedTokenizerArguments = None
+    use_accelerator: bool = False
+    training_args: TrainingArguments = None
+    last_checkpoint: str = None
     _lm_config = None
     _tokenized_datasets = None
     _model_obj = None
     _tokenizer_obj = None
     _pipe_obj = None
-    last_checkpoint: str = None
 
-    def __init__(self, root_dir=None, **args):
-        super().__init__(root_dir=root_dir, **args)
+    def __init__(self, **args):
+        super().__init__(**args)
+        self._init_configs()
         self._init_env()
         self.autorun()
 
-    @property
-    def model(self):
-        if self._model_args is None:
-            self._model_args = ModelArguments(**self.config.model)
-            self._model_args.cache_dir = str(self.cache_dir)
-        return self._model_args
+    def _init_configs(self):
+        self.model.cache_dir = str(self.cache_dir)
+
+        training_args = TrainingArguments(**self.training)
+        if training_args.output_dir is None:
+            training_args.output_dir = self.model_path
+        training_args.seed = self.seed
+        self.training_args = training_args
+
+        if self.dataset.data_dir is None:
+            self.dataset.data_dir = str(self.root_dir)
+        if self.dataset.seed is None:
+            self.dataset.seed = self.seed
+        self.tokenizer.model_max_length = self.dataset.max_seq_length
+        if self.model_type is not None:
+            self.tokenizer.model_type = self.model_type
 
     @property
-    def model_path(self):
-        return str(self.model_dir / self.model_name)
-
-    @property
-    def model_dir(self):
-        model_dir = Path(self.model.model_dir)
-        if not model_dir.is_absolute():
-            model_dir = self.output_dir / model_dir / self.name
-        if not model_dir.exists():
-            model_dir.mkdir(parents=True)
-        return model_dir
-
-    @property
-    def model_name(self):
-        model_name = self.model.model_name
-        if model_name is None:
-            model_name = "{}-{}".format(self.name, self.model_config_name)
-        return model_name
-
-    @property
-    def model_type(self):
-        return self.lm_config.model_type
-
-    @property
-    def model_config_name(self):
-        return (
-            self.model.config_name
-            if self.model.config_name
-            else self.model.model_name_or_path
-        )
-
-    @property
-    def tokenizer_config(self):
-        if self._tokenizer_config is None:
-            tk_args = PreTrainedTokenizerArguments(**self.config.tokenizer)
-            tk_args.model_max_length = self.dataset_config.max_seq_length
-            if self.model_type is not None:
-                tk_args.model_type = self.model_type
-            self._tokenizer_config = tk_args
-        return self._tokenizer_config
-
-    @property
-    def training_config(self):
-        if self._training_config is None:
-            training_args = TrainingArguments(**self.config.training)
-            if training_args.output_dir is None:
-                training_args.output_dir = self.model_path
-            training_args.seed = self.seed
-            self._training_config = training_args
-        return self._training_config
+    def lm_config(self):
+        if self._lm_config is None:
+            self._lm_config = self.load_lm_config()
+        return self._lm_config
 
     def _init_env(self):
-        training_args = self.training_config
+        training_args = self.training_args
 
         log_level = training_args.get_process_log_level()
         logger.setLevel(log_level)
@@ -163,10 +131,42 @@ class MlmTrainer(BaseConfig):
 
         self.last_checkpoint = last_checkpoint
 
+    @property
+    def model_path(self):
+        return str(self.model_dir / self.model_name)
+
+    @property
+    def model_dir(self):
+        model_dir = Path(self.model.model_dir)
+        if not model_dir.is_absolute():
+            model_dir = self.output_dir / model_dir / self.name
+        if not model_dir.exists():
+            model_dir.mkdir(parents=True)
+        return model_dir
+
+    @property
+    def model_name(self):
+        model_name = self.model.model_name
+        if model_name is None:
+            model_name = "{}-{}".format(self.name, self.model_config_name)
+        return model_name
+
+    @property
+    def model_type(self):
+        return self.lm_config.model_type
+
+    @property
+    def model_config_name(self):
+        return (
+            self.model.config_name
+            if self.model.config_name
+            else self.model.model_name_or_path
+        )
+
     def prepare_tokenizer(self):
         from tokenizers.processors import BertProcessing
 
-        tk_args = self.tokenizer_config
+        tk_args = self.tokenizer
         if self.pretrained_tokenizer_path is None:
             raise ValueError("tokenizer.path is required")
 
@@ -214,23 +214,11 @@ class MlmTrainer(BaseConfig):
         logger.info(f"Is a fast tokenizer? {tokenizer.is_fast}")
         logger.info(f"Vocab size: {tokenizer.vocab_size}")
         tokenizer.save_pretrained(self.model_path)
-        self._model_args.tokenizer_name = self.model_path
-
-    @property
-    def dataset_config(self):
-        if self._dataset_config is None:
-            if self.config.data.data_dir is None:
-                self.config.data.data_dir = str(self.root_dir)
-            cfg = DataTrainingArguments(**self.config.data)
-            cfg.cache_dir = str(self.cache_dir)
-            if cfg.seed is None:
-                cfg.seed = self.seed
-            self._dataset_config = cfg
-        return self._dataset_config
+        self.model.tokenizer_name = self.model_path
 
     @property
     def raw_datasets(self):
-        return self.dataset_config.datasets
+        return self.dataset.datasets
 
     @property
     def tokenizer_name_or_path(self):
@@ -242,17 +230,17 @@ class MlmTrainer(BaseConfig):
 
     @property
     def pretrained_tokenizer_dir(self):
-        model_dir = Path(self.tokenizer_config.model_dir or "tokenizers")
+        model_dir = Path(self.tokenizer.model_dir or "tokenizers")
         if not model_dir.is_absolute():
             model_dir = self.output_dir / model_dir / self.name
         return model_dir
 
     @property
     def pretrained_tokenizer_path(self):
-        if self.tokenizer_config.path is not None:
-            return self.tokenizer_config.path
+        if self.tokenizer.path is not None:
+            return self.tokenizer.path
         else:
-            return str(self.pretrained_tokenizer_dir / self.tokenizer_config.name)
+            return str(self.pretrained_tokenizer_dir / self.tokenizer.name)
 
     def load_lm_config(self):
         # Load model config
@@ -278,12 +266,6 @@ class MlmTrainer(BaseConfig):
                 logger.info(f"New config: {config}")
 
         return config
-
-    @property
-    def lm_config(self):
-        if self._lm_config is None:
-            self._lm_config = self.load_lm_config()
-        return self._lm_config
 
     def load_model(self):
         # Load pretrained model
@@ -343,8 +325,8 @@ class MlmTrainer(BaseConfig):
     def preprocess_datasets(self):
         # Preprocessing the datasets.
         # First we tokenize all the texts.
-        data_args = self.dataset_config
-        training_args = self.training_config
+        data_args = self.dataset
+        training_args = self.training_args
 
         raw_datasets = self.raw_datasets
         tokenizer = self.tokenizer_obj
@@ -462,10 +444,6 @@ class MlmTrainer(BaseConfig):
         self._tokenized_datasets = tokenized_datasets
 
     @property
-    def use_accelerator(self):
-        return self.config.get("use_accelerator", False)
-
-    @property
     def tokenizer_obj(self):
         if self._tokenizer_obj is None:
             if self.pretrained_tokenizer_path is not None:
@@ -487,8 +465,8 @@ class MlmTrainer(BaseConfig):
 
     def train(self):
         model_args = self.model
-        data_args = self.dataset_config
-        training_args = self.training_config
+        data_args = self.dataset
+        training_args = self.training_args
 
         tokenizer = self.tokenizer_obj
         model = self.model_obj

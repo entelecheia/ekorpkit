@@ -7,7 +7,6 @@ from pydantic import (
     BaseSettings,
     SecretStr,
     validator,
-    PrivateAttr,
     root_validator,
 )
 from pydantic.utils import ROOT_KEY
@@ -20,39 +19,6 @@ from ekorpkit import eKonf
 
 
 log = logging.getLogger(__name__)
-
-
-class DynamicBaseModel(BaseModel):
-    def __init__(__pydantic_self__, **data: Any) -> None:
-        if __pydantic_self__.__custom_root_type__ and data.keys() != {ROOT_KEY}:
-            data = {ROOT_KEY: data}
-        super().__init__(**data)
-
-
-class LabelStudioSecrets(BaseSettings):
-    api_key: Optional[str] = SecretStr
-    token: Optional[str] = SecretStr
-    password: Optional[str] = SecretStr
-
-    class Config:
-        env_prefix = "LABELSTUDIO_"
-        env_nested_delimiter = "_"
-        case_sentive = False
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings,
-            env_settings,
-            file_secret_settings,
-        ):
-            return (
-                env_settings,
-                init_settings,
-                file_secret_settings,
-            )
 
 
 class Secrets(BaseSettings):
@@ -174,8 +140,8 @@ class BaseBatchModel(BaseModel):
     device: str = "cpu"
     num_devices: int = None
     version: str = "0.0.0"
-    _config: DictConfig = PrivateAttr
-    _initial_config: DictConfig = PrivateAttr
+    _config: DictConfig = None
+    _initial_config: DictConfig = None
 
     def __init__(self, **args):
         args = eKonf.to_config(args)
@@ -439,3 +405,36 @@ class BaseBatchModel(BaseModel):
     @property
     def verbose(self):
         return self.batch.verbose
+
+
+class DynamicBaseModel(BaseModel):
+    def __init__(__pydantic_self__, **data: Any) -> None:
+        if __pydantic_self__.__custom_root_type__ and data.keys() != {ROOT_KEY}:
+            data = {ROOT_KEY: data}
+        super().__init__(**data)
+
+
+class LabelStudioSecrets(BaseSettings):
+    api_key: Optional[str] = SecretStr
+    token: Optional[str] = SecretStr
+    password: Optional[str] = SecretStr
+
+    class Config:
+        env_prefix = "LABELSTUDIO_"
+        env_nested_delimiter = "_"
+        case_sentive = False
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings,
+            env_settings,
+            file_secret_settings,
+        ):
+            return (
+                env_settings,
+                init_settings,
+                file_secret_settings,
+            )
