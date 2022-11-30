@@ -1,0 +1,9 @@
+overwrite_output_dir: true
+num_train_epochs: 1
+per_device_train_batch_size: 1
+prediction_loss_only: true
+logging_steps: 200
+save_steps: 0
+report_to: wandb # enable logging to W&B
+run_name: ${..model.model_name} # name of the W&B run (optional)
+seed:

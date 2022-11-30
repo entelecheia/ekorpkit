@@ -1,0 +1,4 @@
+trainer_type: huggingface
+dataset_type: text
+use_sample: true
+dataset_split: train

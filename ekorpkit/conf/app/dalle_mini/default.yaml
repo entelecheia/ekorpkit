@@ -1,0 +1,17 @@
+defaults:
+  - /auto: default
+  - /batch: default
+  - /secret: default
+  - /project: disco-imagen
+  - /module: dalle_mini
+  - /path: dalle_mini
+  - model: default
+  - imagine: default
+  - /collage: default
+
+_target_: ekorpkit.models.art.mini.DalleMini
+autoload: true
+name: dalle-mini
+verbose: ${oc.select:..verbose, false}
+device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
+num_devices:

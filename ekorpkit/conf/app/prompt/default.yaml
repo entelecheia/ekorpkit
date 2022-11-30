@@ -1,0 +1,17 @@
+defaults:
+  - /auto: default
+  - /batch: default
+  - /secret: default
+  - /project: aiart
+  - /path: _batch_
+  - dataset: default
+  - model: default
+  - training: default
+  - trainer: default
+  - generate: default
+
+_target_: ekorpkit.models.art.prompt.PromptGenerator
+name: prompt-generator
+device: "cuda:0"
+verbose: ${oc.select:..verbose, false}
+generated_prompts:

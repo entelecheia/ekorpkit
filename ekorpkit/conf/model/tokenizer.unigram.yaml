@@ -1,0 +1,18 @@
+defaults:
+  - tokenizer
+
+model_type: unigram
+special_tokens:
+  - "<s>"
+  - "</s>"
+  - "<mask>"
+  - "<pad>"
+  - "<cls>"
+  - "<sep>"
+  - "<unk>"
+unk_token: "[unk]"
+lowercase: True
+whitespace_token: ▁
+add_prefix_space: true
+pre_tokenizers:
+normalizers:

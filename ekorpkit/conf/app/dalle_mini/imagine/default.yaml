@@ -1,0 +1,8 @@
+text_prompts:
+  - sunset over a lake in the mountains
+  - the Eiffel tower landing on the moon
+num_samples: 4
+gen_top_k:
+gen_top_p:
+temperature:
+cond_scale: 10.0

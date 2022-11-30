@@ -1,0 +1,11 @@
+name: midas
+model_dir: ${..path.model_dir}
+default_models:
+  midas_v21_small: ${..model_dir}/midas_v21_small-70d6b9c8.pt
+  midas_v21: ${..model_dir}/midas_v21-f6b98070.pt
+  dpt_large: ${..model_dir}/dpt_large-midas-2f21e586.pt
+  dpt_hybrid: ${..model_dir}/dpt_hybrid-midas-501f0c75.pt
+  dpt_hybrid_nyu: ${..model_dir}/dpt_hybrid_nyu-2ce69ec7.pt
+use_cpu: false
+cuda_device: ${oc.select:..cuda_device, 0}
+verbose: ${oc.select:..verbose, false}

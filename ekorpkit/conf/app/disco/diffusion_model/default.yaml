@@ -1,0 +1,64 @@
+use_cpu: false
+use_checkpoint: true
+512x512_diffusion_uncond_finetune_008100:
+  attention_resolutions: "32, 16, 8"
+  class_cond: false
+  diffusion_steps: 1000
+  rescale_timesteps: true
+  timestep_respacing: 250
+  image_size: 512
+  learn_sigma: true
+  noise_schedule: linear
+  num_channels: 256
+  num_head_channels: 64
+  num_res_blocks: 2
+  resblock_updown: true
+  use_checkpoint: ${..use_checkpoint}
+  use_fp16: ${iif:${..use_cpu},false,true}
+  use_scale_shift_norm: true
+256x256_diffusion_uncond:
+  attention_resolutions: "32, 16, 8"
+  class_cond: false
+  diffusion_steps: 1000
+  rescale_timesteps: true
+  timestep_respacing: 250
+  image_size: 256
+  learn_sigma: true
+  noise_schedule: linear
+  num_channels: 256
+  num_head_channels: 64
+  num_res_blocks: 2
+  resblock_updown: true
+  use_checkpoint: ${..use_checkpoint}
+  use_fp16: ${iif:${..use_cpu},false,true}
+  use_scale_shift_norm: true
+portrait_generator_v001:
+  attention_resolutions: "32, 16, 8"
+  class_cond: false
+  diffusion_steps: 1000
+  rescale_timesteps: true
+  image_size: 512
+  learn_sigma: true
+  noise_schedule: linear
+  num_channels: 128
+  num_heads: 4
+  num_res_blocks: 2
+  resblock_updown: true
+  use_checkpoint: ${..use_checkpoint}
+  use_fp16: ${iif:${..use_cpu},false,true}
+  use_scale_shift_norm: true
+custom:
+  attention_resolutions: "16"
+  class_cond: false
+  diffusion_steps: 1000
+  rescale_timesteps: true
+  timestep_respacing: ddim100
+  image_size: 256
+  learn_sigma: true
+  noise_schedule: linear
+  num_channels: 128
+  num_heads: 1
+  num_res_blocks: 2
+  use_checkpoint: ${..use_checkpoint}
+  use_fp16: ${iif:${..use_cpu},false,true}
+  use_scale_shift_norm: false

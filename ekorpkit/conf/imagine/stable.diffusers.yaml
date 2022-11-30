@@ -1,0 +1,19 @@
+mode: generate
+text_prompts:
+num_samples: 6
+num_images_per_prompt: 1
+width: 768
+height: 512
+num_inference_steps: 100
+guidance_scale: 7.5
+init_image:
+mask_image:
+inpaint_strength: 7.5
+seed:
+increase_seed_by: 1
+clear_output: true
+display_image: true
+save_image: true
+save_image_config: true
+display_collage: true
+save_collage: true

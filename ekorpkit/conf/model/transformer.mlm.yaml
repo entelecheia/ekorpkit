@@ -1,0 +1,11 @@
+model_name_or_path:
+model_name: 
+model_dir:
+model_type:
+config_overrides: # "n_embd=10,resid_pdrop=0.2,scale_attn_weights=false,summary_type=cls_index"
+config_name:
+tokenizer_name:
+cache_dir:
+use_fast_tokenizer: true
+model_revision: main
+use_auth_token: false

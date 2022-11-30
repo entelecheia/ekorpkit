@@ -1,0 +1,19 @@
+# Model references
+
+# dalle-mega
+# can be wandb artifact or 🤗 Hub or local folder or google bucket
+DALLE_MODEL: dalle-mini/dalle-mini/mega-1-fp16:latest
+DALLE_COMMIT_ID:
+DALLE_INIT: false
+# if the notebook crashes too often you can use dalle-mini instead by uncommenting below line
+# DALLE_MODEL: dalle-mini/dalle-mini/mini-1:v0
+
+# VQGAN model
+VQGAN_REPO: dalle-mini/vqgan_imagenet_f16_16384
+VQGAN_COMMIT_ID: e93a26e7707683d349bf5d5c41c5b0ef69b677a9
+VQGAN_INIT: false
+
+# CLIP model
+CLIP_REPO: openai/clip-vit-base-patch32
+CLIP_COMMIT_ID:
+CLIP_INIT: false

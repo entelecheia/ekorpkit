@@ -1,0 +1,37 @@
+diffusion_model: 512x512_diffusion_uncond_finetune_008100
+diffusion_models:
+  - 256x256_diffusion_uncond
+  - 512x512_diffusion_uncond_finetune_008100
+  - portrait_generator_v001
+  - pixelartdiffusion_expanded
+  - pixel_art_diffusion_hard_256
+  - pixel_art_diffusion_soft_256
+  - pixelartdiffusion4k
+  - watercolordiffusion
+  - watercolordiffusion_2
+  - PulpSciFiDiffusion
+clip_models:
+  ViTB32: true
+  ViTB16: true
+  ViTL14: false
+  ViTL14_336px: false
+  RN50x4: false
+  RN50x16: false
+  RN50x64: false
+  RN50: false
+  RN101: false
+openclip_models:
+  ViTB32_laion2b_e16: false
+  ViTB32_laion400m_e31: false
+  ViTB32_laion400m_e32: true
+  ViTB32quickgelu_laion400m_e31: false
+  ViTB32quickgelu_laion400m_e32: false
+  ViTB16_laion400m_e31: false
+  ViTB16_laion400m_e32: false
+  RN50_yffcc15m: false
+  RN50_cc12m: true
+  RN50_quickgelu_yfcc15m: false
+  RN50_quickgelu_cc12m: false
+  RN101_yfcc15m: false
+  RN101_quickgelu_yfcc15m: false
+custom_model: ema_0.9999_058000.pt
