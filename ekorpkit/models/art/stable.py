@@ -27,30 +27,16 @@ class StableDiffusion(BaseModel):
     batch: BatchConfig = None
     imagine: StableImagineConfig = None
     collage: CollageConfig = None
-    pipes = {}
-    generator: torch.Generator = None
+    __pipes__ = {}
+    __generator__: torch.Generator = None
 
     def __init__(self, config_group: str = "app/stable_diffusion", **args):
         super().__init__(config_group=config_group, **args)
 
         if not self.hf_user_access_token:
-            self.login_hf_hub()
+            self.login_huggingface_hub()
         if self.autoload:
             self.load_diffusers()
-
-    def login_hf_hub(self):
-        from huggingface_hub import notebook_login
-
-        if eKonf.is_notebook():
-            notebook_login()
-        else:
-            raise ValueError(
-                "huggingface_hub.notebook_login() is only available in notebook, set hf_user_access_token manually"
-            )
-
-    @property
-    def hf_user_access_token(self):
-        return self.secret.hf_user_access_token
 
     def generate(
         self,
@@ -175,7 +161,7 @@ class StableDiffusion(BaseModel):
             guidance_scale=guidance_scale,
             num_images_per_prompt=num_images_per_prompt,
             num_inference_steps=num_inference_steps,
-            generator=self.generator,
+            generator=self.__generator__,
             **kwargs,
         ).images
         return images
@@ -252,7 +238,7 @@ class StableDiffusion(BaseModel):
             guidance_scale=guidance_scale,
             num_images_per_prompt=num_images_per_prompt,
             num_inference_steps=num_inference_steps,
-            generator=self.generator,
+            generator=self.__generator__,
             **kwargs,
         ).images
         return images
@@ -333,7 +319,7 @@ class StableDiffusion(BaseModel):
                 guidance_scale=inpaint_strength,
                 num_images_per_prompt=num_images_per_prompt,
                 num_inference_steps=num_inference_steps,
-                generator=self.generator,
+                generator=self.__generator__,
                 **kwargs,
             ).images[0]
             eKonf.clear_output(wait=True)
@@ -352,10 +338,10 @@ class StableDiffusion(BaseModel):
         return output
 
     def get_pipe(self, name: str):
-        pipe = self.pipes.get(name)
+        pipe = self.__pipes__.get(name)
         if pipe is None:
             self.load_diffusers(name)
-            pipe = self.pipes.get(name)
+            pipe = self.__pipes__.get(name)
         if pipe is None:
             raise ValueError(f"pipe {name} not found")
         return pipe
@@ -376,7 +362,7 @@ class StableDiffusion(BaseModel):
             else:
                 raise ValueError(f"pipeline {cfg.pipeline} not found")
 
-            self.pipes[model] = DiffusionPipeline.from_pretrained(
+            self.__pipes__[model] = DiffusionPipeline.from_pretrained(
                 pretrained_model_name_or_path=cfg.name,
                 use_auth_token=self.hf_user_access_token.get_secret_value(),
                 revision=cfg.revision,
@@ -390,7 +376,7 @@ class StableDiffusion(BaseModel):
             batch_name=batch_name, batch_num=batch_num, **kwargs
         )
 
-        self.generator = torch.Generator(device=self.device).manual_seed(self.seed)
+        self.__generator__ = torch.Generator(device=self.device).manual_seed(self.seed)
         return config
 
 

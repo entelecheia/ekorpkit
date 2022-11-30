@@ -5,9 +5,9 @@ defaults:
   - /project: language-modeling
   - /path: _batch_
   - /dataset: huggingface
-  - model: unigram
-  - training: huggingface
-  - exporting: default
+  - /_train_: tokenizer.huggingface
+  - /_export_: sentence_text_files
+  - /model: tokenizer.unigram
 
 _target_: ekorpkit.tokenizers.trainer.TokenizerTrainer
 name: tokenizer-trainer

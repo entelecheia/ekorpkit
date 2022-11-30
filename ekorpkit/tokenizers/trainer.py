@@ -23,10 +23,13 @@ log = logging.getLogger(__name__)
 
 
 class TokenizerTrainer(BaseBatchModel):
-    exporting: DictConfig = None
-    training: DictConfig = None
     dataset: DatasetConfig = None
-    _tokenizer_obj = None
+    _export_: DictConfig = None
+    _train_: DictConfig = None
+    __tokenizer_obj__ = None
+
+    class Config:
+        underscore_attrs_are_private = False
 
     def __init__(self, config_group: str = "tokenizer=trainer", **args):
         super().__init__(config_group, **args)
@@ -63,7 +66,7 @@ class TokenizerTrainer(BaseBatchModel):
 
     @property
     def trainer_type(self) -> TrainerType:
-        return self.training.trainer_type
+        return self._train_.trainer_type
 
     @property
     def model_type(self) -> ModelType:
@@ -71,11 +74,11 @@ class TokenizerTrainer(BaseBatchModel):
 
     @property
     def dataset_type(self) -> DatasetType:
-        return self.training.dataset_type
+        return self._train_.dataset_type
 
     @property
     def use_sample(self):
-        return self.training.use_sample
+        return self._train_.use_sample
 
     @property
     def model_filename(self):
@@ -186,7 +189,7 @@ class TokenizerTrainer(BaseBatchModel):
                 trainer=trainer,
             )
         else:
-            split = self.training.dataset_split
+            split = self._train_.dataset_split
             tokenizer.train_from_iterator(
                 self.dataset.batch_iterator(split=split),
                 lengths=len(self.raw_datasets[split]),
@@ -219,7 +222,7 @@ class TokenizerTrainer(BaseBatchModel):
 
     @property
     def sample_filepath(self):
-        fp = self.batch_dir / self.exporting.sample_name
+        fp = self.batch_dir / self._export_.sample_name
         if not fp.exists():
             fp.parent.mkdir(parents=True, exist_ok=True)
         return fp
@@ -232,8 +235,8 @@ class TokenizerTrainer(BaseBatchModel):
         if self.num_exported_files == 0:
             self.export_sentence_chunks()
 
-        overwrite = self.exporting.overwrite_sample
-        sample_frac = self.exporting.sample_frac
+        overwrite = self._export_.overwrite_sample
+        sample_frac = self._export_.sample_frac
 
         self.dataset.export_sample(
             input_dir=self.export_dir,
@@ -244,7 +247,7 @@ class TokenizerTrainer(BaseBatchModel):
 
     @property
     def export_dir(self):
-        dir_ = self.batch_dir / self.exporting.export_name
+        dir_ = self.batch_dir / self._export_.export_name
         if not dir_.exists():
             dir_.mkdir(parents=True)
         return dir_
@@ -261,9 +264,9 @@ class TokenizerTrainer(BaseBatchModel):
         Make a sentence per line files, chuncsize sentences per file
         """
         output_dir = self.export_dir
-        overwrite = self.exporting.overwrite_chunks
-        chunk_size = self.exporting.chunk_size
-        filename_fmt = self.exporting.filename_fmt
+        overwrite = self._export_.overwrite_chunks
+        chunk_size = self._export_.chunk_size
+        filename_fmt = self._export_.filename_fmt
 
         self.dataset.export_sentence_chunks(
             output_dir=output_dir,
@@ -281,9 +284,9 @@ class TokenizerTrainer(BaseBatchModel):
 
     @property
     def tokenizer_obj(self):
-        if self._tokenizer_obj is None:
-            self._tokenizer_obj = self.load_tokenizer()
-        return self._tokenizer_obj
+        if self.__tokenizer_obj__ is None:
+            self.__tokenizer_obj__ = self.load_tokenizer()
+        return self.__tokenizer_obj__
 
     def tokenize(self, text):
         if isinstance(self.tokenizer_obj, spm.SentencePieceProcessor):

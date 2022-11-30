@@ -48,11 +48,11 @@ class MlmTrainer(BaseBatchModel):
     use_accelerator: bool = False
     training_args: TrainingArguments = None
     last_checkpoint: str = None
-    _lm_config = None
-    _tokenized_datasets = None
-    _model_obj = None
-    _tokenizer_obj = None
-    _pipe_obj = None
+    __lm_config_ = None
+    __tokenized_datasets__ = None
+    __model_obj__ = None
+    __tokenizer_obj__ = None
+    __pipe_obj__ = None
 
     def __init__(self, config_group: str = "transformer=mlm.trainer", **args):
         super().__init__(config_group, **args)
@@ -79,9 +79,9 @@ class MlmTrainer(BaseBatchModel):
 
     @property
     def lm_config(self):
-        if self._lm_config is None:
-            self._lm_config = self.load_lm_config()
-        return self._lm_config
+        if self.__lm_config_ is None:
+            self.__lm_config_ = self.load_lm_config()
+        return self.__lm_config_
 
     def _init_env(self):
         training_args = self.training_args
@@ -209,7 +209,7 @@ class MlmTrainer(BaseBatchModel):
             config_kwargs["eos_token_id"] = tokenizer.eos_token_id
             config_kwargs["bos_token_id"] = tokenizer.bos_token_id
         logger.info(f"Update model config with {config_kwargs}")
-        self._lm_config.update(config_kwargs)
+        self.__lm_config_.update(config_kwargs)
 
         logger.info(f"Is a fast tokenizer? {tokenizer.is_fast}")
         logger.info(f"Vocab size: {tokenizer.vocab_size}")
@@ -288,7 +288,7 @@ class MlmTrainer(BaseBatchModel):
         else:
             logger.info("Training new model from scratch")
             model = AutoModelForMaskedLM.from_config(lm_config)
-        self._model_obj = model
+        self.__model_obj__ = model
 
     def load_tokenizer(self):
         # Load tokenizer
@@ -320,7 +320,7 @@ class MlmTrainer(BaseBatchModel):
         if len(tokenizer) > embedding_size:
             self.model_obj.resize_token_embeddings(len(tokenizer))
 
-        self._tokenizer_obj = tokenizer
+        self.__tokenizer_obj__ = tokenizer
 
     def preprocess_datasets(self):
         # Preprocessing the datasets.
@@ -441,27 +441,27 @@ class MlmTrainer(BaseBatchModel):
                     desc=f"Grouping texts in chunks of {max_seq_length}",
                 )
 
-        self._tokenized_datasets = tokenized_datasets
+        self.__tokenized_datasets__ = tokenized_datasets
 
     @property
     def tokenizer_obj(self):
-        if self._tokenizer_obj is None:
+        if self.__tokenizer_obj__ is None:
             if self.pretrained_tokenizer_path is not None:
                 self.prepare_tokenizer()
             self.load_tokenizer()
-        return self._tokenizer_obj
+        return self.__tokenizer_obj__
 
     @property
     def model_obj(self):
-        if self._model_obj is None:
+        if self.__model_obj__ is None:
             self.load_model()
-        return self._model_obj
+        return self.__model_obj__
 
     @property
     def tokenized_datasets(self):
-        if self._tokenized_datasets is None:
+        if self.__tokenized_datasets__ is None:
             self.preprocess_datasets()
-        return self._tokenized_datasets
+        return self.__tokenized_datasets__
 
     def train(self):
         model_args = self.model
@@ -610,11 +610,11 @@ class MlmTrainer(BaseBatchModel):
 
     def fill_mask(self, text, top_k=5, reload=False, **kwargs):
         """Fill the mask in a text"""
-        if reload or self._pipe_obj is None:
+        if reload or self.__pipe_obj__ is None:
             model = AutoModelForMaskedLM.from_pretrained(self.model_path)
             tokenizer = AutoTokenizer.from_pretrained(self.model_path)
 
-            self._pipe_obj = pipeline(
+            self.__pipe_obj__ = pipeline(
                 "fill-mask", model=model, tokenizer=tokenizer, **kwargs
             )
-        return self._pipe_obj(text, top_k=top_k)
+        return self.__pipe_obj__(text, top_k=top_k)

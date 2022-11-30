@@ -28,6 +28,20 @@ class BaseModel(BaseBatchModel):
 
         self.load_modules()
 
+    def login_huggingface_hub(self):
+        from huggingface_hub import notebook_login
+
+        if eKonf.is_notebook():
+            notebook_login()
+        else:
+            raise ValueError(
+                "huggingface_hub.notebook_login() is only available in notebook, set hf_user_access_token manually"
+            )
+
+    @property
+    def hf_user_access_token(self):
+        return self.secret.hf_user_access_token
+
     def load(self):
         log.info("> downloading models...")
         self.download_models()

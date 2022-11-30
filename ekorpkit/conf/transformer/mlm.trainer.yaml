@@ -5,9 +5,9 @@ defaults:
   - /project: language-modeling
   - /path: _batch_
   - /dataset: mlm
-  - model: mlm
-  - training: mlm
-  - tokenizer: mlm
+  - /model: transformer.mlm
+  - /tokenizer: pretrained
+  - /training: transformer.mlm
 
 _target_: ekorpkit.models.transformer.trainers.MlmTrainer
 name: mlm-trainer

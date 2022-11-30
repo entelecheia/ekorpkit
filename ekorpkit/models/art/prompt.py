@@ -37,7 +37,7 @@ class PromptGenerator(BaseConfig):
     _diffuser_obj = None
 
     def __init__(self, root_dir=None, config_name="default", **args):
-        cfg = eKonf.compose(f"model/prompt={config_name}")
+        cfg = eKonf.compose(f"app/prompt={config_name}")
         cfg = eKonf.merge(cfg, args)
         super().__init__(root_dir=root_dir, **cfg)
 
