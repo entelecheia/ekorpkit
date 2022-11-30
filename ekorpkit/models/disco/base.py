@@ -140,7 +140,7 @@ class DiscoDiffusion(BaseModel):
         image.save(init_image_path)
         return init_image_path
 
-    def imagine(
+    def generate(
         self,
         text_prompts=None,
         image_prompts=None,
@@ -218,7 +218,7 @@ class DiscoDiffusion(BaseModel):
 
                 if args.show_collage:
                     eKonf.clear_output()
-                    self.collage(images_or_uris=self.sample_imagepaths)
+                    self.collage_images(images_or_uris=self.sample_imagepaths)
 
         results = {
             "image_filepaths": self.sample_imagepaths,

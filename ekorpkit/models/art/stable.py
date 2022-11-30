@@ -24,18 +24,14 @@ log = logging.getLogger(__name__)
 
 
 class StableDiffusion(BaseModel):
+    batch: BatchConfig = None
+    imagine: StableImagineConfig = None
+    collage: CollageConfig = None
     pipes = {}
-    inpaint_pipe = None
-    generator = None
+    generator: torch.Generator = None
 
-    def __init__(
-        self, hf_user_access_token=None, root_dir=None, config_name="default", **args
-    ):
-        cfg = eKonf.compose(f"model/stable_diffusion={config_name}")
-        if hf_user_access_token is not None:
-            args["hf_user_access_token"] = hf_user_access_token
-        cfg = eKonf.merge(cfg, args)
-        super().__init__(root_dir=root_dir, **cfg)
+    def __init__(self, config_group: str = "app/stable_diffusion", **args):
+        super().__init__(config_group=config_group, **args)
 
         if not self.hf_user_access_token:
             self.login_hf_hub()
@@ -54,9 +50,9 @@ class StableDiffusion(BaseModel):
 
     @property
     def hf_user_access_token(self):
-        return self.config.hf_user_access_token or eKonf.osenv("HF_USER_ACCESS_TOKEN")
+        return self.secret.hf_user_access_token
 
-    def imagine(
+    def generate(
         self,
         text_prompts=None,
         batch_name=None,
@@ -74,7 +70,6 @@ class StableDiffusion(BaseModel):
             imagine_args.update(dict(mode=mode))
         if num_samples is not None:
             imagine_args.update(dict(num_samples=num_samples))
-        log.info("> loading config...")
         config = self.load_config(
             batch_name=batch_name,
             batch_num=batch_num,
@@ -108,7 +103,7 @@ class StableDiffusion(BaseModel):
         if rc.imagine.save_collage or rc.imagine.display_collage:
             if rc.imagine.clear_output:
                 eKonf.clear_output(wait=True)
-            self.collage(
+            self.collage_images(
                 images_or_uris=sample_imagepaths,
                 save_collage=rc.imagine.save_collage,
                 display_collage=rc.imagine.display_collage,
@@ -120,10 +115,12 @@ class StableDiffusion(BaseModel):
         return imagine_rst
 
     def get_run_config(self, config):
-        batch = BatchConfig(output_dir=config.path.output_dir, **config.batch)
-        imagine = StableImagineConfig(**config.imagine)
-        collage = CollageConfig(**config.collage)
-        rc = StableRunConfig(batch=batch, imagine=imagine, collage=collage)
+        self.batch = BatchConfig(output_dir=config.path.output_dir, **config.batch)
+        self.imagine = StableImagineConfig(**config.imagine)
+        self.collage = CollageConfig(**config.collage)
+        rc = StableRunConfig(
+            batch=self.batch, imagine=self.imagine, collage=self.collage
+        )
         return rc
 
     def generate_images(self, rc: StableRunConfig):
@@ -381,7 +378,7 @@ class StableDiffusion(BaseModel):
 
             self.pipes[model] = DiffusionPipeline.from_pretrained(
                 pretrained_model_name_or_path=cfg.name,
-                use_auth_token=self.hf_user_access_token,
+                use_auth_token=self.hf_user_access_token.get_secret_value(),
                 revision=cfg.revision,
                 torch_dtype=torch.float16,
                 cache_dir=self.path.cache_dir,
@@ -395,27 +392,6 @@ class StableDiffusion(BaseModel):
 
         self.generator = torch.Generator(device=self.device).manual_seed(self.seed)
         return config
-
-    def compare_images(self, images, rows=1, cols=None, resize_ratio=1.0):
-        import PIL
-
-        if cols is None:
-            cols = len(images) // rows
-
-        if resize_ratio != 1.0:
-            images = [
-                img.resize(
-                    (int(img.width * resize_ratio), int(img.height * resize_ratio))
-                )
-                for img in images
-            ]
-        w, h = images[0].size
-        grid = PIL.Image.new("RGB", size=(cols * w, rows * h))
-        # grid_w, grid_h = grid.size
-
-        for i, img in enumerate(images):
-            grid.paste(img, box=(i % cols * w, i // cols * h))
-        return grid
 
 
 def set_scheduler(pipe, scheduler: SchedulerType):

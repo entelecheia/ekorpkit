@@ -9,6 +9,7 @@ defaults:
   - run: default
   - path: __project__
   - project: __global__
+  - app: __init__
   - corpus: __init__
   - corpus/builtin: __init__
   - dataset: __init__

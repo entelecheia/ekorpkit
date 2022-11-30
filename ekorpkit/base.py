@@ -784,6 +784,11 @@ def _osenv(key: str = None, default: str = None) -> Any:
 def _env_set(key: str, value: Any) -> None:
     if value and _is_dir(value):
         value = os.path.abspath(value)
+    pre_val = os.environ.get(key)
+    if pre_val:
+        logger.info(f"Overwriting {key}={pre_val} with {value}")
+    else:
+        logger.info(f"Setting {key}={value}")
     os.environ[key] = value
 
 

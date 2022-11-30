@@ -35,7 +35,7 @@ class DalleMini(BaseModel):
         if self.autoload:
             self.load()
 
-    def imagine(
+    def generate(
         self,
         text_prompts=None,
         batch_name=None,
@@ -153,7 +153,7 @@ class DalleMini(BaseModel):
             print(f"text prompts: {text_prompts}")
 
             if show_collage:
-                self.collage(images_or_uris=self.sample_imagepaths)
+                self.collage_images(images_or_uris=self.sample_imagepaths)
 
         config.imagine = cfg
         self.config = config

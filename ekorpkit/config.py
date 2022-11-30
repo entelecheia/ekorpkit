@@ -125,6 +125,28 @@ class BaseBatchConfig(BaseModel):
         return self.config_dir / self.config_jsonfile
 
 
+class ProjectConfig(BaseModel):
+    project_name: str = "ekorpkit-project"
+    project_dir: str = None
+    task_name: str = "default-task"
+    workspace_dir: str = None
+    description: str = None
+    path: DictConfig = None
+
+    class Config:
+        arbitrary_types_allowed = True
+        extra = "allow"
+        validate_assignment = True
+
+    @validator("project_name", allow_reuse=True)
+    def _validate_project_name(cls, v):
+        if v is None:
+            raise ValueError("Project name must be specified.")
+        if eKonf.osenv("WANDB_PROJECT") is None:
+            eKonf.env_set("WANDB_PROJECT", v)
+        return v
+
+
 class BaseBatchModel(BaseModel):
     config_group: str = None
     name: str
@@ -132,7 +154,7 @@ class BaseBatchModel(BaseModel):
     root_dir: Path = None
     batch: BaseBatchConfig = None
     secret: Secrets = None
-    project: DictConfig = None
+    project: ProjectConfig = None
     dataset: DictConfig = None
     model: DictConfig = None
     module: DictConfig = None
@@ -153,13 +175,12 @@ class BaseBatchModel(BaseModel):
 
         object.__setattr__(self, "_config", args)
         object.__setattr__(self, "_initial_config", args.copy())
-        self._init_path(root_dir=self.root_dir, **args)
-        self._init_batch()
+        self._init_config()
 
     def __setattr__(self, key, val):
         super().__setattr__(key, val)
         if key == "name":
-            self._init_batch(batch_name=val)
+            self._init_config(name=val)
 
     class Config:
         arbitrary_types_allowed = True
@@ -225,7 +246,11 @@ class BaseBatchModel(BaseModel):
             )
         return values
 
-    def _init_path(self, path=None, root_dir=None, **kwargs):
+    def _init_config(self, name=None, path=None, root_dir=None, **kwargs):
+        if name is None:
+            name = self.name
+        self.config.name = name
+        self.config.batch.batch_name = name
         if path is None and self.path is not None:
             path = self.path
             log.info(f"Using existing path: {path.root}")
@@ -242,11 +267,8 @@ class BaseBatchModel(BaseModel):
             eKonf.print(path)
         self.root_dir = Path(path.root)
         self.path = path
-
-    def _init_batch(self, batch_name=None):
-        if batch_name is not None:
-            self.config.batch.batch_name = batch_name
         self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
+        self.config.batch.batch_num = self.batch.batch_num
 
     @property
     def batch_name(self):
@@ -353,29 +375,35 @@ class BaseBatchModel(BaseModel):
         **args,
     ):
         """Load the config from the batch config file"""
+        log.info(
+            f"> Loading config for batch_name: {batch_name} batch_num: {batch_num}"
+        )
+        self.config.batch.batch_num = batch_num
         if batch_name is None:
             batch_name = self.batch_name
         else:
-            self.batch.batch_name = batch_name
-        self.batch.batch_num = batch_num
+            self.name = batch_name
 
-        cfg = self._initial_config
-        self._init_path()
-        self._init_batch()
         if batch_num is not None:
+            cfg = self._initial_config.copy()
+            cfg.name = batch_name
+            cfg.batch.batch_num = batch_num
             _path = self.batch.config_filepath
             if _path.is_file():
                 log.info(f"Loading config from {_path}")
                 batch_cfg = eKonf.load(_path)
                 log.info("Merging config with the loaded config")
                 cfg = eKonf.merge(cfg, batch_cfg)
+            else:
+                log.info(f"No config file found at {_path}")
+                cfg.batch.batch_num = None
+        else:
+            cfg = self.config
 
         log.info(f"Merging config with args: {args}")
         self._config = eKonf.merge(cfg, args)
         # reinit the batch config to update the config
-        self._init_batch()
-        if eKonf.osenv("WANDB_PROJECT") is None:
-            eKonf.env_set("WANDB_PROJECT", self.project_name)
+        self._init_config()
 
         return self.config
 

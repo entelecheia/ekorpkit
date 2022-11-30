@@ -177,7 +177,7 @@ class PromptGenerator(BaseConfig):
     ):
         if batch_name is None:
             batch_name = self.name
-        return self.diffuser_obj.imagine(
+        return self.diffuser_obj.generate(
             text_prompts=text_prompts,
             batch_name=batch_name,
             num_samples=num_samples,

@@ -1,6 +1,6 @@
 import logging
 from ekorpkit import eKonf
-from ekorpkit.batch import BaseConfig
+from ekorpkit.config import BaseBatchModel
 from ekorpkit.visualize.collage import collage, label_collage
 from .config import (
     BatchImagineConfig,
@@ -16,14 +16,17 @@ from .config import (
 log = logging.getLogger(__name__)
 
 
-class BaseModel(BaseConfig):
+class BaseModel(BaseBatchModel):
+    batch: BatchConfig = None
+    imagine: ImagineConfig = None
+    collage: CollageConfig = None
     config_to_save = ["batch", "imagine"]
+    sample_imagepaths = []
 
-    def __init__(self, root_dir=None, **args):
-        super().__init__(root_dir=root_dir, **args)
+    def __init__(self, **args):
+        super().__init__(**args)
 
         self.load_modules()
-        self.sample_imagepaths = []
 
     def load(self):
         log.info("> downloading models...")
@@ -31,7 +34,7 @@ class BaseModel(BaseConfig):
         log.info("> loading models...")
         self.load_models()
 
-    def imagine(self, **args):
+    def generate(self, **args):
         """Imagine the text prompts"""
         raise NotImplementedError
 
@@ -53,7 +56,7 @@ class BaseModel(BaseConfig):
         rc = RunConfig(batch=batch, imagine=imagine, collage=collage)
         return rc
 
-    def collage(
+    def collage_images(
         self,
         images_or_uris=None,
         batch_name=None,
@@ -143,7 +146,7 @@ class BaseModel(BaseConfig):
                     batch_args["text_prompts"] = imgn_args["text_prompts"]
                     batch_prompts[batch_run_name] = imgn_args["text_prompts"]
                 log.info(f"batch: {batch_run_name} with {batch_args}")
-                imagine_rst = self.imagine(
+                imagine_rst = self.generate(
                     batch_name=batch_run_name,
                     **imgn_args,
                 )

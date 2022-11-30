@@ -1,7 +1,6 @@
 defaults:
   - default
 
-batch_name: stable-batch
 display_collage: true
 save_collage: true
 num_samples: 1

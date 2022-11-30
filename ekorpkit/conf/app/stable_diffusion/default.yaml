@@ -1,17 +1,16 @@
 defaults:
   - /auto: default
+  - /batch: default
   - /secret: default
-  - /project: disco-imagen
-  - /batch: stable_diffusion
-  - /module: stable_diffusion
-  - /path: stable_diffusion
+  - /project: aiart
+  - /path: _batch_
+  - /module: default
+  - /collage: default
   - model: default
   - imagine: default
-  - /collage: default
 
 _target_: ekorpkit.models.art.stable.StableDiffusion
 autoload: false
 name: stable-diffusion
 verbose: ${oc.select:..verbose, false}
 device: "cuda:0"
-hf_user_access_token:
