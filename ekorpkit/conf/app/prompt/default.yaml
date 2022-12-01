@@ -4,14 +4,22 @@ defaults:
   - /secret: default
   - /project: aiart
   - /path: _batch_
-  - dataset: default
-  - model: default
-  - training: default
+  - /dataset: huggingface
+  - /model: pretrained
+  - /tokenizer: pretrained.prompt
   - trainer: default
-  - generate: default
+  - /_train_: prompt
+  - /_generate_: prompt
 
 _target_: ekorpkit.models.art.prompt.PromptGenerator
 name: prompt-generator
 device: "cuda:0"
 verbose: ${oc.select:..verbose, false}
 generated_prompts:
+dataset:
+  dataset_name: Gustavosta/Stable-Diffusion-Prompts
+  text_column_name: Prompt
+  validation_split_percentage:
+model:
+  model_name: ekorpkit/stable-prompts
+  tokenizer_name: distilgpt2

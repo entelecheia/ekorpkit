@@ -97,17 +97,13 @@ class ModelArguments(BaseModel):
         default=None,
         description="Pretrained config name or path if not the same as model_name",
     )
-    tokenizer_name: Optional[str] = Field(
+    task_name: Optional[str] = Field(
         default=None,
-        description="Pretrained tokenizer name or path if not the same as model_name",
+        description="The tasks to train the model on. Example: 'fill-mask,text-generation,ner'",
     )
     cache_dir: Optional[str] = Field(
         default=None,
         description="Where do you want to store the pretrained models downloaded from huggingface.co",
-    )
-    use_fast_tokenizer: bool = Field(
-        default=True,
-        description="Whether to use one of the fast tokenizer (backed by the tokenizers library) or not.",
     )
     model_revision: str = Field(
         default="main",

@@ -1,0 +1,12 @@
+tokenizer_name: ${oc.select:..model.tokenizer_name,null}
+model_name_or_path: ${oc.select:..model.model_name_or_path,null}
+model_dir:
+return_length: true
+cache_dir:
+use_fast_tokenizer: true
+model_revision: main
+use_auth_token: false
+unk_token: <UNK>
+bos_token: <BOP>
+eos_token: <EOP>
+pad_token: <PAD>

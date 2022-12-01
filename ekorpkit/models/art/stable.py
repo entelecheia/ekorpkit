@@ -33,8 +33,6 @@ class StableDiffusion(BaseModel):
     def __init__(self, config_group: str = "app/stable_diffusion", **args):
         super().__init__(config_group=config_group, **args)
 
-        if not self.hf_user_access_token:
-            self.login_huggingface_hub()
         if self.autoload:
             self.load_diffusers()
 
@@ -364,7 +362,7 @@ class StableDiffusion(BaseModel):
 
             self.__pipes__[model] = DiffusionPipeline.from_pretrained(
                 pretrained_model_name_or_path=cfg.name,
-                use_auth_token=self.hf_user_access_token.get_secret_value(),
+                use_auth_token=self.secret.hugging_face_hub_token.get_secret_value(),
                 revision=cfg.revision,
                 torch_dtype=torch.float16,
                 cache_dir=self.path.cache_dir,

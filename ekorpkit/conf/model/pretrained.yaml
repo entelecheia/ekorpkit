@@ -1,0 +1,7 @@
+model_name:
+model_name_or_path:
+tokenizer_name:
+cache_dir:
+use_fast_tokenizer: true
+model_revision: main
+use_auth_token: false

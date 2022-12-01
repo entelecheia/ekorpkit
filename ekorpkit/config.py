@@ -23,10 +23,11 @@ log = logging.getLogger(__name__)
 
 class Secrets(BaseSettings):
     wandb_api_key: Optional[SecretStr]
-    hf_user_access_token: Optional[SecretStr]
+    hugging_face_hub_token: Optional[SecretStr]
     ecos_api_key: Optional[SecretStr]
     fred_api_key: Optional[SecretStr]
     nasdaq_api_key: Optional[SecretStr]
+    hf_user_access_token: Optional[SecretStr]
 
     class Config:
         env_prefix = ""
@@ -36,18 +37,25 @@ class Secrets(BaseSettings):
         env_file_encoding = "utf-8"
         extra = "allow"
 
-        # @classmethod
-        # def customise_sources(
-        #     cls,
-        #     init_settings: SettingsSourceCallable,
-        #     env_settings: SettingsSourceCallable,
-        #     file_secret_settings: SettingsSourceCallable,
-        # ) -> Tuple[SettingsSourceCallable, ...]:
-        #     return (
-        #         env_settings,
-        #         init_settings,
-        #         file_secret_settings,
-        #     )
+    def init_huggingface_hub(self):
+        from huggingface_hub import notebook_login
+        from huggingface_hub.hf_api import HfFolder
+
+        if (
+            self.hugging_face_hub_token is None
+            and self.hf_user_access_token is not None
+        ):
+            self.hugging_face_hub_token = self.hf_user_access_token
+
+        local_token = HfFolder.get_token()
+        if local_token is None:
+            if eKonf.is_notebook():
+                notebook_login()
+            else:
+                log.info(
+                    "huggingface_hub.notebook_login() is only available in notebook,"
+                    "set HUGGING_FACE_HUB_TOKEN manually"
+                )
 
 
 class BaseBatchConfig(BaseModel):
@@ -175,12 +183,12 @@ class BaseBatchModel(BaseModel):
 
         object.__setattr__(self, "_config", args)
         object.__setattr__(self, "_initial_config", args.copy())
-        self._init_config()
+        self._init_configs()
 
     def __setattr__(self, key, val):
         super().__setattr__(key, val)
         if key == "name":
-            self._init_config(name=val)
+            self._init_configs(name=val)
 
     class Config:
         arbitrary_types_allowed = True
@@ -246,7 +254,7 @@ class BaseBatchModel(BaseModel):
             )
         return values
 
-    def _init_config(self, name=None, path=None, root_dir=None, **kwargs):
+    def _init_configs(self, name=None, path=None, root_dir=None, **kwargs):
         if name is None:
             name = self.name
         self.config.name = name
@@ -269,6 +277,7 @@ class BaseBatchModel(BaseModel):
         self.path = path
         self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
         self.config.batch.batch_num = self.batch.batch_num
+        self.secret.init_huggingface_hub()
 
     @property
     def batch_name(self):
@@ -403,7 +412,7 @@ class BaseBatchModel(BaseModel):
         log.info(f"Merging config with args: {args}")
         self._config = eKonf.merge(cfg, args)
         # reinit the batch config to update the config
-        self._init_config()
+        self._init_configs()
 
         return self.config
 

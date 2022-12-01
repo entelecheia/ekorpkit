@@ -1,5 +1,7 @@
-name:
-path:
+tokenizer_name: ${oc.select:..model.model_name,null}
+tokenizer_name_or_path: ${oc.select:..model.model_name_or_path,null}
+pretrained_tokenizer_file:
+tokenizer_dir:
 model_dir:
 model_type:
 truncation: true
@@ -12,4 +14,10 @@ pad_token: <pad>
 cls_token: <cls>
 sep_token: <sep>
 mask_token: <mask>
+additional_special_tokens:
+add_special_tokens: false
 padding_side: right
+cache_dir:
+use_fast_tokenizer: true
+model_revision: main
+use_auth_token: false

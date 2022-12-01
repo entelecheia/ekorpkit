@@ -84,7 +84,7 @@ class DatasetConfig(BaseModel):
         ),
     )
     text_column_name: Optional[str] = Field(
-        default=None,
+        default="text",
         description="The name of the column in the datasets containing the full text.",
     )
     shuffle: bool = Field(
@@ -264,7 +264,10 @@ class DatasetConfig(BaseModel):
             raw_datasets["train"] = load_dataset(**self.train_data_source)
 
         column_names = raw_datasets["train"].column_names
-        self.text_column_name = "text" if "text" in column_names else column_names[0]
+        text_column_name = self.text_column_name or "text"
+        self.text_column_name = (
+            text_column_name if text_column_name in column_names else column_names[0]
+        )
 
         if self.shuffle:
             log.info("Shuffling the dataset with seed %s", self.seed)
