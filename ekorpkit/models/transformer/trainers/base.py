@@ -143,18 +143,19 @@ class BaseTrainer(BaseBatchModel):
 
     @property
     def model_dir(self):
-        model_dir = Path(self.model.model_dir or "models")
-        if not model_dir.is_absolute():
-            model_dir = self.root_dir / model_dir / self.name
-        if not model_dir.exists():
-            model_dir.mkdir(parents=True)
+        if self.model.model_dir is None:
+            model_dir = super().model_dir
+        else:
+            model_dir = Path(self.model.model_dir)
+        # if not model_dir.exists():
+        #     model_dir.mkdir(parents=True)
         return model_dir
 
     @property
     def tokenizer_dir(self):
         tokenizer_dir = Path(self.tokenizer.tokenizer_dir or "tokenizers")
         if not tokenizer_dir.is_absolute():
-            tokenizer_dir = self.root_dir / tokenizer_dir / self.name
+            tokenizer_dir = self.root_dir / tokenizer_dir
         return tokenizer_dir
 
     @property

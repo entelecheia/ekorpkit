@@ -50,18 +50,15 @@ class PromptGenerator(BaseTrainer):
             pad_token_id=tokenizer.pad_token_id,  # gets rid of warning
         )
 
-        # tokenized_start_token = tokenizer.encode(self.bos_token)
-
         generated_texts = []
         for i, generated_sequence in enumerate(output_sequences):
             tokens = list(generated_sequence)
-            # else:
-            #     tokens = []
-            #     for i, s in enumerate(generated_sequence):
-            #         if s in tokenized_start_token and i != 0:
-            #             if len(tokens) >= cfg.min_prompt_length:
-            #                 break
-            #         tokens.append(s)
+            # tokens = []
+            # for i, s in enumerate(generated_sequence):
+            #     if s in tokenized_start_token and i != 0:
+            #         if len(tokens) >= cfg.min_prompt_length:
+            #             break
+            #     tokens.append(s)
 
             text = tokenizer.decode(
                 tokens, clean_up_tokenization_spaces=True, skip_special_tokens=True

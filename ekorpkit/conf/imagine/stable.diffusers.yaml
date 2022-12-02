@@ -4,7 +4,7 @@ num_samples: 6
 num_images_per_prompt: 1
 width: 768
 height: 512
-num_inference_steps: 100
+num_inference_steps: 50
 guidance_scale: 7.5
 init_image:
 mask_image:

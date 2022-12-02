@@ -239,7 +239,9 @@ class BatchImagineConfig(BatchConfig):
     clear_output: bool = True
     display_collage: bool = False
     save_collage: bool = True
-    run_config_file = "run_configs.yaml"
+    run_config_file: str = "run_configs.yaml"
+    batch_run_name_delimiter: str = "."
+    run_pair_name_delimiter: str = "-"
 
     @validator("batch_run_params")
     def batch_run_params_is_dict(cls, v):
@@ -278,7 +280,11 @@ class BatchImagineConfig(BatchConfig):
     def batch_run_configs(self):
         for run_pair in self.batch_run_pairs:
             batch_run_pair = {name: self.batch_run_params[name] for name in run_pair}
-            batch_run_name = self.batch_name + "_" + "_".join(run_pair)
+            batch_run_name = (
+                self.batch_name
+                + self.batch_run_name_delimiter
+                + self.run_pair_name_delimiter.join(run_pair)
+            )
             yield BatchRunConfig(
                 batch_name=batch_run_name,
                 batch_run_pair=batch_run_pair,

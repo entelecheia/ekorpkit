@@ -1,5 +1,5 @@
 import logging
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from typing import Optional
 from enum import Enum
 from transformers import (
@@ -50,7 +50,7 @@ class ModelArguments(BaseModel):
         description="The model name to use when saving the model and the tokenizer.",
     )
     model_dir: Optional[str] = Field(
-        default="models",
+        default=None,
         description="The directory where the model and the tokenizer will be saved.",
     )
     model_type: Optional[str] = Field(
@@ -109,12 +109,6 @@ class ModelArguments(BaseModel):
             raise ValueError(
                 "--config_overrides can't be used in combination with --config_name or --model_name_or_path"
             )
-
-    @validator("model_dir")
-    def check_model_dir(cls, v):
-        if not v:
-            v = "models"
-        return v
 
 
 class DataTrainingArguments(DatasetConfig):

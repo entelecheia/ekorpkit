@@ -112,11 +112,18 @@ class StableDiffusion(BaseModel):
         cfg = rc.imagine
         images = []
         image_num = 0
+
+        if cfg.init_image is not None:
+            init_image = eKonf.load_image(cfg.init_image)
+        else:
+            init_image = None
+
         with torch.autocast("cuda"):
             for i in tqdm(range(cfg.num_iterations)):
                 log.info(f"> generating image {image_num+1}/{cfg.num_samples}")
                 imgs = self.generating(
                     prompt=cfg.get_prompt(i),
+                    init_image=init_image,
                     width=cfg.width,
                     height=cfg.height,
                     guidance_scale=cfg.guidance_scale,
@@ -148,12 +155,14 @@ class StableDiffusion(BaseModel):
         guidance_scale=7.5,
         num_images_per_prompt=1,
         num_inference_steps=50,
+        init_image=None,
         **kwargs,
     ):
         """Generate images from a prompt"""
         pipe = self.get_pipe("generate")
         images = pipe(
             prompt=prompt,
+            init_image=init_image,
             width=width,
             height=height,
             guidance_scale=guidance_scale,
