@@ -1,6 +1,3 @@
-defaults:
-  - transformer.trainer
-
 output_dir:
 overwrite_output_dir: true
 do_train: true
@@ -21,3 +18,5 @@ learning_rate: 5e-4
 save_steps: 5_000
 fp16: true
 push_to_hub: false
+hub_token:
+seed:

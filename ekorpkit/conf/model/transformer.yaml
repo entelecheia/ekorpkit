@@ -1,0 +1,12 @@
+model_name_or_path:
+model_name:
+model_dir:
+model_type:
+model_objective: # mlm, clm, plm, ...
+config_overrides: # "n_embd=10,resid_pdrop=0.2,scale_attn_weights=false,summary_type=cls_index"
+config_name:
+task_name:
+cache_dir:
+model_revision: main
+use_auth_token: false
+ignore_model_path: false

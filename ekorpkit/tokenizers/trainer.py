@@ -96,7 +96,7 @@ class TokenizerTrainer(BaseBatchModel):
     def model_dir(self):
         model_dir = Path(self.model.model_dir or "tokenizers")
         if not model_dir.is_absolute():
-            model_dir = self.output_dir / model_dir / self.name
+            model_dir = self.root_dir / model_dir / self.name
         if not model_dir.exists():
             model_dir.mkdir(parents=True)
         return model_dir

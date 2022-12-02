@@ -2,18 +2,26 @@ import logging
 import os
 import transformers
 import datasets
+import random
+import math
+import evaluate
+from itertools import chain
 from omegaconf import DictConfig
 from pathlib import Path
+from accelerate import Accelerator
 from transformers import (
     CONFIG_MAPPING,
     AutoConfig,
     TrainingArguments,
     set_seed,
+    DataCollatorForLanguageModeling,
+    Trainer,
+    is_torch_tpu_available,
 )
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
-from .config import ModelArguments, DataTrainingArguments
+from .config import ModelArguments, DataTrainingArguments, LM_MAPPING
 from ekorpkit.tokenizers.config import TokenizerConfig
 from ekorpkit.config import BaseBatchModel
 
@@ -47,8 +55,9 @@ class BaseTrainer(BaseBatchModel):
         self._init_env()
         self.autorun()
 
-    def _init_configs(self):
-        super()._init_configs()
+    def _init_configs(self, **args):
+        super()._init_configs(**args)
+        hf_token = self.secret.hugging_face_hub_token.get_secret_value()
 
         if self.dataset.data_dir is None:
             self.dataset.data_dir = str(self.root_dir)
@@ -56,9 +65,7 @@ class BaseTrainer(BaseBatchModel):
             self.dataset.seed = self.seed
 
         self.model.cache_dir = str(self.cache_dir)
-        self.model.use_auth_token = (
-            self.secret.hugging_face_hub_token.get_secret_value()
-        )
+        self.model.use_auth_token = hf_token
 
         if self.tokenizer.tokenizer_name is None:
             self.tokenizer.tokenizer_name = self.model_name
@@ -69,16 +76,16 @@ class BaseTrainer(BaseBatchModel):
         if self.tokenizer.tokenizer_dir is None:
             self.tokenizer.tokenizer_dir = self.tokenizer_dir
         self.tokenizer.model_max_length = self.dataset.max_seq_length
-        self.tokenizer.output_dir = self.output_dir
+        self.tokenizer.root_dir = self.root_dir
         self.tokenizer.cache_dir = str(self.cache_dir)
-        self.tokenizer.use_auth_token = (
-            self.secret.hugging_face_hub_token.get_secret_value()
-        )
+        self.tokenizer.use_auth_token = hf_token
+        self.tokenizer.ignore_model_path = self.model.ignore_model_path
 
         training_args = TrainingArguments(**self.training)
         if training_args.output_dir is None:
             training_args.output_dir = self.model_path
         training_args.seed = self.seed
+        training_args.hub_token = hf_token
         self.training_args = training_args
 
     def _init_env(self):
@@ -97,7 +104,8 @@ class BaseTrainer(BaseBatchModel):
             + f", distributed training: {bool(training_args.local_rank != -1)}, 16-bits training: {training_args.fp16}"
         )
         # Set the verbosity to info of the Transformers logger (on main process only):
-        logger.info(f"Training/evaluation parameters {training_args}")
+        if self.verbose > 1:
+            logger.info(f"Training/evaluation parameters {training_args}")
 
         # Detecting last checkpoint.
         last_checkpoint = None
@@ -137,7 +145,7 @@ class BaseTrainer(BaseBatchModel):
     def model_dir(self):
         model_dir = Path(self.model.model_dir or "models")
         if not model_dir.is_absolute():
-            model_dir = self.output_dir / model_dir / self.name
+            model_dir = self.root_dir / model_dir / self.name
         if not model_dir.exists():
             model_dir.mkdir(parents=True)
         return model_dir
@@ -146,7 +154,7 @@ class BaseTrainer(BaseBatchModel):
     def tokenizer_dir(self):
         tokenizer_dir = Path(self.tokenizer.tokenizer_dir or "tokenizers")
         if not tokenizer_dir.is_absolute():
-            tokenizer_dir = self.output_dir / tokenizer_dir / self.name
+            tokenizer_dir = self.root_dir / tokenizer_dir / self.name
         return tokenizer_dir
 
     @property
@@ -170,14 +178,40 @@ class BaseTrainer(BaseBatchModel):
         )
 
     @property
+    def model_obj(self):
+        if self.__model_obj__ is None:
+            self.load_model()
+        return self.__model_obj__
+
+    @property
     def raw_datasets(self):
         return self.dataset.datasets
+
+    @property
+    def tokenizer_obj(self):
+        return self.tokenizer.tokenizer_obj
+
+    @property
+    def tokenized_datasets(self):
+        if self.__tokenized_datasets__ is None:
+            self.preprocess_datasets()
+        return self.__tokenized_datasets__
 
     @property
     def auto_config(self):
         if self.__auto_config__ is None:
             self.__auto_config__ = self.load_auto_config()
         return self.__auto_config__
+
+    def load_datasets(
+        self, dataset_name=None, dataset_config_name=None, text_column_name=None
+    ):
+        self.dataset.load_datasets(
+            dataset_name=dataset_name,
+            dataset_config_name=dataset_config_name,
+            text_column_name=text_column_name,
+        )
+        self.__tokenized_datasets__ = None
 
     def load_auto_config(self):
         # Load model config
@@ -204,27 +238,371 @@ class BaseTrainer(BaseBatchModel):
 
         return config
 
-    @property
-    def model_obj(self):
-        if self.__model_obj__ is None:
-            self.load_model()
-        return self.__model_obj__
+    def load_model(self, model_name=None):
+        # Load pretrained model
+        #
+        # Distributed training:
+        # The .from_pretrained methods guarantee that only one local process can concurrently
+        # download model & vocab.
+        if model_name is not None:
+            self.model.model_name = model_name
+            self.model.ignore_model_path = False
+        self._init_configs()
 
-    @property
-    def tokenizer_obj(self):
-        return self.tokenizer.tokenizer_obj
+        model_args = self.model
 
-    @property
-    def tokenized_datasets(self):
-        if self.__tokenized_datasets__ is None:
-            self.preprocess_datasets()
-        return self.__tokenized_datasets__
+        AutoModelForLM = LM_MAPPING[model_args.model_objective]
+        model = None
+        if Path(self.model_path).is_dir() and not model_args.ignore_model_path:
+            try:
+                model = AutoModelForLM.from_pretrained(
+                    self.model_path,
+                    from_tf=bool(".ckpt" in model_args.model_name_or_path),
+                )
+            except OSError:
+                logger.warning(
+                    f"Model {self.model_path} not found. Trying model_name_or_path instead."
+                )
+        if model is None:
+            if model_args.model_name_or_path is not None:
 
-    def load_model(self):
-        raise NotImplementedError
+                model = AutoModelForLM.from_pretrained(
+                    model_args.model_name_or_path,
+                    from_tf=bool(".ckpt" in model_args.model_name_or_path),
+                    config=self.auto_config,
+                    cache_dir=model_args.cache_dir,
+                    revision=model_args.model_revision,
+                    use_auth_token=True if model_args.use_auth_token else None,
+                )
+            else:
+                auto_config = self.auto_config.to_dict()
+                original_config, update_config = {}, {}
+                for k, v in self.tokenizer.special_token_ids.items():
+                    if k in auto_config and v != auto_config[k]:
+                        original_config[k] = auto_config[k]
+                        update_config[k] = v
+                if auto_config["vocab_size"] != self.tokenizer.vocab_size:
+                    original_config["vocab_size"] = auto_config["vocab_size"]
+                    update_config["vocab_size"] = self.tokenizer.vocab_size
+                if update_config:
+                    logger.info(
+                        f"Overriding original model config {original_config} with {update_config}"
+                    )
+                    self.auto_config.update(update_config)
+                    if self.verbose > 1:
+                        logger.info(f"New model config {auto_config}")
+                logger.info("Training new model from scratch")
+                model = AutoModelForLM.from_config(self.auto_config)
+
+        # We resize the embeddings only when necessary to avoid index errors. If you are creating a model from scratch
+        # on a small vocab and want a smaller embedding size, remove this test.
+        embedding_size = model.get_input_embeddings().weight.shape[0]
+        if self.tokenizer.vocab_size > embedding_size:
+            model.resize_token_embeddings(self.tokenizer.vocab_size)
+            logger.info(
+                f"Resized embedding from {embedding_size} to {self.tokenizer.vocab_size}"
+            )
+
+        self.__model_obj__ = model
 
     def preprocess_datasets(self):
-        raise NotImplementedError
+        # Preprocessing the datasets.
+        # First we tokenize all the texts.
+        data_args = self.dataset
+        model_args = self.model
+        training_args = self.training_args
+        raw_datasets = self.raw_datasets
+        column_names = raw_datasets["train"].column_names
+        text_column_name = self.dataset.text_column_name
+        tokenizer = self.tokenizer_obj
+
+        if data_args.max_seq_length is None:
+            max_seq_length = tokenizer.model_max_length
+            if max_seq_length > 1024:
+                logger.warning(
+                    f"The tokenizer picked seems to have a very large `model_max_length` ({max_seq_length}). "
+                    "Picking 1024 instead. You can change that default value by passing --max_seq_length xxx."
+                )
+                max_seq_length = 1024
+        else:
+            if data_args.max_seq_length > tokenizer.model_max_length:
+                logger.warning(
+                    f"The max_seq_length passed ({data_args.max_seq_length}) is larger than the maximum length for the"
+                    f"model ({tokenizer.model_max_length}). Using max_seq_length={tokenizer.model_max_length}."
+                )
+            max_seq_length = min(data_args.max_seq_length, tokenizer.model_max_length)
+        return_special_tokens_mask = data_args.return_special_tokens_mask
+        affix_bos_eos_to_sentences = data_args.affix_bos_eos_to_sentences
+        bos_token = self.tokenizer.bos_token
+        eos_token = self.tokenizer.eos_token
+
+        if data_args.line_by_line:
+            # When using line_by_line, we just tokenize each nonempty line.
+            padding = "max_length" if data_args.pad_to_max_length else False
+
+            def tokenize_function(examples):
+                # Remove empty lines
+                examples[text_column_name] = [
+                    line
+                    if not affix_bos_eos_to_sentences
+                    else f"{bos_token} {line} {eos_token}"
+                    for line in examples[text_column_name]
+                    if len(line) > 0 and not line.isspace()
+                ]
+                # Tokenize lines
+                return tokenizer(
+                    examples[text_column_name],
+                    padding=padding,
+                    truncation=True,
+                    max_length=max_seq_length,
+                    # We use this option because DataCollatorForLanguageModeling (see below) is more efficient when it
+                    # receives the `special_tokens_mask`.
+                    return_special_tokens_mask=return_special_tokens_mask,
+                )
+
+            with training_args.main_process_first(desc="dataset map tokenization"):
+                tokenized_datasets = raw_datasets.map(
+                    tokenize_function,
+                    batched=True,
+                    num_proc=data_args.num_workers,
+                    remove_columns=[text_column_name],
+                    load_from_cache_file=not data_args.overwrite_cache,
+                    desc="Running tokenizer on dataset line_by_line",
+                )
+        else:
+            # Otherwise, we tokenize every text, then concatenate them together before splitting them in smaller parts.
+            # We use `return_special_tokens_mask=True` because DataCollatorForLanguageModeling (see below) is more
+            # efficient when it receives the `special_tokens_mask`.
+            group_by_shuffling = data_args.group_by_shuffling
+
+            def tokenize_function(examples):
+                examples[text_column_name] = [
+                    line
+                    if not affix_bos_eos_to_sentences
+                    else f"{bos_token} {line} {eos_token}"
+                    for line in examples[text_column_name]
+                    if len(line) > 0 and not line.isspace()
+                ]
+                return tokenizer(
+                    examples[text_column_name],
+                    return_special_tokens_mask=return_special_tokens_mask,
+                )
+
+            with training_args.main_process_first(desc="dataset map tokenization"):
+                tokenized_datasets = raw_datasets.map(
+                    tokenize_function,
+                    batched=True,
+                    num_proc=data_args.num_workers,
+                    remove_columns=column_names,
+                    load_from_cache_file=not data_args.overwrite_cache,
+                    desc="Running tokenizer on every text in dataset",
+                )
+
+            # Main data processing function that will concatenate all texts from our dataset and generate chunks of
+            # max_seq_length.
+            def group_texts(examples):
+                # Concatenate all texts.
+                concatenated_examples = {
+                    k: list(chain(*examples[k])) for k in examples.keys()
+                }
+                if group_by_shuffling:
+                    # Shuffle the order of concatenated examples
+                    random.shuffle(concatenated_examples["input_ids"])
+                total_length = len(concatenated_examples[list(examples.keys())[0]])
+                # We drop the small remainder, we could add padding if the model supported it instead of this drop,
+                # you can customize this part to your needs.
+                if total_length >= max_seq_length:
+                    total_length = (total_length // max_seq_length) * max_seq_length
+                # Split by chunks of max_len.
+                result = {
+                    k: [
+                        t[i : i + max_seq_length]
+                        for i in range(0, total_length, max_seq_length)
+                    ]
+                    for k, t in concatenated_examples.items()
+                }
+                if model_args.model_objective == "clm":
+                    result["labels"] = result["input_ids"].copy()
+                return result
+
+            # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts throws away a
+            # remainder for each of those groups of 1,000 texts. You can adjust that batch_size here but a higher value
+            # might be slower to preprocess.
+            #
+            # To speed up this part, we use multiprocessing.
+            # See the documentation of the map method for more information:
+            # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map
+
+            with training_args.main_process_first(desc="grouping texts together"):
+                tokenized_datasets = tokenized_datasets.map(
+                    group_texts,
+                    batched=True,
+                    num_proc=data_args.num_workers,
+                    load_from_cache_file=not data_args.overwrite_cache,
+                    desc=f"Grouping texts in chunks of {max_seq_length}",
+                )
+
+        self.__tokenized_datasets__ = tokenized_datasets
 
     def train(self):
-        raise NotImplementedError
+        self._init_configs()
+
+        model_args = self.model
+        data_args = self.dataset
+        training_args = self.training_args
+
+        tokenizer = self.tokenizer_obj
+        model = self.model_obj
+        tokenized_datasets = self.tokenized_datasets
+        last_checkpoint = self.last_checkpoint
+
+        if training_args.do_train:
+            if "train" not in tokenized_datasets:
+                raise ValueError("--do_train requires a train dataset")
+            train_dataset = tokenized_datasets["train"]
+            if data_args.max_train_samples is not None:
+                max_train_samples = min(len(train_dataset), data_args.max_train_samples)
+                train_dataset = train_dataset.select(range(max_train_samples))
+
+        if training_args.do_eval:
+            if "validation" not in tokenized_datasets:
+                raise ValueError("--do_eval requires a validation dataset")
+            eval_dataset = tokenized_datasets["validation"]
+            if data_args.max_eval_samples is not None:
+                max_eval_samples = min(len(eval_dataset), data_args.max_eval_samples)
+                eval_dataset = eval_dataset.select(range(max_eval_samples))
+
+            def preprocess_logits_for_metrics(logits, labels):
+                if isinstance(logits, tuple):
+                    # Depending on the model and config, logits may contain extra tensors,
+                    # like past_key_values, but logits always come first
+                    logits = logits[0]
+                return logits.argmax(dim=-1)
+
+            metric = evaluate.load("accuracy")
+
+            if model_args.model_objective == "mlm":
+
+                def compute_metrics(eval_preds):
+                    preds, labels = eval_preds
+                    # preds have the same shape as the labels, after the argmax(-1) has been calculated
+                    # by preprocess_logits_for_metrics
+                    labels = labels.reshape(-1)
+                    preds = preds.reshape(-1)
+                    mask = labels != -100
+                    labels = labels[mask]
+                    preds = preds[mask]
+                    return metric.compute(predictions=preds, references=labels)
+
+            else:
+
+                def compute_metrics(eval_preds):
+                    preds, labels = eval_preds
+                    # preds have the same shape as the labels, after the argmax(-1) has been calculated
+                    # by preprocess_logits_for_metrics but we need to shift the labels
+                    labels = labels[:, 1:].reshape(-1)
+                    preds = preds[:, :-1].reshape(-1)
+                    return metric.compute(predictions=preds, references=labels)
+
+        # Data collator
+        # This one will take care of randomly masking the tokens.
+        pad_to_multiple_of_8 = (
+            data_args.line_by_line
+            and training_args.fp16
+            and not data_args.pad_to_max_length
+        )
+        data_collator = DataCollatorForLanguageModeling(
+            tokenizer=tokenizer,
+            mlm=data_args.mlm,
+            mlm_probability=data_args.mlm_probability,
+            pad_to_multiple_of=8 if pad_to_multiple_of_8 else None,
+        )
+
+        # Initialize our Trainer
+        trainer = Trainer(
+            model=model,
+            args=training_args,
+            train_dataset=train_dataset if training_args.do_train else None,
+            eval_dataset=eval_dataset if training_args.do_eval else None,
+            tokenizer=tokenizer,
+            data_collator=data_collator,
+            compute_metrics=compute_metrics
+            if training_args.do_eval and not is_torch_tpu_available()
+            else None,
+            preprocess_logits_for_metrics=preprocess_logits_for_metrics
+            if training_args.do_eval and not is_torch_tpu_available()
+            else None,
+        )
+
+        # if use_accelerator is True, then prepare trainer for distributed training
+        if self.use_accelerator:
+            accelerator = Accelerator()
+            acc_state = {str(k): str(v) for k, v in accelerator.state.__dict__.items()}
+            logger.info(f"Accelerator state: {acc_state}")
+            device = accelerator.device
+            logger.info(f"Accelerator device: {device}")
+            trainer = accelerator.prepare(trainer)
+
+        self.save_config()
+
+        # Training
+        if training_args.do_train:
+            checkpoint = None
+            if training_args.resume_from_checkpoint is not None:
+                checkpoint = training_args.resume_from_checkpoint
+            elif last_checkpoint is not None:
+                checkpoint = last_checkpoint
+            train_result = trainer.train(resume_from_checkpoint=checkpoint)
+            trainer.save_model()  # Saves the tokenizer too for easy upload
+            metrics = train_result.metrics
+
+            max_train_samples = (
+                data_args.max_train_samples
+                if data_args.max_train_samples is not None
+                else len(train_dataset)
+            )
+            metrics["train_samples"] = min(max_train_samples, len(train_dataset))
+
+            trainer.log_metrics("train", metrics)
+            trainer.save_metrics("train", metrics)
+            trainer.save_state()
+
+        # Evaluation
+        if training_args.do_eval:
+            logger.info("*** Evaluate ***")
+
+            metrics = trainer.evaluate()
+
+            max_eval_samples = (
+                data_args.max_eval_samples
+                if data_args.max_eval_samples is not None
+                else len(eval_dataset)
+            )
+            metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
+            try:
+                perplexity = math.exp(metrics["eval_loss"])
+            except OverflowError:
+                perplexity = float("inf")
+            metrics["perplexity"] = perplexity
+
+            trainer.log_metrics("eval", metrics)
+            trainer.save_metrics("eval", metrics)
+
+        kwargs = {
+            "finetuned_from": model_args.model_name_or_path,
+            "tasks": model_args.task_name,
+        }
+        if data_args.dataset_name is not None:
+            kwargs["dataset_tags"] = data_args.dataset_name
+            if data_args.dataset_config_name is not None:
+                kwargs["dataset_args"] = data_args.dataset_config_name
+                kwargs[
+                    "dataset"
+                ] = f"{data_args.dataset_name} {data_args.dataset_config_name}"
+            else:
+                kwargs["dataset"] = data_args.dataset_name
+
+        if training_args.push_to_hub:
+            trainer.push_to_hub(**kwargs)
+        else:
+            trainer.create_model_card(**kwargs)

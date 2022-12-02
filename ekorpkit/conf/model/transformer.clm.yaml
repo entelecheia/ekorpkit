@@ -1,0 +1,5 @@
+defaults:
+  - transformer
+
+model_objective: clm
+task_name: text-generation

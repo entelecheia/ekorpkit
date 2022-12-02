@@ -4,11 +4,10 @@ defaults:
   - /secret: default
   - /project: aiart
   - /path: _batch_
-  - /dataset: huggingface
-  - /model: pretrained
-  - /tokenizer: pretrained.prompt
-  - trainer: default
-  - /_train_: prompt
+  - /dataset: language-modeling
+  - /model: transformer.clm
+  - /tokenizer: pretrained
+  - /training: prompt
   - /_generate_: prompt
 
 _target_: ekorpkit.models.art.prompt.PromptGenerator
@@ -20,6 +19,18 @@ dataset:
   dataset_name: Gustavosta/Stable-Diffusion-Prompts
   text_column_name: Prompt
   validation_split_percentage:
+  mlm: false
+  line_by_line: true
+  pad_to_max_length: true
+  affix_bos_eos_to_sentences: false
+  group_by_shuffling: false
 model:
   model_name: ekorpkit/stable-prompts
-  tokenizer_name: distilgpt2
+  model_name_or_path: distilgpt2
+tokenizer:
+  add_special_tokens: true
+  bos_token: <bop>
+  eos_token: <eop>
+  pad_token: <pad>
+  # tokenizer_name_or_path: distilgpt2
+use_accelerator: false

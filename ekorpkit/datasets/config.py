@@ -116,59 +116,73 @@ class DatasetConfig(BaseModel):
             if self.data_dir is not None:
                 self.data_dir = os.path.abspath(os.path.expanduser(self.data_dir))
             if self.train_file is not None:
-                if (
-                    not Path(self.train_file).is_absolute()
-                    and self.data_dir is not None
-                ):
-                    self.train_file = os.path.join(self.data_dir, self.train_file)
-
-                if eKonf.is_file(self.train_file):
+                # check if train_file is url or local path
+                if self.train_file.startswith("http"):
+                    self.train_file = self.train_file
                     extension = self.train_file.split(".")[-1]
                     if extension not in ["csv", "json", "txt", "parquet"]:
                         raise ValueError(
                             "`train_file` should be a csv, a json, a txt or a parquet file."
                         )
                     self.file_extention = extension
-                elif eKonf.is_dir(self.train_file):
-                    files = eKonf.get_filepaths(
-                        f"*.{self.file_extention}", self.train_file
-                    )
-                    if len(files) == 0:
-                        raise ValueError(
-                            f"Could not find any {self.file_extention} file in {self.train_file}"
-                        )
                 else:
-                    raise ValueError(
-                        "`train_file` doesn't exist. Please check the path."
-                    )
+                    if (
+                        not Path(self.train_file).is_absolute()
+                        and self.data_dir is not None
+                    ):
+                        self.train_file = os.path.join(self.data_dir, self.train_file)
+
+                    if eKonf.is_file(self.train_file):
+                        extension = self.train_file.split(".")[-1]
+                        if extension not in ["csv", "json", "txt", "parquet"]:
+                            raise ValueError(
+                                "`train_file` should be a csv, a json, a txt or a parquet file."
+                            )
+                        self.file_extention = extension
+                    elif eKonf.is_dir(self.train_file):
+                        files = eKonf.get_filepaths(
+                            f"*.{self.file_extention}", self.train_file
+                        )
+                        if len(files) == 0:
+                            raise ValueError(
+                                f"Could not find any {self.file_extention} file in {self.train_file}"
+                            )
+                    else:
+                        raise ValueError(
+                            "`train_file` doesn't exist. Please check the path."
+                        )
 
             if self.validation_file is not None:
-                if (
-                    not Path(self.validation_file).is_absolute()
-                    and self.data_dir is not None
-                ):
-                    self.validation_file = os.path.join(
-                        self.data_dir, self.validation_file
-                    )
+                # check if validation_file is url or local path
+                if self.validation_file.startswith("http"):
+                    self.validation_file = self.validation_file
+                else:
+                    if (
+                        not Path(self.validation_file).is_absolute()
+                        and self.data_dir is not None
+                    ):
+                        self.validation_file = os.path.join(
+                            self.data_dir, self.validation_file
+                        )
 
-                if eKonf.is_file(self.validation_file):
-                    extension = self.validation_file.split(".")[-1]
-                    if extension not in ["csv", "json", "txt", "parquet"]:
-                        raise ValueError(
-                            "`validation_file` should be a csv, a json, a txt or a parquet file."
+                    if eKonf.is_file(self.validation_file):
+                        extension = self.validation_file.split(".")[-1]
+                        if extension not in ["csv", "json", "txt", "parquet"]:
+                            raise ValueError(
+                                "`validation_file` should be a csv, a json, a txt or a parquet file."
+                            )
+                        if extension != self.file_extention:
+                            raise ValueError(
+                                "`validation_file` should have the same extension as `train_file`."
+                            )
+                    elif eKonf.is_dir(self.validation_file):
+                        files = eKonf.get_filepaths(
+                            f"*.{self.file_extention}", self.validation_file
                         )
-                    if extension != self.file_extention:
-                        raise ValueError(
-                            "`validation_file` should have the same extension as `train_file`."
-                        )
-                elif eKonf.is_dir(self.validation_file):
-                    files = eKonf.get_filepaths(
-                        f"*.{self.file_extention}", self.validation_file
-                    )
-                    if len(files) == 0:
-                        raise ValueError(
-                            f"Could not find any {self.file_extention} file in {self.validation_file}"
-                        )
+                        if len(files) == 0:
+                            raise ValueError(
+                                f"Could not find any {self.file_extention} file in {self.validation_file}"
+                            )
 
     @property
     def dataset_kwargs(self):
@@ -234,7 +248,9 @@ class DatasetConfig(BaseModel):
             dataset_kwargs["split"] = f"train[:{self.validation_split_percentage}%]"
         return dataset_kwargs
 
-    def load_datasets(self):
+    def load_datasets(
+        self, dataset_name=None, dataset_config_name=None, text_column_name=None
+    ):
         # Get the datasets: you can either provide your own CSV/JSON/TXT training and evaluation files (see below)
         # or just provide the name of one of the public datasets available on the hub at
         # https://huggingface.co/datasets/ (the dataset will be downloaded automatically from the datasets Hub
@@ -244,6 +260,10 @@ class DatasetConfig(BaseModel):
         #
         # In distributed training, the load_dataset function guarantee that only one local process can concurrently
         # download the dataset.
+        if dataset_name is not None:
+            self.dataset_name = dataset_name
+            self.dataset_config_name = dataset_config_name
+            self.text_column_name = text_column_name
         self._check_data_sources()
         if self.dataset_name is not None:
             # Downloading and loading a dataset from the hub.

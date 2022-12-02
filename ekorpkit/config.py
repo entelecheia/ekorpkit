@@ -70,7 +70,7 @@ class BaseBatchConfig(BaseModel):
     config_yaml = "config.yaml"
     config_json = "config.json"
     config_dirname = "configs"
-    verbose = False
+    verbose: Union[bool, int] = False
 
     def __init__(self, **values):
         super().__init__(**values)

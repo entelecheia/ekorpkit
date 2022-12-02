@@ -4,7 +4,7 @@ defaults:
   - /secret: default
   - /project: language-modeling
   - /path: _batch_
-  - /dataset: mlm
+  - /dataset: language-modeling
   - /model: transformer.mlm
   - /tokenizer: pretrained
   - /training: transformer.mlm

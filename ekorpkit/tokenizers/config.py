@@ -54,16 +54,13 @@ class TokenizerConfig(BaseModel):
             "If None, the tokenizer will be saved in the same directory as the model."
         ),
     )
-    output_dir: Path = Field(
-        None,
-        description=(
-            "Directory to save the tokenizer. "
-            "If None, the tokenizer will be saved in the model directory"
-        ),
-    )
     model_type: str = Field(
         None,
         description="Type of the trasnformer model [bert, roberta, ...]",
+    )
+    ignore_model_path: bool = Field(
+        False,
+        description="If set, the model path will not be used to load the tokenizer.",
     )
     truncation: bool = Field(
         True,
@@ -113,8 +110,8 @@ class TokenizerConfig(BaseModel):
         True,
         description="Whether to add special tokens when encoding sequences.",
     )
-    padding: bool = Field(
-        True,
+    padding: str = Field(
+        None,
         description="Whether to pad the input sequence to the maximum length.",
     )
     padding_side: str = Field(
@@ -140,6 +137,11 @@ class TokenizerConfig(BaseModel):
             "with private models)."
         ),
     )
+    special_tokens_map: dict = Field(
+        None,
+        description="A dictionary mapping special token class names to special tokens (string) or special token "
+        "attributes (dictionary).",
+    )
     __tokenizer_obj__ = None
 
     class Config:
@@ -157,12 +159,6 @@ class TokenizerConfig(BaseModel):
                 "You must provide a tokenizer name, a tokenizer name or path or a pretrained tokenizer file."
             )
 
-    @validator("output_dir")
-    def _check_output_dir(cls, v):
-        if isinstance(v, str):
-            v = Path(v)
-        return v
-
     @validator("model_dir")
     def _check_model_dir(cls, v):
         if isinstance(v, str):
@@ -177,6 +173,8 @@ class TokenizerConfig(BaseModel):
 
     @property
     def special_tokens(self):
+        if self.special_tokens_map:
+            return self.special_tokens_map
         tokens = dict(
             unk_token=self.unk_token,
             pad_token=self.pad_token,
@@ -186,24 +184,26 @@ class TokenizerConfig(BaseModel):
             cls_token=self.cls_token,
             sep_token=self.sep_token,
         )
+        # remove None values
+        tokens = {k: v for k, v in tokens.items() if v is not None}
         return tokens
 
     @property
     def special_token_ids(self):
         token_ids = dict(
-            unk_token_id=self.__tokenizer_obj__.unk_token_id,
-            pad_token_id=self.__tokenizer_obj__.pad_token_id,
-            mask_token_id=self.__tokenizer_obj__.mask_token_id,
-            bos_token_id=self.__tokenizer_obj__.bos_token_id,
-            eos_token_id=self.__tokenizer_obj__.eos_token_id,
-            cls_token_id=self.__tokenizer_obj__.cls_token_id,
-            sep_token_id=self.__tokenizer_obj__.sep_token_id,
+            unk_token_id=self.tokenizer_obj.unk_token_id,
+            pad_token_id=self.tokenizer_obj.pad_token_id,
+            mask_token_id=self.tokenizer_obj.mask_token_id,
+            bos_token_id=self.tokenizer_obj.bos_token_id,
+            eos_token_id=self.tokenizer_obj.eos_token_id,
+            cls_token_id=self.tokenizer_obj.cls_token_id,
+            sep_token_id=self.tokenizer_obj.sep_token_id,
         )
         return token_ids
 
     @property
     def vocab_size(self):
-        return self.__tokenizer_obj__.vocab_size
+        return len(self.tokenizer_obj)
 
     @property
     def tokenizer_obj(self):
@@ -284,17 +284,29 @@ class TokenizerConfig(BaseModel):
             "revision": self.model_revision,
             "use_auth_token": self.use_auth_token,
         }
-        if self.tokenizer_name_or_path:
-            tokenizer = AutoTokenizer.from_pretrained(
-                self.tokenizer_name_or_path, **tokenizer_kwargs
-            )
-        else:
-            raise ValueError(
-                "You are instantiating a new tokenizer from scratch. This is not supported by this class."
-                "You can do it from the tokenizer trainer class."
-            )
+        tokenizer = None
+        if Path(self.model_path).is_dir() and not self.ignore_model_path:
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(
+                    self.model_path, **tokenizer_kwargs
+                )
+            except OSError:
+                logger.warning(
+                    f"Couldn't load tokenizer from {self.model_path}. Trying tokenizer_name_or_path."
+                )
+
+        if tokenizer is None:
+            if self.tokenizer_name_or_path:
+                tokenizer = AutoTokenizer.from_pretrained(
+                    self.tokenizer_name_or_path, **tokenizer_kwargs
+                )
+            else:
+                raise ValueError(
+                    "You are instantiating a new tokenizer from scratch. This is not supported by this class."
+                    "You can do it from the tokenizer trainer class."
+                )
 
         if self.add_special_tokens:
             tokenizer.add_special_tokens(self.special_tokens)
-
+        self.special_tokens_map = tokenizer.special_tokens_map
         self.__tokenizer_obj__ = tokenizer
