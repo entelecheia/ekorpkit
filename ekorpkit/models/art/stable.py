@@ -372,7 +372,7 @@ class StableDiffusion(BaseModel):
 
             self.__pipes__[model] = DiffusionPipeline.from_pretrained(
                 pretrained_model_name_or_path=cfg.name,
-                use_auth_token=self.secrets.hugging_face_hub_token.get_secret_value(),
+                use_auth_token=self.secrets.HUGGING_FACE_HUB_TOKEN.get_secret_value(),
                 revision=cfg.revision,
                 torch_dtype=torch.float16,
                 cache_dir=self.path.cache_dir,

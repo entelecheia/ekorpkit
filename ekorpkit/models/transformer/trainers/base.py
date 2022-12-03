@@ -57,7 +57,7 @@ class BaseTrainer(BaseBatchModel):
 
     def _init_configs(self, **args):
         super()._init_configs(**args)
-        hf_token = self.secrets.hugging_face_hub_token.get_secret_value()
+        hf_token = self.secrets.HUGGING_FACE_HUB_TOKEN.get_secret_value()
 
         if self.dataset.data_dir is None:
             self.dataset.data_dir = str(self.root_dir)

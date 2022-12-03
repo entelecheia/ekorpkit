@@ -42,6 +42,7 @@ class Environments(BaseSettings):
     KMP_DUPLICATE_LIB_OK: Optional[str]
     CUDA_DEVICE_ORDER: Optional[str]
     CUDA_VISIBLE_DEVICES: Optional[str]
+    WANDB_PROJECT: Optional[str]
 
     class Config:
         env_prefix = ""
@@ -73,12 +74,12 @@ class Environments(BaseSettings):
 
 
 class Secrets(BaseSettings):
-    wandb_api_key: Optional[SecretStr]
-    hugging_face_hub_token: Optional[SecretStr]
-    ecos_api_key: Optional[SecretStr]
-    fred_api_key: Optional[SecretStr]
-    nasdaq_api_key: Optional[SecretStr]
-    hf_user_access_token: Optional[SecretStr]
+    WANDB_API_KEY: Optional[SecretStr]
+    HUGGING_FACE_HUB_TOKEN: Optional[SecretStr]
+    ECOS_API_KEY: Optional[SecretStr]
+    FRED_API_KEY: Optional[SecretStr]
+    NASDAQ_API_KEY: Optional[SecretStr]
+    HF_USER_ACCESS_TOKEN: Optional[SecretStr]
 
     class Config:
         env_prefix = ""
@@ -104,10 +105,10 @@ class Secrets(BaseSettings):
         from huggingface_hub.hf_api import HfFolder
 
         if (
-            self.hugging_face_hub_token is None
-            and self.hf_user_access_token is not None
+            self.HUGGING_FACE_HUB_TOKEN is None
+            and self.HF_USER_ACCESS_TOKEN is not None
         ):
-            self.hugging_face_hub_token = self.hf_user_access_token
+            self.HUGGING_FACE_HUB_TOKEN = self.HF_USER_ACCESS_TOKEN
 
         local_token = HfFolder.get_token()
         if local_token is None:
