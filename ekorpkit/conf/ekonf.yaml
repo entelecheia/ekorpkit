@@ -7,13 +7,14 @@ defaults:
   - mode: default
   - path: __project__
   - project: __global__
-  - app: __init__
   - corpus: __init__
   - corpus/builtin: __init__
   - dataset: __init__
   - io: __init__
   - model: __init__
   - model/transformer: __init__
+  - task: __init__
+  - task/multimodal: __init__
   - tokenizer: __init__
   - transformer: __init__
   - pipeline: __init__

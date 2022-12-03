@@ -30,7 +30,8 @@ class StableDiffusion(BaseModel):
     __pipes__ = {}
     __generator__: torch.Generator = None
 
-    def __init__(self, config_group: str = "app/stable_diffusion", **args):
+    def __init__(self, config_name: str = "stable-diffusion", **args):
+        config_group = f"task/multimodal/text2image={config_name}"
         super().__init__(config_group=config_group, **args)
 
         if self.autoload:
@@ -371,7 +372,7 @@ class StableDiffusion(BaseModel):
 
             self.__pipes__[model] = DiffusionPipeline.from_pretrained(
                 pretrained_model_name_or_path=cfg.name,
-                use_auth_token=self.secret.hugging_face_hub_token.get_secret_value(),
+                use_auth_token=self.secrets.hugging_face_hub_token.get_secret_value(),
                 revision=cfg.revision,
                 torch_dtype=torch.float16,
                 cache_dir=self.path.cache_dir,

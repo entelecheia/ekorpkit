@@ -1,7 +1,6 @@
 defaults:
   - /auto: default
   - /batch: default
-  - /secret: default
   - /project: aiart
   - /path: _batch_
   - /module: default

@@ -77,11 +77,15 @@ from .base import (
     _viewsource,
     DictKeyType,
     Environments,
+    Secrets,
 )
 from ekorpkit.io.google import _mount_google_drive
 
 
 logger = _getLogger(__name__)
+
+envs = Environments()
+secrets = Secrets()
 
 
 class eKonf:
@@ -91,6 +95,8 @@ class eKonf:
     __ekorpkit_path__ = __ekorpkit_path__()
     __home_path__ = __home_path__()
     config = _config
+    envs = envs
+    secrets = secrets
     book_repo = "https://github.com/entelecheia/ekorpkit-book/raw/main/"
     book_repo_assets = book_repo + "assets/"
     book_url = "https://entelecheia.github.io/ekorpkit-book/"

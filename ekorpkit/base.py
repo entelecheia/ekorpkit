@@ -17,7 +17,7 @@ from enum import Enum
 from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
-from pydantic import BaseSettings, SecretStr
+from pydantic import BaseSettings, SecretStr, root_validator
 from pydantic.env_settings import SettingsSourceCallable
 from typing import Any, List, IO, Dict, Union, Tuple, Type, Optional
 from ekorpkit.utils.batch import decorator_apply
@@ -38,9 +38,6 @@ class Environments(BaseSettings):
     EKORPKIT_PROJECT: Optional[str]
     EKORPKIT_WORKSPACE_ROOT: Optional[str]
     EKORPKIT_LOG_LEVEL: Optional[str]
-    FRED_API_KEY: Optional[SecretStr]
-    NASDAQ_API_KEY: Optional[SecretStr]
-    WANDB_API_KEY: Optional[SecretStr]
     NUM_WORKERS: Optional[int]
     KMP_DUPLICATE_LIB_OK: Optional[str]
     CUDA_DEVICE_ORDER: Optional[str]
@@ -48,9 +45,12 @@ class Environments(BaseSettings):
 
     class Config:
         env_prefix = ""
+        env_nested_delimiter = "__"
         case_sentive = False
         env_file = ".env"
         env_file_encoding = "utf-8"
+        validate_assignment = True
+        extra = "allow"
 
         @classmethod
         def customise_sources(
@@ -60,6 +60,64 @@ class Environments(BaseSettings):
             file_secret_settings: SettingsSourceCallable,
         ) -> Tuple[SettingsSourceCallable, ...]:
             return env_settings, file_secret_settings
+
+    @root_validator()
+    def _check_and_set_values(cls, values):
+        for k, v in values.items():
+            if v is not None:
+                old_value = os.getenv(k.upper())
+                if old_value is None or old_value != v:
+                    os.environ[k.upper()] = str(v)
+                    logger.info(f"Set environment variable {k.upper()}={v}")
+        return values
+
+
+class Secrets(BaseSettings):
+    wandb_api_key: Optional[SecretStr]
+    hugging_face_hub_token: Optional[SecretStr]
+    ecos_api_key: Optional[SecretStr]
+    fred_api_key: Optional[SecretStr]
+    nasdaq_api_key: Optional[SecretStr]
+    hf_user_access_token: Optional[SecretStr]
+
+    class Config:
+        env_prefix = ""
+        env_nested_delimiter = "__"
+        case_sentive = False
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        validate_assignment = True
+        extra = "allow"
+
+    @root_validator()
+    def _check_and_set_values(cls, values):
+        for k, v in values.items():
+            if v is not None:
+                old_value = os.getenv(k.upper())
+                if old_value is None or old_value != v.get_secret_value():
+                    os.environ[k.upper()] = v.get_secret_value()
+                    logger.info(f"Set environment variable {k.upper()}={v}")
+        return values
+
+    def init_huggingface_hub(self):
+        from huggingface_hub import notebook_login
+        from huggingface_hub.hf_api import HfFolder
+
+        if (
+            self.hugging_face_hub_token is None
+            and self.hf_user_access_token is not None
+        ):
+            self.hugging_face_hub_token = self.hf_user_access_token
+
+        local_token = HfFolder.get_token()
+        if local_token is None:
+            if _is_notebook():
+                notebook_login()
+            else:
+                logger.info(
+                    "huggingface_hub.notebook_login() is only available in notebook,"
+                    "set HUGGING_FACE_HUB_TOKEN manually"
+                )
 
 
 def _setLogger(level=None, force=True, filterwarnings_action="ignore", **kwargs):

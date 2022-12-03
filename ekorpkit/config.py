@@ -16,46 +16,10 @@ from typing import (
     Union,
 )
 from ekorpkit import eKonf
+from .base import Environments, Secrets
 
 
 log = logging.getLogger(__name__)
-
-
-class Secrets(BaseSettings):
-    wandb_api_key: Optional[SecretStr]
-    hugging_face_hub_token: Optional[SecretStr]
-    ecos_api_key: Optional[SecretStr]
-    fred_api_key: Optional[SecretStr]
-    nasdaq_api_key: Optional[SecretStr]
-    hf_user_access_token: Optional[SecretStr]
-
-    class Config:
-        env_prefix = ""
-        env_nested_delimiter = "__"
-        case_sentive = False
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "allow"
-
-    def init_huggingface_hub(self):
-        from huggingface_hub import notebook_login
-        from huggingface_hub.hf_api import HfFolder
-
-        if (
-            self.hugging_face_hub_token is None
-            and self.hf_user_access_token is not None
-        ):
-            self.hugging_face_hub_token = self.hf_user_access_token
-
-        local_token = HfFolder.get_token()
-        if local_token is None:
-            if eKonf.is_notebook():
-                notebook_login()
-            else:
-                log.info(
-                    "huggingface_hub.notebook_login() is only available in notebook,"
-                    "set HUGGING_FACE_HUB_TOKEN manually"
-                )
 
 
 class BaseBatchConfig(BaseModel):
@@ -156,12 +120,14 @@ class ProjectConfig(BaseModel):
 
 
 class BaseBatchModel(BaseModel):
+    config_name: str = None
     config_group: str = None
     name: str
     path: DictConfig = None
     root_dir: Path = None
     batch: BaseBatchConfig = None
-    secret: Secrets = None
+    envs: Environments = Environments()
+    secrets: Secrets = Secrets()
     project: ProjectConfig = None
     dataset: DictConfig = None
     model: DictConfig = None
@@ -226,15 +192,6 @@ class BaseBatchModel(BaseModel):
             v = Path(v)
         return v
 
-    @validator("secret", pre=True)
-    def _validate_secret(cls, v):
-        if v is not None:
-            for k, v in v.items():
-                if v:
-                    eKonf.env_set(k, v)
-            v = Secrets()
-        return v
-
     @validator("batch", pre=True)
     def _validate_batch(cls, v):
         if v is None:
@@ -277,7 +234,7 @@ class BaseBatchModel(BaseModel):
         self.path = path
         self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
         self.config.batch.batch_num = self.batch.batch_num
-        self.secret.init_huggingface_hub()
+        self.secrets.init_huggingface_hub()
 
     @property
     def batch_name(self):

@@ -16,7 +16,7 @@ class PromptGenerator(BaseTrainer):
     class Config:
         underscore_attrs_are_private = False
 
-    def __init__(self, config_group: str = "app/prompt", **args):
+    def __init__(self, config_group: str = "task/nlp/generation=prompt", **args):
         super().__init__(config_group=config_group, **args)
 
     def _generate_text(

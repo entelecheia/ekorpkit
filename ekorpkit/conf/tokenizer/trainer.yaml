@@ -1,7 +1,6 @@
 defaults:
   - /auto: default
   - /batch: default
-  - /secret: default
   - /project: language-modeling
   - /path: _batch_
   - /dataset: huggingface
