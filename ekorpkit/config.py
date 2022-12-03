@@ -114,8 +114,7 @@ class ProjectConfig(BaseModel):
     def _validate_project_name(cls, v):
         if v is None:
             raise ValueError("Project name must be specified.")
-        if eKonf.osenv("WANDB_PROJECT") is None:
-            eKonf.env_set("WANDB_PROJECT", v)
+        eKonf.envs.WANDB_PROJECT = v
         return v
 
 
@@ -234,6 +233,8 @@ class BaseBatchModel(BaseModel):
         self.path = path
         self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
         self.config.batch.batch_num = self.batch.batch_num
+        self.envs = Environments()
+        self.secrets = Secrets()
         self.secrets.init_huggingface_hub()
 
     @property

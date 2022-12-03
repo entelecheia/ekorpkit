@@ -67,7 +67,7 @@ class Environments(BaseSettings):
         for k, v in values.items():
             if v is not None:
                 old_value = os.getenv(k.upper())
-                if old_value is None or old_value != v:
+                if old_value is None or old_value != str(v):
                     os.environ[k.upper()] = str(v)
                     logger.info(f"Set environment variable {k.upper()}={v}")
         return values
