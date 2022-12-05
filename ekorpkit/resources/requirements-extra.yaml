@@ -43,6 +43,7 @@ flaml: automl, model, all
 yellowbrick: yellowbrick
 scipy: automl, model, all
 wandb: all, model, art
+GPUtil: all, model, art
 
 boto3>=1.0,<2.0: aws, cached-path
 google-api-python-client: google

@@ -8,8 +8,8 @@ from tqdm.auto import tqdm
 from PIL import Image, ImageDraw
 from ekorpkit import eKonf
 from ekorpkit.utils.func import elapsed_timer
-from .base import BaseModel
-from .config import (
+from ekorpkit.diffusers.base import BaseModel
+from ekorpkit.diffusers.config import (
     ImagineMode,
     BatchConfig,
     StableImagineConfig,
@@ -31,7 +31,7 @@ class StableDiffusion(BaseModel):
     __generator__: torch.Generator = None
 
     def __init__(self, config_name: str = "stable-diffusion", **args):
-        config_group = f"task/multimodal/text2image={config_name}"
+        config_group = f"task/multi/text2image={config_name}"
         super().__init__(config_group=config_group, **args)
 
         if self.autoload:
@@ -377,6 +377,10 @@ class StableDiffusion(BaseModel):
                 torch_dtype=torch.float16,
                 cache_dir=self.path.cache_dir,
             ).to(cfg.device)
+
+    def reset(self):
+        self.__pipes__ = {}
+        return super().reset()
 
     def load_config(self, batch_name=None, batch_num=None, **kwargs):
         """Load the settings"""

@@ -1,23 +1,45 @@
 import logging
-from omegaconf import DictConfig
-from ekorpkit import eKonf
+from pydantic import BaseModel
 from ekorpkit.models.transformer.trainers.base import BaseTrainer
-from .stable import StableDiffusion
+from ekorpkit.tasks.multi import StableDiffusion
 
 
 logger = logging.getLogger(__name__)
 
 
+class GenerateConfig(BaseModel):
+    """Generate config for prompt task"""
+
+    prompt: str = None
+    num_prompts_to_generate: int = 5
+    # Maximum and min length of the generated prompts. Will cut off mid word. This is expected behavior
+    max_prompt_length: int = 100
+    min_prompt_length: int = 10
+    # temperature: Default: 1.2. Turning up will inject more chaos.
+    temperature: float = 1.2
+    # top_k: Default 70. The number of top tokens returned by the AI. Will be randomly selected for generation.
+    top_k: int = 70
+    # top_p: Default 0.9. The total percent to consider from the `top_k` returned tokens.
+    # For more information refer to [this guide!]( https://docs.cohere.ai/token-picking/)
+    top_p: float = 0.9
+
+
 class PromptGenerator(BaseTrainer):
-    _generate_: DictConfig = None
+    _generate_: GenerateConfig = None
     generated_prompts: list = None
     __diffuser_obj__ = None
 
     class Config:
         underscore_attrs_are_private = False
 
-    def __init__(self, config_group: str = "task/nlp/generation=prompt", **args):
+    def __init__(self, config_name: str = "prompt", **args):
+        config_group = f"task/nlp/generation={config_name}"
         super().__init__(config_group=config_group, **args)
+
+    def _init_configs(self, **args):
+        super()._init_configs(**args)
+        if not isinstance(self._generate_, GenerateConfig):
+            self._generate_ = GenerateConfig(**self._generate_)
 
     def _generate_text(
         self,
@@ -53,12 +75,6 @@ class PromptGenerator(BaseTrainer):
         generated_texts = []
         for i, generated_sequence in enumerate(output_sequences):
             tokens = list(generated_sequence)
-            # tokens = []
-            # for i, s in enumerate(generated_sequence):
-            #     if s in tokenized_start_token and i != 0:
-            #         if len(tokens) >= cfg.min_prompt_length:
-            #             break
-            #     tokens.append(s)
 
             text = tokenizer.decode(
                 tokens, clean_up_tokenization_spaces=True, skip_special_tokens=True
@@ -81,19 +97,27 @@ class PromptGenerator(BaseTrainer):
         **kwargs,
     ):
         self.load_config()
-        cfg = self._generate_
-        cfg.num_prompts_to_generate = num_prompts_to_generate
-        cfg = eKonf.merge(cfg, kwargs)
+        args = self._generate_
+        args.num_prompts_to_generate = num_prompts_to_generate
+        args = args.copy(update=kwargs)
 
         if prompt is None:
-            prompt = cfg.prompt
+            prompt = args.prompt
         if prompt is None:
-            prompt = self.bos_token
-        cfg.prompt = prompt
+            prompt = self.tokenizer.bos_token
+        args.prompt = prompt
 
-        generated_prompts = self._generate_text(**cfg)
+        generated_prompts = self._generate_text(
+            prompt=prompt,
+            num_return_sequences=args.num_prompts_to_generate,
+            max_length=args.max_prompt_length,
+            min_length=args.min_prompt_length,
+            temperature=args.temperature,
+            top_k=args.top_k,
+            top_p=args.top_p,
+        )
         self.generated_prompts = generated_prompts
-        self._generate_ = cfg
+        self._generate_ = args
         self.save_config()
 
         if generate_images:

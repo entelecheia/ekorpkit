@@ -14,7 +14,8 @@ defaults:
   - model: __init__
   - model/transformer: __init__
   - task: __init__
-  - task/multimodal: __init__
+  - task/multi: __init__
+  - task/nlp: __init__
   - tokenizer: __init__
   - transformer: __init__
   - pipeline: __init__

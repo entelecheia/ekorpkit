@@ -23,7 +23,6 @@ from .base import (
     __version__,
     _apply,
     _compose,
-    _config,
     _Defaults,
     _dependencies,
     _dict_product,
@@ -84,8 +83,19 @@ from ekorpkit.io.google import _mount_google_drive
 
 logger = _getLogger(__name__)
 
-envs = Environments()
-secrets = Secrets()
+
+class eKonfConfig:
+    @property
+    def envs(self):
+        return Environments()
+
+    @property
+    def environ(self):
+        return _osenv()
+
+    @property
+    def secrets(self):
+        return Secrets()
 
 
 class eKonf:
@@ -94,9 +104,7 @@ class eKonf:
     __version__ = __version__()
     __ekorpkit_path__ = __ekorpkit_path__()
     __home_path__ = __home_path__()
-    config = _config
-    envs = envs
-    secrets = secrets
+    os: eKonfConfig = eKonfConfig()
     book_repo = "https://github.com/entelecheia/ekorpkit-book/raw/main/"
     book_repo_assets = book_repo + "assets/"
     book_url = "https://entelecheia.github.io/ekorpkit-book/"
@@ -109,9 +117,14 @@ class eKonf:
         raise NotImplementedError("Use one of the static construction functions")
 
     @staticmethod
-    def env() -> Environments:
+    def envs() -> Environments:
         """Return the current environments"""
         return Environments()
+
+    @staticmethod
+    def secrets() -> Secrets:
+        """Return the current secrets"""
+        return Secrets()
 
     @staticmethod
     def compose(
@@ -278,8 +291,11 @@ class eKonf:
         _run(config, **kwargs)
 
     @staticmethod
-    def load_dotenv(verbose: bool = False):
-        _load_dotenv(verbose)
+    def load_dotenv(
+        verbose: bool = False,
+        override: bool = False,
+    ):
+        _load_dotenv(verbose, override)
 
     @staticmethod
     def _init_env_(cfg, verbose=False):
@@ -984,3 +1000,9 @@ class eKonf:
 
         shutil.copyfile(src, dst, follow_symlinks=follow_symlinks)
         logger.info(f"copied {src} to {dst}")
+
+    @staticmethod
+    def gpu_usage(all=False, attrList=None, useOldCode=False):
+        from GPUtil import showUtilization
+
+        return showUtilization(all, attrList, useOldCode)

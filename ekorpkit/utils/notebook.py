@@ -50,7 +50,7 @@ def _clear_output(wait=False):
     from IPython import display
 
     if _is_notebook():
-        display.clear_output(wait=True)
+        display.clear_output(wait=wait)
 
 
 def _display(

@@ -1,6 +1,5 @@
 prompt:
-check_start_token: true
-num_prompts_to_generate: 10
+num_prompts_to_generate: 5
 # Maximum and min length of the generated prompts. Will cut off mid word. This is expected behavior
 max_prompt_length: 50
 min_prompt_length: 30

@@ -118,7 +118,6 @@ class DatasetConfig(BaseModel):
             if self.train_file is not None:
                 # check if train_file is url or local path
                 if self.train_file.startswith("http"):
-                    self.train_file = self.train_file
                     extension = self.train_file.split(".")[-1]
                     if extension not in ["csv", "json", "txt", "parquet"]:
                         raise ValueError(
@@ -213,7 +212,7 @@ class DatasetConfig(BaseModel):
                 dataset_kwargs["path"] = "text"
             else:
                 dataset_kwargs["path"] = self.file_extention
-            if eKonf.is_file(self.train_file):
+            if self.train_file.startswith("http") or eKonf.is_file(self.train_file):
                 dataset_kwargs["data_files"] = self.train_file
             else:
                 dataset_kwargs["data_dir"] = self.train_file
@@ -238,7 +237,9 @@ class DatasetConfig(BaseModel):
                 dataset_kwargs["path"] = "text"
             else:
                 dataset_kwargs["path"] = self.file_extention
-            if eKonf.is_file(self.validation_file):
+            if self.validation_file.startswith("http") or eKonf.is_file(
+                self.validation_file
+            ):
                 dataset_kwargs["data_files"] = self.validation_file
             else:
                 dataset_kwargs["data_dir"] = self.validation_file
@@ -249,7 +250,12 @@ class DatasetConfig(BaseModel):
         return dataset_kwargs
 
     def load_datasets(
-        self, dataset_name=None, dataset_config_name=None, text_column_name=None
+        self,
+        dataset_name=None,
+        dataset_config_name=None,
+        text_column_name=None,
+        train_file=None,
+        validation_file=None,
     ):
         # Get the datasets: you can either provide your own CSV/JSON/TXT training and evaluation files (see below)
         # or just provide the name of one of the public datasets available on the hub at
@@ -264,6 +270,13 @@ class DatasetConfig(BaseModel):
             self.dataset_name = dataset_name
             self.dataset_config_name = dataset_config_name
             self.text_column_name = text_column_name
+        elif train_file is not None:
+            self.train_file = train_file
+            self.validation_file = validation_file
+            self.dataset_name = None
+            self.dataset_config_name = None
+            self.text_column_name = "text"
+
         self._check_data_sources()
         if self.dataset_name is not None:
             # Downloading and loading a dataset from the hub.

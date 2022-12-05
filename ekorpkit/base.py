@@ -34,15 +34,17 @@ class Dummy:
 
 class Environments(BaseSettings):
     EKORPKIT_CONFIG_DIR: Optional[str]
-    EKORPKIT_DATA_DIR: Optional[str]
-    EKORPKIT_PROJECT: Optional[str]
     EKORPKIT_WORKSPACE_ROOT: Optional[str]
+    EKORPKIT_PROJECT: Optional[str]
+    EKORPKIT_PROJECT_DIR: Optional[str]
+    EKORPKIT_DATA_DIR: Optional[str]
     EKORPKIT_LOG_LEVEL: Optional[str]
     NUM_WORKERS: Optional[int]
     KMP_DUPLICATE_LIB_OK: Optional[str]
     CUDA_DEVICE_ORDER: Optional[str]
     CUDA_VISIBLE_DEVICES: Optional[str]
     WANDB_PROJECT: Optional[str]
+    WANDB_DISABLED: Optional[str]
 
     class Config:
         env_prefix = ""
@@ -64,6 +66,11 @@ class Environments(BaseSettings):
 
     @root_validator()
     def _check_and_set_values(cls, values):
+        workspace = values.get("EKORPKIT_WORKSPACE_ROOT")
+        project = values.get("EKORPKIT_PROJECT")
+        if workspace is not None and project is not None:
+            project_dir = os.path.join(workspace, "projects", project)
+            values["EKORPKIT_PROJECT_DIR"] = project_dir
         for k, v in values.items():
             if v is not None:
                 old_value = os.getenv(k.upper())
@@ -415,7 +422,7 @@ def getcwd():
 
 _env_initialized_ = False
 
-_config = _compose().copy()
+_config_ = _compose().copy()
 
 DictKeyType = Union[str, int, Enum, float, bool]
 
@@ -815,19 +822,24 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     return hydra.utils.instantiate(config, *args, **kwargs)
 
 
-def _load_dotenv(verbose=False):
+def _load_dotenv(
+    verbose: bool = False,
+    override: bool = False,
+):
     original_cwd = getcwd()
     config_dir = os.environ.get("EKORPKIT_CONFIG_DIR")
     dotenv_dir = config_dir or original_cwd
     dotenv_path = Path(dotenv_dir, ".env")
     if dotenv_path.is_file():
-        dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+        dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose, override=override)
         logger.info(f"Loaded .env from {dotenv_path}")
     else:
         logger.info(f"No .env file found in {dotenv_dir}, finding .env in parent dirs")
         dotenv_path = dotenv.find_dotenv()
         if dotenv_path:
-            dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose)
+            dotenv.load_dotenv(
+                dotenv_path=dotenv_path, verbose=verbose, override=override
+            )
             logger.info(f"Loaded .env from {dotenv_path}")
         else:
             logger.info(f"No .env file found in {dotenv_path}")
@@ -860,7 +872,7 @@ def _init_env_(cfg=None, verbose=False):
         logging.basicConfig(level=_log_level, force=True)
 
     if cfg is None:
-        cfg = _config
+        cfg = _config_
     env = cfg.env
 
     backend = env.distributed_framework.backend
@@ -1158,13 +1170,9 @@ def _set_workspace(
     workspace=None,
     project=None,
 ):
+    envs = Environments()
     if isinstance(workspace, str):
-        _env_set("EKORPKIT_WORKSPACE_ROOT", workspace)
-        logger.info(f"Setting EKORPKIT_WORKSPACE_ROOT to {workspace}")
+        envs.EKORPKIT_WORKSPACE_ROOT = workspace
     if isinstance(project, str):
-        _env_set("EKORPKIT_PROJECT", project)
-        logger.info(f"Setting EKORPKIT_PROJECT to {project}")
-    if workspace is not None and project is not None:
-        project_dir = os.path.join(workspace, "projects", project)
-        _env_set("EKORPKIT_PROJECT_DIR", project_dir)
-    return _osenv("EKORPKIT_PROJECT_DIR")
+        envs.EKORPKIT_PROJECT = project
+    return envs.EKORPKIT_PROJECT_DIR

@@ -10,17 +10,16 @@ from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key, shard
 from PIL import Image
 from tqdm.auto import trange
-from .base import BaseModel
+from ekorpkit.diffusers.base import BaseModel
 
 
 log = logging.getLogger(__name__)
 
 
 class DalleMini(BaseModel):
-    def __init__(self, root_dir=None, config_name="default", **args):
-        cfg = eKonf.compose(f"model/dalle_mini={config_name}")
-        cfg = eKonf.merge(cfg, args)
-        super().__init__(root_dir=root_dir, **cfg)
+    def __init__(self, config_name: str = "default", **args):
+        config_group = f"task/multi/disco={config_name}"
+        super().__init__(config_group=config_group, **args)
 
         self.model = None
         self.model_params = None

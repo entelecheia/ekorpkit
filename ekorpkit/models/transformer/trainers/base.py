@@ -5,6 +5,7 @@ import datasets
 import random
 import math
 import evaluate
+import torch
 from itertools import chain
 from omegaconf import DictConfig
 from pathlib import Path
@@ -91,7 +92,8 @@ class BaseTrainer(BaseBatchModel):
     def _init_env(self):
         training_args = self.training_args
 
-        log_level = training_args.get_process_log_level()
+        # log_level = training_args.get_process_log_level()
+        log_level = self.envs.EKORPKIT_LOG_LEVEL
         logger.setLevel(log_level)
         datasets.utils.logging.set_verbosity(log_level)
         transformers.utils.logging.set_verbosity(log_level)
@@ -205,12 +207,19 @@ class BaseTrainer(BaseBatchModel):
         return self.__auto_config__
 
     def load_datasets(
-        self, dataset_name=None, dataset_config_name=None, text_column_name=None
+        self,
+        dataset_name=None,
+        dataset_config_name=None,
+        text_column_name=None,
+        train_file=None,
+        validation_file=None,
     ):
         self.dataset.load_datasets(
             dataset_name=dataset_name,
             dataset_config_name=dataset_config_name,
             text_column_name=text_column_name,
+            train_file=train_file,
+            validation_file=validation_file,
         )
         self.__tokenized_datasets__ = None
 
@@ -446,6 +455,7 @@ class BaseTrainer(BaseBatchModel):
         self.__tokenized_datasets__ = tokenized_datasets
 
     def train(self):
+        self.reset()
         self._init_configs()
 
         model_args = self.model
@@ -459,15 +469,17 @@ class BaseTrainer(BaseBatchModel):
 
         if training_args.do_train:
             if "train" not in tokenized_datasets:
-                raise ValueError("--do_train requires a train dataset")
+                raise ValueError("do_train requires a train dataset")
             train_dataset = tokenized_datasets["train"]
             if data_args.max_train_samples is not None:
                 max_train_samples = min(len(train_dataset), data_args.max_train_samples)
                 train_dataset = train_dataset.select(range(max_train_samples))
 
+        if "validation" not in tokenized_datasets:
+            training_args.do_eval = False
         if training_args.do_eval:
-            if "validation" not in tokenized_datasets:
-                raise ValueError("--do_eval requires a validation dataset")
+            # if "validation" not in tokenized_datasets:
+            #     raise ValueError("do_eval requires a validation dataset")
             eval_dataset = tokenized_datasets["validation"]
             if data_args.max_eval_samples is not None:
                 max_eval_samples = min(len(eval_dataset), data_args.max_eval_samples)
@@ -519,6 +531,7 @@ class BaseTrainer(BaseBatchModel):
             pad_to_multiple_of=8 if pad_to_multiple_of_8 else None,
         )
 
+        torch.set_grad_enabled(True)
         # Initialize our Trainer
         trainer = Trainer(
             model=model,
@@ -607,3 +620,11 @@ class BaseTrainer(BaseBatchModel):
             trainer.push_to_hub(**kwargs)
         else:
             trainer.create_model_card(**kwargs)
+
+        del trainer
+        self.reset()
+
+    def reset(self):
+        # self.__tokenized_datasets__ = None
+        # self.__model_obj__ = None
+        super().reset()

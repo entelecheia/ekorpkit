@@ -26,8 +26,8 @@ from .utils import (
 from ekorpkit.utils.func import elapsed_timer
 from ekorpkit.visualize.motion import create_video as _create_video
 from ekorpkit.visualize.motion import extract_frames
-from ..art.base import BaseModel
-from ..art.config import AnimMode
+from ekorpkit.diffusers.base import BaseModel
+from ekorpkit.diffusers.config import AnimMode
 
 
 log = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ class DiscoDiffusion(BaseModel):
         args = self.load_config(batch_name=batch_name, batch_num=batch_num, **args)
         args = self._prepare_config(args)
         self.save_config(args)
-        self._initial_config = args
+        self._initial_config_ = args
 
         self._prepare_models()
         self.sample_imagepaths = []
@@ -169,7 +169,7 @@ class DiscoDiffusion(BaseModel):
         log.info("> loading settings...")
         args = self.load_config(batch_name=batch_name, batch_num=batch_num, **args)
         args = self._prepare_config(args)
-        self._initial_config = args
+        self._initial_config_ = args
 
         if args.animation_mode == AnimMode.NONE:
             if args.start_sample >= args.num_samples:

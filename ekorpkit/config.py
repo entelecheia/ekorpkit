@@ -125,8 +125,6 @@ class BaseBatchModel(BaseModel):
     path: DictConfig = None
     root_dir: Path = None
     batch: BaseBatchConfig = None
-    envs: Environments = Environments()
-    secrets: Secrets = Secrets()
     project: ProjectConfig = None
     dataset: DictConfig = None
     model: DictConfig = None
@@ -136,8 +134,8 @@ class BaseBatchModel(BaseModel):
     device: str = "cpu"
     num_devices: int = None
     version: str = "0.0.0"
-    _config: DictConfig = None
-    _initial_config: DictConfig = None
+    _config_: DictConfig = None
+    _initial_config_: DictConfig = None
 
     def __init__(self, config_group=None, **args):
         if config_group is not None:
@@ -146,8 +144,8 @@ class BaseBatchModel(BaseModel):
             args = eKonf.to_config(args)
         super().__init__(**args)
 
-        object.__setattr__(self, "_config", args)
-        object.__setattr__(self, "_initial_config", args.copy())
+        object.__setattr__(self, "_config_", args)
+        object.__setattr__(self, "_initial_config_", args.copy())
         self._init_configs()
 
     def __setattr__(self, key, val):
@@ -160,19 +158,20 @@ class BaseBatchModel(BaseModel):
         extra = "allow"
         validate_assignment = False
         exclude = {
-            "_config",
-            "_initial_config",
+            "_config_",
+            "_initial_config_",
             "path",
             "module",
             "secret",
             "auto",
             "project",
         }
+        include = {}
         underscore_attrs_are_private = True
 
     @property
     def config(self):
-        return self._config
+        return self._config_
 
     @validator("path", pre=True)
     def _validate_path(cls, v):
@@ -233,9 +232,15 @@ class BaseBatchModel(BaseModel):
         self.path = path
         self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
         self.config.batch.batch_num = self.batch.batch_num
-        self.envs = Environments()
-        self.secrets = Secrets()
         self.secrets.init_huggingface_hub()
+
+    @property
+    def envs(self):
+        return Environments()
+
+    @property
+    def secrets(self):
+        return Secrets()
 
     @property
     def batch_name(self):
@@ -300,7 +305,7 @@ class BaseBatchModel(BaseModel):
     ):
         """Save the batch config"""
         if config is not None:
-            self._config = config
+            self._config_ = config
         log.info(f"Saving config to {self.batch.config_filepath}")
         cfg = eKonf.to_dict(self.config)
         if exclude is None:
@@ -352,7 +357,7 @@ class BaseBatchModel(BaseModel):
             self.name = batch_name
 
         if batch_num is not None:
-            cfg = self._initial_config.copy()
+            cfg = self._initial_config_.copy()
             cfg.name = batch_name
             cfg.batch.batch_num = batch_num
             _path = self.batch.config_filepath
@@ -368,7 +373,7 @@ class BaseBatchModel(BaseModel):
             cfg = self.config
 
         log.info(f"Merging config with args: {args}")
-        self._config = eKonf.merge(cfg, args)
+        self._config_ = eKonf.merge(cfg, args)
         # reinit the batch config to update the config
         self._init_configs()
 
@@ -398,6 +403,18 @@ class BaseBatchModel(BaseModel):
     @property
     def verbose(self):
         return self.batch.verbose
+
+    def reset(self, objects=None):
+        """Reset the memory cache"""
+        if isinstance(objects, list):
+            for obj in objects:
+                del obj
+        try:
+            from ekorpkit.utils.gpu import GPUMon
+
+            GPUMon.release_gpu_memory()
+        except ImportError:
+            pass
 
 
 class DynamicBaseModel(BaseModel):

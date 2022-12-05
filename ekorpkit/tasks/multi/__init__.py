@@ -1,0 +1,1 @@
+from .stable import StableDiffusion
