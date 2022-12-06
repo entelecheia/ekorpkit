@@ -346,3 +346,25 @@ def _create_floatslider(
         **kwargs,
     )
     return slider
+
+
+def _load_extentions(exts=["autotime"]):
+    if _is_notebook():
+        from IPython import get_ipython
+
+        ip = get_ipython()
+        try:
+            loaded = ip.extension_manager.loaded
+            for ext in exts:
+                if ext not in loaded:
+                    ip.extentension_manager.load_extension(ext)
+        except AttributeError:
+            for ext in exts:
+                ip.magic("load_ext {}".format(ext))
+
+
+def _set_matplotlib_formats(*formats, **kwargs):
+    if _is_notebook():
+        from IPython.display import set_matplotlib_formats
+
+        set_matplotlib_formats(*formats, **kwargs)

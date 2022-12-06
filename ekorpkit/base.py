@@ -23,7 +23,7 @@ from typing import Any, List, IO, Dict, Union, Tuple, Type, Optional
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
-from ekorpkit.utils.notebook import _is_notebook
+from ekorpkit.utils.notebook import _is_notebook, _load_extentions, _set_matplotlib_formats
 from . import _version
 
 
@@ -1241,12 +1241,15 @@ def _records_to_dataframe(
 
 
 def _set_workspace(
-    workspace=None,
-    project=None,
+    workspace=None, project=None, autotime=True, retina=True
 ) -> ProjectConfig:
     envs = Environments()
     if isinstance(workspace, str):
         envs.EKORPKIT_WORKSPACE_ROOT = workspace
     if isinstance(project, str):
         envs.EKORPKIT_PROJECT = project
+    if autotime:
+        _load_extentions(exts=["autotime"])
+    if retina:
+        _set_matplotlib_formats("retina")
     return ProjectConfig()
