@@ -26,7 +26,7 @@ column_info:
     chapter: str
 
 io:
-  data_dir:  ${path.dataset}/source/${.name}
+  data_dir:  ${path.datasets}/source/${.name}
   data_sources: 
     train: ${..fetcher.output_file}
 

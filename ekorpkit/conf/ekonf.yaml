@@ -6,7 +6,7 @@ defaults:
   - env: default
   - mode: default
   - path: __project__
-  - project: __global__
+  - project: default
   - corpus: __init__
   - corpus/builtin: __init__
   - dataset: __init__

@@ -1,7 +1,7 @@
 # If you're having issues with model downloads, check this to compare SHA's:
 check_model_SHA: false #@param{type:"boolean"}
 archive_dir: ${..path.archive_dir}
-model_dir: ${..path.model_dir}
+model_dir: ${..path.models_dir}
 pretrained_dir: ${..path.pretrained_dir}
 pretrained_symlink: ./pretrained
 models:

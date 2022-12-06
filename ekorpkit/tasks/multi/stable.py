@@ -375,7 +375,7 @@ class StableDiffusion(BaseModel):
                 use_auth_token=self.secrets.HUGGING_FACE_HUB_TOKEN.get_secret_value(),
                 revision=cfg.revision,
                 torch_dtype=torch.float16,
-                cache_dir=self.path.cache_dir,
+                cache_dir=self.cache_dir,
             ).to(cfg.device)
 
     def reset(self):

@@ -3,7 +3,7 @@ defaults:
 
 _target_: ekorpkit.datasets.corpora.Corpora
 corpora:
-data_dir: ${dir.corpus}
+data_dir: ${path.corpus}
 use_name_as_subdir: true
 auto:
   load: false

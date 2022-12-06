@@ -32,8 +32,8 @@ class AutoML:
         self._feature_importance = args.feature_importance.visualize.plot
 
         self._path = self.args.path
-        self._model_file = self._path.model.filepath
-        self._log_file = self._path.log.filepath
+        self._model_file = self._path.models.filepath
+        self._log_file = self._path.logs.filepath
         self._pred_file = self._path.pred.filepath
 
         self._automl = AutoML()

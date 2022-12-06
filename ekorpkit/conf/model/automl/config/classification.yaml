@@ -6,7 +6,7 @@ metric: accuracy
 log_training_metric: true
 task: classification
 # task type
-log_file_name: ${oc.select:..path.log.filepath, automl.log}
+log_file_name: ${oc.select:..path.logs.filepath, automl.log}
 # flaml log file
 seed: 7654321
 # random seed

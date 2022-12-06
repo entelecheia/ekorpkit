@@ -17,7 +17,7 @@ from enum import Enum
 from tqdm.auto import tqdm
 from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
-from pydantic import BaseSettings, SecretStr, root_validator
+from pydantic import BaseModel, BaseSettings, SecretStr, root_validator, validator
 from pydantic.env_settings import SettingsSourceCallable
 from typing import Any, List, IO, Dict, Union, Tuple, Type, Optional
 from ekorpkit.utils.batch import decorator_apply
@@ -25,6 +25,49 @@ from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
 from ekorpkit.utils.notebook import _is_notebook
 from . import _version
+
+
+def _setLogger(level=None, force=True, filterwarnings_action="ignore", **kwargs):
+    level = level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
+    os.environ["EKORPKIT_LOG_LEVEL"] = level
+    if filterwarnings_action is not None:
+        warnings.filterwarnings(filterwarnings_action)
+
+    if isinstance(level, str):
+        level = getattr(logging, level.upper(), logging.INFO)
+    if sys.version_info >= (3, 8):
+        logging.basicConfig(level=level, force=force, **kwargs)
+    else:
+        logging.basicConfig(level=level, **kwargs)
+
+
+def _getLogger(
+    _name=None,
+    _log_level=None,
+    _fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+):
+    _name = _name or __name__
+    logger = logging.getLogger(_name)
+    _log_level = _log_level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
+    logger.setLevel(_log_level)
+    return logger
+
+
+logger = _getLogger()
+
+__hydra_version_base__ = "1.2"
+
+
+def __ekorpkit_path__():
+    return Path(__file__).parent.as_posix()
+
+
+def __home_path__():
+    return Path.home().as_posix()
+
+
+def __version__():
+    return _version.get_versions()["version"]
 
 
 class Dummy:
@@ -128,47 +171,78 @@ class Secrets(BaseSettings):
                 )
 
 
-def _setLogger(level=None, force=True, filterwarnings_action="ignore", **kwargs):
-    level = level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
-    os.environ["EKORPKIT_LOG_LEVEL"] = level
-    if filterwarnings_action is not None:
-        warnings.filterwarnings(filterwarnings_action)
+class ProjectPathConfig(BaseModel):
+    workspace: str = None
+    project: str = "ekorpkit-default"
+    data: str = None
+    home: str = None
+    ekorpkit: str = None
+    resources: str = None
+    runtime: str = None
+    archive: str = None
+    corpus: str = None
+    datasets: str = None
+    logs: str = None
+    models: str = None
+    outputs: str = None
+    cache: str = None
+    tmp: str = None
+    library: str = None
 
-    if isinstance(level, str):
-        level = getattr(logging, level.upper(), logging.INFO)
-    if sys.version_info >= (3, 8):
-        logging.basicConfig(level=level, force=force, **kwargs)
-    else:
-        logging.basicConfig(level=level, **kwargs)
+    class Config:
+        extra = "allow"
 
-
-def _getLogger(
-    _name=None,
-    _log_level=None,
-    _fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-):
-    _name = _name or __name__
-    logger = logging.getLogger(_name)
-    _log_level = _log_level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
-    logger.setLevel(_log_level)
-    return logger
-
-
-logger = _getLogger()
-
-__hydra_version_base__ = "1.2"
-
-
-def __ekorpkit_path__():
-    return Path(__file__).parent.as_posix()
+    def __init__(self, **data: Any):
+        if not data:
+            data = _compose("path=__project__")
+            logger.info(
+                "There are no arguments to initilize a config, using default config."
+            )
+        super().__init__(**data)
 
 
-def __home_path__():
-    return Path.home().as_posix()
+class ProjectConfig(BaseModel):
+    project_name: str = "ekorpkit-project"
+    task_name: str = None
+    workspace_root: str = None
+    project_root: str = None
+    description: str = None
+    version: str = __version__()
+    path: ProjectPathConfig = None
 
+    class Config:
+        extra = "allow"
 
-def __version__():
-    return _version.get_versions()["version"]
+    def __init__(self, **data: Any):
+        if not data:
+            data = _compose("project=default")
+            logger.info(
+                "There are no arguments to initilize a config, using default config."
+            )
+        super().__init__(**data)
+
+    @validator("project_name", allow_reuse=True)
+    def _validate_project_name(cls, v):
+        if v is None:
+            raise ValueError("Project name must be specified.")
+        # Environments().WANDB_PROJECT = v
+        return v
+
+    @property
+    def workspace_dir(self):
+        return Path(self.path.workspace)
+
+    @property
+    def project_dir(self):
+        return Path(self.path.project)
+
+    @property
+    def envs(self):
+        return Environments()
+
+    @property
+    def secrets(self):
+        return Secrets()
 
 
 def _check_path(_path: str, alt_path: str = None):
@@ -1169,10 +1243,10 @@ def _records_to_dataframe(
 def _set_workspace(
     workspace=None,
     project=None,
-):
+) -> ProjectConfig:
     envs = Environments()
     if isinstance(workspace, str):
         envs.EKORPKIT_WORKSPACE_ROOT = workspace
     if isinstance(project, str):
         envs.EKORPKIT_PROJECT = project
-    return envs.EKORPKIT_PROJECT_DIR
+    return ProjectConfig()

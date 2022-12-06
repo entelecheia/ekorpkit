@@ -1,4 +1,4 @@
-root: ${oc.select:..root_dir, ${dir.project}/${.name}}
+root: ${oc.select:..root_dir, ${path.project}/${.name}}
 name: ${oc.select:..name, ${name}}
 cached_path: ${oc.select:.cache.path,null}
 filetype: ${oc.select:..filetype,''}

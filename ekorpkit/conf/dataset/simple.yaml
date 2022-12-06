@@ -3,7 +3,7 @@ defaults:
 
 _target_: ekorpkit.datasets.dataset.Dataset
 name: ${oc.select:.simple.name, ''}
-data_dir: ${oc.select:.simple.data_dir, ${path.dataset}/simple}
+data_dir: ${oc.select:.simple.data_dir, ${path.datasets}/simple}
 # filetype: ${oc.select:.simple.filetype, .parquet}
 # column_info:
 #   columns: ${oc.select:..simple.column_info.columns:, ${.keys}}

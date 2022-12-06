@@ -76,6 +76,7 @@ from .base import (
     _viewsource,
     DictKeyType,
     Environments,
+    ProjectConfig,
     Secrets,
 )
 from ekorpkit.io.google import _mount_google_drive
@@ -955,7 +956,7 @@ class eKonf:
         )
 
     @staticmethod
-    def set_workspace(workspace=None, project=None):
+    def set_workspace(workspace=None, project=None) -> ProjectConfig:
         return _set_workspace(workspace, project)
 
     @staticmethod

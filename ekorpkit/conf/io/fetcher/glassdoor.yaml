@@ -3,7 +3,7 @@ defaults:
 
 _target_: ekorpkit.io.fetch.loader.glassdoor.GlassDoor
 output_file: ${.name}.jl
-input_file: ${path.dataset}/source/byod/gd/reviews.tar
+input_file: ${path.datasets}/source/byod/gd/reviews.tar
 file_extension: .htm
 verbose: true
 print_every_n: 1000

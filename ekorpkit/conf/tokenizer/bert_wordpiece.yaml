@@ -2,7 +2,7 @@ name: ${corpus.name}_bwp_${oc.select:.name_suffix,uncased}_v${.vocab_size}
 name_suffix: ${iif:${.do_lower_case},uncased,cased}
 train_files: 
 input_dir: ${corpus.corpus_dir}
-output_dir: ${path.model}/tokenizers/${.name}
+output_dir: ${path.models}/tokenizers/${.name}
 model_type: bert
 clean_text: true
 handle_chinese_chars: false

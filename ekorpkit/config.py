@@ -16,10 +16,60 @@ from typing import (
     Union,
 )
 from ekorpkit import eKonf
-from .base import Environments, Secrets
+from .base import Environments, Secrets, ProjectConfig
 
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
+
+class PathConfig(BaseModel):
+    task_name: str = "default-task"
+    root: str = None
+    batch_name: str = None
+    verbose: bool = False
+
+    class Config:
+        extra = "ignore"
+
+    def __init__(self, **data: Any):
+        if not data:
+            data = eKonf.compose("path=__batch__")
+            logger.info(
+                "There are no arguments to initilize a config, using default config."
+            )
+        super().__init__(**data)
+
+    @property
+    def root_dir(self):
+        return Path(self.root)
+
+    @property
+    def output_dir(self):
+        return self.root_dir / "outputs"
+
+    @property
+    def batch_dir(self):
+        return self.output_dir / self.batch_name
+
+    @property
+    def library_dir(self):
+        return self.root_dir / "libs"
+
+    @property
+    def data_dir(self):
+        return self.root_dir / "data"
+
+    @property
+    def model_dir(self):
+        return self.root_dir / "models"
+
+    @property
+    def cache_dir(self):
+        return self.root_dir / "cache"
+
+    @property
+    def tmp_dir(self):
+        return self.root_dir / "tmp"
 
 
 class BaseBatchConfig(BaseModel):
@@ -48,7 +98,7 @@ class BaseBatchConfig(BaseModel):
             else:
                 self.batch_num = num_files
         if self.verbose:
-            log.info(f"Batch name: {self.batch_name}, Batch num: {self.batch_num}")
+            logger.info(f"Batch name: {self.batch_name}, Batch num: {self.batch_num}")
 
     @validator("seed")
     def _validate_seed(cls, v, values):
@@ -56,7 +106,7 @@ class BaseBatchConfig(BaseModel):
             random.seed()
             seed = random.randint(0, 2**32 - 1)
             if values.get("verbose"):
-                log.info(f"Setting seed to {seed}")
+                logger.info(f"Setting seed to {seed}")
             return seed
         return v
 
@@ -97,32 +147,11 @@ class BaseBatchConfig(BaseModel):
         return self.config_dir / self.config_jsonfile
 
 
-class ProjectConfig(BaseModel):
-    project_name: str = "ekorpkit-project"
-    project_dir: str = None
-    task_name: str = "default-task"
-    workspace_dir: str = None
-    description: str = None
-    path: DictConfig = None
-
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
-        validate_assignment = True
-
-    @validator("project_name", allow_reuse=True)
-    def _validate_project_name(cls, v):
-        if v is None:
-            raise ValueError("Project name must be specified.")
-        eKonf.envs.WANDB_PROJECT = v
-        return v
-
-
 class BaseBatchModel(BaseModel):
     config_name: str = None
     config_group: str = None
     name: str
-    path: DictConfig = None
+    path: PathConfig = None
     root_dir: Path = None
     batch: BaseBatchConfig = None
     project: ProjectConfig = None
@@ -173,14 +202,14 @@ class BaseBatchModel(BaseModel):
     def config(self):
         return self._config_
 
-    @validator("path", pre=True)
-    def _validate_path(cls, v):
-        if v is None:
-            v = eKonf.compose("path=_batch_")
-            log.info(f"There is no path in the config, using default path: {v.root}")
-        if v.verbose:
-            eKonf.print(v)
-        return v
+    # @validator("path", pre=True)
+    # def _validate_path(cls, v):
+    #     if v is None:
+    #         v = eKonf.compose("path=_batch_")
+    #         logger.info(f"There is no path in the config, using default path: {v.root}")
+    #     if v.verbose:
+    #         eKonf.print(v)
+    #     return v
 
     @validator("root_dir")
     def _validate_root_dir(cls, v, values):
@@ -194,7 +223,7 @@ class BaseBatchModel(BaseModel):
     def _validate_batch(cls, v):
         if v is None:
             v = eKonf.compose("batch")
-            log.info(
+            logger.info(
                 f"There is no batch in the config, using default batch: {v.batch_name}"
             )
         return v
@@ -209,26 +238,26 @@ class BaseBatchModel(BaseModel):
             )
         return values
 
-    def _init_configs(self, name=None, path=None, root_dir=None, **kwargs):
+    def _init_configs(self, name=None, root_dir=None, **kwargs):
         if name is None:
             name = self.name
         self.config.name = name
         self.config.batch.batch_name = name
-        if path is None and self.path is not None:
-            path = self.path
-            log.info(f"Using existing path: {path.root}")
-        if path is None:
-            path = self.config.get("path")
-            log.info(f"Using config path: {path.root}")
+
+        path = self.config.get("path")
         if path is None:
             path = eKonf.compose("path=_batch_")
-            log.info(f"There is no path in the config, using default path: {path.root}")
+            logger.info(
+                f"There is no path in the config, using default path: {path.root}"
+            )
+        else:
+            logger.info(f"Using config path: {path.root}")
+        path = PathConfig(**path)
         if root_dir is not None:
             path.root = str(root_dir)
-
         if path.verbose:
-            eKonf.print(path)
-        self.root_dir = Path(path.root)
+            eKonf.print(path.dict())
+        self.root_dir = path.root_dir
         self.path = path
         self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
         self.config.batch.batch_num = self.batch.batch_num
@@ -272,19 +301,19 @@ class BaseBatchModel(BaseModel):
 
     @property
     def output_dir(self):
-        return Path(self.path.output_dir)
+        return self.path.output_dir
 
     @property
     def data_dir(self):
-        return Path(self.path.data_dir)
+        return self.path.data_dir
 
     @property
     def model_dir(self):
-        return Path(self.path.get("model_dir"))
+        return self.path.model_dir
 
     @property
     def cache_dir(self):
-        cache_dir = self.path.get("cache_dir")
+        cache_dir = Path(self.project.path.cache)
         if cache_dir is None:
             cache_dir = self.output_dir / "cache"
             cache_dir.mkdir(parents=True, exist_ok=True)
@@ -292,7 +321,7 @@ class BaseBatchModel(BaseModel):
 
     @property
     def library_dir(self):
-        return Path(self.path.library_dir)
+        return self.path.library_dir
 
     def autorun(self):
         return eKonf.methods(self.auto, self)
@@ -306,7 +335,7 @@ class BaseBatchModel(BaseModel):
         """Save the batch config"""
         if config is not None:
             self._config_ = config
-        log.info(f"Saving config to {self.batch.config_filepath}")
+        logger.info(f"Saving config to {self.batch.config_filepath}")
         cfg = eKonf.to_dict(self.config)
         if exclude is None:
             exclude = self.__config__.exclude
@@ -337,7 +366,7 @@ class BaseBatchModel(BaseModel):
         if exclude is None:
             exclude = self.__config__.exclude
         config = self.dict(exclude=exclude)
-        log.info(f"Saving config to {self.batch.config_jsonpath}")
+        logger.info(f"Saving config to {self.batch.config_jsonpath}")
         eKonf.save_json(config, self.batch.config_jsonpath, default=dumper)
 
     def load_config(
@@ -347,7 +376,7 @@ class BaseBatchModel(BaseModel):
         **args,
     ):
         """Load the config from the batch config file"""
-        log.info(
+        logger.info(
             f"> Loading config for batch_name: {batch_name} batch_num: {batch_num}"
         )
         self.config.batch.batch_num = batch_num
@@ -362,17 +391,17 @@ class BaseBatchModel(BaseModel):
             cfg.batch.batch_num = batch_num
             _path = self.batch.config_filepath
             if _path.is_file():
-                log.info(f"Loading config from {_path}")
+                logger.info(f"Loading config from {_path}")
                 batch_cfg = eKonf.load(_path)
-                log.info("Merging config with the loaded config")
+                logger.info("Merging config with the loaded config")
                 cfg = eKonf.merge(cfg, batch_cfg)
             else:
-                log.info(f"No config file found at {_path}")
+                logger.info(f"No config file found at {_path}")
                 cfg.batch.batch_num = None
         else:
             cfg = self.config
 
-        log.info(f"Merging config with args: {args}")
+        logger.info(f"Merging config with args: {args}")
         self._config_ = eKonf.merge(cfg, args)
         # reinit the batch config to update the config
         self._init_configs()
@@ -386,7 +415,7 @@ class BaseBatchModel(BaseModel):
     def load_modules(self):
         """Load the modules"""
         if self.module.get("modules") is None:
-            log.info("No modules to load")
+            logger.info("No modules to load")
             return
         library_dir = self.library_dir
         for module in self.module.modules:

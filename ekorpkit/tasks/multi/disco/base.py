@@ -242,7 +242,7 @@ class DiscoDiffusion(BaseModel):
         self.diffusion_model = self.config.models.diffusion_model
         if self.diffusion_model == "custom":
             custom_path = os.path.join(
-                self._path.model_dir, self.config.models.custom_model
+                self._path.models_dir, self.config.models.custom_model
             )
             self.model.load_state_dict(torch.load(custom_path, map_location="cpu"))
         else:
