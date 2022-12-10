@@ -6,4 +6,4 @@ batch_dir: ${.output_dir}/${.batch_name}
 data_dir: ${join_path:${.root}, inputs}
 cache_dir: ${oc.select:..project.path.cache,${join_path:${.root}, cache}}
 tmp_dir: ${oc.select:..project.path.tmp,${join_path:${.root}, tmp}}
-verbose: ${oc.select:..btach.verbose, false}
+verbose: ${oc.select:..batch.verbose, false}

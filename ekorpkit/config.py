@@ -72,9 +72,11 @@ class PathConfig(BaseModel):
 
 
 class BaseBatchConfig(BaseModel):
-    output_dir: Path = Path.cwd() / "outputs"
     batch_name: str
     batch_num: int = None
+    output_dir: Path = Path.cwd() / "outputs"
+    output_suffix: str = None
+    output_extention: str = ""
     random_seed: bool = True
     seed: int = None
     resume_run: bool = False
@@ -116,6 +118,13 @@ class BaseBatchConfig(BaseModel):
             return seed
         return v
 
+    @validator("output_extention")
+    def _validate_output_extention(cls, v):
+        if v:
+            return v.strip(".")
+        else:
+            return ""
+
     @property
     def batch_dir(self):
         batch_dir = self.output_dir / self.batch_name
@@ -131,6 +140,13 @@ class BaseBatchConfig(BaseModel):
     @property
     def file_prefix(self):
         return f"{self.batch_name}({self.batch_num})"
+
+    @property
+    def output_file(self):
+        if self.output_suffix:
+            return f"{self.file_prefix}_{self.output_suffix}.{self.output_extention}"
+        else:
+            return f"{self.file_prefix}.{self.output_extention}"
 
     @property
     def config_filename(self):
@@ -161,8 +177,6 @@ class BaseBatchModel(BaseModel):
     root_dir: Path = None
     batch: BaseBatchConfig = None
     project: ProjectConfig = None
-    dataset: DictConfig = None
-    model: DictConfig = None
     module: DictConfig = None
     auto: Union[DictConfig, str] = None
     autoload: bool = False
@@ -242,7 +256,9 @@ class BaseBatchModel(BaseModel):
         self.config.batch.batch_num = self.batch.batch_num
         if self.project.init_huggingface_hub:
             self.secrets.init_huggingface_hub()
-        logger.info(f"Initalized batch: {self.batch_name}({self.batch_num}) in {self.root_dir}")
+        logger.info(
+            f"Initalized batch: {self.batch_name}({self.batch_num}) in {self.root_dir}"
+        )
 
     @property
     def envs(self):

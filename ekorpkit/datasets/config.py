@@ -1,12 +1,15 @@
 import os
 import logging
+from pandas import DataFrame
 from random import sample
 from glob import glob
 from pathlib import Path
 from tqdm.auto import tqdm
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datasets import load_dataset, DatasetDict
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
 from ekorpkit import eKonf
 
 
@@ -422,3 +425,239 @@ def batch_chunks(dataset, batch_size, text_column="text"):
     for i in tqdm(range(0, len(dataset), batch_size)):
         end_i = min(len(dataset), i + batch_size)
         yield dataset[i:end_i][text_column]
+
+
+class DataframeConfig(BaseModel):
+    """
+    Arguments pertaining to what data we are going to input our model for training and eval.
+    """
+
+    dataset_name: Optional[str] = Field(
+        default=None,
+        description="The name of the dataset to use.",
+    )
+    data_dir: Optional[str] = Field(
+        default=None,
+        description="The directory where the dataset is located.",
+    )
+    data_file: Optional[str] = Field(
+        default=None,
+        description="The input data file (or folder).",
+    )
+    file_extention: str = Field(
+        default="parquet",
+        description="The input file extension",
+    )
+    overwrite_cache: bool = Field(
+        default=False,
+        description="Overwrite the cached training and evaluation sets",
+    )
+    num_workers: Optional[int] = Field(
+        default=None,
+        description="The number of processes to use for the preprocessing.",
+    )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Where do you want to store the pretrained models downloaded from huggingface.co",
+    )
+    data_columns: Optional[List[str]] = Field(
+        default=None,
+        description="The columns of the data to use.",
+    )
+    text_column_name: Optional[str] = Field(
+        default="text",
+        description="The name of the column in the datasets containing the full text.",
+    )
+    label_column_name: Optional[str] = Field(
+        default="labels",
+        description="The name of the column in the datasets containing the labels.",
+    )
+    class_column_name: Optional[str] = Field(
+        default="classes",
+        description="The name of the encoded class column in the datasets containing the labels.",
+    )
+    test_split_ratio: Optional[float] = Field(
+        default=0.2,
+        description="The ratio of the test set.",
+    )
+    shuffle: bool = Field(
+        default=True,
+        description="Whether to shuffle the data or not.",
+    )
+    seed: Optional[int] = Field(
+        default=None,
+        description="A seed for the shuffle.",
+    )
+    encode_labels: bool = Field(
+        default=False,
+        description="Whether to encode the labels or not.",
+    )
+    __raw_datasets__ = None
+    __raw_data__ = None
+    __le__ = None
+    __le_classes__ = None
+
+    class Config:
+        extra = "allow"
+        underscore_attrs_are_private = True
+
+    def _check_data_sources(self):
+        if self.data_file is None:
+            raise ValueError("Need to specify a data_file")
+        else:
+            if self.data_dir is not None:
+                self.data_dir = os.path.abspath(os.path.expanduser(self.data_dir))
+            if self.data_file is not None:
+                # check if train_file is url or local path
+                if self.data_file.startswith("http"):
+                    extension = self.data_file.split(".")[-1]
+                    if extension not in ["csv", "parquet"]:
+                        raise ValueError(
+                            "`train_file` should be a csv or a parquet file."
+                        )
+                    self.file_extention = extension
+                else:
+                    if (
+                        not Path(self.data_file).is_absolute()
+                        and self.data_dir is not None
+                    ):
+                        self.data_file = os.path.join(self.data_dir, self.data_file)
+
+                    if eKonf.is_file(self.data_file):
+                        extension = self.data_file.split(".")[-1]
+                        if extension not in ["csv", "parquet"]:
+                            raise ValueError(
+                                "`data_file` should be a csv or a parquet file."
+                            )
+                        self.file_extention = extension
+                    elif eKonf.is_dir(self.data_file):
+                        files = eKonf.get_filepaths(
+                            f"*.{self.file_extention}", self.data_file
+                        )
+                        if len(files) == 0:
+                            raise ValueError(
+                                f"Could not find any {self.file_extention} file in {self.data_file}"
+                            )
+                    else:
+                        raise ValueError(
+                            "`data_file` doesn't exist. Please check the path."
+                        )
+
+    def load_datasets(
+        self,
+        data=None,
+        data_file=None,
+        data_dir=None,
+        test_split_ratio=None,
+        shuffle=None,
+        seed=None,
+        encode_labels=None,
+        text_column_name=None,
+        label_column_name=None,
+        class_column_name=None,
+    ) -> dict:
+
+        if data is not None:
+            raw_data = data
+        else:
+            if data_file is not None:
+                self.data_file = data_file
+            if data_dir is not None:
+                self.data_dir = data_dir
+
+            self._check_data_sources()
+            raw_data = eKonf.load_data(self.data_file)
+        self.__raw_data__ = raw_data
+
+        if text_column_name is not None:
+            self.text_column_name = text_column_name
+        column_names = raw_data.columns
+        text_column_name = self.text_column_name or "text"
+        self.text_column_name = (
+            text_column_name if text_column_name in column_names else column_names[0]
+        )
+
+        # encode labels
+        if encode_labels is not None:
+            self.encode_labels = encode_labels
+        if label_column_name is not None:
+            self.label_column_name = label_column_name
+        if class_column_name is not None:
+            self.class_column_name = class_column_name
+        if self.encode_labels:
+            le = preprocessing.LabelEncoder()
+            label_series = raw_data[self.label_column_name]
+            le.fit(label_series)
+            raw_data[self.class_column_name] = le.transform(label_series)
+            self.__le__ = le
+            self.__le_classes__ = le.classes_
+
+        if test_split_ratio is not None:
+            self.test_split_ratio = test_split_ratio
+        if shuffle is not None:
+            self.shuffle = shuffle
+        if seed is not None:
+            self.seed = seed
+
+        # split the data
+        if self.test_split_ratio is not None and self.test_split_ratio > 0:
+            log.info(
+                "Splitting the dataframe into train and test with ratio %s",
+                self.test_split_ratio,
+            )
+            train, test = train_test_split(
+                raw_data,
+                test_size=self.test_split_ratio,
+                random_state=self.seed,
+                shuffle=self.shuffle,
+            )
+            raw_datasets = {"train": train, "test": test}
+            log.info(f"Train data: {train.shape}, Test data: {test.shape}")
+
+        else:
+
+            if self.shuffle:
+                log.info("Shuffling the dataframe with seed %s", self.seed)
+                raw_data = raw_data.sample(frac=1, random_state=self.seed).reset_index(
+                    drop=True
+                )
+            raw_datasets = {"train": raw_data}
+            log.info(f"Train data: {raw_data.shape}")
+
+        self.__raw_datasets__ = raw_datasets
+        return raw_datasets
+
+    @property
+    def datasets(self) -> dict:
+        if self.__raw_datasets__ is None:
+            self.load_datasets()
+        return self.__raw_datasets__
+
+    @property
+    def data(self) -> DataFrame:
+        if self.__raw_data__ is None:
+            self.load_datasets()
+        return self.__raw_data__
+
+    @property
+    def train_data(self) -> DataFrame:
+        return self.datasets["train"]
+
+    @property
+    def test_data(self) -> DataFrame:
+        if "test" in self.datasets:
+            return self.datasets["test"]
+        return None
+
+    @property
+    def le_classes(self):
+        return self.__le_classes__
+
+    @property
+    def le(self):
+        return self.__le__
+
+    def inverse_transform(self, y):
+        if self.encode_labels:
+            return self.le.inverse_transform(y)
+        return y

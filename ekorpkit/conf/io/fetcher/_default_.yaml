@@ -2,7 +2,7 @@ defaults:
   - /auto: default
   - /batch: fetch
   - /project: data
-  - /path: _fatch_
+  - /path: _default_
 
 _name_: fetcher
 name: ${oc.select:..name, _temp_fetched}

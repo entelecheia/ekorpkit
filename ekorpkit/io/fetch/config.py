@@ -13,10 +13,6 @@ class BaseFatchConfig(BaseBatchConfig):
     compress: bool = False
     output_extention: str = "parquet"
 
-    @property
-    def output_file(self):
-        return f"{self.file_prefix}.{self.output_extention}"
-
 
 class BaseFetcher(BaseBatchModel):
     batch: BaseFatchConfig = None
