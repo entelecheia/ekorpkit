@@ -36,8 +36,8 @@ class PromptGenerator(BaseTrainer):
         config_group = f"task/nlp/generation={config_name}"
         super().__init__(config_group=config_group, **args)
 
-    def _init_configs(self, **args):
-        super()._init_configs(**args)
+    def initialize_configs(self, **args):
+        super().initialize_configs(**args)
         if not isinstance(self._generate_, GenerateConfig):
             self._generate_ = GenerateConfig(**self._generate_)
 

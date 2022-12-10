@@ -9,7 +9,6 @@ from pydantic import (
     validator,
     root_validator,
 )
-from pydantic.utils import ROOT_KEY
 from typing import (
     Any,
     Optional,
@@ -81,13 +80,20 @@ class BaseBatchConfig(BaseModel):
     resume_run: bool = False
     resume_latest: bool = False
     num_workers: int = 1
+    device: str = "cpu"
+    num_devices: Optional[int] = None
     config_yaml = "config.yaml"
     config_json = "config.json"
     config_dirname = "configs"
     verbose: Union[bool, int] = False
 
-    def __init__(self, **values):
-        super().__init__(**values)
+    def __init__(self, **data):
+        if not data:
+            data = eKonf.compose("batch")
+            logger.info(
+                f"There is no batch in the config, using default batch: {data.batch_name}"
+            )
+        super().__init__(**data)
         self.init_batch_num()
 
     def init_batch_num(self):
@@ -160,13 +166,11 @@ class BaseBatchModel(BaseModel):
     module: DictConfig = None
     auto: Union[DictConfig, str] = None
     autoload: bool = False
-    device: str = "cpu"
-    num_devices: int = None
     version: str = "0.0.0"
     _config_: DictConfig = None
     _initial_config_: DictConfig = None
 
-    def __init__(self, config_group=None, **args):
+    def __init__(self, config_group=None, root_dir=None, **args):
         if config_group is not None:
             args = eKonf.merge(eKonf.compose(config_group), args)
         else:
@@ -175,12 +179,12 @@ class BaseBatchModel(BaseModel):
 
         object.__setattr__(self, "_config_", args)
         object.__setattr__(self, "_initial_config_", args.copy())
-        self._init_configs()
+        self.initialize_configs(root_dir=root_dir)
 
     def __setattr__(self, key, val):
         super().__setattr__(key, val)
         if key == "name":
-            self._init_configs(name=val)
+            self.initialize_configs(name=val)
 
     class Config:
         arbitrary_types_allowed = True
@@ -189,6 +193,7 @@ class BaseBatchModel(BaseModel):
         exclude = {
             "_config_",
             "_initial_config_",
+            "__data__",
             "path",
             "module",
             "secret",
@@ -202,15 +207,6 @@ class BaseBatchModel(BaseModel):
     def config(self):
         return self._config_
 
-    # @validator("path", pre=True)
-    # def _validate_path(cls, v):
-    #     if v is None:
-    #         v = eKonf.compose("path=_batch_")
-    #         logger.info(f"There is no path in the config, using default path: {v.root}")
-    #     if v.verbose:
-    #         eKonf.print(v)
-    #     return v
-
     @validator("root_dir")
     def _validate_root_dir(cls, v, values):
         if v is None:
@@ -219,26 +215,9 @@ class BaseBatchModel(BaseModel):
             v = Path(v)
         return v
 
-    @validator("batch", pre=True)
-    def _validate_batch(cls, v):
-        if v is None:
-            v = eKonf.compose("batch")
-            logger.info(
-                f"There is no batch in the config, using default batch: {v.batch_name}"
-            )
-        return v
-
-    @root_validator(pre=False)
-    def _validate_config(cls, values):
-        name = values.get("name")
-        batch_name = values.get("batch").batch_name
-        if name != batch_name:
-            raise ValueError(
-                f"Model name {name} does not match batch name {batch_name}"
-            )
-        return values
-
-    def _init_configs(self, name=None, root_dir=None, **kwargs):
+    def initialize_configs(
+        self, name=None, root_dir=None, batch_class=BaseBatchConfig, **kwargs
+    ):
         if name is None:
             name = self.name
         self.config.name = name
@@ -250,18 +229,20 @@ class BaseBatchModel(BaseModel):
             logger.info(
                 f"There is no path in the config, using default path: {path.root}"
             )
-        else:
-            logger.info(f"Using config path: {path.root}")
         path = PathConfig(**path)
         if root_dir is not None:
             path.root = str(root_dir)
+            self.config.path.root = str(root_dir)
         if path.verbose:
             eKonf.print(path.dict())
-        self.root_dir = path.root_dir
+        self.root_dir = Path(path.root_dir)
         self.path = path
-        self.batch = BaseBatchConfig(output_dir=self.output_dir, **self.config.batch)
+        self.config.batch.output_dir = str(self.output_dir)
+        self.batch = batch_class(**self.config.batch)
         self.config.batch.batch_num = self.batch.batch_num
-        self.secrets.init_huggingface_hub()
+        if self.project.init_huggingface_hub:
+            self.secrets.init_huggingface_hub()
+        logger.info(f"Initalized batch: {self.batch_name}({self.batch_num}) in {self.root_dir}")
 
     @property
     def envs(self):
@@ -357,7 +338,7 @@ class BaseBatchModel(BaseModel):
         self.save_settings(exclude=exclude)
         return self.batch.config_filename
 
-    def save_settings(self, exclude=None):
+    def save_settings(self, exclude=None, exclude_none=True):
         def dumper(obj):
             if isinstance(obj, DictConfig):
                 return eKonf.to_dict(obj)
@@ -365,7 +346,7 @@ class BaseBatchModel(BaseModel):
 
         if exclude is None:
             exclude = self.__config__.exclude
-        config = self.dict(exclude=exclude)
+        config = self.dict(exclude=exclude, exclude_none=exclude_none)
         logger.info(f"Saving config to {self.batch.config_jsonpath}")
         eKonf.save_json(config, self.batch.config_jsonpath, default=dumper)
 
@@ -404,7 +385,7 @@ class BaseBatchModel(BaseModel):
         logger.info(f"Merging config with args: {args}")
         self._config_ = eKonf.merge(cfg, args)
         # reinit the batch config to update the config
-        self._init_configs()
+        self.initialize_configs()
 
         return self.config
 
@@ -445,35 +426,10 @@ class BaseBatchModel(BaseModel):
         except ImportError:
             pass
 
+    @property
+    def device(self):
+        return self.batch.device
 
-class DynamicBaseModel(BaseModel):
-    def __init__(__pydantic_self__, **data: Any) -> None:
-        if __pydantic_self__.__custom_root_type__ and data.keys() != {ROOT_KEY}:
-            data = {ROOT_KEY: data}
-        super().__init__(**data)
-
-
-class LabelStudioSecrets(BaseSettings):
-    api_key: Optional[str] = SecretStr
-    token: Optional[str] = SecretStr
-    password: Optional[str] = SecretStr
-
-    class Config:
-        env_prefix = "LABELSTUDIO_"
-        env_nested_delimiter = "_"
-        case_sentive = False
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings,
-            env_settings,
-            file_secret_settings,
-        ):
-            return (
-                env_settings,
-                init_settings,
-                file_secret_settings,
-            )
+    @property
+    def num_devices(self):
+        return self.batch.num_devices

@@ -3,9 +3,7 @@ root: ${join_path:${oc.select:..project.project_root,${oc.env:EKORPKIT_PROJECT_D
 batch_name: ${oc.select:..batch.batch_name, demo}
 output_dir: ${join_path:${.root}, outputs}
 batch_dir: ${.output_dir}/${.batch_name}
-library_dir: ${join_path:${.root}, libs}
-data_dir: ${join_path:${.root}, data}
-model_dir: ${join_path:${.root}, models}
+data_dir: ${join_path:${.root}, inputs}
 cache_dir: ${oc.select:..project.path.cache,${join_path:${.root}, cache}}
 tmp_dir: ${oc.select:..project.path.tmp,${join_path:${.root}, tmp}}
-verbose: ${oc.select:..batch.verbose, false}
+verbose: ${oc.select:..btach.verbose, false}

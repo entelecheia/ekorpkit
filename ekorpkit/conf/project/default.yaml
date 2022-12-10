@@ -6,3 +6,4 @@ project_root: ${.path.project}
 task_name: default-task
 workspace_root: ${oc.select:workspace_dir,${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.path.home}/.ekorpkit}}
 description:
+init_huggingface_hub: false

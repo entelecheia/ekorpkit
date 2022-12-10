@@ -1,0 +1,50 @@
+project_id:
+annotation_file: annotations.json
+prediction_file: predictions.json
+api:
+  header:
+    Authorization: Token ${..token}
+  token: ${oc.env:LABEL_STUDIO_USER_TOKEN,null}
+  server: ${oc.env:LABEL_STUDIO_SERVER,null}
+jobs:
+  project: /api/projects/
+  get_project: /api/projects/{id}/
+  export: /api/projects/{id}/export
+  download_export: /api/projects/{id}/exports/{export_pk}/download/
+  import: /api/projects/{id}/import
+request_schema:
+  export:
+    exportType: JSON
+  download_export:
+    exportType: JSON
+    download_all_tasks:
+    download_resources:
+    ids:
+  project:
+    title:
+    description:
+    label_config:
+    expert_instruction:
+    show_instruction: true
+    show_skip_button: true
+    enable_empty_annotation: true
+    show_annotation_history: true
+    organization:
+    color:
+    maximum_annotations: 1
+    is_published: true
+    model_version:
+    is_draft: true
+    min_annotations_to_start_training: 10
+    show_collab_predictions: true
+    sampling: Sequential sampling
+    show_ground_truth_first: true
+    show_overlap_first: true
+    overlap_cohort_percentage: 100
+    task_data_login:
+    task_data_password:
+    control_weights:
+    evaluate_predictions_automatically: true
+    skip_queue: REQUEUE_FOR_ME
+    reveal_preannotations_interactively: true
+label_config:

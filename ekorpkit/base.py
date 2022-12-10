@@ -19,11 +19,16 @@ from pathlib import Path
 from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
 from pydantic import BaseModel, BaseSettings, SecretStr, root_validator, validator
 from pydantic.env_settings import SettingsSourceCallable
+from pydantic.utils import ROOT_KEY
 from typing import Any, List, IO, Dict, Union, Tuple, Type, Optional
 from ekorpkit.utils.batch import decorator_apply
 from ekorpkit.io.cached_path import cached_path
 from ekorpkit.utils.func import lower_case_with_underscores
-from ekorpkit.utils.notebook import _is_notebook, _load_extentions, _set_matplotlib_formats
+from ekorpkit.utils.notebook import (
+    _is_notebook,
+    _load_extentions,
+    _set_matplotlib_formats,
+)
 from . import _version
 
 
@@ -88,6 +93,7 @@ class Environments(BaseSettings):
     CUDA_VISIBLE_DEVICES: Optional[str]
     WANDB_PROJECT: Optional[str]
     WANDB_DISABLED: Optional[str]
+    LABEL_STUDIO_SERVER: Optional[str]
 
     class Config:
         env_prefix = ""
@@ -105,6 +111,7 @@ class Environments(BaseSettings):
             env_settings: SettingsSourceCallable,
             file_secret_settings: SettingsSourceCallable,
         ) -> Tuple[SettingsSourceCallable, ...]:
+            _load_dotenv()
             return env_settings, file_secret_settings
 
     @root_validator()
@@ -130,6 +137,7 @@ class Secrets(BaseSettings):
     FRED_API_KEY: Optional[SecretStr]
     NASDAQ_API_KEY: Optional[SecretStr]
     HF_USER_ACCESS_TOKEN: Optional[SecretStr]
+    LABEL_STUDIO_USER_TOKEN: Optional[SecretStr]
 
     class Config:
         env_prefix = ""
@@ -139,6 +147,16 @@ class Secrets(BaseSettings):
         env_file_encoding = "utf-8"
         validate_assignment = True
         extra = "allow"
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> Tuple[SettingsSourceCallable, ...]:
+            _load_dotenv()
+            return env_settings, file_secret_settings
 
     @root_validator()
     def _check_and_set_values(cls, values):
@@ -207,6 +225,7 @@ class ProjectConfig(BaseModel):
     workspace_root: str = None
     project_root: str = None
     description: str = None
+    init_huggingface_hub: bool = False
     version: str = __version__()
     path: ProjectPathConfig = None
 
@@ -243,6 +262,13 @@ class ProjectConfig(BaseModel):
     @property
     def secrets(self):
         return Secrets()
+
+
+class DynamicBaseModel(BaseModel):
+    def __init__(__pydantic_self__, **data: Any) -> None:
+        if __pydantic_self__.__custom_root_type__ and data.keys() != {ROOT_KEY}:
+            data = {ROOT_KEY: data}
+        super().__init__(**data)
 
 
 def _check_path(_path: str, alt_path: str = None):
@@ -906,17 +932,23 @@ def _load_dotenv(
     dotenv_path = Path(dotenv_dir, ".env")
     if dotenv_path.is_file():
         dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose, override=override)
-        logger.info(f"Loaded .env from {dotenv_path}")
+        if verbose:
+            logger.info(f"Loaded .env from {dotenv_path}")
     else:
-        logger.info(f"No .env file found in {dotenv_dir}, finding .env in parent dirs")
+        if verbose:
+            logger.info(
+                f"No .env file found in {dotenv_dir}, finding .env in parent dirs"
+            )
         dotenv_path = dotenv.find_dotenv()
         if dotenv_path:
             dotenv.load_dotenv(
                 dotenv_path=dotenv_path, verbose=verbose, override=override
             )
-            logger.info(f"Loaded .env from {dotenv_path}")
+            if verbose:
+                logger.info(f"Loaded .env from {dotenv_path}")
         else:
-            logger.info(f"No .env file found in {dotenv_path}")
+            if verbose:
+                logger.info(f"No .env file found in {dotenv_path}")
 
 
 def _osenv(key: str = None, default: str = None) -> Any:

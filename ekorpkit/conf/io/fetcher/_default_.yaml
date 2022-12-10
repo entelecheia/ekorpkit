@@ -1,0 +1,8 @@
+defaults:
+  - /auto: default
+  - /batch: fetch
+  - /project: data
+  - /path: _fatch_
+
+_name_: fetcher
+name: ${oc.select:..name, _temp_fetched}

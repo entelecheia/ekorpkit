@@ -12,4 +12,5 @@ _target_: ekorpkit.models.art.stable.StableDiffusion
 autoload: false
 name: stable-diffusion
 verbose: ${oc.select:..verbose, false}
-device: "cuda:0"
+batch:
+  device: "cuda:0"

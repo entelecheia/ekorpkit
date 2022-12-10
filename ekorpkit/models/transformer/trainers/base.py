@@ -56,8 +56,8 @@ class BaseTrainer(BaseBatchModel):
         self._init_env()
         self.autorun()
 
-    def _init_configs(self, **args):
-        super()._init_configs(**args)
+    def initialize_configs(self, **args):
+        super().initialize_configs(**args)
         hf_token = self.secrets.HUGGING_FACE_HUB_TOKEN.get_secret_value()
 
         if self.dataset.data_dir is None:
@@ -257,7 +257,7 @@ class BaseTrainer(BaseBatchModel):
         if model_name is not None:
             self.model.model_name = model_name
             self.model.ignore_model_path = False
-        self._init_configs()
+        self.initialize_configs()
 
         model_args = self.model
 
@@ -456,7 +456,7 @@ class BaseTrainer(BaseBatchModel):
 
     def train(self):
         self.reset()
-        self._init_configs()
+        self.initialize_configs()
 
         model_args = self.model
         data_args = self.dataset
