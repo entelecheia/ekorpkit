@@ -189,7 +189,7 @@ def label_collage(
         # fig.savefig(collage_filepath, dpi=dpi, bbox_inches="tight", pad_inches=0)
         img.save(collage_filepath)
         # collage_image.save(collage_filepath)
-        log.info(f"Saved collage to {collage_filepath}")
+        # log.info(f"Saved collage to {collage_filepath}")
 
     return Collage(
         image=img,

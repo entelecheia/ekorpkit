@@ -94,6 +94,8 @@ class Environments(BaseSettings):
     WANDB_PROJECT: Optional[str]
     WANDB_DISABLED: Optional[str]
     LABEL_STUDIO_SERVER: Optional[str]
+    KMP_DUPLICATE_LIB_OK: Optional[str] = "True"
+    CACHED_PATH_CACHE_ROOT: Optional[str]
 
     class Config:
         env_prefix = ""

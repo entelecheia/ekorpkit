@@ -41,6 +41,15 @@ class PromptGenerator(BaseTrainer):
         if not isinstance(self._generate_, GenerateConfig):
             self._generate_ = GenerateConfig(**self._generate_)
 
+    # @property
+    # def model_obj(self):
+    #     if self.__model_obj__ is None:
+    #         self.load_model()
+    #         logger.info(f"Loaded model: {self.model_name}")
+    #         self.__model_obj__.to(self.device)
+    #         logger.info(f"Moved model to device: {self.device}")
+    #     return self.__model_obj__
+
     def _generate_text(
         self,
         prompt,
@@ -54,7 +63,7 @@ class PromptGenerator(BaseTrainer):
         **kwargs,
     ):
         tokenizer = self.tokenizer_obj
-        model = self.model_obj.to(self.device)
+        model = self.model_obj
 
         encoded_prompt = tokenizer(
             prompt, add_special_tokens=False, return_tensors="pt"
@@ -96,7 +105,7 @@ class PromptGenerator(BaseTrainer):
         num_samples=3,
         **kwargs,
     ):
-        self.load_config()
+        self.load_config(batch_name=batch_name)
         args = self._generate_
         args.num_prompts_to_generate = num_prompts_to_generate
         args = args.copy(update=kwargs)
@@ -161,6 +170,7 @@ class PromptGenerator(BaseTrainer):
     @property
     def diffuser_obj(self):
         if self.__diffuser_obj__ is None:
+            logger.info("Initializing diffuser")
             self.__diffuser_obj__ = StableDiffusion()
         return self.__diffuser_obj__
 

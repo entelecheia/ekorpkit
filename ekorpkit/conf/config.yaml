@@ -7,7 +7,7 @@ defaults:
   - env: default
   - mode: default
   - run: default
-  - path: __project__
+  # - path: __project__
   - project: __global__
   - corpus: __init__
   - corpus/builtin: __init__

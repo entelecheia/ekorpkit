@@ -100,7 +100,7 @@ class StableDiffusion(BaseModel):
         return imagine_rst
 
     def get_run_config(self, config):
-        self.batch = BatchConfig(output_dir=config.path.output_dir, **config.batch)
+        self.batch = BatchConfig(**config.batch)
         self.imagine = StableImagineConfig(**config.imagine)
         self.collage = CollageConfig(**config.collage)
         rc = StableRunConfig(

@@ -1,13 +1,11 @@
 import logging
 import random
+import inspect
 from omegaconf import DictConfig
 from pathlib import Path
 from pydantic import (
     BaseModel,
-    BaseSettings,
-    SecretStr,
     validator,
-    root_validator,
 )
 from typing import (
     Any,
@@ -76,7 +74,7 @@ class BaseBatchConfig(BaseModel):
     batch_num: int = None
     output_dir: Path = Path.cwd() / "outputs"
     output_suffix: str = None
-    output_extention: str = ""
+    output_extention: Optional[str] = ""
     random_seed: bool = True
     seed: int = None
     resume_run: bool = False
@@ -106,7 +104,9 @@ class BaseBatchConfig(BaseModel):
             else:
                 self.batch_num = num_files
         if self.verbose:
-            logger.info(f"Batch name: {self.batch_name}, Batch num: {self.batch_num}")
+            logger.info(
+                f"Init batch number - Batch name: {self.batch_name}, Batch num: {self.batch_num}"
+            )
 
     @validator("seed")
     def _validate_seed(cls, v, values):
@@ -174,7 +174,6 @@ class BaseBatchModel(BaseModel):
     config_group: str = None
     name: str
     path: PathConfig = None
-    root_dir: Path = None
     batch: BaseBatchConfig = None
     project: ProjectConfig = None
     module: DictConfig = None
@@ -183,22 +182,6 @@ class BaseBatchModel(BaseModel):
     version: str = "0.0.0"
     _config_: DictConfig = None
     _initial_config_: DictConfig = None
-
-    def __init__(self, config_group=None, root_dir=None, **args):
-        if config_group is not None:
-            args = eKonf.merge(eKonf.compose(config_group), args)
-        else:
-            args = eKonf.to_config(args)
-        super().__init__(**args)
-
-        object.__setattr__(self, "_config_", args)
-        object.__setattr__(self, "_initial_config_", args.copy())
-        self.initialize_configs(root_dir=root_dir)
-
-    def __setattr__(self, key, val):
-        super().__setattr__(key, val)
-        if key == "name":
-            self.initialize_configs(name=val)
 
     class Config:
         arbitrary_types_allowed = True
@@ -216,49 +199,86 @@ class BaseBatchModel(BaseModel):
         }
         include = {}
         underscore_attrs_are_private = True
+        property_set_methods = {
+            "name": "set_batch_name",
+            "batch_name": "set_batch_name",
+            "batch_num": "set_batch_num",
+            "output_dir": "set_output_dir",
+            "root_dir": "set_root_dir",
+        }
 
-    @property
-    def config(self):
-        return self._config_
+    def __init__(self, config_group=None, root_dir=None, **args):
+        if config_group is not None:
+            args = eKonf.merge(eKonf.compose(config_group), args)
+        else:
+            args = eKonf.to_config(args)
+        super().__init__(**args)
 
-    @validator("root_dir")
-    def _validate_root_dir(cls, v, values):
-        if v is None:
-            v = Path(values.get("path").root)
-        if isinstance(v, str):
-            v = Path(v)
-        return v
+        object.__setattr__(self, "_config_", args)
+        object.__setattr__(self, "_initial_config_", args.copy())
+        self.initialize_configs(root_dir=root_dir)
 
-    def initialize_configs(
-        self, name=None, root_dir=None, batch_class=BaseBatchConfig, **kwargs
-    ):
-        if name is None:
-            name = self.name
-        self.config.name = name
-        self.config.batch.batch_name = name
+    def __setattr__(self, key, val):
+        super().__setattr__(key, val)
+        method = self.__config__.property_set_methods.get(key)
+        if method is not None:
+            getattr(self, method)(val)
 
-        path = self.config.get("path")
+    def set_root_dir(self, root_dir: Union[str, Path]):
+        path = self.config.path
         if path is None:
             path = eKonf.compose("path=_batch_")
             logger.info(
                 f"There is no path in the config, using default path: {path.root}"
             )
-        path = PathConfig(**path)
+            self._config_.path = path
         if root_dir is not None:
             path.root = str(root_dir)
-            self.config.path.root = str(root_dir)
-        if path.verbose:
-            eKonf.print(path.dict())
-        self.root_dir = Path(path.root_dir)
-        self.path = path
-        self.config.batch.output_dir = str(self.output_dir)
-        self.batch = batch_class(**self.config.batch)
-        self.config.batch.batch_num = self.batch.batch_num
+        self.path = PathConfig(**path)
+        if self.path.verbose:
+            eKonf.print(self.path.dict())
+        self.output_dir = self.path.output_dir
+
+    def set_output_dir(self, val):
+        self._config_.batch.output_dir = str(val)
+        self.batch.output_dir = Path(val)
+
+    def set_batch_name(self, val):
+        self._config_.batch.batch_name = val
+        self._config_.name = val
+        self.batch.batch_name = val
+        if self.name is None or self.name != val:
+            self.name = val
+        self.initialize_configs(name=val)
+
+    def set_batch_num(self, val):
+        self._config_.batch.batch_num = val
+        self.batch.batch_num = val
+
+    def initialize_configs(
+        self, root_dir=None, batch_config_class=BaseBatchConfig, **kwargs
+    ):
+        self.root_dir = root_dir
+
+        self.batch = batch_config_class(**self.config.batch)
+        self.batch_num = self.batch.batch_num
         if self.project.init_huggingface_hub:
             self.secrets.init_huggingface_hub()
         logger.info(
             f"Initalized batch: {self.batch_name}({self.batch_num}) in {self.root_dir}"
         )
+
+    @property
+    def config(self):
+        return self._config_
+
+    @property
+    def root_dir(self) -> Path:
+        return Path(self.path.root)
+
+    @property
+    def output_dir(self):
+        return self.path.output_dir
 
     @property
     def envs(self):
@@ -297,10 +317,6 @@ class BaseBatchModel(BaseModel):
         return self.batch.batch_dir
 
     @property
-    def output_dir(self):
-        return self.path.output_dir
-
-    @property
     def data_dir(self):
         return self.path.data_dir
 
@@ -319,6 +335,18 @@ class BaseBatchModel(BaseModel):
     @property
     def library_dir(self):
         return self.path.library_dir
+
+    @property
+    def verbose(self):
+        return self.batch.verbose
+
+    @property
+    def device(self):
+        return self.batch.device
+
+    @property
+    def num_devices(self):
+        return self.batch.num_devices
 
     def autorun(self):
         return eKonf.methods(self.auto, self)
@@ -363,7 +391,8 @@ class BaseBatchModel(BaseModel):
         if exclude is None:
             exclude = self.__config__.exclude
         config = self.dict(exclude=exclude, exclude_none=exclude_none)
-        logger.info(f"Saving config to {self.batch.config_jsonpath}")
+        if self.verbose:
+            logger.info(f"Saving config to {self.batch.config_jsonpath}")
         eKonf.save_json(config, self.batch.config_jsonpath, default=dumper)
 
     def load_config(
@@ -376,16 +405,14 @@ class BaseBatchModel(BaseModel):
         logger.info(
             f"> Loading config for batch_name: {batch_name} batch_num: {batch_num}"
         )
-        self.config.batch.batch_num = batch_num
+        # self.config.batch.batch_num = batch_num
         if batch_name is None:
             batch_name = self.batch_name
-        else:
-            self.name = batch_name
 
         if batch_num is not None:
             cfg = self._initial_config_.copy()
-            cfg.name = batch_name
-            cfg.batch.batch_num = batch_num
+            self.batch.batch_name = batch_name
+            self.batch.batch_num = batch_num
             _path = self.batch.config_filepath
             if _path.is_file():
                 logger.info(f"Loading config from {_path}")
@@ -394,14 +421,15 @@ class BaseBatchModel(BaseModel):
                 cfg = eKonf.merge(cfg, batch_cfg)
             else:
                 logger.info(f"No config file found at {_path}")
-                cfg.batch.batch_num = None
+                batch_num = None
         else:
             cfg = self.config
 
         logger.info(f"Merging config with args: {args}")
         self._config_ = eKonf.merge(cfg, args)
-        # reinit the batch config to update the config
-        self.initialize_configs()
+
+        self.batch_num = batch_num
+        self.batch_name = batch_name
 
         return self.config
 
@@ -426,10 +454,6 @@ class BaseBatchModel(BaseModel):
                 syspath = library_dir / syspath
             eKonf.ensure_import_module(name, libpath, liburi, specname, syspath)
 
-    @property
-    def verbose(self):
-        return self.batch.verbose
-
     def reset(self, objects=None):
         """Reset the memory cache"""
         if isinstance(objects, list):
@@ -441,11 +465,3 @@ class BaseBatchModel(BaseModel):
             GPUMon.release_gpu_memory()
         except ImportError:
             pass
-
-    @property
-    def device(self):
-        return self.batch.device
-
-    @property
-    def num_devices(self):
-        return self.batch.num_devices

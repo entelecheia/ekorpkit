@@ -22,7 +22,7 @@ class BaseFetcher(BaseBatchModel):
         super().__init__(**args)
 
     def initialize_configs(self, **kwargs):
-        super().initialize_configs(batch_class=BaseFatchConfig, **kwargs)
+        super().initialize_configs(batch_config_class=BaseFatchConfig, **kwargs)
 
     def fetch(self):
         if not self.exsits() or self.batch.force_download:

@@ -82,7 +82,10 @@ class BaseTrainer(BaseBatchModel):
         self.tokenizer.use_auth_token = hf_token
         self.tokenizer.ignore_model_path = self.model.ignore_model_path
 
-        training_args = TrainingArguments(**self.training)
+        if self.training_args is None:
+            training_args = TrainingArguments(**self.training)
+        else:
+            training_args = self.training_args
         if training_args.output_dir is None:
             training_args.output_dir = self.model_path
         training_args.seed = self.seed
