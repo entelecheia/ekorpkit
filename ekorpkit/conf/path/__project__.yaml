@@ -14,3 +14,4 @@ outputs: ${.project}/outputs
 cache: ${.workspace}/.cache
 tmp: ${.workspace}/.tmp
 library: ${join_path:${.data}, libs}
+  # CACHED_PATH_CACHE_ROOT: ${project.path.cache}/cached_path

@@ -148,7 +148,7 @@ class LabelStudio(BaseFetcher):
         with open(json_path, "w") as f:
             f.write(response.text)
         log.info(f"{json_path} is downloaded")
-        return json_path
+        return self.annotations_to_dataframe(json_path)
 
     def annotation_path(self, annotation_file=None):
         if annotation_file is None:
@@ -164,9 +164,10 @@ class LabelStudio(BaseFetcher):
             prediction_file = self.model.prediction_file
         return str(self.batch_dir / f"{self.batch.file_prefix}_{prediction_file}")
 
-    def annotations_to_dataframe(self, anotation_file=None, output_file=None):
+    def annotations_to_dataframe(self, anotation_path=None, output_file=None):
 
-        anotation_path = self.annotation_path(anotation_file)
+        if anotation_path is None:
+            anotation_path = self.annotation_path()
         if not os.path.exists(anotation_path):
             log.info(f"{anotation_path} does not exist")
             return None

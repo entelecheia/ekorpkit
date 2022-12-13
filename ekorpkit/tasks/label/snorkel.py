@@ -28,9 +28,9 @@ class BaseSnorkel(BaseBatchModel):
     __applier__ = None
     __pred_data__ = None
 
-    def __init__(self, config_name: str = "snorkel", **args):
-        config_group = f"task/label={config_name}"
-        super().__init__(config_group=config_group, **args)
+    def __init__(self, config_name: str = "label.snorkel", **args):
+        config_group = f"task={config_name}"
+        super().__init__(config_name=config_name, config_group=config_group, **args)
 
     def initialize_configs(self, **kwargs):
         super().initialize_configs(**kwargs)

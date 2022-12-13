@@ -1,2 +1,2 @@
-dotenv_path: ${project.path.runtime}/.env
+dotenv_path: ${..path.runtime}/.env
 dotenv: # ${dotenv_values:${.dotenv_path}}

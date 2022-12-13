@@ -274,8 +274,8 @@ class BaseBatchModel(BaseModel):
 
         self.batch = batch_config_class(**self.config.batch)
         self.batch_num = self.batch.batch_num
-        if self.project.init_huggingface_hub:
-            self.secrets.init_huggingface_hub()
+        # if self.project.use_huggingface_hub:
+        #     self.secrets.init_huggingface_hub()
         logger.info(
             f"Initalized batch: {self.batch_name}({self.batch_num}) in {self.root_dir}"
         )

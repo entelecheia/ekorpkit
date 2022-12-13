@@ -300,7 +300,7 @@ class eKonf:
 
     @staticmethod
     def _init_env_(cfg, verbose=False):
-        _init_env_(cfg, verbose=verbose)
+        return _init_env_(cfg, verbose=verbose)
 
     @staticmethod
     def _stop_env_(cfg, verbose=False):

@@ -226,6 +226,11 @@ class ProjectPathConfig(BaseModel):
         Path(self.logs).mkdir(parents=True, exist_ok=True)
         return Path(self.logs)
 
+    @property
+    def cache_dir(self):
+        Path(self.cache).mkdir(parents=True, exist_ok=True)
+        return Path(self.cache)
+
 
 class ProjectConfig(BaseModel):
     project_name: str = "ekorpkit-project"
@@ -233,7 +238,8 @@ class ProjectConfig(BaseModel):
     workspace_root: str = None
     project_root: str = None
     description: str = None
-    init_huggingface_hub: bool = False
+    use_huggingface_hub: bool = False
+    use_wandb: bool = False
     version: str = __version__()
     path: ProjectPathConfig = None
     env: DictConfig = None
@@ -245,16 +251,21 @@ class ProjectConfig(BaseModel):
     def __init__(self, **data: Any):
         if not data:
             data = _compose("project=default")
-            logger.info(
-                "There are no arguments to initilize a config, using default config."
-            )
+            # logger.info(
+            #     "There are no arguments to initilize a config, using default config."
+            # )
         super().__init__(**data)
+        if self.use_wandb:
+            self.envs.WANDB_DIR = str(self.path.log_dir)
+            self.envs.WANDB_PROJECT = self.project_name
+        self.envs.CACHED_PATH_CACHE_ROOT = str(self.path.cache_dir / "cached_path")
+        if self.use_huggingface_hub:
+            self.secrets.init_huggingface_hub()
 
     @validator("project_name", allow_reuse=True)
     def _validate_project_name(cls, v):
         if v is None:
             raise ValueError("Project name must be specified.")
-        # Environments().WANDB_PROJECT = v
         return v
 
     @property
@@ -267,10 +278,7 @@ class ProjectConfig(BaseModel):
 
     @property
     def envs(self):
-        return Environments(
-            CACHED_PATH_CACHE_ROOT=self.env.os.CACHED_PATH_CACHE_ROOT,
-            WANDB_DIR=str(self.path.log_dir),
-        )
+        return Environments()
 
     @property
     def secrets(self):
@@ -476,9 +484,11 @@ def _compose(
             overrides.append(overide)
         else:
             overrides = [overide]
-    logging.info(f"compose config with overrides: {overrides}")
+    if verbose:
+        logging.info(f"compose config with overrides: {overrides}")
     if is_initialized:
-        logging.info("Hydra is already initialized")
+        if verbose:
+            logging.info("Hydra is already initialized")
         cfg = hydra.compose(config_name=config_name, overrides=overrides)
     else:
         with hydra.initialize_config_module(
@@ -1029,6 +1039,7 @@ def _init_env_(cfg=None, verbose=False):
         if verbose:
             logger.info(f"initialized batcher with {batcher.batcher_instance}")
     _env_initialized_ = True
+    return ProjectConfig()
 
 
 def _stop_env_(cfg, verbose=False):
