@@ -1,12 +1,13 @@
+# @package _global_
 defaults:
   - /auto: default
   - /batch: default
-  - /project: language-modeling
-  - /path: _batch_
   - /dataset: huggingface
-  - /_train_: tokenizer.huggingface
-  - /_export_: sentence_text_files
+  - /method/train: tokenizer.huggingface
+  - /method/export: sentence_text_files
   - /model: tokenizer.unigram
+  - /path: _batch_
+  - /project: language-modeling
 
 _target_: ekorpkit.tokenizers.trainer.TokenizerTrainer
 name: tokenizer-trainer

@@ -1,11 +1,11 @@
 # @package _global_
-app_name: ${about.app.name}
+app_name: ${about.name}
 name: ${oc.env:EKORPKIT_PROJECT,ekorpkit-project}
 root: ${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.project.path.home}/.ekorpkit}
 debug_mode: false
 print_config: false
 print_resolved_config: true
-num_workers: ${alt:${oc.env:NUM_WORKERS,null},1}
+# num_workers: ${alt:${oc.env:NUM_WORKERS,null},1}
 verbose: false
 ignore_warnings: true
 

@@ -24,7 +24,7 @@ def listup(**args):
 
 def about(**args):
     # from . import __version__
-
+    args = args["about"]
     name = args.get("name")
     print()
     for k, v in args.items():

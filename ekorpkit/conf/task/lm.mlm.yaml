@@ -1,0 +1,14 @@
+# @package _global_
+defaults:
+  - /auto: default
+  - /batch: default
+  - /project: language-modeling
+  - /path: _batch_
+  - /dataset: language-modeling
+  - /model: transformer.mlm
+  - /tokenizer: pretrained
+  - /trainer: transformer.mlm
+
+_target_: ekorpkit.tasks.nlp.MlmTrainer
+name: mlm-trainer
+use_accelerator: false

@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 import json
 from omegaconf import DictConfig
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 from .config import BaseFetcher
 from ekorpkit import eKonf
 

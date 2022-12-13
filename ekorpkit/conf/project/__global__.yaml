@@ -1,4 +1,5 @@
 defaults:
+  - /env: default
   - /path: __project__
 
 project_name: ${oc.select:..name,ekorpkit-project}

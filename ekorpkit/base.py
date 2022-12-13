@@ -93,6 +93,7 @@ class Environments(BaseSettings):
     CUDA_VISIBLE_DEVICES: Optional[str]
     WANDB_PROJECT: Optional[str]
     WANDB_DISABLED: Optional[str]
+    WANDB_DIR: Optional[str]
     LABEL_STUDIO_SERVER: Optional[str]
     KMP_DUPLICATE_LIB_OK: Optional[str] = "True"
     CACHED_PATH_CACHE_ROOT: Optional[str]
@@ -114,7 +115,7 @@ class Environments(BaseSettings):
             file_secret_settings: SettingsSourceCallable,
         ) -> Tuple[SettingsSourceCallable, ...]:
             _load_dotenv()
-            return env_settings, file_secret_settings
+            return env_settings, file_secret_settings, init_settings
 
     @root_validator()
     def _check_and_set_values(cls, values):
@@ -158,7 +159,7 @@ class Secrets(BaseSettings):
             file_secret_settings: SettingsSourceCallable,
         ) -> Tuple[SettingsSourceCallable, ...]:
             _load_dotenv()
-            return env_settings, file_secret_settings
+            return env_settings, file_secret_settings, init_settings
 
     @root_validator()
     def _check_and_set_values(cls, values):
@@ -220,6 +221,11 @@ class ProjectPathConfig(BaseModel):
             )
         super().__init__(**data)
 
+    @property
+    def log_dir(self):
+        Path(self.logs).mkdir(parents=True, exist_ok=True)
+        return Path(self.logs)
+
 
 class ProjectConfig(BaseModel):
     project_name: str = "ekorpkit-project"
@@ -230,9 +236,11 @@ class ProjectConfig(BaseModel):
     init_huggingface_hub: bool = False
     version: str = __version__()
     path: ProjectPathConfig = None
+    env: DictConfig = None
 
     class Config:
         extra = "allow"
+        arbitrary_types_allowed = True
 
     def __init__(self, **data: Any):
         if not data:
@@ -259,7 +267,10 @@ class ProjectConfig(BaseModel):
 
     @property
     def envs(self):
-        return Environments()
+        return Environments(
+            CACHED_PATH_CACHE_ROOT=self.env.os.CACHED_PATH_CACHE_ROOT,
+            WANDB_DIR=str(self.path.log_dir),
+        )
 
     @property
     def secrets(self):
@@ -474,7 +485,7 @@ def _compose(
             config_module="ekorpkit.conf", version_base=__hydra_version_base__
         ):
             cfg = hydra.compose(config_name=config_name, overrides=overrides)
-    if key:
+    if key and key != "task":
         cfg = _select(
             cfg,
             key=key,
@@ -981,13 +992,13 @@ def _init_env_(cfg=None, verbose=False):
 
     if cfg is None:
         cfg = _config_
-    env = cfg.env
+    env = cfg.project.env
 
     backend = env.distributed_framework.backend
-    for env_name, env_value in env.get("os", {}).items():
-        if env_value:
-            logger.info(f"setting environment variable {env_name} to {env_value}")
-            os.environ[env_name] = str(env_value)
+    # for env_name, env_value in env.get("os", {}).items():
+    #     if env_value:
+    #         logger.info(f"setting environment variable {env_name} to {env_value}")
+    #         os.environ[env_name] = str(env_value)
 
     if env.distributed_framework.initialize:
         backend_handle = None
@@ -1021,7 +1032,7 @@ def _init_env_(cfg=None, verbose=False):
 
 
 def _stop_env_(cfg, verbose=False):
-    env = cfg.env
+    env = cfg.project.env
     backend = env.distributed_framework.backend
     if verbose:
         logger.info(f"stopping {backend}, if running")

@@ -7,7 +7,7 @@ import math
 import evaluate
 import torch
 from itertools import chain
-from omegaconf import DictConfig
+from pydantic import validator
 from pathlib import Path
 from accelerate import Accelerator
 from transformers import (
@@ -25,7 +25,7 @@ from transformers.utils.versions import require_version
 from .config import ModelArguments, DataTrainingArguments, LM_MAPPING
 from ekorpkit.tokenizers.config import TokenizerConfig
 from ekorpkit.config import BaseBatchModel
-
+from ekorpkit import eKonf
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.24.0")
@@ -40,21 +40,24 @@ logger = logging.getLogger(__name__)
 
 class BaseTrainer(BaseBatchModel):
     model: ModelArguments = None
-    training: DictConfig = None
+    trainer: TrainingArguments = None
     dataset: DataTrainingArguments = None
     tokenizer: TokenizerConfig = None
     use_accelerator: bool = False
-    training_args: TrainingArguments = None
     last_checkpoint: str = None
     __auto_config__ = None
     __tokenized_datasets__ = None
     __model_obj__ = None
     __tokenizer_obj__ = None
 
-    def __init__(self, config_group: str = "transformer=trainer", **args):
-        super().__init__(config_group, **args)
+    def __init__(self, config_name: str = None, config_group: str = None, **args):
+        super().__init__(config_name=config_name, config_group=config_group, **args)
         self._init_env()
         self.autorun()
+
+    @validator("trainer", pre=True)
+    def _check_trainer(cls, v):
+        return None
 
     def initialize_configs(self, **args):
         super().initialize_configs(**args)
@@ -82,18 +85,17 @@ class BaseTrainer(BaseBatchModel):
         self.tokenizer.use_auth_token = hf_token
         self.tokenizer.ignore_model_path = self.model.ignore_model_path
 
-        if self.training_args is None:
-            training_args = TrainingArguments(**self.training)
+        if self.trainer is None:
+            training_args = TrainingArguments(**eKonf.to_dict(self.config.trainer))
         else:
-            training_args = self.training_args
-        if training_args.output_dir is None:
-            training_args.output_dir = self.model_path
+            training_args = self.trainer
+        training_args.output_dir = self.model_path
         training_args.seed = self.seed
         training_args.hub_token = hf_token
-        self.training_args = training_args
+        self.trainer = training_args
 
     def _init_env(self):
-        training_args = self.training_args
+        training_args = self.trainer
 
         # log_level = training_args.get_process_log_level()
         log_level = self.envs.EKORPKIT_LOG_LEVEL
@@ -187,6 +189,9 @@ class BaseTrainer(BaseBatchModel):
     def model_obj(self):
         if self.__model_obj__ is None:
             self.load_model()
+        if self.device != self.__model_obj__.device:
+            logger.info(f"Moving model to device: {self.device}")
+            self.__model_obj__ = self.__model_obj__.to(self.device)
         return self.__model_obj__
 
     @property
@@ -323,7 +328,7 @@ class BaseTrainer(BaseBatchModel):
         # First we tokenize all the texts.
         data_args = self.dataset
         model_args = self.model
-        training_args = self.training_args
+        training_args = self.trainer
         raw_datasets = self.raw_datasets
         column_names = raw_datasets["train"].column_names
         text_column_name = self.dataset.text_column_name
@@ -463,7 +468,7 @@ class BaseTrainer(BaseBatchModel):
 
         model_args = self.model
         data_args = self.dataset
-        training_args = self.training_args
+        training_args = self.trainer
 
         tokenizer = self.tokenizer_obj
         model = self.model_obj

@@ -2,5 +2,4 @@
 defaults:
   - /project: __global__
 
-_target_: ekorpkit.cli.cmd
-_config_: about.app
+_target_: ekorpkit.cli.about

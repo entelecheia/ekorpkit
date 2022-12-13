@@ -30,9 +30,9 @@ class StableDiffusion(BaseModel):
     __pipes__ = {}
     __generator__: torch.Generator = None
 
-    def __init__(self, config_name: str = "stable-diffusion", **args):
-        config_group = f"task/multi/text2image={config_name}"
-        super().__init__(config_group=config_group, **args)
+    def __init__(self, config_name: str = "stable.diffusion", **args):
+        config_group = f"task={config_name}"
+        super().__init__(config_name=config_name, config_group=config_group, **args)
 
         if self.autoload:
             self.load_diffusers()

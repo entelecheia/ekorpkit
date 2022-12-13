@@ -1,4 +1,4 @@
-output_dir:
+output_dir: 
 overwrite_output_dir: true
 do_train: true
 do_eval: true
@@ -19,4 +19,7 @@ save_steps: 5_000
 fp16: true
 push_to_hub: false
 hub_token:
-seed:
+seed: 42
+sharded_ddp: ""
+fsdp: ""
+debug: ""

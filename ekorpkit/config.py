@@ -68,6 +68,12 @@ class PathConfig(BaseModel):
     def tmp_dir(self):
         return self.root_dir / "tmp"
 
+    @property
+    def log_dir(self):
+        log_dir = self.root_dir / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        return log_dir
+
 
 class BaseBatchConfig(BaseModel):
     batch_name: str
@@ -207,12 +213,18 @@ class BaseBatchModel(BaseModel):
             "root_dir": "set_root_dir",
         }
 
-    def __init__(self, config_group=None, root_dir=None, **args):
+    def __init__(
+        self,
+        config_name: str = None,
+        config_group: str = None,
+        root_dir: str = None,
+        **args,
+    ):
         if config_group is not None:
             args = eKonf.merge(eKonf.compose(config_group), args)
         else:
             args = eKonf.to_config(args)
-        super().__init__(**args)
+        super().__init__(config_name=config_name, config_group=config_group, **args)
 
         object.__setattr__(self, "_config_", args)
         object.__setattr__(self, "_initial_config_", args.copy())
@@ -417,7 +429,8 @@ class BaseBatchModel(BaseModel):
             if _path.is_file():
                 logger.info(f"Loading config from {_path}")
                 batch_cfg = eKonf.load(_path)
-                logger.info("Merging config with the loaded config")
+                if self.verbose:
+                    logger.info("Merging config with the loaded config")
                 cfg = eKonf.merge(cfg, batch_cfg)
             else:
                 logger.info(f"No config file found at {_path}")
@@ -425,7 +438,8 @@ class BaseBatchModel(BaseModel):
         else:
             cfg = self.config
 
-        logger.info(f"Merging config with args: {args}")
+        if self.verbose:
+            logger.info(f"Merging config with args: {args}")
         self._config_ = eKonf.merge(cfg, args)
 
         self.batch_num = batch_num

@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class MlmTrainer(BaseTrainer):
-    def __init__(self, config_name: str = "mlm", **args):
-        config_group = f"task/nlp/lm={config_name}"
-        super().__init__(config_group=config_group, **args)
+    def __init__(self, config_name: str = "lm.mlm", **args):
+        config_group = f"task={config_name}"
+        super().__init__(config_name=config_name, config_group=config_group, **args)
 
     def fill_mask(self, text, top_k=5, reload=False, **kwargs):
         """Fill the mask in a text"""

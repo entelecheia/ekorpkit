@@ -24,22 +24,26 @@ class GenerateConfig(BaseModel):
     top_p: float = 0.9
 
 
+class MethodConfig(BaseModel):
+    generate: GenerateConfig = None
+
+
 class PromptGenerator(BaseTrainer):
-    _generate_: GenerateConfig = None
+    method: MethodConfig = None
     generated_prompts: list = None
     __diffuser_obj__ = None
 
     class Config:
         underscore_attrs_are_private = False
 
-    def __init__(self, config_name: str = "prompt", **args):
-        config_group = f"task/nlp/generation={config_name}"
-        super().__init__(config_group=config_group, **args)
+    def __init__(self, config_name: str = "stable.prompt", **args):
+        config_group = f"task={config_name}"
+        super().__init__(config_name=config_name, config_group=config_group, **args)
 
     def initialize_configs(self, **args):
         super().initialize_configs(**args)
-        if not isinstance(self._generate_, GenerateConfig):
-            self._generate_ = GenerateConfig(**self._generate_)
+        if not isinstance(self.method, MethodConfig):
+            self.method = MethodConfig(**self.method)
 
     # @property
     # def model_obj(self):
@@ -106,7 +110,7 @@ class PromptGenerator(BaseTrainer):
         **kwargs,
     ):
         self.load_config(batch_name=batch_name)
-        args = self._generate_
+        args = self.method.generate
         args.num_prompts_to_generate = num_prompts_to_generate
         args = args.copy(update=kwargs)
 
