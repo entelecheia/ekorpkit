@@ -13,7 +13,7 @@ force:
 ekorpkit:
   num_workers: ${..num_workers}
   cmd: ${..cmd}
-  project_name: ${oc.env:EKORPKIT_PROJECT,default}
+  project_name: ${oc.env:EKORPKIT_PROJECT_NAME,default}
   +corpus/builtin: ${..name}
   corpus.builtin.io.force.summarize: ${..force.summarize}
   corpus.builtin.io.force.preprocess: ${..force.preprocess}

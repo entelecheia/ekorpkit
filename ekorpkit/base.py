@@ -83,9 +83,9 @@ class Dummy:
 class Environments(BaseSettings):
     EKORPKIT_CONFIG_DIR: Optional[str]
     EKORPKIT_WORKSPACE_ROOT: Optional[str]
-    EKORPKIT_PROJECT: Optional[str]
-    EKORPKIT_PROJECT_DIR: Optional[str]
-    EKORPKIT_DATA_DIR: Optional[str]
+    EKORPKIT_PROJECT_NAME: Optional[str]
+    EKORPKIT_PROJECT_ROOT: Optional[str]
+    EKORPKIT_DATA_ROOT: Optional[str]
     EKORPKIT_LOG_LEVEL: Optional[str]
     NUM_WORKERS: Optional[int]
     KMP_DUPLICATE_LIB_OK: Optional[str]
@@ -120,10 +120,10 @@ class Environments(BaseSettings):
     @root_validator()
     def _check_and_set_values(cls, values):
         workspace = values.get("EKORPKIT_WORKSPACE_ROOT")
-        project = values.get("EKORPKIT_PROJECT")
+        project = values.get("EKORPKIT_PROJECT_NAME")
         if workspace is not None and project is not None:
             project_dir = os.path.join(workspace, "projects", project)
-            values["EKORPKIT_PROJECT_DIR"] = project_dir
+            values["EKORPKIT_PROJECT_ROOT"] = project_dir
         for k, v in values.items():
             if v is not None:
                 old_value = os.getenv(k.upper())
@@ -243,6 +243,7 @@ class ProjectConfig(BaseModel):
     version: str = __version__()
     path: ProjectPathConfig = None
     env: DictConfig = None
+    verbose: bool = False
 
     class Config:
         extra = "allow"
@@ -251,14 +252,12 @@ class ProjectConfig(BaseModel):
     def __init__(self, **data: Any):
         if not data:
             data = _compose("project=default")
-            # logger.info(
-            #     "There are no arguments to initilize a config, using default config."
-            # )
         super().__init__(**data)
+        self.envs.EKORPKIT_DATA_ROOT = str(self.path.data)
+        self.envs.CACHED_PATH_CACHE_ROOT = str(self.path.cache_dir / "cached_path")
         if self.use_wandb:
             self.envs.WANDB_DIR = str(self.path.log_dir)
             self.envs.WANDB_PROJECT = self.project_name
-        self.envs.CACHED_PATH_CACHE_ROOT = str(self.path.cache_dir / "cached_path")
         if self.use_huggingface_hub:
             self.secrets.init_huggingface_hub()
 
@@ -1303,7 +1302,7 @@ def _set_workspace(
     if isinstance(workspace, str):
         envs.EKORPKIT_WORKSPACE_ROOT = workspace
     if isinstance(project, str):
-        envs.EKORPKIT_PROJECT = project
+        envs.EKORPKIT_PROJECT_NAME = project
     if autotime:
         _load_extentions(exts=["autotime"])
     if retina:

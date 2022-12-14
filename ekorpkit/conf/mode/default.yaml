@@ -1,6 +1,6 @@
 # @package _global_
 app_name: ${about.name}
-name: ${oc.env:EKORPKIT_PROJECT,ekorpkit-project}
+name: ${oc.env:EKORPKIT_PROJECT_NAME,ekorpkit-project}
 root: ${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.project.path.home}/.ekorpkit}
 debug_mode: false
 print_config: false

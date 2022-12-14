@@ -8,7 +8,7 @@ seed:
 resume_run: false
 resume_latest: false
 run_to_resume: latest
-verbose: false
+verbose: ${oc.select:..project.verbose,false}
 num_workers: ${oc.select:num_workers,1}
 device: cpu
 num_devices:

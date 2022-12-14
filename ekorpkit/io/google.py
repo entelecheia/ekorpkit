@@ -23,7 +23,7 @@ def _mount_google_drive(
             _env_set("EKORPKIT_WORKSPACE_ROOT", workspace)
             logger.info(f"Setting EKORPKIT_WORKSPACE_ROOT to {workspace}")
         if isinstance(project, str):
-            _env_set("EKORPKIT_PROJECT", project)
-            logger.info(f"Setting EKORPKIT_PROJECT to {project}")
+            _env_set("EKORPKIT_PROJECT_NAME", project)
+            logger.info(f"Setting EKORPKIT_PROJECT_NAME to {project}")
     except ImportError:
         logger.warning("Google Colab not detected.")

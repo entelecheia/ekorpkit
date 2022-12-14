@@ -28,7 +28,6 @@ class StableDiffusion(BaseModel):
     imagine: StableImagineConfig = None
     collage: CollageConfig = None
     __pipes__ = {}
-    __generator__: torch.Generator = None
 
     def __init__(self, config_name: str = "stable.diffusion", **args):
         config_group = f"task={config_name}"
@@ -114,23 +113,22 @@ class StableDiffusion(BaseModel):
         images = []
         image_num = 0
 
-        if cfg.init_image is not None:
-            init_image = eKonf.load_image(cfg.init_image)
-        else:
-            init_image = None
+        # if cfg.init_image is not None:
+        #     init_image = eKonf.load_image(cfg.init_image)
+        # else:
+        #     init_image = None
 
         with torch.autocast("cuda"):
             for i in tqdm(range(cfg.num_iterations)):
                 log.info(f"> generating image {image_num+1}/{cfg.num_samples}")
                 imgs = self.generating(
                     prompt=cfg.get_prompt(i),
-                    init_image=init_image,
                     width=cfg.width,
                     height=cfg.height,
                     guidance_scale=cfg.guidance_scale,
                     num_images_per_prompt=cfg.num_images_per_prompt,
                     num_inference_steps=cfg.num_inference_steps,
-                    seed=cfg.seed,
+                    generator=self.get_generator(cfg.seed),
                 )
                 for img in imgs:
                     img_path = rc.save(img, image_num, seed=cfg.seed)
@@ -156,20 +154,19 @@ class StableDiffusion(BaseModel):
         guidance_scale=7.5,
         num_images_per_prompt=1,
         num_inference_steps=50,
-        init_image=None,
+        generator=None,
         **kwargs,
     ):
         """Generate images from a prompt"""
         pipe = self.get_pipe("generate")
         images = pipe(
             prompt=prompt,
-            init_image=init_image,
             width=width,
             height=height,
             guidance_scale=guidance_scale,
             num_images_per_prompt=num_images_per_prompt,
             num_inference_steps=num_inference_steps,
-            generator=self.__generator__,
+            generator=generator,
             **kwargs,
         ).images
         return images
@@ -197,7 +194,7 @@ class StableDiffusion(BaseModel):
                     guidance_scale=cfg.inpaint_strength,
                     num_images_per_prompt=cfg.num_images_per_prompt,
                     num_inference_steps=cfg.num_inference_steps,
-                    seed=cfg.seed,
+                    generator=self.get_generator(cfg.seed),
                 )
                 for img in imgs:
                     img_path = rc.save(img, image_num, seed=cfg.seed)
@@ -226,6 +223,7 @@ class StableDiffusion(BaseModel):
         guidance_scale=7.5,
         num_images_per_prompt=1,
         num_inference_steps=50,
+        generator=None,
         **kwargs,
     ):
         """Inpainting"""
@@ -246,7 +244,7 @@ class StableDiffusion(BaseModel):
             guidance_scale=guidance_scale,
             num_images_per_prompt=num_images_per_prompt,
             num_inference_steps=num_inference_steps,
-            generator=self.__generator__,
+            generator=generator,
             **kwargs,
         ).images
         return images
@@ -301,6 +299,7 @@ class StableDiffusion(BaseModel):
         num_images_per_prompt=1,
         num_inference_steps=50,
         max_display_image_width=None,
+        seed=None,
         **kwargs,
     ):
         """Stitching images"""
@@ -327,7 +326,7 @@ class StableDiffusion(BaseModel):
                 guidance_scale=inpaint_strength,
                 num_images_per_prompt=num_images_per_prompt,
                 num_inference_steps=num_inference_steps,
-                generator=self.__generator__,
+                generator=self.get_generator(seed),
                 **kwargs,
             ).images[0]
             eKonf.clear_output(wait=True)
@@ -382,14 +381,10 @@ class StableDiffusion(BaseModel):
         self.__pipes__ = {}
         return super().reset()
 
-    def load_config(self, batch_name=None, batch_num=None, **kwargs):
-        """Load the settings"""
-        config = super().load_config(
-            batch_name=batch_name, batch_num=batch_num, **kwargs
-        )
-
-        self.__generator__ = torch.Generator(device=self.device).manual_seed(self.seed)
-        return config
+    def get_generator(self, seed=None):
+        if seed is None:
+            seed = self.seed
+        return torch.Generator(device=self.device).manual_seed(seed)
 
 
 def set_scheduler(pipe, scheduler: SchedulerType):

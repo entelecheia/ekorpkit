@@ -1,5 +1,5 @@
 # App name, override to match the name your app is known by
-app_name: ${about.app.name}
+app_name: ${about.name}
 
 # Help header, customize to describe your app to your users
 header: == ${hydra.help.app_name} ==
@@ -20,8 +20,8 @@ footer: |-
 template: |-
   ${hydra.help.header} 
   
-  author: ${about.app.author}
-  description: ${about.app.description}
+  author: ${about.author}
+  description: ${about.description}
 
   ${hydra.help.app_name} Command Line Interface for Hydra
 

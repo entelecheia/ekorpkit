@@ -3,7 +3,7 @@ defaults:
   - /path: __project__
 
 project_name: ${oc.select:..name,ekorpkit-project}
-project_dir: ${.path.project}
 task_name: default-task
+project_root: ${.path.project}
 workspace_root: ${oc.select:..root,${.path.home}/.ekorpkit}
 description: 

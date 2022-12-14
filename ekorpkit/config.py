@@ -109,10 +109,9 @@ class BaseBatchConfig(BaseModel):
                 self.batch_num = num_files - 1
             else:
                 self.batch_num = num_files
-        if self.verbose:
-            logger.info(
-                f"Init batch number - Batch name: {self.batch_name}, Batch num: {self.batch_num}"
-            )
+        logger.info(
+            f"Init batch - Batch name: {self.batch_name}, Batch num: {self.batch_num}"
+        )
 
     @validator("seed")
     def _validate_seed(cls, v, values):
@@ -175,12 +174,11 @@ class BaseBatchConfig(BaseModel):
         return self.config_dir / self.config_jsonfile
 
 
-class BaseBatchModel(BaseModel):
+class BaseConfigModel(BaseModel):
     config_name: str = None
     config_group: str = None
     name: str
     path: PathConfig = None
-    batch: BaseBatchConfig = None
     project: ProjectConfig = None
     module: DictConfig = None
     auto: Union[DictConfig, str] = None
@@ -206,10 +204,7 @@ class BaseBatchModel(BaseModel):
         include = {}
         underscore_attrs_are_private = True
         property_set_methods = {
-            "name": "set_batch_name",
-            "batch_name": "set_batch_name",
-            "batch_num": "set_batch_num",
-            "output_dir": "set_output_dir",
+            "name": "set_name",
             "root_dir": "set_root_dir",
         }
 
@@ -247,38 +242,14 @@ class BaseBatchModel(BaseModel):
         if root_dir is not None:
             path.root = str(root_dir)
         self.path = PathConfig(**path)
-        if self.path.verbose:
-            eKonf.print(self.path.dict())
-        self.output_dir = self.path.output_dir
 
-    def set_output_dir(self, val):
-        self._config_.batch.output_dir = str(val)
-        self.batch.output_dir = Path(val)
-
-    def set_batch_name(self, val):
-        self._config_.batch.batch_name = val
+    def set_name(self, val):
         self._config_.name = val
-        self.batch.batch_name = val
         if self.name is None or self.name != val:
             self.name = val
-        self.initialize_configs(name=val)
 
-    def set_batch_num(self, val):
-        self._config_.batch.batch_num = val
-        self.batch.batch_num = val
-
-    def initialize_configs(
-        self, root_dir=None, batch_config_class=BaseBatchConfig, **kwargs
-    ):
+    def initialize_configs(self, root_dir=None, **kwargs):
         self.root_dir = root_dir
-
-        self.batch = batch_config_class(**self.config.batch)
-        self.batch_num = self.batch.batch_num
-        # if self.project.use_huggingface_hub:
-        #     self.secrets.init_huggingface_hub()
-        logger.info(
-            f"Initalized batch: {self.batch_name}({self.batch_num}) in {self.root_dir}"
-        )
 
     @property
     def config(self):
@@ -301,14 +272,6 @@ class BaseBatchModel(BaseModel):
         return Secrets()
 
     @property
-    def batch_name(self):
-        return self.batch.batch_name
-
-    @property
-    def batch_num(self):
-        return self.batch.batch_num
-
-    @property
     def project_name(self):
         return self.project.project_name
 
@@ -319,14 +282,6 @@ class BaseBatchModel(BaseModel):
     @property
     def workspace_dir(self):
         return Path(self.project.workspace_dir)
-
-    @property
-    def seed(self):
-        return self.batch.seed
-
-    @property
-    def batch_dir(self):
-        return self.batch.batch_dir
 
     @property
     def data_dir(self):
@@ -350,6 +305,115 @@ class BaseBatchModel(BaseModel):
 
     @property
     def verbose(self):
+        return self.project.verbose
+
+    def autorun(self):
+        return eKonf.methods(self.auto, self)
+
+    def show_config(self):
+        eKonf.print(self.dict())
+
+    def load_modules(self):
+        """Load the modules"""
+        if self.module.get("modules") is None:
+            logger.info("No modules to load")
+            return
+        library_dir = self.library_dir
+        for module in self.module.modules:
+            name = module.name
+            libname = module.libname
+            liburi = module.liburi
+            specname = module.specname
+            libpath = library_dir / libname
+            syspath = module.get("syspath")
+            if syspath is not None:
+                syspath = library_dir / syspath
+            eKonf.ensure_import_module(name, libpath, liburi, specname, syspath)
+
+    def reset(self, objects=None):
+        """Reset the memory cache"""
+        if isinstance(objects, list):
+            for obj in objects:
+                del obj
+        try:
+            from ekorpkit.utils.gpu import GPUMon
+
+            GPUMon.release_gpu_memory()
+        except ImportError:
+            pass
+
+
+class BaseBatchModel(BaseConfigModel):
+    batch: BaseBatchConfig = None
+
+    class Config:
+        arbitrary_types_allowed = True
+        extra = "allow"
+        validate_assignment = False
+        exclude = {
+            "_config_",
+            "_initial_config_",
+            "__data__",
+            "path",
+            "module",
+            "secret",
+            "auto",
+            "project",
+        }
+        include = {}
+        underscore_attrs_are_private = True
+        property_set_methods = {
+            "name": "set_name",
+            "batch_name": "set_name",
+            "batch_num": "set_batch_num",
+            "root_dir": "set_root_dir",
+        }
+
+    def __init__(self, **args):
+        super().__init__(**args)
+
+    def set_name(self, val):
+        super().set_name(val)
+        self._config_.batch.batch_name = val
+        self.batch.batch_name = val
+        self.initialize_configs(name=val)
+
+    def set_batch_num(self, val):
+        self._config_.batch.batch_num = val
+        self.batch.batch_num = val
+
+    def initialize_configs(
+        self, root_dir=None, batch_config_class=BaseBatchConfig, **kwargs
+    ):
+        super().initialize_configs(root_dir=root_dir, **kwargs)
+
+        self.batch = batch_config_class(**self.config.batch)
+        self.batch_num = self.batch.batch_num
+        # if self.project.use_huggingface_hub:
+        #     self.secrets.init_huggingface_hub()
+        if self.verbose:
+            logger.info(
+                f"Initalized batch: {self.batch_name}({self.batch_num}) in {self.root_dir}"
+            )
+
+    @property
+    def batch_name(self):
+        return self.batch.batch_name
+
+    @property
+    def batch_num(self):
+        return self.batch.batch_num
+
+    @property
+    def seed(self):
+        return self.batch.seed
+
+    @property
+    def batch_dir(self):
+        return self.batch.batch_dir
+
+    @property
+    def verbose(self):
         return self.batch.verbose
 
     @property
@@ -359,9 +423,6 @@ class BaseBatchModel(BaseModel):
     @property
     def num_devices(self):
         return self.batch.num_devices
-
-    def autorun(self):
-        return eKonf.methods(self.auto, self)
 
     def save_config(
         self,
@@ -414,9 +475,10 @@ class BaseBatchModel(BaseModel):
         **args,
     ):
         """Load the config from the batch config file"""
-        logger.info(
-            f"> Loading config for batch_name: {batch_name} batch_num: {batch_num}"
-        )
+        if self.verbose:
+            logger.info(
+                f"> Loading config for batch_name: {batch_name} batch_num: {batch_num}"
+            )
         # self.config.batch.batch_num = batch_num
         if batch_name is None:
             batch_name = self.batch_name
@@ -448,34 +510,5 @@ class BaseBatchModel(BaseModel):
         return self.config
 
     def show_config(self, batch_name=None, batch_num=None):
-        cfg = self.load_config(batch_name, batch_num)
-        eKonf.print(cfg)
-
-    def load_modules(self):
-        """Load the modules"""
-        if self.module.get("modules") is None:
-            logger.info("No modules to load")
-            return
-        library_dir = self.library_dir
-        for module in self.module.modules:
-            name = module.name
-            libname = module.libname
-            liburi = module.liburi
-            specname = module.specname
-            libpath = library_dir / libname
-            syspath = module.get("syspath")
-            if syspath is not None:
-                syspath = library_dir / syspath
-            eKonf.ensure_import_module(name, libpath, liburi, specname, syspath)
-
-    def reset(self, objects=None):
-        """Reset the memory cache"""
-        if isinstance(objects, list):
-            for obj in objects:
-                del obj
-        try:
-            from ekorpkit.utils.gpu import GPUMon
-
-            GPUMon.release_gpu_memory()
-        except ImportError:
-            pass
+        self.load_config(batch_name, batch_num)
+        eKonf.print(self.dict())
