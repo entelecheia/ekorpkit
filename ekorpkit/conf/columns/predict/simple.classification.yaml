@@ -1,0 +1,4 @@
+input: ${..train.input}
+predicted: ${..train.predicted}
+pred_probs: ${..train.pred_probs}
+model_outputs: ${..train.model_outputs}

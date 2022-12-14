@@ -1,16 +1,286 @@
 import os
 import logging
 from abc import ABCMeta
+from omegaconf import DictConfig
+from pydantic import BaseModel, validator
+from typing import List, Dict, Any, Union, Optional
 from sklearn import preprocessing
 from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit import eKonf
-
-
-DESCRIPTION = "ekorpkit datasets"
-LICENSE = "Copyright of the dataset is owned by the authors."
+from ekorpkit.config import BaseConfigModel
+from ekorpkit.base import _SPLITS as SPLITS
+from ekorpkit.info.column import BaseInfo
+from ekorpkit.info.stat import SummaryInfo
 
 
 log = logging.getLogger(__name__)
+
+
+class PipelineConfig(BaseModel):
+    name: str = None
+    use_batcher: bool = True
+    verbose: bool = False
+    _pipeline_: list = None
+
+    class Config:
+        arbitrary_types_allowed = True
+        underscore_attrs_are_private = False
+        extra = "allow"
+
+    def __init__(self, **args):
+        super().__init__(**args)
+        if self._pipeline is None:
+            self._pipeline = []
+
+
+class BaseDatasetConfig(BaseConfigModel):
+    info: DictConfig = None
+    column_info: DictConfig = None
+    data_dir: str = None
+    data_files: Dict[str, str] = None
+    filetype: str = None
+    collapse_ids: bool = False
+    pipeline: Optional[PipelineConfig] = None
+    description = "ekorpkit datasets"
+    license = "Copyright of the dataset is owned by the authors."
+    __info__ = None
+    __column__: BaseInfo = None
+    __splits__ = {}
+    __summary_info__: SummaryInfo = None
+    __data__ = None
+    __loaded__ = False
+    __le_classes__ = None
+    __le__ = None
+
+    class Config:
+        arbitrary_types_allowed = True
+        validate_assignment = True
+        underscore_attrs_are_private = True
+        extra = "allow"
+        enum_values_are_str = True
+
+    def __init__(self, **args):
+        super().__init__(**args)
+
+    @validator("filetype")
+    def _check_filetype(cls, v):
+        if v is None:
+            return "parquet"
+        return v.replace(".", "")
+
+    @property
+    def info_file(self):
+        return os.path.join(self.data_dir, f"info-{self.name}.yaml")
+
+    def load_info(self):
+        """Load the info file."""
+        self.__info__ = (
+            eKonf.load(self.info_file)
+            if eKonf.exists(self.info_file) and not self.force.build
+            else {}
+        )
+        if self.__info__:
+            log.info(f"Loaded info file: {self.info_file}")
+            self.__info__ = eKonf.to_dict(self.__info__)
+        self.description = self.__info__.get("description") or self.description
+        self.license = self.__info__.get("license") or self.license
+        if self.verbose:
+            log.info(f"Intantiating a {self.__class__.__name__} [{self.name}]")
+        self.data_files = self.__info__.get("data_files") or self.data_files
+        if self.data_files is None:
+            self.data_files = {
+                SPLITS.TRAIN.value: f"{self.name}-train.{self.filetype}",
+                SPLITS.DEV.value: f"{self.name}-dev.{self.filetype}",
+                SPLITS.TEST.value: f"{self.name}-test.{self.filetype}",
+            }
+
+    def load_column_info(self):
+        self.__column__ = eKonf.instantiate(self.column_info)
+
+    def __str__(self):
+        classname = self.__class__.__name__
+        s = f"{classname} : {self.name}"
+        return s
+
+    def __getitem__(self, split="train"):
+        if split in self.splits:
+            return self.splits[split]
+        else:
+            return None
+
+    def __len__(self):
+        return self.num_rows
+
+    @property
+    def num_rows(self) -> int:
+        """Number of rows in the corpus (same as :meth:`Corpus.__len__`)."""
+        if self.data.index is not None:
+            return len(self.data.index)
+        return len(self.data)
+
+    @property
+    def INFO(self):
+        return self.__info__
+
+    @property
+    def COLUMN(self) -> BaseInfo:
+        return self.__column__
+
+    @property
+    def ID(self):
+        return self.COLUMN.ID
+
+    @property
+    def IDs(self):
+        return self.COLUMN.IDs
+
+    @property
+    def DATA(self):
+        return self.COLUMN.DATA
+
+    @property
+    def DATATYPEs(self):
+        return self.COLUMN.DATATYPEs
+
+    @property
+    def data(self):
+        dfs = []
+        for _, data in self.splits.items():
+            if data is not None:
+                dfs.append(data)
+        return eKonf.concat_data(dfs)
+
+    @property
+    def splits(self):
+        return self.__splits__
+
+    @property
+    def summary_info(self) -> SummaryInfo:
+        return self.__summary_info__
+
+    @property
+    def classes(self):
+        if self.__le_classes__ is None:
+            log.info("LabelEncoder is not fitted")
+            return None
+        return self.__le_classes__.tolist()
+
+    def build(self):
+        data = None
+        if self.pipeline._pipeline_ and len(self.pipeline._pipeline_) > 0:
+            data = apply_pipeline(data, self.pipeline._pipeline_, self.pipeline)
+        if data is not None:
+            log.info(f"Dataset {self.name} built with {len(data)} rows")
+        else:
+            log.info(f"Dataset {self.name} is empty")
+
+    def persist(self):
+        if not self.__loaded__:
+            log.info(f"Dataset {self.name} is not loaded")
+            return
+        if self.summary_info is None:
+            self.summarize()
+        for split, data in self.__splits__.items():
+            if data is None:
+                continue
+            data_file = self.data_files[split]
+            eKonf.save_data(
+                data,
+                data_file,
+                base_dir=self.data_dir,
+                verbose=self.verbose,
+            )
+        if self.summary_info is not None:
+            self.summary_info.save(info={"column_info": self.COLUMN.INFO})
+
+    def save_as(self, name):
+        if not self.__loaded__:
+            log.info(f"Dataset {self.name} is not loaded")
+            return
+        self.data_dir = self.data_dir.replace(self.name, name)
+        self.name = name
+        self._config_.data_files = None
+        self.info.data_dir = self.data_dir
+        self.info.name = self.name
+        self.__summary_info__ = None
+        self.load_info()
+        self.persist()
+
+    def load(self):
+        if self.__loaded__:
+            return
+        for split, data_file in self.data_files.items():
+            if eKonf.exists(self.data_dir, data_file):
+                data = eKonf.load_data(
+                    data_file,
+                    self.data_dir,
+                    verbose=self.verbose,
+                    concatenate=True,
+                )
+                data = self.COLUMN.init_info(data)
+                data = self.COLUMN.append_split(data, split)
+                if self.collapse_ids:
+                    data = self.COLUMN.combine_ids(data)
+                self.__splits__[split] = data
+                if self.verbose:
+                    log.info(f"Data loaded {len(data)} rows")
+                    print(data.head(3))
+                    print(data.tail(3))
+            else:
+                log.warning(f"File {data_file} not found.")
+                # log.info(f"Dataset {self.name} split {split} is empty")
+        self.__loaded__ = True
+
+    def summarize(self):
+        if not self.__loaded__:
+            log.info(f"Dataset {self.name} is not loaded")
+            return
+        summary_info = None
+        if self.info:
+            summary_info = eKonf.instantiate(self.info)
+        if summary_info:
+            summary_info.load(self.INFO)
+        for split, data in self.splits.items():
+            if data is None:
+                continue
+            data_file = self.data_files[split]
+            if summary_info:
+                stats = {"data_file": data_file}
+                summary_info.init_stats(split_name=split, stats=stats)
+                summary_info.calculate_stats(data, split)
+        self.__summary_info__ = summary_info
+
+    def fit_labelencoder(self, data):
+        self.__le__ = preprocessing.LabelEncoder()
+        self.__le__.fit(data)
+        self.__le_classes__ = self.__le__.classes_
+        log.info(f"LabelEncoder classes: {self.__le_classes__}")
+
+    def transform_labels(self, data):
+        if not self.__loaded__:
+            log.info(f"Dataset {self.name} is not loaded")
+            return data
+        if data is None:
+            log.info("Data is None")
+            return data
+        if self.__le__ is None:
+            log.info("Label encoder is not fitted")
+            self.fit_labelencoder(data)
+        _data = self.__le__.transform(data)
+        return _data
+
+    def inverse_transform_labels(self, data):
+        if not self.__loaded__:
+            log.info(f"Dataset {self.name} is not loaded")
+            return data
+        if data is None:
+            log.info("Data is None")
+            return data
+        if self.__le__ is None:
+            log.info("Label encoder is not fitted")
+            self.fit_labelencoder(data)
+        _data = self.__le__.inverse_transform(data)
+        return _data
 
 
 class BaseSet:
@@ -59,8 +329,8 @@ class BaseSet:
             self._info = eKonf.to_dict(self._info)
         self.filetype = self.args.get("filetype") or "parquet"
         self.filetype = "." + self.filetype.replace(".", "")
-        self.description = self.args.get("description", DESCRIPTION)
-        self.license = self.args.get("license", LICENSE)
+        self.description = self.args.get("description")
+        self.license = self.args.get("license")
         if self.verbose:
             log.info(
                 f"Intantiating a {self.__class__.__name__} [{self.name}] with a config:"

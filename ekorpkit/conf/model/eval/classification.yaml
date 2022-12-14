@@ -3,7 +3,7 @@ defaults:
   - /visualize/plot: confusion_matrix
   - /_func_: evaluate_classification_performance
   - /_eval_: classification
-  - /columns: model_classification
+  - /columns: model.classification
 
 _target_: ekorpkit.models.eval.eval_classification
 data:

@@ -496,17 +496,27 @@ class eKonf:
         )
 
     @staticmethod
-    def load_data(filename=None, base_dir=None, verbose=False, **kwargs):
+    def load_data(filename=None, base_dir=None, filetype=None, verbose=False, **kwargs):
         from ekorpkit.io.file import load_data
 
         if _Keys.TARGET in kwargs:
             return eKonf.instantiate(
-                kwargs, filename=filename, base_dir=base_dir, verbose=verbose
+                kwargs,
+                filename=filename,
+                base_dir=base_dir,
+                verbose=verbose,
+                filetype=filetype,
             )
         else:
             if filename is None:
                 raise ValueError("filename must be specified")
-            return load_data(filename, base_dir=base_dir, verbose=verbose, **kwargs)
+            return load_data(
+                filename,
+                base_dir=base_dir,
+                verbose=verbose,
+                filetype=filetype,
+                **kwargs,
+            )
 
     @staticmethod
     def get_filepaths(
@@ -957,9 +967,9 @@ class eKonf:
 
     @staticmethod
     def set_workspace(
-        workspace=None, project=None, autotime=True, retina=True
+        workspace=None, project=None, task=None, autotime=True, retina=True
     ) -> ProjectConfig:
-        return _set_workspace(workspace, project, autotime, retina)
+        return _set_workspace(workspace, project, task, autotime, retina)
 
     @staticmethod
     def scale_image(

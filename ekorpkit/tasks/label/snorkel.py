@@ -56,7 +56,7 @@ class BaseSnorkel(BaseBatchModel):
     def load_datasets(
         self,
         data=None,
-        data_file=None,
+        data_files=None,
         data_dir=None,
         test_split_ratio=0.2,
         seed=None,
@@ -67,7 +67,7 @@ class BaseSnorkel(BaseBatchModel):
     ):
         self.dataset.load_datasets(
             data=data,
-            data_file=data_file,
+            data_files=data_files,
             data_dir=data_dir,
             test_split_ratio=test_split_ratio,
             seed=seed,

@@ -182,6 +182,7 @@ class BaseConfigModel(BaseModel):
     project: ProjectConfig = None
     module: DictConfig = None
     auto: Union[DictConfig, str] = None
+    force: Union[DictConfig, str] = None
     autoload: bool = False
     version: str = "0.0.0"
     _config_: DictConfig = None
@@ -282,10 +283,6 @@ class BaseConfigModel(BaseModel):
     @property
     def workspace_dir(self):
         return Path(self.project.workspace_dir)
-
-    @property
-    def data_dir(self):
-        return self.path.data_dir
 
     @property
     def model_dir(self):
@@ -411,6 +408,10 @@ class BaseBatchModel(BaseConfigModel):
     @property
     def batch_dir(self):
         return self.batch.batch_dir
+
+    @property
+    def data_dir(self):
+        return self.path.data_dir
 
     @property
     def verbose(self):

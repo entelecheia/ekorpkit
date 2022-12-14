@@ -1,5 +1,5 @@
 defaults:
-  - /columns: dataset_simple
+  - /columns: dataset.simple
   - datetime: default
 
 data:

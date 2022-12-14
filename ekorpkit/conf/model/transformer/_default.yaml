@@ -7,7 +7,7 @@ dataset: ${dataset}
 model_class:
 model_type: ${.pretrained.model_type}
 model_name: ${.pretrained.model_name}
-model_uri: ${.pretrained.model_uri}
+model_name_or_path: ${.pretrained.model_name_or_path}
 output_dir: ${dir.project}/outputs/${.name}/${.model_name}
 model_dir: ${.output_dir}
 pred_file: ${.name}_test_predictions.parquet

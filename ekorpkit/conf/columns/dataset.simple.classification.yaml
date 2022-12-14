@@ -1,4 +1,4 @@
 defaults:
-  - dataset_simple
+  - dataset.simple
   
 labels: labels

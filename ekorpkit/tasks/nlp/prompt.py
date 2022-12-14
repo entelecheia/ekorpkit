@@ -45,15 +45,6 @@ class PromptGenerator(BaseTrainer):
         if not isinstance(self.method, MethodConfig):
             self.method = MethodConfig(**self.method)
 
-    # @property
-    # def model_obj(self):
-    #     if self.__model_obj__ is None:
-    #         self.load_model()
-    #         logger.info(f"Loaded model: {self.model_name}")
-    #         self.__model_obj__.to(self.device)
-    #         logger.info(f"Moved model to device: {self.device}")
-    #     return self.__model_obj__
-
     def _generate_text(
         self,
         prompt,

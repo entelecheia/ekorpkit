@@ -84,6 +84,7 @@ class Environments(BaseSettings):
     EKORPKIT_CONFIG_DIR: Optional[str]
     EKORPKIT_WORKSPACE_ROOT: Optional[str]
     EKORPKIT_PROJECT_NAME: Optional[str]
+    EKORPKIT_TASK_NAME: Optional[str]
     EKORPKIT_PROJECT_ROOT: Optional[str]
     EKORPKIT_DATA_ROOT: Optional[str]
     EKORPKIT_LOG_LEVEL: Optional[str]
@@ -1001,6 +1002,9 @@ def _init_env_(cfg=None, verbose=False):
 
     if cfg is None:
         cfg = _config_
+    if "project" not in cfg:
+        logger.warning(f"No project config found in {cfg}")
+        return
     env = cfg.project.env
 
     backend = env.distributed_framework.backend
@@ -1042,6 +1046,9 @@ def _init_env_(cfg=None, verbose=False):
 
 
 def _stop_env_(cfg, verbose=False):
+    if "project" not in cfg:
+        logger.warning(f"No project config found in {cfg}")
+        return
     env = cfg.project.env
     backend = env.distributed_framework.backend
     if verbose:
@@ -1296,13 +1303,15 @@ def _records_to_dataframe(
 
 
 def _set_workspace(
-    workspace=None, project=None, autotime=True, retina=True
+    workspace=None, project=None, task=None, autotime=True, retina=True
 ) -> ProjectConfig:
     envs = Environments()
     if isinstance(workspace, str):
         envs.EKORPKIT_WORKSPACE_ROOT = workspace
     if isinstance(project, str):
         envs.EKORPKIT_PROJECT_NAME = project
+    if isinstance(task, str):
+        envs.EKORPKIT_TASK_NAME = task
     if autotime:
         _load_extentions(exts=["autotime"])
     if retina:

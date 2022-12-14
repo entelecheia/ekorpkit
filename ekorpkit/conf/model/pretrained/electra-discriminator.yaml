@@ -2,4 +2,4 @@ model_type: electra
 model_name: 
 model_dir: ${path.models}/${.model_type}/${.model_name}
 model_checkpoint: 
-model_uri: ${.model_dir}/${iif:${.model_checkpoint},${.model_checkpoint}/,}discriminator
+model_name_or_path: ${.model_dir}/${iif:${.model_checkpoint},${.model_checkpoint}/,}discriminator

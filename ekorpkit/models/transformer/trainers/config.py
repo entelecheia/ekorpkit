@@ -107,7 +107,7 @@ class ModelArguments(BaseModel):
             self.config_name is not None or self.model_name_or_path is not None
         ):
             raise ValueError(
-                "--config_overrides can't be used in combination with --config_name or --model_name_or_path"
+                "config_overrides can't be used in combination with config_name or model_name_or_path"
             )
 
 

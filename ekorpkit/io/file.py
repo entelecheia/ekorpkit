@@ -152,9 +152,17 @@ def concat_data(
         return data
 
 
-def load_data(filename, base_dir=None, verbose=False, **kwargs):
+def load_data(filename, base_dir=None, filetype=None, verbose=False, **kwargs):
     concatenate = kwargs.pop("concatenate", False)
     ignore_index = kwargs.pop("ignore_index", False)
+
+    if filename.startswith("http"):
+        if not filetype:
+            filetype = filename.split(".")[-1]
+        if filetype not in ["csv", "parquet"]:
+            raise ValueError("`file` should be a csv or a parquet file.")
+        kwargs["filetype"] = filetype
+        return load_dataframe(filename, verbose=verbose, **kwargs)
 
     if base_dir:
         filepaths = get_filepaths(filename, base_dir)
@@ -163,7 +171,9 @@ def load_data(filename, base_dir=None, verbose=False, **kwargs):
     log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
 
     data = {
-        os.path.basename(f): load_dataframe(f, verbose=verbose, **kwargs)
+        os.path.basename(f): load_dataframe(
+            f, verbose=verbose, filetype=filetype, **kwargs
+        )
         for f in filepaths
     }
     data = {k: v for k, v in data.items() if v is not None}
@@ -193,19 +203,22 @@ def load_dataframe(
     parse_dates = kwargs.pop("parse_dates", False)
 
     filetype = kwargs.pop("filetype", None) or "parquet"
-    fileinfo = os.path.splitext(filename)
-    filename = fileinfo[0]
-    filetype = fileinfo[1] if len(fileinfo) > 1 else filetype
-    filetype = "." + filetype.replace(".", "")
-    filename = f"{filename}{filetype}"
-    if base_dir is not None:
-        filepath = os.path.join(base_dir, filename)
-    else:
+    if filename.startswith("http"):
         filepath = filename
+    else:
+        fileinfo = os.path.splitext(filename)
+        filename = fileinfo[0]
+        filetype = fileinfo[1] if len(fileinfo) > 1 else filetype
+        filetype = "." + filetype.replace(".", "")
+        filename = f"{filename}{filetype}"
+        if base_dir is not None:
+            filepath = os.path.join(base_dir, filename)
+        else:
+            filepath = filename
 
-    if not os.path.exists(filepath):
-        log.warning(f"File {filepath} does not exist")
-        return None
+        if not os.path.exists(filepath):
+            log.warning(f"File {filepath} does not exist")
+            return None
     log.info(f"Loading data from {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype or "tsv" in filetype:

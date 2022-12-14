@@ -1,12 +1,14 @@
 import os
 import logging
+import pandas as pd
+import numpy as np
 from pandas import DataFrame
 from random import sample
 from glob import glob
 from pathlib import Path
 from tqdm.auto import tqdm
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict, Union
 from datasets import load_dataset, DatasetDict
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
@@ -37,7 +39,7 @@ class DatasetConfig(BaseModel):
         default=None,
         description="The input training data file (or folder).",
     )
-    file_extention: str = Field(
+    file_extension: str = Field(
         default="txt",
         description="The input file extension",
     )
@@ -120,71 +122,21 @@ class DatasetConfig(BaseModel):
                 self.data_dir = os.path.abspath(os.path.expanduser(self.data_dir))
             if self.train_file is not None:
                 # check if train_file is url or local path
-                if self.train_file.startswith("http"):
-                    extension = self.train_file.split(".")[-1]
-                    if extension not in ["csv", "json", "txt", "parquet"]:
-                        raise ValueError(
-                            "`train_file` should be a csv, a json, a txt or a parquet file."
-                        )
-                    self.file_extention = extension
-                else:
-                    if (
-                        not Path(self.train_file).is_absolute()
-                        and self.data_dir is not None
-                    ):
-                        self.train_file = os.path.join(self.data_dir, self.train_file)
-
-                    if eKonf.is_file(self.train_file):
-                        extension = self.train_file.split(".")[-1]
-                        if extension not in ["csv", "json", "txt", "parquet"]:
-                            raise ValueError(
-                                "`train_file` should be a csv, a json, a txt or a parquet file."
-                            )
-                        self.file_extention = extension
-                    elif eKonf.is_dir(self.train_file):
-                        files = eKonf.get_filepaths(
-                            f"*.{self.file_extention}", self.train_file
-                        )
-                        if len(files) == 0:
-                            raise ValueError(
-                                f"Could not find any {self.file_extention} file in {self.train_file}"
-                            )
-                    else:
-                        raise ValueError(
-                            "`train_file` doesn't exist. Please check the path."
-                        )
+                self.train_file, self.file_extension = check_data_file(
+                    self.train_file,
+                    self.data_dir,
+                    self.file_extension,
+                    allowed_file_extensions=["csv", "json", "txt", "parquet"],
+                )
 
             if self.validation_file is not None:
                 # check if validation_file is url or local path
-                if self.validation_file.startswith("http"):
-                    self.validation_file = self.validation_file
-                else:
-                    if (
-                        not Path(self.validation_file).is_absolute()
-                        and self.data_dir is not None
-                    ):
-                        self.validation_file = os.path.join(
-                            self.data_dir, self.validation_file
-                        )
-
-                    if eKonf.is_file(self.validation_file):
-                        extension = self.validation_file.split(".")[-1]
-                        if extension not in ["csv", "json", "txt", "parquet"]:
-                            raise ValueError(
-                                "`validation_file` should be a csv, a json, a txt or a parquet file."
-                            )
-                        if extension != self.file_extention:
-                            raise ValueError(
-                                "`validation_file` should have the same extension as `train_file`."
-                            )
-                    elif eKonf.is_dir(self.validation_file):
-                        files = eKonf.get_filepaths(
-                            f"*.{self.file_extention}", self.validation_file
-                        )
-                        if len(files) == 0:
-                            raise ValueError(
-                                f"Could not find any {self.file_extention} file in {self.validation_file}"
-                            )
+                self.validation_file, _ = check_data_file(
+                    self.validation_file,
+                    self.data_dir,
+                    self.file_extension,
+                    allowed_file_extensions=["csv", "json", "txt", "parquet"],
+                )
 
     @property
     def dataset_kwargs(self):
@@ -211,10 +163,10 @@ class DatasetConfig(BaseModel):
                 dataset_kwargs["split"] = f"train[{self.validation_split_percentage}%:]"
         elif self.train_file is not None:
             dataset_kwargs = self.dataset_kwargs
-            if self.file_extention == "txt":
+            if self.file_extension == "txt":
                 dataset_kwargs["path"] = "text"
             else:
-                dataset_kwargs["path"] = self.file_extention
+                dataset_kwargs["path"] = self.file_extension
             if self.train_file.startswith("http") or eKonf.is_file(self.train_file):
                 dataset_kwargs["data_files"] = self.train_file
             else:
@@ -236,10 +188,10 @@ class DatasetConfig(BaseModel):
                 dataset_kwargs["split"] = f"train[:{self.validation_split_percentage}%]"
         elif self.validation_file is not None:
             dataset_kwargs = self.dataset_kwargs
-            if self.file_extention == "txt":
+            if self.file_extension == "txt":
                 dataset_kwargs["path"] = "text"
             else:
-                dataset_kwargs["path"] = self.file_extention
+                dataset_kwargs["path"] = self.file_extension
             if self.validation_file.startswith("http") or eKonf.is_file(
                 self.validation_file
             ):
@@ -427,6 +379,36 @@ def batch_chunks(dataset, batch_size, text_column="text"):
         yield dataset[i:end_i][text_column]
 
 
+def check_data_file(
+    data_file,
+    data_dir=None,
+    file_extension=None,
+    allowed_file_extensions=["csv", "parquet"],
+):
+
+    if data_file.startswith("http"):
+        file_extension = data_file.split(".")[-1]
+        if file_extension not in allowed_file_extensions:
+            raise ValueError("`data_file` should be a csv or a parquet file.")
+    else:
+        if not Path(data_file).is_absolute() and data_dir is not None:
+            data_file = os.path.join(data_dir, data_file)
+
+        if eKonf.is_file(data_file):
+            file_extension = data_file.split(".")[-1]
+            if file_extension not in allowed_file_extensions:
+                raise ValueError("`data_file` should be a csv or a parquet file.")
+        elif eKonf.is_dir(data_file):
+            files = eKonf.get_filepaths(f"*.{file_extension}", data_file)
+            if len(files) == 0:
+                raise ValueError(
+                    f"Could not find any {file_extension} file in {data_file}"
+                )
+        else:
+            raise ValueError("`data_file` doesn't exist. Please check the path.")
+    return data_file, file_extension
+
+
 class DataframeConfig(BaseModel):
     """
     Arguments pertaining to what data we are going to input our model for training and eval.
@@ -440,11 +422,11 @@ class DataframeConfig(BaseModel):
         default=None,
         description="The directory where the dataset is located.",
     )
-    data_file: Optional[str] = Field(
+    data_files: Union[str, Dict[str, str]] = Field(
         default=None,
-        description="The input data file (or folder).",
+        description="The input data files for the splits from 'train', 'validation', 'test'.",
     )
-    file_extention: str = Field(
+    file_extension: str = Field(
         default="parquet",
         description="The input file extension",
     )
@@ -493,7 +475,6 @@ class DataframeConfig(BaseModel):
         description="Whether to encode the labels or not.",
     )
     __raw_datasets__ = None
-    __raw_data__ = None
     __le__ = None
     __le_classes__ = None
 
@@ -502,51 +483,26 @@ class DataframeConfig(BaseModel):
         underscore_attrs_are_private = True
 
     def _check_data_sources(self):
-        if self.data_file is None:
-            raise ValueError("Need to specify a data_file")
+        if self.data_files is None:
+            raise ValueError("Need a data files dictionary to load a dataset.")
         else:
             if self.data_dir is not None:
                 self.data_dir = os.path.abspath(os.path.expanduser(self.data_dir))
-            if self.data_file is not None:
-                # check if train_file is url or local path
-                if self.data_file.startswith("http"):
-                    extension = self.data_file.split(".")[-1]
-                    if extension not in ["csv", "parquet"]:
-                        raise ValueError(
-                            "`train_file` should be a csv or a parquet file."
-                        )
-                    self.file_extention = extension
-                else:
-                    if (
-                        not Path(self.data_file).is_absolute()
-                        and self.data_dir is not None
-                    ):
-                        self.data_file = os.path.join(self.data_dir, self.data_file)
-
-                    if eKonf.is_file(self.data_file):
-                        extension = self.data_file.split(".")[-1]
-                        if extension not in ["csv", "parquet"]:
-                            raise ValueError(
-                                "`data_file` should be a csv or a parquet file."
-                            )
-                        self.file_extention = extension
-                    elif eKonf.is_dir(self.data_file):
-                        files = eKonf.get_filepaths(
-                            f"*.{self.file_extention}", self.data_file
-                        )
-                        if len(files) == 0:
-                            raise ValueError(
-                                f"Could not find any {self.file_extention} file in {self.data_file}"
-                            )
-                    else:
-                        raise ValueError(
-                            "`data_file` doesn't exist. Please check the path."
-                        )
+            if isinstance(self.data_files, str):
+                data_file, self.file_extension = check_data_file(
+                    self.data_file, self.data_dir, self.file_extension
+                )
+                self.data_files = {"train": data_file}
+            else:
+                for split, data_file in self.data_files.items():
+                    self.data_files[split], self.file_extension = check_data_file(
+                        data_file, self.data_dir, self.file_extension
+                    )
 
     def load_datasets(
         self,
         data=None,
-        data_file=None,
+        data_files=None,
         data_dir=None,
         test_split_ratio=None,
         shuffle=None,
@@ -557,21 +513,25 @@ class DataframeConfig(BaseModel):
         class_column_name=None,
     ) -> dict:
 
+        raw_datasets = {}
         if data is not None:
-            raw_data = data
+            if isinstance(data, DataFrame):
+                raw_datasets["train"] = data
+            elif isinstance(data, dict):
+                raw_datasets = data
         else:
-            if data_file is not None:
-                self.data_file = data_file
+            if data_files is not None:
+                self.data_file = data_files
             if data_dir is not None:
                 self.data_dir = data_dir
 
             self._check_data_sources()
-            raw_data = eKonf.load_data(self.data_file)
-        self.__raw_data__ = raw_data
+            for split, data_file in self.data_files.items():
+                raw_datasets[split] = eKonf.load_data(data_file)
 
         if text_column_name is not None:
             self.text_column_name = text_column_name
-        column_names = raw_data.columns
+        column_names = raw_datasets["train"].columns
         text_column_name = self.text_column_name or "text"
         self.text_column_name = (
             text_column_name if text_column_name in column_names else column_names[0]
@@ -586,9 +546,11 @@ class DataframeConfig(BaseModel):
             self.class_column_name = class_column_name
         if self.encode_labels:
             le = preprocessing.LabelEncoder()
-            label_series = raw_data[self.label_column_name]
+            label_series = raw_datasets["train"][self.label_column_name]
             le.fit(label_series)
-            raw_data[self.class_column_name] = le.transform(label_series)
+            for split in raw_datasets:
+                label_series = raw_datasets["train"][self.label_column_name]
+                raw_datasets[split][self.class_column_name] = le.transform(label_series)
             self.__le__ = le
             self.__le_classes__ = le.classes_
 
@@ -600,13 +562,17 @@ class DataframeConfig(BaseModel):
             self.seed = seed
 
         # split the data
-        if self.test_split_ratio is not None and self.test_split_ratio > 0:
+        if (
+            self.test_split_ratio is not None
+            and self.test_split_ratio > 0
+            and "test" not in raw_datasets
+        ):
             log.info(
                 "Splitting the dataframe into train and test with ratio %s",
                 self.test_split_ratio,
             )
             train, test = train_test_split(
-                raw_data,
+                raw_datasets["train"],
                 test_size=self.test_split_ratio,
                 random_state=self.seed,
                 shuffle=self.shuffle,
@@ -614,15 +580,16 @@ class DataframeConfig(BaseModel):
             raw_datasets = {"train": train, "test": test}
             log.info(f"Train data: {train.shape}, Test data: {test.shape}")
 
-        else:
+        if self.shuffle:
+            log.info("Shuffling the dataframe with seed %s", self.seed)
+            for split, data in raw_datasets.items():
+                raw_datasets[split] = data.sample(
+                    frac=1, random_state=self.seed
+                ).reset_index(drop=True)
 
-            if self.shuffle:
-                log.info("Shuffling the dataframe with seed %s", self.seed)
-                raw_data = raw_data.sample(frac=1, random_state=self.seed).reset_index(
-                    drop=True
-                )
-            raw_datasets = {"train": raw_data}
-            log.info(f"Train data: {raw_data.shape}")
+        log.info(f"Train data: {raw_datasets['train'].shape}")
+        if "test" in raw_datasets:
+            log.info(f"Test data: {raw_datasets['test'].shape}")
 
         self.__raw_datasets__ = raw_datasets
         return raw_datasets
@@ -635,9 +602,11 @@ class DataframeConfig(BaseModel):
 
     @property
     def data(self) -> DataFrame:
-        if self.__raw_data__ is None:
-            self.load_datasets()
-        return self.__raw_data__
+        dfs = []
+        for _, data in self.datasets.items():
+            if data is not None:
+                dfs.append(data)
+        return eKonf.concat_data(dfs)
 
     @property
     def train_data(self) -> DataFrame:
@@ -647,6 +616,12 @@ class DataframeConfig(BaseModel):
     def test_data(self) -> DataFrame:
         if "test" in self.datasets:
             return self.datasets["test"]
+        return None
+
+    @property
+    def dev_data(self) -> DataFrame:
+        if "dev" in self.datasets:
+            return self.datasets["dev"]
         return None
 
     @property
@@ -661,3 +636,29 @@ class DataframeConfig(BaseModel):
         if self.encode_labels:
             return self.le.inverse_transform(y)
         return y
+
+    def cross_val_datasets(self, cv=5, dev_size=0.2, random_state=1235, shuffle=True):
+        if not self.datasets:
+            self.load_datasets()
+        if shuffle:
+            data = self.data.sample(frac=1).reset_index(drop=True)
+        else:
+            data = self.data.reset_index(drop=True)
+
+        splits = np.array_split(data, cv)
+        for i, split in enumerate(splits):
+            _data = pd.concat(splits[:i] + splits[i + 1 :])
+            if dev_size is not None and dev_size > 0:
+                _train_data, _dev_data = train_test_split(
+                    _data,
+                    test_size=dev_size,
+                    random_state=random_state,
+                    shuffle=shuffle,
+                )
+            else:
+                _train_data, _dev_data = _data, None
+            log.info(f"Train data: {_train_data.shape}, Test data: {_dev_data.shape}")
+            self.datasets["train"] = _train_data
+            self.datasets["dev"] = _dev_data
+            self.datasets["test"] = split
+            yield i, split

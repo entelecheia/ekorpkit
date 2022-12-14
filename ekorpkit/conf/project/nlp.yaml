@@ -1,5 +1,5 @@
 defaults:
   - default
 
-task_name: language-modeling
+task_name: nlp
 use_huggingface_hub: true

@@ -1,0 +1,7 @@
+defaults:
+  - /auto: default
+  - /batch: pred
+  - /project: default
+  - /path: _batch_
+
+name: ${.mode.model_name}-${.mode.model_class}
