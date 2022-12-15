@@ -1,4 +1,2 @@
-input: text
-predicted: pred_labels
-pred_probs: pred_probs
-model_outputs: raw_preds
+text: text
+labels: labels

@@ -7,8 +7,8 @@ defaults:
   - savefig: default
 
 name: ${oc.select:..name,fig1}
-output_dir: ${oc.select:..output_dir, ${dir.output}/figs}
+output_dir: ${oc.select:..output_dir, ${path.output_dir}/figs}
 output_file: ${oc.select:..output_file, ${.name}.png}
-verbose: ${oc.select:verbose, true}
+verbose: ${oc.select:project.verbose, true}
 axes:
   - ${..ax}

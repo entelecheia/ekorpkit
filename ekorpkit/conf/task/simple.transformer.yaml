@@ -4,4 +4,4 @@ defaults:
   - /project: default
   - /path: _batch_
 
-name: ${.mode.model_name}-${.mode.model_class}
+name: simple-transformer

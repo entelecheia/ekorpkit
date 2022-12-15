@@ -967,9 +967,17 @@ class eKonf:
 
     @staticmethod
     def set_workspace(
-        workspace=None, project=None, task=None, autotime=True, retina=True
+        workspace=None,
+        project=None,
+        task=None,
+        log_level=None,
+        autotime=True,
+        retina=True,
+        **kwargs,
     ) -> ProjectConfig:
-        return _set_workspace(workspace, project, task, autotime, retina)
+        return _set_workspace(
+            workspace, project, task, log_level, autotime, retina, **kwargs
+        )
 
     @staticmethod
     def scale_image(

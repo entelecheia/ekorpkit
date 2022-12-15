@@ -1,20 +1,14 @@
 defaults:
-  - /path: data_output
   - /visualize/plot: confusion_matrix
-  - /_func_: evaluate_classification_performance
-  - /_eval_: classification
   - /columns: model.classification
+  - /columns/eval: classification
 
 _target_: ekorpkit.models.eval.eval_classification
-data:
-data_dir:
-data_file:
-path:
-  concat_data: true
-output_dir: ${oc.select:..output_dir, .}
-output_file: ${oc.select:..output_file, confusion_matrix.png}
-labels: ${oc.select:..labels,null}
+output_dir:
+output_file: confusion_matrix.png
+labels:
 visualize:
   output_dir: ${..output_dir}
   output_file: ${..output_file}
 verbose: ${oc.select:..verbose, false}
+average: weighted

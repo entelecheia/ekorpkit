@@ -2,7 +2,7 @@ import os
 import logging
 from ekorpkit import eKonf
 from pydantic import validator
-from .base import BaseDatasetConfig, SPLITS
+from .config import BaseDatasetConfig, SPLITS
 
 
 log = logging.getLogger(__name__)

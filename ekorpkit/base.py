@@ -34,6 +34,7 @@ from . import _version
 
 def _setLogger(level=None, force=True, filterwarnings_action="ignore", **kwargs):
     level = level or os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
+    level = level.upper()
     os.environ["EKORPKIT_LOG_LEVEL"] = level
     if filterwarnings_action is not None:
         warnings.filterwarnings(filterwarnings_action)
@@ -210,6 +211,7 @@ class ProjectPathConfig(BaseModel):
     cache: str = None
     tmp: str = None
     library: str = None
+    verbose: bool = False
 
     class Config:
         extra = "allow"
@@ -1003,7 +1005,8 @@ def _init_env_(cfg=None, verbose=False):
     if cfg is None:
         cfg = _config_
     if "project" not in cfg:
-        logger.warning(f"No project config found in {cfg}")
+        if verbose:
+            logger.warning(f"No project config found in {cfg}")
         return
     env = cfg.project.env
 
@@ -1047,7 +1050,8 @@ def _init_env_(cfg=None, verbose=False):
 
 def _stop_env_(cfg, verbose=False):
     if "project" not in cfg:
-        logger.warning(f"No project config found in {cfg}")
+        if verbose:
+            logger.warning(f"No project config found in {cfg}")
         return
     env = cfg.project.env
     backend = env.distributed_framework.backend
@@ -1303,7 +1307,7 @@ def _records_to_dataframe(
 
 
 def _set_workspace(
-    workspace=None, project=None, task=None, autotime=True, retina=True
+    workspace=None, project=None, task=None, log_level=None, autotime=True, retina=True
 ) -> ProjectConfig:
     envs = Environments()
     if isinstance(workspace, str):
@@ -1312,6 +1316,9 @@ def _set_workspace(
         envs.EKORPKIT_PROJECT_NAME = project
     if isinstance(task, str):
         envs.EKORPKIT_TASK_NAME = task
+    if isinstance(log_level, str):
+        envs.EKORPKIT_LOG_LEVEL = log_level
+        _setLogger(log_level)
     if autotime:
         _load_extentions(exts=["autotime"])
     if retina:

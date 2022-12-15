@@ -1,6 +1,6 @@
 import logging
 from pydantic import BaseModel
-from ekorpkit.models.transformer.trainers.base import BaseTrainer
+from ekorpkit.models.transformer.trainers.base import BaseLMTrainer
 from ekorpkit.tasks.multi import StableDiffusion
 
 
@@ -28,7 +28,7 @@ class MethodConfig(BaseModel):
     generate: GenerateConfig = None
 
 
-class PromptGenerator(BaseTrainer):
+class PromptGenerator(BaseLMTrainer):
     method: MethodConfig = None
     generated_prompts: list = None
     __diffuser_obj__ = None

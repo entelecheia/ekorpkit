@@ -22,7 +22,7 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
-from .config import ModelArguments, DataTrainingArguments, LM_MAPPING
+from .config import LMModelConfig, LMTrainingDatasetConfig, LM_MAPPING
 from ekorpkit.tokenizers.config import TokenizerConfig
 from ekorpkit.config import BaseBatchModel
 from ekorpkit import eKonf
@@ -38,17 +38,14 @@ require_version(
 logger = logging.getLogger(__name__)
 
 
-class BaseTrainer(BaseBatchModel):
-    model: ModelArguments = None
+class BaseLMTrainer(BaseBatchModel):
+    model: LMModelConfig = None
     trainer: TrainingArguments = None
-    dataset: DataTrainingArguments = None
+    dataset: LMTrainingDatasetConfig = None
     tokenizer: TokenizerConfig = None
     use_accelerator: bool = False
     last_checkpoint: str = None
-    __auto_config__ = None
     __tokenized_datasets__ = None
-    __model_obj__ = None
-    __tokenizer_obj__ = None
 
     def __init__(self, config_name: str = None, config_group: str = None, **args):
         super().__init__(config_name=config_name, config_group=config_group, **args)
@@ -63,33 +60,17 @@ class BaseTrainer(BaseBatchModel):
         super().initialize_configs(**args)
         hf_token = self.secrets.HUGGING_FACE_HUB_TOKEN.get_secret_value()
 
-        if self.dataset.data_dir is None:
-            self.dataset.data_dir = str(self.root_dir)
-        if self.dataset.seed is None:
-            self.dataset.seed = self.seed
-
-        self.model.cache_dir = str(self.cache_dir)
-        self.model.use_auth_token = hf_token
-
-        if self.tokenizer.tokenizer_name is None:
-            self.tokenizer.tokenizer_name = self.model_name
-        if self.tokenizer.model_type is None:
-            self.tokenizer.model_type = self.model_type
-        if self.tokenizer.model_dir is None:
-            self.tokenizer.model_dir = self.model_dir
-        if self.tokenizer.tokenizer_dir is None:
-            self.tokenizer.tokenizer_dir = self.tokenizer_dir
-        self.tokenizer.model_max_length = self.dataset.max_seq_length
-        self.tokenizer.root_dir = self.root_dir
-        self.tokenizer.cache_dir = str(self.cache_dir)
-        self.tokenizer.use_auth_token = hf_token
-        self.tokenizer.ignore_model_path = self.model.ignore_model_path
+        self.dataset.initialize_config(self.root_dir, self.seed)
+        self.model.initialize_config(
+            self.name, self.model_dir, self.cache_dir, self.log_dir, hf_token
+        )
+        self.tokenizer.initialize_config(self.model, self.dataset, self.root_dir)
 
         if self.trainer is None:
             training_args = TrainingArguments(**eKonf.to_dict(self.config.trainer))
         else:
             training_args = self.trainer
-        training_args.output_dir = self.model_path
+        training_args.output_dir = self.model.model_output_dir
         training_args.seed = self.seed
         training_args.hub_token = hf_token
         self.trainer = training_args
@@ -145,54 +126,10 @@ class BaseTrainer(BaseBatchModel):
         self.last_checkpoint = last_checkpoint
 
     @property
-    def model_path(self):
-        return str(self.model_dir / self.model_name)
-
-    @property
-    def model_dir(self):
-        if self.model.model_dir is None:
-            model_dir = super().model_dir
-        else:
-            model_dir = Path(self.model.model_dir)
-        # if not model_dir.exists():
-        #     model_dir.mkdir(parents=True)
-        return model_dir
-
-    @property
-    def tokenizer_dir(self):
-        tokenizer_dir = Path(self.tokenizer.tokenizer_dir or "tokenizers")
-        if not tokenizer_dir.is_absolute():
-            tokenizer_dir = self.root_dir / tokenizer_dir
-        return tokenizer_dir
-
-    @property
-    def model_name(self):
-        model_name = self.model.model_name
-        if model_name is None:
-            model_name = "{}-{}".format(self.name, self.model_config_name)
-            self.model.model_name = model_name
-        return model_name
-
-    @property
-    def model_type(self):
-        return self.auto_config.model_type
-
-    @property
-    def model_config_name(self):
-        return (
-            self.model.config_name
-            if self.model.config_name
-            else self.model.model_name_or_path
-        )
-
-    @property
     def model_obj(self):
-        if self.__model_obj__ is None:
+        if self.model.model_obj is None:
             self.load_model()
-        if self.device != self.__model_obj__.device:
-            logger.info(f"Moving model to device: {self.device}")
-            self.__model_obj__ = self.__model_obj__.to(self.device)
-        return self.__model_obj__
+        return self.model.model_obj
 
     @property
     def raw_datasets(self):
@@ -207,12 +144,6 @@ class BaseTrainer(BaseBatchModel):
         if self.__tokenized_datasets__ is None:
             self.preprocess_datasets()
         return self.__tokenized_datasets__
-
-    @property
-    def auto_config(self):
-        if self.__auto_config__ is None:
-            self.__auto_config__ = self.load_auto_config()
-        return self.__auto_config__
 
     def load_datasets(
         self,
@@ -231,97 +162,10 @@ class BaseTrainer(BaseBatchModel):
         )
         self.__tokenized_datasets__ = None
 
-    def load_auto_config(self):
-        # Load model config
-        model_args = self.model
-
-        config_kwargs = {
-            "cache_dir": model_args.cache_dir,
-            "revision": model_args.model_revision,
-            "use_auth_token": model_args.use_auth_token,
-        }
-        if model_args.config_name:
-            config = AutoConfig.from_pretrained(model_args.config_name, **config_kwargs)
-        elif model_args.model_name_or_path:
-            config = AutoConfig.from_pretrained(
-                model_args.model_name_or_path, **config_kwargs
-            )
-        else:
-            config = CONFIG_MAPPING[model_args.model_type]()
-            logger.warning("You are instantiating a new config instance from scratch.")
-            if model_args.config_overrides is not None:
-                logger.info(f"Overriding config: {model_args.config_overrides}")
-                config.update_from_string(model_args.config_overrides)
-                logger.info(f"New config: {config}")
-
-        return config
-
     def load_model(self, model_name=None):
         # Load pretrained model
-        #
-        # Distributed training:
-        # The .from_pretrained methods guarantee that only one local process can concurrently
-        # download model & vocab.
-        if model_name is not None:
-            self.model.model_name = model_name
-            self.model.ignore_model_path = False
         self.initialize_configs()
-
-        model_args = self.model
-
-        AutoModelForLM = LM_MAPPING[model_args.model_objective]
-        model = None
-        if Path(self.model_path).is_dir() and not model_args.ignore_model_path:
-            try:
-                model = AutoModelForLM.from_pretrained(
-                    self.model_path,
-                    from_tf=bool(".ckpt" in model_args.model_name_or_path),
-                )
-            except OSError:
-                logger.warning(
-                    f"Model {self.model_path} not found. Trying model_name_or_path instead."
-                )
-        if model is None:
-            if model_args.model_name_or_path is not None:
-
-                model = AutoModelForLM.from_pretrained(
-                    model_args.model_name_or_path,
-                    from_tf=bool(".ckpt" in model_args.model_name_or_path),
-                    config=self.auto_config,
-                    cache_dir=model_args.cache_dir,
-                    revision=model_args.model_revision,
-                    use_auth_token=True if model_args.use_auth_token else None,
-                )
-            else:
-                auto_config = self.auto_config.to_dict()
-                original_config, update_config = {}, {}
-                for k, v in self.tokenizer.special_token_ids.items():
-                    if k in auto_config and v != auto_config[k]:
-                        original_config[k] = auto_config[k]
-                        update_config[k] = v
-                if auto_config["vocab_size"] != self.tokenizer.vocab_size:
-                    original_config["vocab_size"] = auto_config["vocab_size"]
-                    update_config["vocab_size"] = self.tokenizer.vocab_size
-                if update_config:
-                    logger.info(
-                        f"Overriding original model config {original_config} with {update_config}"
-                    )
-                    self.auto_config.update(update_config)
-                    if self.verbose > 1:
-                        logger.info(f"New model config {auto_config}")
-                logger.info("Training new model from scratch")
-                model = AutoModelForLM.from_config(self.auto_config)
-
-        # We resize the embeddings only when necessary to avoid index errors. If you are creating a model from scratch
-        # on a small vocab and want a smaller embedding size, remove this test.
-        embedding_size = model.get_input_embeddings().weight.shape[0]
-        if self.tokenizer.vocab_size > embedding_size:
-            model.resize_token_embeddings(self.tokenizer.vocab_size)
-            logger.info(
-                f"Resized embedding from {embedding_size} to {self.tokenizer.vocab_size}"
-            )
-
-        self.__model_obj__ = model
+        self.model.load_model(self.tokenizer_obj, model_name)
 
     def preprocess_datasets(self):
         # Preprocessing the datasets.

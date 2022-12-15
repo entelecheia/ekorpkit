@@ -1,5 +1,6 @@
 import logging
-from pydantic import BaseModel, Field
+from pydantic import Field
+from pathlib import Path
 from typing import Optional
 from enum import Enum
 from transformers import (
@@ -10,6 +11,7 @@ from transformers import (
     AutoModelForSeq2SeqLM,
 )
 from ekorpkit.datasets.config import DatasetConfig
+from ..config import ModelConfig
 
 
 logger = logging.getLogger(__name__)
@@ -33,26 +35,11 @@ LM_MAPPING = {
 }
 
 
-class ModelArguments(BaseModel):
+class LMModelConfig(ModelConfig):
     """
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune, or train from scratch.
     """
 
-    model_name_or_path: Optional[str] = Field(
-        default=None,
-        description=(
-            "The model checkpoint for weights initialization."
-            "Don't set if you want to train a model from scratch."
-        ),
-    )
-    model_name: Optional[str] = Field(
-        default=None,
-        description="The model name to use when saving the model and the tokenizer.",
-    )
-    model_dir: Optional[str] = Field(
-        default=None,
-        description="The directory where the model and the tokenizer will be saved.",
-    )
     model_type: Optional[str] = Field(
         default=None,
         description="If training from scratch, pass a model type from the list: "
@@ -62,67 +49,88 @@ class ModelArguments(BaseModel):
         default=ModelObjectives.mlm,
         description="The objective to use when training the model.",
     )
-    config_overrides: Optional[str] = Field(
-        default=None,
-        description=(
-            "Override some existing default config settings when a model is trained from scratch. Example: "
-            "n_embd=10,resid_pdrop=0.2,scale_attn_weights=false,summary_type=cls_index"
-        ),
-    )
-    config_name: Optional[str] = Field(
-        default=None,
-        description="Pretrained config name or path if not the same as model_name",
-    )
-    task_name: Optional[str] = Field(
-        default=None,
-        description="The tasks to train the model on. Example: 'fill-mask,text-generation,ner'",
-    )
-    cache_dir: Optional[str] = Field(
-        default=None,
-        description="Where do you want to store the pretrained models downloaded from huggingface.co",
-    )
-    model_revision: str = Field(
-        default="main",
-        description="The specific model version to use (can be a branch name, tag name or commit id).",
-    )
-    use_auth_token: bool = Field(
-        default=False,
-        description=(
-            "Will use the token generated when running `huggingface-cli login` (necessary to use this script "
-            "with private models)."
-        ),
-    )
-    ignore_model_path: bool = Field(
-        default=False,
-        description="If set, the model path will not be used to load the model.",
-    )
 
     class Config:
         extra = "allow"
         use_enum_values = True
+        underscore_attrs_are_private = True
 
     def __init__(self, **kw):
         super().__init__(**kw)
-        if self.config_overrides is not None and (
-            self.config_name is not None or self.model_name_or_path is not None
+
+    def load_model(self, tokenizer_obj, model_name=None):
+        # Load pretrained model
+        #
+        # Distributed training:
+        # The .from_pretrained methods guarantee that only one local process can concurrently
+        # download model & vocab.
+        if model_name is not None:
+            self.model_name = model_name
+            self.ignore_existing_model_output = False
+
+        AutoModelForLM = LM_MAPPING[self.model_objective]
+        model = None
+        if (
+            Path(self.model_output_dir).is_dir()
+            and not self.ignore_existing_model_output
         ):
-            raise ValueError(
-                "config_overrides can't be used in combination with config_name or model_name_or_path"
+            try:
+                model = AutoModelForLM.from_pretrained(
+                    self.model_output_dir,
+                    from_tf=bool(".ckpt" in self.model_name_or_path),
+                )
+            except OSError:
+                logger.warning(
+                    f"Model {self.model_output_dir} not found. Trying model_name_or_path instead."
+                )
+        if model is None and self.use_model_name_or_path:
+            if self.model_name_or_path is not None:
+
+                model = AutoModelForLM.from_pretrained(
+                    self.model_name_or_path,
+                    from_tf=bool(".ckpt" in self.model_name_or_path),
+                    config=self.auto_config,
+                    cache_dir=self.cache_dir,
+                    revision=self.model_revision,
+                    use_auth_token=True if self.use_auth_token else None,
+                )
+            else:
+                auto_config = self.auto_config.to_dict()
+                original_config, update_config = {}, {}
+                for k, v in tokenizer_obj.special_token_ids.items():
+                    if k in auto_config and v != auto_config[k]:
+                        original_config[k] = auto_config[k]
+                        update_config[k] = v
+                if auto_config["vocab_size"] != tokenizer_obj.vocab_size:
+                    original_config["vocab_size"] = auto_config["vocab_size"]
+                    update_config["vocab_size"] = self.tokenizer.vocab_size
+                if update_config:
+                    logger.info(
+                        f"Overriding original model config {original_config} with {update_config}"
+                    )
+                    self.auto_config.update(update_config)
+                    if self.verbose > 1:
+                        logger.info(f"New model config {auto_config}")
+                logger.info("Training new model from scratch")
+                model = AutoModelForLM.from_config(self.auto_config)
+
+        # We resize the embeddings only when necessary to avoid index errors. If you are creating a model from scratch
+        # on a small vocab and want a smaller embedding size, remove this test.
+        embedding_size = model.get_input_embeddings().weight.shape[0]
+        if tokenizer_obj.vocab_size > embedding_size:
+            model.resize_token_embeddings(tokenizer_obj.vocab_size)
+            logger.info(
+                f"Resized embedding from {embedding_size} to {tokenizer_obj.vocab_size}"
             )
 
+        self.__model_obj__ = model
 
-class DataTrainingArguments(DatasetConfig):
+
+class LMTrainingDatasetConfig(DatasetConfig):
     """
     Arguments pertaining to what data we are going to input our model for training and eval.
     """
 
-    max_seq_length: Optional[int] = Field(
-        default=None,
-        description=(
-            "The maximum total input sequence length after tokenization. Sequences longer "
-            "than this will be truncated."
-        ),
-    )
     mlm: bool = Field(
         default=False,
         description="Train with masked-language modeling loss instead of language modeling.",

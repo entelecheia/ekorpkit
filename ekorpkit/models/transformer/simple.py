@@ -1,6 +1,7 @@
 import pandas as pd
 import logging
 import sklearn
+from pathlib import Path
 from scipy.special import softmax
 from simpletransformers.classification import ClassificationModel
 from abc import abstractmethod
@@ -11,9 +12,10 @@ from ekorpkit.base import _Keys as Keys
 from .config import (
     ColumnConfig,
     ModelBatchConfig,
-    TrainerArgs,
-    SimpleModelConfig,
-    ClassificationArgs,
+    TrainerConfig,
+    ModelConfig,
+    ClassificationModelConfig,
+    ClassificationTrainerConfig,
 )
 
 log = logging.getLogger(__name__)
@@ -21,9 +23,9 @@ log = logging.getLogger(__name__)
 
 class SimpleTrainer(BaseBatchModel):
     batch: ModelBatchConfig = None
-    trainer: TrainerArgs = None
+    trainer: TrainerConfig = None
     dataset: DataframeConfig = None
-    model: SimpleModelConfig = None
+    model: ModelConfig = None
     columns: ColumnConfig = None
     __model_obj__ = None
 
@@ -33,6 +35,28 @@ class SimpleTrainer(BaseBatchModel):
 
     def __init__(self, **args):
         super().__init__(**args)
+
+    def initialize_configs(self, **args):
+        super().initialize_configs(batch_config_class=ModelBatchConfig, **args)
+        hf_token = self.secrets.HUGGING_FACE_HUB_TOKEN.get_secret_value()
+
+        self.dataset.initialize_config(self.root_dir, self.seed)
+        # self.model = ModelConfig(**self.config.model)
+        self.model.initialize_config(
+            self.name, self.model_dir, self.cache_dir, self.log_dir, hf_token
+        )
+        self.model.eval.output_dir = str(self.batch_dir)
+
+        if self.trainer.output_dir is None:
+            self.trainer.output_dir = self.model.model_output_dir
+        if self.trainer.best_model_dir is None:
+            self.trainer.best_model_dir = self.model.best_model_output_dir
+        if self.trainer.cache_dir is None:
+            self.trainer.cache_dir = self.model.cache_dir
+        if not self.trainer.wandb_kwargs:
+            self.trainer.wandb_kwargs = self.model.wandb_kwargs
+        if self.trainer.wandb_project is None:
+            self.trainer.wandb_project = self.model.wandb_project
 
     @abstractmethod
     def train(self):
@@ -52,8 +76,13 @@ class SimpleTrainer(BaseBatchModel):
         return self.dataset.datasets
 
     @property
-    def model_obj(self):
+    def model_obj(self) -> ClassificationModel:
+        if self.__model_obj__ is None:
+            self.load_model()
         return self.__model_obj__
+
+    def load_model():
+        raise NotImplementedError("Must override load_model")
 
     def load_datasets(
         self,
@@ -145,44 +174,25 @@ class SimpleTrainer(BaseBatchModel):
             pred_dfs.append(pred_df)
         return pd.concat(pred_dfs)
 
-    def eval(self):
-        if self.dataset.test_data is None:
-            log.warning("No test data found")
-            return
-
-        data_to_predict = self.convert_to_predict(self.dataset.test_data)
-        preds = self.predict_data(data_to_predict)
-        self.pred_data = self.append_predictions(self.dataset.test_data, preds)
-        eKonf.save_data(self.pred_data, self.pred_path())
-        if self.verbose:
-            print(self.pred_data.head())
-        # if self._eval_cfg:
-        #     self._eval_cfg.labels = self.labels_list
-        #     eKonf.instantiate(self._eval_cfg, data=self.pred_data)
-
 
 class SimpleClassification(SimpleTrainer):
-    trainer: ClassificationArgs = None
+    model: ClassificationModelConfig = None
+    trainer: ClassificationTrainerConfig = None
 
     def __init__(self, config_name: str = "simple.classification", **args):
         config_group = f"task={config_name}"
         super().__init__(config_name=config_name, config_group=config_group, **args)
 
     @property
-    def label_list(self):
+    def labels_list(self):
         return self.model_obj.args.labels_list
 
     @property
     def labels_map(self):
         return self.model_obj.args.labels_map
 
-    @property
-    def model_obj(self) -> ClassificationModel:
-        if self.__model_obj__ is None:
-            self.load_model()
-        return self.__model_obj__
-
     def train(self):
+        self.load_config()
 
         model_args = self.model
         train_data, dev_data, test_data = self.convert_to_train()
@@ -192,11 +202,11 @@ class SimpleClassification(SimpleTrainer):
 
         # Create a NERModel
         model = ClassificationModel(
-            model_args.model_type,
-            model_args.model_name_or_path,
+            model_type=model_args.model_type,
+            model_name=model_args.model_name_or_path,
             num_labels=model_args.num_labels,
             use_cuda=model_args.use_cuda,
-            cuda_device=model_args.device,
+            cuda_device=model_args.cuda_device,
             args=self.trainer.dict(),
         )
 
@@ -214,10 +224,10 @@ class SimpleClassification(SimpleTrainer):
             print(f"Wrong predictions: {wrong_predictions[:5]}")
             print(f"num_outputs: {len(model_outputs)}")
             print(f"num_wrong_predictions: {len(wrong_predictions)}")
+        self.save_config()
         self.__model_obj__ = model
 
     def load_model(self, model_dir=None):
-        from simpletransformers.classification import ClassificationModel
 
         if model_dir is None:
             model_dir = self.trainer.best_model_dir
@@ -238,3 +248,24 @@ class SimpleClassification(SimpleTrainer):
             Keys.PRED_PROBS.value: pred_probs,
             Keys.MODEL_OUTPUTS.value: model_outputs,
         }
+
+    def eval_figure_file(self, figure_file=None):
+        if figure_file is None:
+            figure_file = self.model.eval.output_file
+        return f"{self.batch.file_prefix}_{figure_file}"
+
+    def eval(self):
+        if self.dataset.test_data is None:
+            log.warning("No test data found")
+            return
+
+        data_to_predict = self.convert_to_predict(self.dataset.test_data)
+        preds = self.predict_data(data_to_predict)
+        self.pred_data = self.append_predictions(self.dataset.test_data, preds)
+        eKonf.save_data(self.pred_data, self.pred_path())
+        if self.verbose:
+            print(self.pred_data.head())
+        if self.model.eval:
+            self.model.eval.labels = self.labels_list
+            self.model.eval.visualize.output_file = self.eval_figure_file()
+            eKonf.instantiate(self.model.eval, data=self.pred_data)

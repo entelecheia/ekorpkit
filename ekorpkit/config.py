@@ -38,7 +38,8 @@ class PathConfig(BaseModel):
 
     @property
     def root_dir(self):
-        return Path(self.root)
+        # return as an absolute path
+        return Path(self.root).absolute()
 
     @property
     def output_dir(self):
@@ -109,9 +110,10 @@ class BaseBatchConfig(BaseModel):
                 self.batch_num = num_files - 1
             else:
                 self.batch_num = num_files
-        logger.info(
-            f"Init batch - Batch name: {self.batch_name}, Batch num: {self.batch_num}"
-        )
+        if self.verbose:
+            logger.info(
+                f"Init batch - Batch name: {self.batch_name}, Batch num: {self.batch_num}"
+            )
 
     @validator("seed")
     def _validate_seed(cls, v, values):
@@ -287,6 +289,10 @@ class BaseConfigModel(BaseModel):
     @property
     def model_dir(self):
         return self.path.model_dir
+
+    @property
+    def log_dir(self):
+        return self.path.log_dir
 
     @property
     def cache_dir(self):

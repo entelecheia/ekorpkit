@@ -1,10 +1,12 @@
 import logging
 from pydantic import BaseModel, Field, validator
-from typing import Optional
+from typing import Optional, Union
 from enum import Enum
 from pathlib import Path
 from tokenizers import Tokenizer
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
+from ekorpkit.datasets.config import DatasetConfig
+from ekorpkit.models.transformer.config import ModelConfig
 
 # from ekorpkit import eKonf
 
@@ -58,7 +60,7 @@ class TokenizerConfig(BaseModel):
         None,
         description="Type of the trasnformer model [bert, roberta, ...]",
     )
-    ignore_model_path: bool = Field(
+    ignore_existing_model_output: bool = Field(
         False,
         description="If set, the model path will not be used to load the tokenizer.",
     )
@@ -159,6 +161,23 @@ class TokenizerConfig(BaseModel):
                 "You must provide a tokenizer name, a tokenizer name or path or a pretrained tokenizer file."
             )
 
+    def initialize_config(
+        self, model: ModelConfig, dataset: DatasetConfig, root_dir: Union[str, Path]
+    ):
+        if self.tokenizer_name is None:
+            self.tokenizer_name = model.model_name
+        if self.model_type is None:
+            self.model_type = model.model_type
+        if self.model_dir is None:
+            self.model_dir = model.model_dir
+        self.tokenizer_dir = Path(self.tokenizer_dir or "tokenizers")
+        if not self.tokenizer_dir.is_absolute():
+            self.tokenizer_dir = Path(root_dir) / self.tokenizer_dir
+        self.model_max_length = dataset.max_seq_length
+        self.cache_dir = str(model.cache_dir)
+        self.use_auth_token = model.use_auth_token
+        self.ignore_existing_model_output = model.ignore_existing_model_output
+
     @validator("model_dir")
     def _check_model_dir(cls, v):
         if isinstance(v, str):
@@ -214,12 +233,12 @@ class TokenizerConfig(BaseModel):
         return self.__tokenizer_obj__
 
     @property
-    def model_path(self):
+    def model_output_dir(self):
         if self.tokenizer_name is None:
             return None
         model_path = self.tokenizer_name
         if not Path(model_path).is_absolute() or self.model_dir is not None:
-            model_path = str(self.model_dir / model_path)
+            model_path = str(Path(self.model_dir) / model_path)
         return model_path
 
     @property
@@ -271,9 +290,9 @@ class TokenizerConfig(BaseModel):
 
         logger.info(f"Is a fast tokenizer? {tokenizer.is_fast}")
         logger.info(f"Vocab size: {tokenizer.vocab_size}")
-        tokenizer.save_pretrained(self.model_path)
-        logger.info(f"Saved tokenizer to {self.model_path}")
-        self.tokenizer_name_or_path = self.model_path
+        tokenizer.save_pretrained(self.model_output_dir)
+        logger.info(f"Saved tokenizer to {self.model_output_dir}")
+        self.tokenizer_name_or_path = self.model_output_dir
 
     def load_tokenizer(self):
         # Load tokenizer
@@ -285,14 +304,17 @@ class TokenizerConfig(BaseModel):
             "use_auth_token": self.use_auth_token,
         }
         tokenizer = None
-        if Path(self.model_path).is_dir() and not self.ignore_model_path:
+        if (
+            Path(self.model_output_dir).is_dir()
+            and not self.ignore_existing_model_output
+        ):
             try:
                 tokenizer = AutoTokenizer.from_pretrained(
-                    self.model_path, **tokenizer_kwargs
+                    self.model_output_dir, **tokenizer_kwargs
                 )
             except OSError:
                 logger.warning(
-                    f"Couldn't load tokenizer from {self.model_path}. Trying tokenizer_name_or_path."
+                    f"Couldn't load tokenizer from {self.model_output_dir}. Trying tokenizer_name_or_path."
                 )
 
         if tokenizer is None:

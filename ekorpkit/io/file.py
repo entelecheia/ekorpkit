@@ -47,7 +47,7 @@ def glob_re(pattern, base_dir, recursive=False):
 
 
 def get_filepaths(
-    filename_patterns, base_dir=None, recursive=True, verbose=True, **kwargs
+    filename_patterns, base_dir=None, recursive=True, verbose=False, **kwargs
 ):
     if isinstance(filename_patterns, (PosixPath, WindowsPath)):
         filename_patterns = str(filename_patterns)
@@ -168,7 +168,8 @@ def load_data(filename, base_dir=None, filetype=None, verbose=False, **kwargs):
         filepaths = get_filepaths(filename, base_dir)
     else:
         filepaths = get_filepaths(filename)
-    log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
+    if verbose:
+        log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
 
     data = {
         os.path.basename(f): load_dataframe(
@@ -219,7 +220,8 @@ def load_dataframe(
         if not os.path.exists(filepath):
             log.warning(f"File {filepath} does not exist")
             return None
-    log.info(f"Loading data from {filepath}")
+    if verbose:
+        log.info(f"Loading data from {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype or "tsv" in filetype:
             delimiter = kwargs.pop("delimiter", "\t") if "tsv" in filetype else None
