@@ -1,4 +1,0 @@
-defaults:
-  - default
-
-task_name: ${oc.env:EKORPKIT_TASK_NAME,data}

@@ -137,7 +137,7 @@ class eKonf:
         throw_on_missing: bool = False,
         config_name="ekonf",
         verbose: bool = False,
-    ):
+    ) -> Union[DictConfig, Dict]:
         return _compose(
             config_group=config_group,
             overrides=overrides,
@@ -499,6 +499,8 @@ class eKonf:
     def load_data(filename=None, base_dir=None, filetype=None, verbose=False, **kwargs):
         from ekorpkit.io.file import load_data
 
+        if filename is not None:
+            filename = str(filename)        
         if _Keys.TARGET in kwargs:
             return eKonf.instantiate(
                 kwargs,
@@ -1011,6 +1013,8 @@ class eKonf:
     def copy(src, dst, *, follow_symlinks=True):
         import shutil
 
+        src = str(src)
+        dst = str(dst)
         _mkdir(dst)
         shutil.copy(src, dst, follow_symlinks=follow_symlinks)
         logger.info(f"copied {src} to {dst}")
@@ -1019,6 +1023,8 @@ class eKonf:
     def copyfile(src, dst, *, follow_symlinks=True):
         import shutil
 
+        src = str(src)
+        dst = str(dst)
         shutil.copyfile(src, dst, follow_symlinks=follow_symlinks)
         logger.info(f"copied {src} to {dst}")
 

@@ -155,6 +155,8 @@ def concat_data(
 def load_data(filename, base_dir=None, filetype=None, verbose=False, **kwargs):
     concatenate = kwargs.pop("concatenate", False)
     ignore_index = kwargs.pop("ignore_index", False)
+    if filename is not None:
+        filename = str(filename)
 
     if filename.startswith("http"):
         if not filetype:

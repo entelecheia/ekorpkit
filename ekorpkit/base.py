@@ -437,7 +437,7 @@ def _compose(
     throw_on_missing: bool = False,
     config_name="ekonf",
     verbose: bool = False,
-):
+) -> Union[DictConfig, Dict]:
     """
     Compose your configuration from config groups and overrides (overrides=["override_name"])
 

@@ -1,7 +1,8 @@
 import pandas as pd
 import logging
 import sklearn
-from pathlib import Path
+import numpy as np
+from typing import Tuple
 from scipy.special import softmax
 from simpletransformers.classification import ClassificationModel
 from abc import abstractmethod
@@ -89,7 +90,8 @@ class SimpleTrainer(BaseBatchModel):
         data=None,
         data_files=None,
         data_dir=None,
-        test_split_ratio=0.2,
+        test_size=0.2,
+        dev_size=0.1,
         seed=None,
         shuffle=None,
         encode_labels=None,
@@ -100,7 +102,8 @@ class SimpleTrainer(BaseBatchModel):
             data=data,
             data_files=data_files,
             data_dir=data_dir,
-            test_split_ratio=test_split_ratio,
+            test_size=test_size,
+            dev_size=dev_size,
             seed=seed,
             shuffle=shuffle,
             encode_labels=encode_labels,
@@ -108,12 +111,11 @@ class SimpleTrainer(BaseBatchModel):
             label_column_name=label_column_name,
         )
 
+    def convert_to_train(self):
         if self.dataset.dev_data is not None:
             self.trainer.evaluate_during_training = True
         else:
             self.trainer.evaluate_during_training = False
-
-    def convert_to_train(self):
         return (
             self.rename_columns(self.dataset.train_data, self.columns.train),
             self.rename_columns(self.dataset.dev_data, self.columns.train),
@@ -167,9 +169,9 @@ class SimpleTrainer(BaseBatchModel):
             cv=cv, dev_size=dev_size, random_state=random_state, shuffle=shuffle
         )
         pred_dfs = []
-        for i, split in enumerate(splits):
+        for split_no, split in splits:
             self.train()
-            log.info(f"Predicting split {i}")
+            log.info(f"Predicting split {split_no}")
             pred_df = self.predict(split)
             pred_dfs.append(pred_df)
         return pd.concat(pred_dfs)
@@ -269,3 +271,50 @@ class SimpleClassification(SimpleTrainer):
             self.model.eval.labels = self.labels_list
             self.model.eval.visualize.output_file = self.eval_figure_file()
             eKonf.instantiate(self.model.eval, data=self.pred_data)
+
+    def create_records_from_preds(
+        self,
+        cv_preds: pd.DataFrame,
+        meta_columns=["id", "split"],
+        prediction_agent=None,
+    ):
+        import rubrix as rb
+
+        text_col = self.columns.text
+        label_col = self.columns.labels
+        pred_col = self.columns.model_outputs
+        records = []
+        for _, row in cv_preds.iterrows():
+            record = rb.TextClassificationRecord(
+                inputs={"text": row[text_col]},
+                prediction=list(row[pred_col].items()),
+                annotation=row[label_col] if label_col in cv_preds.columns else None,
+                metadata=row[meta_columns].to_dict(),
+                prediction_agent=prediction_agent,
+            )
+            records.append(record)
+        log.info(f"Created {len(records)} records")
+        return records
+
+    def find_label_errors(
+        self,
+        pred_data: pd.DataFrame,
+        meta_columns=["id", "split"],
+        sort_by: str = "likelihood",
+        metadata_key: str = "label_error_candidate",
+        num_workers: int = None,
+        **kwargs,
+    ):
+        """Finds potential annotation/label errors in your datasets using [cleanlab](https://github.com/cleanlab/cleanlab)."""
+        from rubrix.labeling.text_classification import find_label_errors
+
+        num_workers = self.batch.num_workers if num_workers is None else num_workers
+        records = self.create_records_from_preds(pred_data, meta_columns=meta_columns)
+        records_with_label_errors = find_label_errors(
+            records,
+            sort_by=sort_by,
+            metadata_key=metadata_key,
+            n_jobs=num_workers,
+            **kwargs,
+        )
+        return records_with_label_errors

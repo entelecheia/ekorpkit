@@ -1,7 +1,7 @@
 defaults:
   - /auto: default
   - /batch: fetch
-  - /project: data
+  - /project: dataset
   - /path: _default_
 
 _name_: fetcher

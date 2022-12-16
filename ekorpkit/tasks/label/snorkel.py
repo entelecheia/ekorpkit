@@ -69,7 +69,7 @@ class BaseSnorkel(BaseBatchModel):
             data=data,
             data_files=data_files,
             data_dir=data_dir,
-            test_split_ratio=test_split_ratio,
+            test_size=test_split_ratio,
             seed=seed,
             shuffle=shuffle,
             encode_labels=encode_labels,

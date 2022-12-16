@@ -76,6 +76,12 @@ class BaseDatasetConfig(BaseConfigModel):
             return "parquet"
         return v.replace(".", "")
 
+    @validator("data_dir", pre=True)
+    def _check_data_dir(cls, v):
+        if v is not None:
+            return str(v)
+        return v
+
     @property
     def info_file(self):
         return os.path.join(self.data_dir, f"info-{self.name}.yaml")
@@ -744,9 +750,13 @@ class DataframeConfig(BaseModel):
         default="classes",
         description="The name of the encoded class column in the datasets containing the labels.",
     )
-    test_split_ratio: Optional[float] = Field(
+    test_size: Optional[float] = Field(
         default=0.2,
-        description="The ratio of the test set.",
+        description="The proportion of the dataset to include in the test split.",
+    )
+    dev_size: Optional[float] = Field(
+        default=0.2,
+        description="The proportion of the dataset to include in the dev split.",
     )
     shuffle: bool = Field(
         default=True,
@@ -768,6 +778,21 @@ class DataframeConfig(BaseModel):
         extra = "allow"
         underscore_attrs_are_private = True
 
+    @validator("data_dir", pre=True)
+    def check_data_dir(cls, v):
+        if v is not None:
+            return str(v)
+        return v
+
+    @validator("data_files", pre=True)
+    def check_data_files(cls, v):
+        if v is not None:
+            if isinstance(v, Path):
+                return str(v)
+            elif isinstance(v, DictConfig):
+                return eKonf.to_dict(v)
+        return v
+
     def initialize_config(self, data_dir, seed):
         if self.data_dir is None:
             self.data_dir = str(data_dir)
@@ -782,7 +807,7 @@ class DataframeConfig(BaseModel):
                 self.data_dir = os.path.abspath(os.path.expanduser(self.data_dir))
             if isinstance(self.data_files, str):
                 data_file, self.file_extension = check_data_file(
-                    self.data_file, self.data_dir, self.file_extension
+                    self.data_files, self.data_dir, self.file_extension
                 )
                 self.data_files = {"train": data_file}
             else:
@@ -796,7 +821,8 @@ class DataframeConfig(BaseModel):
         data=None,
         data_files=None,
         data_dir=None,
-        test_split_ratio=None,
+        test_size=None,
+        dev_size=None,
         shuffle=None,
         seed=None,
         encode_labels=None,
@@ -846,31 +872,51 @@ class DataframeConfig(BaseModel):
             self.__le__ = le
             self.__le_classes__ = le.classes_
 
-        if test_split_ratio is not None:
-            self.test_split_ratio = test_split_ratio
+        if test_size is not None:
+            self.test_size = test_size
+        if dev_size is not None:
+            self.dev_size = dev_size
         if shuffle is not None:
             self.shuffle = shuffle
         if seed is not None:
             self.seed = seed
 
-        # split the data
+        # split the data into train, dev and test
         if (
-            self.test_split_ratio is not None
-            and self.test_split_ratio > 0
-            and "test" not in raw_datasets
+            self.test_size is not None
+            and self.test_size > 0
+            and raw_datasets.get("test") is None
         ):
             log.info(
                 "Splitting the dataframe into train and test with ratio %s",
-                self.test_split_ratio,
+                self.test_size,
             )
             train, test = train_test_split(
                 raw_datasets["train"],
-                test_size=self.test_split_ratio,
+                test_size=self.test_size,
                 random_state=self.seed,
                 shuffle=self.shuffle,
             )
-            raw_datasets = {"train": train, "test": test}
-            log.info(f"Train data: {train.shape}, Test data: {test.shape}")
+            raw_datasets["train"] = train
+            raw_datasets["test"] = test
+
+        if (
+            self.dev_size is not None
+            and self.dev_size > 0
+            and raw_datasets.get("dev") is None
+        ):
+            log.info(
+                "Splitting the dataframe into train and dev with ratio %s",
+                self.dev_size,
+            )
+            train, dev = train_test_split(
+                raw_datasets["train"],
+                test_size=self.dev_size,
+                random_state=self.seed,
+                shuffle=self.shuffle,
+            )
+            raw_datasets["train"] = train
+            raw_datasets["dev"] = dev
 
         if self.shuffle:
             log.info("Shuffling the dataframe with seed %s", self.seed)
@@ -880,8 +926,10 @@ class DataframeConfig(BaseModel):
                 ).reset_index(drop=True)
 
         log.info(f"Train data: {raw_datasets['train'].shape}")
-        if "test" in raw_datasets:
+        if raw_datasets.get("test") is not None:
             log.info(f"Test data: {raw_datasets['test'].shape}")
+        if raw_datasets.get("dev") is not None:
+            log.info(f"Dev data: {raw_datasets['dev'].shape}")
 
         self.__raw_datasets__ = raw_datasets
         return raw_datasets
@@ -938,8 +986,8 @@ class DataframeConfig(BaseModel):
             data = self.data.reset_index(drop=True)
 
         splits = np.array_split(data, cv)
-        for i, split in enumerate(splits):
-            _data = pd.concat(splits[:i] + splits[i + 1 :])
+        for split_no, split in enumerate(splits):
+            _data = pd.concat(splits[:split_no] + splits[split_no + 1 :])
             if dev_size is not None and dev_size > 0:
                 _train_data, _dev_data = train_test_split(
                     _data,
@@ -947,10 +995,13 @@ class DataframeConfig(BaseModel):
                     random_state=random_state,
                     shuffle=shuffle,
                 )
+                log.info(
+                    f"Train data: {_train_data.shape}, Test data: {_dev_data.shape}"
+                )
             else:
                 _train_data, _dev_data = _data, None
-            log.info(f"Train data: {_train_data.shape}, Test data: {_dev_data.shape}")
+                log.info(f"Train data: {_train_data.shape}")
             self.datasets["train"] = _train_data
             self.datasets["dev"] = _dev_data
             self.datasets["test"] = split
-            yield i, split
+            yield split_no, split

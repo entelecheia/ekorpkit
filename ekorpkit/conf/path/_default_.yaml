@@ -3,7 +3,7 @@ root: ${join_path:${oc.select:..project.project_root,${oc.env:EKORPKIT_PROJECT_R
 verbose: ${oc.select:..project.verbose, false}
 
 output_dir: ${join_path:${.root}, outputs}
-data_dir: ${join_path:${.root}, inputs}
+data_dir: ${join_path:${.root}, data}
 library_dir: ${join_path:${.root}, libs}
 model_dir: ${join_path:${.root}, models}
 cache_dir: ${oc.select:..project.path.cache,${join_path:${.root}, cache}}

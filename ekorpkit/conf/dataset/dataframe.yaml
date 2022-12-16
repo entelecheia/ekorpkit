@@ -3,7 +3,8 @@ data_dir: ${oc.select:..path.data_dir, null}
 data_files: ${oc.select:..data_files, null}
 concat_data: false
 data_columns: ${oc.select:..data_columns, null}
-test_split_ratio:
+test_size:
+dev_size:
 shuffle: false
 seed:
 encode_labels: false

@@ -4,7 +4,7 @@ defaults:
   - /auto: load_build
   - /force: _build
   - /info: _build_dataset
-  - /project: data
+  - /project: dataset
 
 _target_: ekorpkit.datasets.dataset.Dataset
 name: ${oc.select:.builtin.name, null}
