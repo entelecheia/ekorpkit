@@ -1,6 +1,7 @@
 import logging
 from ekorpkit import eKonf
 from ekorpkit.models.metrics import evaluate_classification_performance
+from ekorpkit.visualize.plot import plot
 
 
 log = logging.getLogger(__name__)
@@ -23,6 +24,6 @@ def eval_classification(
         labels=labels,
         average=average,
     )
-    plot = visualize.plot
-    plot.plots[0].display_labels = labels
-    eKonf.instantiate(plot, data=cm)
+    plot_cfg = visualize.plot
+    plot_cfg.plots[0].display_labels = labels
+    plot(data=cm, **plot_cfg)

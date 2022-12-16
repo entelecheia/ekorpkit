@@ -1,5 +1,5 @@
 # @package _global_
 defaults:
-  - /project: __global__
+  - /project: default
 
 _target_: ekorpkit.cli.about
