@@ -31,7 +31,8 @@ class ColumnConfig(BaseModel):
 
 
 class ModelBatchConfig(BaseBatchConfig):
-    pred_file: str = "pred.parquet"
+    preds_file: str = "preds.parquet"
+    cv_file: str = "cv.parquet"
 
 
 class TrainerConfig(BaseModel):

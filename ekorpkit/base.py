@@ -89,6 +89,7 @@ class Environments(BaseSettings):
     EKORPKIT_PROJECT_ROOT: Optional[str]
     EKORPKIT_DATA_ROOT: Optional[str]
     EKORPKIT_LOG_LEVEL: Optional[str]
+    EKORPKIT_VERBOSE: Optional[Union[bool, str, int]]
     NUM_WORKERS: Optional[int]
     KMP_DUPLICATE_LIB_OK: Optional[str]
     CUDA_DEVICE_ORDER: Optional[str]
@@ -96,6 +97,8 @@ class Environments(BaseSettings):
     WANDB_PROJECT: Optional[str]
     WANDB_DISABLED: Optional[str]
     WANDB_DIR: Optional[str]
+    WANDB_NOTEBOOK_NAME: Optional[str]
+    WANDB_SILENT: Optional[Union[bool, str]]
     LABEL_STUDIO_SERVER: Optional[str]
     KMP_DUPLICATE_LIB_OK: Optional[str] = "True"
     CACHED_PATH_CACHE_ROOT: Optional[str]
@@ -121,6 +124,7 @@ class Environments(BaseSettings):
 
     @root_validator()
     def _check_and_set_values(cls, values):
+        verbose = values.get("EKORPKIT_VERBOSE")
         workspace = values.get("EKORPKIT_WORKSPACE_ROOT")
         project = values.get("EKORPKIT_PROJECT_NAME")
         if workspace is not None and project is not None:
@@ -131,7 +135,8 @@ class Environments(BaseSettings):
                 old_value = os.getenv(k.upper())
                 if old_value is None or old_value != str(v):
                     os.environ[k.upper()] = str(v)
-                    logger.info(f"Set environment variable {k.upper()}={v}")
+                    if verbose:
+                        logger.info(f"Set environment variable {k.upper()}={v}")
         return values
 
 
@@ -227,12 +232,12 @@ class ProjectPathConfig(BaseModel):
     @property
     def log_dir(self):
         Path(self.logs).mkdir(parents=True, exist_ok=True)
-        return Path(self.logs)
+        return Path(self.logs).absolute()
 
     @property
     def cache_dir(self):
         Path(self.cache).mkdir(parents=True, exist_ok=True)
-        return Path(self.cache)
+        return Path(self.cache).absolute()
 
 
 class ProjectConfig(BaseModel):
@@ -256,11 +261,28 @@ class ProjectConfig(BaseModel):
         if not data:
             data = _compose("project=default")
         super().__init__(**data)
+        if self.envs.EKORPKIT_VERBOSE is not None:
+            self.verbose = self.envs.EKORPKIT_VERBOSE
         self.envs.EKORPKIT_DATA_ROOT = str(self.path.data)
         self.envs.CACHED_PATH_CACHE_ROOT = str(self.path.cache_dir / "cached_path")
+        wandb_dir = str(self.path.log_dir)
+        self.envs.WANDB_DIR = wandb_dir
+        project_name = self.project_name.replace("/", "-").replace("\\", "-")
+        self.envs.WANDB_PROJECT = project_name
+        task_name = self.task_name.replace("/", "-").replace("\\", "-")
+        notebook_name = self.path.log_dir / f"{task_name}-nb"
+        notebook_name.mkdir(parents=True, exist_ok=True)
+        self.envs.WANDB_NOTEBOOK_NAME = str(notebook_name)
+        self.envs.WANDB_SILENT = str(not self.verbose)
         if self.use_wandb:
-            self.envs.WANDB_DIR = str(self.path.log_dir)
-            self.envs.WANDB_PROJECT = self.project_name
+            try:
+                import wandb
+
+                wandb.init(project=self.project_name)
+            except ImportError:
+                logger.warning(
+                    "wandb is not installed, please install it to use wandb."
+                )
         if self.use_huggingface_hub:
             self.secrets.init_huggingface_hub()
 
@@ -1307,9 +1329,15 @@ def _records_to_dataframe(
 
 
 def _set_workspace(
-    workspace=None, project=None, task=None, log_level=None, autotime=True, retina=True
+    workspace=None,
+    project=None,
+    task=None,
+    log_level=None,
+    autotime=True,
+    retina=True,
+    verbose=False,
 ) -> ProjectConfig:
-    envs = Environments()
+    envs = Environments(EKORPKIT_VERBOSE=verbose)
     if isinstance(workspace, str):
         envs.EKORPKIT_WORKSPACE_ROOT = workspace
     if isinstance(project, str):

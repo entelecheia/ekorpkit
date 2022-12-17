@@ -500,7 +500,7 @@ class eKonf:
         from ekorpkit.io.file import load_data
 
         if filename is not None:
-            filename = str(filename)        
+            filename = str(filename)
         if _Keys.TARGET in kwargs:
             return eKonf.instantiate(
                 kwargs,
@@ -975,10 +975,18 @@ class eKonf:
         log_level=None,
         autotime=True,
         retina=True,
+        verbose=None,
         **kwargs,
     ) -> ProjectConfig:
         return _set_workspace(
-            workspace, project, task, log_level, autotime, retina, **kwargs
+            workspace,
+            project,
+            task,
+            log_level,
+            autotime,
+            retina,
+            verbose,
+            **kwargs,
         )
 
     @staticmethod

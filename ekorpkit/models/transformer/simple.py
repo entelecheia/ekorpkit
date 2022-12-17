@@ -67,11 +67,6 @@ class SimpleTrainer(BaseBatchModel):
     def predict_data(self, data: list):
         raise NotImplementedError("Must override predict")
 
-    def pred_path(self, pred_file=None):
-        if pred_file is None:
-            pred_file = self.batch.pred_file
-        return str(self.batch_dir / f"{self.batch.file_prefix}_{pred_file}")
-
     @property
     def raw_datasets(self):
         return self.dataset.datasets
@@ -155,15 +150,33 @@ class SimpleTrainer(BaseBatchModel):
             data[pred_probs_column] = preds[Keys.PRED_PROBS]
         return data
 
-    def predict(self, data, **args):
+    def preds_path(self, preds_file=None):
+        if preds_file is None:
+            preds_file = self.batch.preds_file
+        return str(self.batch_dir / f"{self.batch.file_prefix}_{preds_file}")
+
+    def cv_path(self, cv_file=None):
+        if cv_file is None:
+            cv_file = self.batch.cv_file
+        return str(self.batch_dir / f"{self.batch.file_prefix}_{cv_file}")
+
+    def predict(self, data, preds_file=None, **args):
         if args:
             self.columns.predict = args
         data_to_predict = self.convert_to_predict(data)
         preds = self.predict_data(data_to_predict)
         data = self.append_predictions(data, preds)
+        eKonf.save_data(data, self.preds_path(preds_file))
         return data
 
-    def cross_val_predict(self, cv=5, dev_size=0.2, random_state=1235, shuffle=True):
+    def cross_val_predict(
+        self,
+        cv=5,
+        dev_size=0.2,
+        random_state=1235,
+        shuffle=True,
+        cv_file=None,
+    ):
 
         splits = self.dataset.cross_val_datasets(
             cv=cv, dev_size=dev_size, random_state=random_state, shuffle=shuffle
@@ -174,7 +187,9 @@ class SimpleTrainer(BaseBatchModel):
             log.info(f"Predicting split {split_no}")
             pred_df = self.predict(split)
             pred_dfs.append(pred_df)
-        return pd.concat(pred_dfs)
+        cv_preds = pd.concat(pred_dfs)
+        eKonf.save_data(cv_preds, self.cv_path(cv_file))
+        return cv_preds
 
 
 class SimpleClassification(SimpleTrainer):
@@ -194,6 +209,7 @@ class SimpleClassification(SimpleTrainer):
         return self.model_obj.args.labels_map
 
     def train(self):
+        self.reset()
         self.load_config()
 
         model_args = self.model
@@ -227,12 +243,14 @@ class SimpleClassification(SimpleTrainer):
             print(f"num_outputs: {len(model_outputs)}")
             print(f"num_wrong_predictions: {len(wrong_predictions)}")
         self.save_config()
-        self.__model_obj__ = model
+        self.reset()
 
     def load_model(self, model_dir=None):
 
         if model_dir is None:
             model_dir = self.trainer.best_model_dir
+            if not eKonf.exists(model_dir):
+                model_dir = self.trainer.output_dir
 
         self.__model_obj__ = ClassificationModel(self.model.model_type, model_dir)
         # , args=self._model_cfg
@@ -263,14 +281,14 @@ class SimpleClassification(SimpleTrainer):
 
         data_to_predict = self.convert_to_predict(self.dataset.test_data)
         preds = self.predict_data(data_to_predict)
-        self.pred_data = self.append_predictions(self.dataset.test_data, preds)
-        eKonf.save_data(self.pred_data, self.pred_path())
+        pred_data = self.append_predictions(self.dataset.test_data, preds)
+        eKonf.save_data(pred_data, self.preds_path())
         if self.verbose:
-            print(self.pred_data.head())
+            print(pred_data.head())
         if self.model.eval:
             self.model.eval.labels = self.labels_list
             self.model.eval.visualize.output_file = self.eval_figure_file()
-            eKonf.instantiate(self.model.eval, data=self.pred_data)
+            eKonf.instantiate(self.model.eval, data=pred_data)
 
     def create_records_from_preds(
         self,

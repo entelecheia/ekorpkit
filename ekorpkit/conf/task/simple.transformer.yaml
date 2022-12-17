@@ -1,6 +1,6 @@
 defaults:
   - /auto: default
-  - /batch: pred
+  - /batch: preds
   - /project: default
   - /path: _batch_
 

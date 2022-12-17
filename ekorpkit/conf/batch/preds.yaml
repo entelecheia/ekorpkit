@@ -1,0 +1,5 @@
+defaults:
+  - default
+
+preds_file: preds.parquet
+cv_file: cv.parquet

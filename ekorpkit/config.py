@@ -292,13 +292,13 @@ class BaseConfigModel(BaseModel):
 
     @property
     def log_dir(self):
-        return self.path.log_dir
+        return self.project.path.log_dir
 
     @property
     def cache_dir(self):
         cache_dir = Path(self.project.path.cache)
         if cache_dir is None:
-            cache_dir = self.output_dir / "cache"
+            cache_dir = self.output_dir / ".cache"
             cache_dir.mkdir(parents=True, exist_ok=True)
         return Path(cache_dir)
 

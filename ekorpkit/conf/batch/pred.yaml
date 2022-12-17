@@ -1,4 +1,0 @@
-defaults:
-  - default
-
-pred_file: preds.parquet
