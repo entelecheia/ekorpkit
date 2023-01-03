@@ -1,0 +1,25 @@
+ARG BUILD_FROM="pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime"
+FROM $BUILD_FROM
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
+
+RUN apt-get update \
+    && apt-get install -y fontconfig fonts-nanum curl git tzdata imagemagick ffmpeg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PIP_DEFAULT_TIMEOUT 100
+ENV DS_BUILD_FUSED_ADAM 1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV KMP_DUPLICATE_LIB_OK TRUE
+ENV EKORPKIT_WORKSPACE_ROOT=/workspace
+WORKDIR $EKORPKIT_WORKSPACE_ROOT
+
+ARG PACKAGE_VERSION=""
+ARG PRE_OPTION=""
+RUN pip install --upgrade --no-cache-dir pip && \
+    pip install --no-cache-dir $PRE_OPTION "ekorpkit[all]$PACKAGE_VERSION"
+
+CMD ["bash"]

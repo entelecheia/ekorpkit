@@ -1,0 +1,20 @@
+ARG BUILD_FROM="entelecheia/ekorpkit:latest-pytorch1.11-runtime"
+FROM $BUILD_FROM
+
+# Set up environment variables
+ENV WORK_DIR=/tests
+ENV EKORPKIT_CONFIG_DIR=$WORK_DIR/config
+ENV EKORPKIT_WORKSPACE_ROOT=/tests
+ENV EKORPKIT_PROJECT_NAME=ekorpkit-test
+ENV TEST_BRANCH=main
+ENV CODECOV_TOKEN=""
+
+WORKDIR $WORK_DIR
+
+COPY ./scripts/tests ./scripts
+RUN mkdir -p ./config
+
+RUN curl -Os https://uploader.codecov.io/latest/linux/codecov
+RUN chmod +x codecov
+
+CMD ["bash"]

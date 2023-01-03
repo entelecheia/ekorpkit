@@ -1,0 +1,12 @@
+#!/bin/bash
+RELEASE_TYPE=${RELEASE_TYPE:-"runtime"}
+VERSION=${VERSION:-"latest"}
+VARIANT=${VARIANT:-"pytorch1.11"}
+USERNAME=${USERNAME:-"entelecheia"}
+NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-"device=0"}
+
+RUN_ARGS=""
+if [[ -n "${NVIDIA_VISIBLE_DEVICES}" ]]; then
+    RUN_ARGS="${RUN_ARGS} --runtime=nvidia --gpus ${NVIDIA_VISIBLE_DEVICES}"
+fi
+RUN_ARGS="${RUN_ARGS} --ulimit memlock=-1 --ulimit stack=67108864"

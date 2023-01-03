@@ -9,7 +9,6 @@ node_modules/
 logs/
 workspace/
 .history/
-.vscode/
 TODO
 core
 .ekorpkit/
