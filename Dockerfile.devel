@@ -18,7 +18,8 @@ RUN pip install --no-cache-dir --upgrade \
     jupyterlab_execute_time \
     jupyterlab-git \
     jupyterlab-vim \
-    ipympl 
+    ipympl \
+    ipython-autotime
 
 
 RUN jupyter nbextension enable --py widgetsnbextension
