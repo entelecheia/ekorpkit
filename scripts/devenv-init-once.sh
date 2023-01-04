@@ -10,6 +10,7 @@ set +o allexport
 # print all commands to stdout
 set -x
 
+chezmoi update --apply=false
 chezmoi init --apply --verbose
 chezmoi apply
 

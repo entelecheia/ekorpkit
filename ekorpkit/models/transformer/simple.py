@@ -126,8 +126,8 @@ class SimpleTrainer(BaseBatchModel):
             for key, name in columns.items()
             if name and name != key and name in data.columns
         }
-        log.info(f"Renaming columns: {renames}")
         if renames:
+            log.info(f"Renaming columns: {renames}")
             data = data.copy().rename(columns=renames)
         if self.verbose:
             print(data.head())
