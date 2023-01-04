@@ -11,7 +11,7 @@ fi
 
 RUN_ARGS=""
 if [[ -n "${NVIDIA_VISIBLE_DEVICES}" ]]; then
-    RUN_ARGS="${RUN_ARGS} --runtime=nvidia --gpus ${NVIDIA_VISIBLE_DEVICES}"
+    RUN_ARGS="${RUN_ARGS} --gpus ${NVIDIA_VISIBLE_DEVICES}"
 fi
 RUN_ARGS="${RUN_ARGS} --ulimit memlock=-1 --ulimit stack=67108864"
 RUN_ARGS="${RUN_ARGS} --network=$DOCKER_NETWORK_NAME"
