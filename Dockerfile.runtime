@@ -22,4 +22,6 @@ ARG PRE_OPTION=""
 RUN pip install --upgrade --no-cache-dir pip && \
     pip install --no-cache-dir $PRE_OPTION "ekorpkit[all]$PACKAGE_VERSION"
 
+RUN rm -rf /workspace && mkdir -p /workspace
+
 CMD ["bash"]

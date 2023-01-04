@@ -13,6 +13,10 @@ if [[ "${RELEASE_TYPE}" == "runtime" ]]; then
     if [[ "${VARIANT}" == "nvidia-pytorch22.02" ]]; then
         BUILD_FROM="nvcr.io/nvidia/pytorch:22.02-py3"
     fi
+elif [[ "${RELEASE_TYPE}" == "devel" ]]; then
+    VARIANT="nvidia-pytorch22.02"
+    TAG="${VERSION}-${VARIANT}-runtime"
+    BUILD_FROM="${USERNAME}/ekorpkit:${TAG}"
 else
     TAG="${VERSION}-${VARIANT}-runtime"
     BUILD_FROM="${USERNAME}/ekorpkit:${TAG}"

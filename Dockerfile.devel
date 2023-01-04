@@ -1,0 +1,55 @@
+ARG BUILD_FROM="entelecheia/ekorpkit:latest-pytorch1.11-runtime"
+FROM $BUILD_FROM
+
+RUN apt-get update \
+    && apt-get install -y --fix-missing openssh-server nodejs npm locales\
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up locale
+RUN localedef -v -c -i en_US -f UTF-8 en_US.UTF-8 || true
+# Update nodejs
+RUN npm cache clean -f && npm install -g n && n lts
+
+# Set up jupyter notebook extensions
+RUN pip install --no-cache-dir --upgrade \
+    jupyter_nbextensions_configurator ipywidgets RISE \
+    jupyterlab \
+    jupyterlab_execute_time \
+    jupyterlab-git \
+    jupyterlab-vim \
+    ipympl 
+
+
+RUN jupyter nbextension enable --py widgetsnbextension
+RUN jupyter nbextensions_configurator enable
+RUN jupyter labextension install \
+    @jupyter-widgets/jupyterlab-manager \
+    jupyterlab-slide-mode-keyboard-shortcuts \
+    jupyter-matplotlib \
+    jupyterlab-spreadsheet
+
+# install dotfiles
+ARG DOTFILES_USER_NAME=""
+ARG DOTFILES_USER_EMAIL=""
+ARG DOTFILES_GITHUB_USERNAME=""
+
+ENV DOTFILES_USER_NAME $DOTFILES_USER_NAME
+ENV DOTFILES_USER_EMAIL $DOTFILES_USER_EMAIL
+ENV DOTFILES_GITHUB_USERNAME $DOTFILES_GITHUB_USERNAME
+ENV DOTFILES_WORKSPACE_LOCATION="/"
+ENV DOTFILES_NO_ROOTMOI=1
+ENV REMOTE_CONTAINERS=1
+# ENV DOTFILES_DEBUG=1
+RUN rm -rf /workspace && mkdir -p /workspace
+RUN sh -c "$(wget -qO- https://bit.ly/3W2JGyL)"
+# Set up environment variables
+ENV EKORPKIT_SRC_DIR=/workspace/projects/ekorpkit
+WORKDIR $EKORPKIT_SRC_DIR
+
+# install requirements
+RUN pip install --no-cache-dir -e ".[all]"
+COPY requirements-devel.txt .
+RUN pip install --no-cache-dir -r requirements-devel.txt
+
+CMD ["zsh"]
