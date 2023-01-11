@@ -153,6 +153,7 @@ dmypy.json
 .pyre/
 
 .env*
+!.env.docker*
 !.env.project
 !.env.vault
 !.env.example
