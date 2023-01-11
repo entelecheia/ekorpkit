@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  ekorpkit:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile.dev
+      args:
+        BUILD_FROM: $BUILD_FROM
+        USER_FULLNAME: $USER_FULLNAME
+        USER_EMAIL: $USER_EMAIL
+        GITHUB_USERNAME: $GITHUB_USERNAME
+        WORKSPACE_LOCATION: $WORKSPACE_LOCATION
+        SYSTEM_HOSTNAME: $SYSTEM_HOSTNAME
+        EKORPKIT_SRC_DIR: $EKORPKIT_SRC_DIR
+    image: $IMAGE_NAME
+    container_name: $CONTAINER_NAME
+    command:
+      - bash 
+      - ./scripts/devenv-entrypoint.sh
+    env_file:
+      - .env
+    ulimits:
+      stack: 67108864
+      memlock: -1
+    ipc: host
+    ports:
+      - "$HOST_SSH_PORT:22"
+      - "$HOST_JUPYTER_PORT:$CONTAINER_JUPYTER_PORT"
+      - "$HOST_RUBRIX_PORT:6900"
+    volumes:
+        - "$WORKSPACE_ROOT:$CONTAINER_WORKSPACE_ROOT"
+        - "$HOME/.cache/huggingface:/root/.cache/huggingface"
+        - "$HOME/.huggingface:/root/.huggingface"
+        - "$PWD/.resources/rubrix/.users.yaml:$RUBRIX_LOCAL_AUTH_USERS_DB_FILE"
+networks:
+  default:
+    name: $DOCKER_NETWORK_NAME
+    external: true

@@ -1,7 +1,0 @@
-#!/bin/bash
-DOCKER_NETWORK_NAME=${APP_DOCKER_NETWORK:-"ekorpkit-network"}
-
-# if network does not exist, create it
-if [[ -z "$(docker network ls | grep ${DOCKER_NETWORK_NAME})" ]]; then
-    docker network create "${DOCKER_NETWORK_NAME}"
-fi

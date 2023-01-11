@@ -39,12 +39,19 @@ class SimpleTrainer(BaseBatchModel):
 
     def initialize_configs(self, **args):
         super().initialize_configs(batch_config_class=ModelBatchConfig, **args)
-        hf_token = self.secrets.HUGGING_FACE_HUB_TOKEN.get_secret_value()
+        if self.secrets.HUGGING_FACE_HUB_TOKEN:
+            hf_token = self.secrets.HUGGING_FACE_HUB_TOKEN.get_secret_value()
+        else:
+            hf_token = None
+        if self.secrets.WANDB_API_KEY:
+            wandb_token = self.secrets.WANDB_API_KEY.get_secret_value()
+        else:
+            wandb_token = None
 
         self.dataset.initialize_config(self.root_dir, self.seed)
         # self.model = ModelConfig(**self.config.model)
         self.model.initialize_config(
-            self.name, self.model_dir, self.cache_dir, self.log_dir, hf_token
+            self.name, self.model_dir, self.cache_dir, self.log_dir, hf_token, wandb_token
         )
         self.model.eval.output_dir = str(self.batch_dir)
 
@@ -296,7 +303,7 @@ class SimpleClassification(SimpleTrainer):
         meta_columns=["id", "split"],
         prediction_agent=None,
     ):
-        import rubrix as rb
+        import argilla as rb
 
         text_col = self.columns.text
         label_col = self.columns.labels
@@ -324,7 +331,7 @@ class SimpleClassification(SimpleTrainer):
         **kwargs,
     ):
         """Finds potential annotation/label errors in your datasets using [cleanlab](https://github.com/cleanlab/cleanlab)."""
-        from rubrix.labeling.text_classification import find_label_errors
+        from argilla.labeling.text_classification import find_label_errors
 
         num_workers = self.batch.num_workers if num_workers is None else num_workers
         records = self.create_records_from_preds(pred_data, meta_columns=meta_columns)

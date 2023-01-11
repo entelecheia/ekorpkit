@@ -5,7 +5,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
 
 RUN apt-get update \
-    && apt-get install -y fontconfig fonts-nanum curl git tzdata imagemagick ffmpeg \
+    && apt-get install -y fontconfig fonts-nanum curl git tzdata locales imagemagick ffmpeg \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -17,10 +17,10 @@ ENV KMP_DUPLICATE_LIB_OK TRUE
 ENV EKORPKIT_WORKSPACE_ROOT=/workspace
 WORKDIR $EKORPKIT_WORKSPACE_ROOT
 
-ARG PACKAGE_VERSION=""
-ARG PRE_OPTION=""
+ENV SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL True
+ARG PIP_PACKAGE_NAME=""
 RUN pip install --upgrade --no-cache-dir pip && \
-    pip install --no-cache-dir $PRE_OPTION "ekorpkit[all]$PACKAGE_VERSION"
+    pip install --no-cache-dir $PIP_PACKAGE_NAME
 
 RUN rm -rf /workspace && mkdir -p /workspace
 

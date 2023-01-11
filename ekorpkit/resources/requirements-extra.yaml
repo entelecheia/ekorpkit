@@ -105,6 +105,6 @@ diffusers: art, stable, all
 
 cleanlab: label, all
 # snorkel: label
-rubrix: label
+argilla: label
 
 dicttoxml: all, xml

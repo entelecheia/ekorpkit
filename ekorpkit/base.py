@@ -101,6 +101,7 @@ class Environments(BaseSettings):
     WANDB_SILENT: Optional[Union[bool, str]]
     LABEL_STUDIO_SERVER: Optional[str]
     KMP_DUPLICATE_LIB_OK: Optional[str] = "True"
+    TOKENIZERS_PARALLELISM: Optional[bool] = False
     CACHED_PATH_CACHE_ROOT: Optional[str]
 
     class Config:

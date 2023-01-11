@@ -181,7 +181,7 @@ class ModelConfig(BaseModel):
                 "config_overrides can't be used in combination with config_name or model_name_or_path"
             )
 
-    def initialize_config(self, name, model_dir, cache_dir, log_dir, hf_token):
+    def initialize_config(self, name, model_dir, cache_dir, log_dir, hf_token, wandb_token=None):
         if self.model_name is None:
             self.model_name = "{}-{}".format(name, self.model_config_name)
         if self.model_dir is None:
@@ -192,7 +192,10 @@ class ModelConfig(BaseModel):
             self.log_dir = str(log_dir)
         self.model_type = self.auto_config.model_type
         self.use_auth_token = hf_token
-        self.wandb_project = self.wandb_project.replace("/", "-") or "transformers"
+        if wandb_token:
+            self.wandb_project = self.wandb_project.replace("/", "-") or "transformers"
+        else:
+            self.wandb_project = None
 
     @property
     def model_config_name(self):
