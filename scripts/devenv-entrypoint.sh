@@ -19,10 +19,9 @@ service ssh start
 jupyter lab \
     --no-browser \
     --notebook-dir="$CONTAINER_WORKSPACE_ROOT" \
-    --NotebookApp.token="$JUPYTER_TOKEN" \
+    --ServerApp.token="$JUPYTER_TOKEN" \
     --port="$CONTAINER_JUPYTER_PORT" \
     --ip=0.0.0.0 \
-    --allow-root \
-    --allow_origin='*'
+    --allow-root
 
 set +x 
