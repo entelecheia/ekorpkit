@@ -19,7 +19,9 @@ services:
       - bash 
       - ./scripts/devenv-entrypoint.sh
     env_file:
-      - .env
+      - .env.dev
+    # environment:
+    #   JUPYTER_TOKEN: $JUPYTER_TOKEN
     ulimits:
       stack: 67108864
       memlock: -1
@@ -33,6 +35,25 @@ services:
         - "$HOME/.cache/huggingface:/root/.cache/huggingface"
         - "$HOME/.huggingface:/root/.huggingface"
         - "$PWD/.resources/rubrix/.users.yaml:$RUBRIX_LOCAL_AUTH_USERS_DB_FILE"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${CUDA_DEVICE_ID}"]
+              capabilities: [gpu]
+  ngrok:
+    image: wernight/ngrok:latest
+    ports:
+      - 4840
+    env_file:
+      - .env.dev
+    # environment:
+    #   NGROK_AUTH: $NGROK_AUTH
+    #   NGROK_PROTOCOL: $NGROK_PROTOCOL
+    #   NGROK_PORT: $NGROK_PORT
+    depends_on:
+      - ekorpkit
 networks:
   default:
     name: $DOCKER_NETWORK_NAME
