@@ -159,3 +159,4 @@ dmypy.json
 !.env.example
 
 .release-it.json
+.flaskenv*
