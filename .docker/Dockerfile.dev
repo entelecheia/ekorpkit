@@ -47,14 +47,15 @@ ENV APPLY_ROOTMOI=0
 ENV REMOTE_CONTAINERS=1
 # ENV DOTFILES_DEBUG=1
 RUN rm -rf /workspace && mkdir -p /workspace
-RUN sh -c "$(wget -qO- https://bit.ly/3W2JGyL)"
+RUN sh -c "$(wget -qO- https://dotfiles.entelecheia.cc/install)"
 # Set up environment variables
 ARG EKORPKIT_SRC_DIR="/workspace/projects/ekorpkit"
 ENV EKORPKIT_SRC_DIR $EKORPKIT_SRC_DIR
+RUN git clone https://github.com/entelecheia/ekorpkit.git $EKORPKIT_SRC_DIR
 WORKDIR $EKORPKIT_SRC_DIR
 
 # install requirements
-RUN pip install --no-cache-dir -e ".[all]"
+RUN pip install --no-cache-dir -e "."
 COPY requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 

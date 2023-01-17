@@ -2,9 +2,9 @@
 set -x
 set -o allexport
 # shellcheck disable=SC1091
-source .env.dev
+source .env
 # shellcheck disable=SC1091
-source .docker/.env.docker.dev
+source .docker/docker.dev.env
 set +o allexport
 
 # print all commands to stdout
@@ -18,9 +18,9 @@ service ssh start
 # set port to value of JUPYTER_DOCKER_PORT
 jupyter lab \
     --no-browser \
-    --notebook-dir="$CONTAINER_WORKSPACE_ROOT" \
+    --notebook-dir="$WORKSPACE_ROOT" \
     --ServerApp.token="$JUPYTER_TOKEN" \
-    --port="$CONTAINER_JUPYTER_PORT" \
+    --port="$JUPYTER_PORT" \
     --ip=0.0.0.0 \
     --allow-root
 
