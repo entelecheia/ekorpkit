@@ -46,7 +46,7 @@ services:
     ports:
       - 4840
     env_file:
-      - .env
+      - .env.ngrok
     # environment:
     #   NGROK_AUTH: $NGROK_AUTH
     #   NGROK_PROTOCOL: $NGROK_PROTOCOL
