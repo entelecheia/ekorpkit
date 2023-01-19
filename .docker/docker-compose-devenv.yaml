@@ -4,9 +4,18 @@ services:
   ekorpkit:
     build:
       context: .
-      dockerfile: .docker/Dockerfile.dev
+      dockerfile: .docker/Dockerfile.devenv
       args:
         BUILD_FROM: $BUILD_FROM
+        USER_FULLNAME: $USER_FULLNAME
+        USER_EMAIL: $USER_EMAIL
+        GITHUB_USERNAME: $GITHUB_USERNAME
+        WORKSPACE_LOCATION: $WORKSPACE_LOCATION
+        SYSTEM_HOSTNAME: $SYSTEM_HOSTNAME
+        EKORPKIT_SRC_DIR: $EKORPKIT_SRC_DIR
+        USERNAME: $USERNAME
+        USER_UID: $USER_UID
+        USER_GID: $USER_GID
     image: $IMAGE_NAME
     command:
       - bash 

@@ -1,0 +1,48 @@
+ARG BUILD_FROM="entelecheia/ekorpkit:0.1.40-nvidia-pytorch22.02-dev"
+FROM $BUILD_FROM
+
+# Add a non-root user to a container
+ARG USERNAME="ekorpkit"
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# install dotfiles
+ARG USER_FULLNAME=""
+ARG USER_EMAIL=""
+ARG GITHUB_USERNAME=""
+ARG WORKSPACE_LOCATION="/"
+ARG SYSTEM_HOSTNAME="ekorpkit-container"
+
+ENV USER_FULLNAME $USER_FULLNAME
+ENV USER_EMAIL $USER_EMAIL
+ENV GITHUB_USERNAME $GITHUB_USERNAME
+ENV WORKSPACE_LOCATION $WORKSPACE_LOCATION
+ENV SYSTEM_HOSTNAME $SYSTEM_HOSTNAME
+ENV APPLY_ROOTMOI=0
+ENV REMOTE_CONTAINERS=1
+# ENV DOTFILES_DEBUG=1
+
+USER $USERNAME
+RUN sudo rm -rf /workspace && sudo mkdir -p /workspace
+RUN sudo chown -R $USERNAME:$USERNAME /workspace
+RUN sh -c "$(wget -qO- https://dotfiles.entelecheia.cc/install)"
+# Set up environment variables
+ARG EKORPKIT_SRC_DIR="/workspace/projects/ekorpkit"
+ENV EKORPKIT_SRC_DIR $EKORPKIT_SRC_DIR
+RUN git clone https://github.com/entelecheia/ekorpkit.git $EKORPKIT_SRC_DIR
+WORKDIR $EKORPKIT_SRC_DIR
+
+# install requirements
+RUN pip install --no-cache-dir -e "."
+COPY requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+COPY ./scripts/devenv-entrypoint.sh ./scripts
+RUN sudo chmod 755 ./scripts/devenv-entrypoint.sh
+CMD ["zsh"]
