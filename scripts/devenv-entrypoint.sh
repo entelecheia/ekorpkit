@@ -4,7 +4,7 @@ set -o allexport
 # shellcheck disable=SC1091
 source .env
 # shellcheck disable=SC1091
-source .docker/docker.dev.env
+source .docker/docker.devenv.env
 set +o allexport
 
 # print all commands to stdout
