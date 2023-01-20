@@ -10,7 +10,7 @@ set +o allexport
 # print all commands to stdout
 set -x
 
-service ssh start
+sudo service ssh start
 
 # start jupyter notebook in background and redirect output to logfile
 # change working directory to workspace root
