@@ -11,10 +11,8 @@ services:
     command:
       - bash 
       - ./scripts/devenv-entrypoint.sh
-    env_file:
-      - .env
-    # environment:
-    #   JUPYTER_TOKEN: $JUPYTER_TOKEN
+    environment:
+      JUPYTER_TOKEN: $JUPYTER_TOKEN
     ulimits:
       stack: 67108864
       memlock: -1
@@ -39,12 +37,10 @@ services:
     image: wernight/ngrok:latest
     ports:
       - 4840
-    env_file:
-      - .env.ngrok
-    # environment:
-    #   NGROK_AUTH: $NGROK_AUTH
-    #   NGROK_PROTOCOL: $NGROK_PROTOCOL
-    #   NGROK_PORT: $NGROK_PORT
+    environment:
+      NGROK_AUTH: $NGROK_AUTH
+      NGROK_PROTOCOL: $NGROK_PROTOCOL
+      NGROK_PORT: $NGROK_PORT
     depends_on:
       - ekorpkit
 networks:

@@ -20,10 +20,12 @@ services:
     command:
       - bash 
       - ./scripts/devenv-entrypoint.sh
-    env_file:
-      - .env
-    # environment:
-    #   JUPYTER_TOKEN: $JUPYTER_TOKEN
+    environment:
+      HOST_JUPYTER_IP: $HOST_JUPYTER_IP
+      HOST_JUPYTER_PORT: $HOST_JUPYTER_PORT
+      JUPYTER_TOKEN: $JUPYTER_TOKEN
+      JUPYTER_PORT: $JUPYTER_PORT
+      WORKSPACE_ROOT: "/workspace"
     ulimits:
       stack: 67108864
       memlock: -1
@@ -33,9 +35,12 @@ services:
       - "$HOST_JUPYTER_PORT:$JUPYTER_PORT"
       - "$HOST_RUBRIX_PORT:6900"
     volumes:
+        - "$HOME/.ssh:/home/$USERNAME/.ssh"
+        - "$HOME/.password-store:/home/$USERNAME/.password-store"
+        - "$HOME/.passage:/home/$USERNAME/.passage"
+        - "$HOME/.cache/huggingface:/home/$USERNAME/.cache/huggingface"
+        - "$HOME/.huggingface:/home/$USERNAME/.huggingface"
         - "$WORKSPACE_ROOT:/workspace"
-        - "$HOME/.cache/huggingface:/root/.cache/huggingface"
-        - "$HOME/.huggingface:/root/.huggingface"
         - "$PWD/.resources/rubrix/.users.yaml:$RUBRIX_LOCAL_AUTH_USERS_DB_FILE"
     deploy:
       resources:
@@ -48,12 +53,10 @@ services:
     image: wernight/ngrok:latest
     ports:
       - 4840
-    env_file:
-      - .env.ngrok
-    # environment:
-    #   NGROK_AUTH: $NGROK_AUTH
-    #   NGROK_PROTOCOL: $NGROK_PROTOCOL
-    #   NGROK_PORT: $NGROK_PORT
+    environment:
+      NGROK_AUTH: $NGROK_AUTH
+      NGROK_PORT: $NGROK_PORT
+      NGROK_PROTOCOL: $NGROK_PROTOCOL
     depends_on:
       - ekorpkit
 networks:

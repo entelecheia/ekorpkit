@@ -1,12 +1,4 @@
 #!/bin/bash
-set -x
-set -o allexport
-# shellcheck disable=SC1091
-source .env
-# shellcheck disable=SC1091
-source .docker/docker.devenv.env
-set +o allexport
-
 # print all commands to stdout
 set -x
 
