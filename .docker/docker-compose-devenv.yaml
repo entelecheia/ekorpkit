@@ -10,8 +10,9 @@ services:
         USER_FULLNAME: $USER_FULLNAME
         USER_EMAIL: $USER_EMAIL
         GITHUB_USERNAME: $GITHUB_USERNAME
-        WORKSPACE_LOCATION: $WORKSPACE_LOCATION
-        SYSTEM_HOSTNAME: $SYSTEM_HOSTNAME
+        WORKSPACE_LOCATION: $CONTAINER_WORKSPACE_LOCATION
+        WORKSPACE_ROOT: $CONTAINER_WORKSPACE_ROOT
+        SYSTEM_HOSTNAME: $CONTAINER_HOSTNAME
         EKORPKIT_SRC_DIR: $EKORPKIT_SRC_DIR
         USERNAME: $USERNAME
         USER_UID: $USER_UID
@@ -25,7 +26,7 @@ services:
       HOST_JUPYTER_PORT: $HOST_JUPYTER_PORT
       JUPYTER_TOKEN: $JUPYTER_TOKEN
       JUPYTER_PORT: $JUPYTER_PORT
-      WORKSPACE_ROOT: "/workspace"
+      WORKSPACE_ROOT: $CONTAINER_WORKSPACE_ROOT
     ulimits:
       stack: 67108864
       memlock: -1
@@ -40,7 +41,7 @@ services:
         - "$HOME/.passage:/home/$USERNAME/.passage"
         - "$HOME/.cache/huggingface:/home/$USERNAME/.cache/huggingface"
         - "$HOME/.huggingface:/home/$USERNAME/.huggingface"
-        - "$WORKSPACE_ROOT:/workspace"
+        - "$WORKSPACE_ROOT:$CONTAINER_WORKSPACE_ROOT"
         - "$PWD/.resources/rubrix/.users.yaml:$RUBRIX_LOCAL_AUTH_USERS_DB_FILE"
     deploy:
       resources:
