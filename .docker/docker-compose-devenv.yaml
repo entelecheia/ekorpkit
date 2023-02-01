@@ -18,6 +18,7 @@ services:
         USER_UID: $USER_UID
         USER_GID: $USER_GID
     image: $IMAGE_NAME
+    hostname: $CONTAINER_HOSTNAME
     command:
       - bash 
       - ./scripts/devenv-entrypoint.sh
