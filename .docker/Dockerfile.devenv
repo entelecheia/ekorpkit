@@ -16,6 +16,9 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get clean -y \    
     && rm -rf /var/lib/apt/lists/*
 
+# fix sudo setrlimit(RLIMIT_CORE) error
+RUN echo "Set disable_coredump false" > /etc/sudo.conf
+
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
     && adduser --uid $USER_UID --gid $USER_GID --force-badname --disabled-password --gecos "" $USERNAME  \
