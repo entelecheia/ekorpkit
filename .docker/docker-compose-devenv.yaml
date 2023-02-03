@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  ekorpkit:
+  workspace:
     build:
       context: .
       dockerfile: .docker/Dockerfile.devenv
@@ -60,7 +60,7 @@ services:
       NGROK_PORT: $NGROK_PORT
       NGROK_PROTOCOL: $NGROK_PROTOCOL
     depends_on:
-      - ekorpkit
+      - workspace
 networks:
   default:
     name: $DOCKER_NETWORK_NAME
