@@ -38,6 +38,7 @@ services:
       - "$HOST_RUBRIX_PORT:6900"
     volumes:
         - "$HOME/.ssh:/home/$USERNAME/.ssh"
+        - "$HOME/.config/gh:/home/$USERNAME/.config/gh"
         - "$HOME/.password-store:/home/$USERNAME/.password-store"
         - "$HOME/.passage:/home/$USERNAME/.passage"
         - "$HOME/.cache/huggingface:/home/$USERNAME/.cache/huggingface"
