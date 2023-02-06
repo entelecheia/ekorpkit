@@ -2,6 +2,6 @@ defaults:
   - mecab
 
 mecab:
-  userdic_path: ${dir.resource}/dictionaries/mecab/ekon_v1.dic
+  userdic_path: ${__ekorpkit_path__:}/resources/dictionaries/mecab/ekon_v1.dic
   backend: mecab-python3
   verbose: ${oc.select:..verbose, false}
