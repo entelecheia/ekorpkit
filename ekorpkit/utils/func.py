@@ -3,10 +3,10 @@ import time
 import os
 import re
 import datetime
-import chardet
 from contextlib import contextmanager
 from timeit import default_timer
 from functools import partial
+import chardet
 
 
 def unescape_dict(d):
@@ -23,6 +23,7 @@ def _elapser(start, end):
 
 @contextmanager
 def elapsed_timer(format_time=False):
+    '''A context manager that yields a function that returns the elapsed time'''
     start = default_timer()
     # elapser = lambda: default_timer() - start
     elapser = partial(_elapser_timer, start)
@@ -34,14 +35,16 @@ def elapsed_timer(format_time=False):
     elapser = partial(_elapser, start, end)
 
 
-def lower_case_with_underscores(s):
-    return re.sub(r"\s+", "_", s.lower()).replace("-", "_")
+def lower_case_with_underscores(string):
+    '''Converts 'CamelCased' to 'camel_cased'.'''
+    return re.sub(r"\s+", "_", string.lower()).replace("-", "_")
 
 
-def ordinal(n):
+def ordinal(num):
+    '''Return the ordinal of a number as a string.'''
     return "%d%s" % (
-        n,
-        "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4],
+        num,
+        "tsnrhtdd"[(num // 10 % 10 != 1) * (num % 10 < 4) * num % 10 :: 4],
     )
 
 
@@ -63,7 +66,7 @@ def get_offset_ranges(count, num_workers):
 def change_directory(directory):
     original = os.path.abspath(os.getcwd())
 
-    fancy_print(" Change directory to {}".format(directory))
+    fancy_print(f" Change directory to {directory}")
     os.chdir(directory)
     try:
         yield
@@ -78,11 +81,12 @@ def change_directory(directory):
 
 
 def fancy_print(*args, color=None, bold=False, **kwargs):
+    '''Print with color and bold'''
     if bold:
         print("\033[1m", end="")
 
     if color:
-        print("\033[{}m".format(color), end="")
+        print(f"\033[{color}m", end="")
 
     print(*args, **kwargs)
 
@@ -166,7 +170,7 @@ def any_to_utf8(b):
     try:
         return b.decode("utf-8")
     except UnicodeDecodeError:
-        # try to figure out encoding if not urf-8
+        # try to figure out encoding if not utf-8
 
         guess = chardet.detect(b)["encoding"]
 

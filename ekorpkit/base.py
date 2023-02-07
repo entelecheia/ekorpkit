@@ -82,6 +82,7 @@ class Dummy:
 
 
 class Environments(BaseSettings):
+    '''Environment variables for ekorpkit'''
     EKORPKIT_CONFIG_DIR: Optional[str]
     EKORPKIT_WORKSPACE_ROOT: Optional[str]
     EKORPKIT_PROJECT_NAME: Optional[str]
@@ -562,13 +563,16 @@ def dotenv_values(dotenv_path=None, **kwargs):
 
 
 def getcwd():
+    '''Get the original working directory before hydra changed it'''
     try:
         return hydra.utils.get_original_cwd()
-    except Exception:
+    except ValueError:
         return os.getcwd()
 
+class _GlobalEnv:
+    initialized: bool = False
 
-_env_initialized_ = False
+_global_env = _GlobalEnv()
 
 _config_ = _compose().copy()
 
@@ -955,9 +959,9 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     :return: if _target_ is a class name: the instantiated object
              if _target_ is a callable: the return value of the call
     """
-    if not _env_initialized_:
-        _init_env_()
     verbose = config.get(_Keys.VERBOSE, False)
+    if not _global_env.initilized:
+        _init_env_(config, verbose=verbose)
     if not _is_instantiatable(config):
         if verbose:
             logger.info("Config is not instantiatable, returning config")
@@ -966,7 +970,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     if _Keys.RECURSIVE not in kwargs:
         kwargs[_Keys.RECURSIVE.value] = _recursive_
     if verbose:
-        logger.info(f"instantiating {config.get(_Keys.TARGET)}...")
+        logger.info("instantiating %s ...", config.get(_Keys.TARGET))
     return hydra.utils.instantiate(config, *args, **kwargs)
 
 
@@ -1018,8 +1022,6 @@ def _env_set(key: str, value: Any) -> None:
 
 
 def _init_env_(cfg=None, verbose=False):
-    global _env_initialized_
-
     _load_dotenv(verbose=verbose)
     if _is_notebook():
         _log_level = os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
@@ -1029,7 +1031,7 @@ def _init_env_(cfg=None, verbose=False):
         cfg = _config_
     if "project" not in cfg:
         if verbose:
-            logger.warning(f"No project config found in {cfg}")
+            logger.warning("No project config found, skipping env initialization")
         return
     env = cfg.project.env
 
@@ -1067,7 +1069,7 @@ def _init_env_(cfg=None, verbose=False):
         )
         if verbose:
             logger.info(f"initialized batcher with {batcher.batcher_instance}")
-    _env_initialized_ = True
+    _global_env.initilized = True
     return ProjectConfig()
 
 
@@ -1100,23 +1102,23 @@ def _stop_env_(cfg, verbose=False):
 
 def _pipe(data, pipe):
     _func_ = pipe.get(_Keys.FUNC)
-    fn = _partial(_func_)
-    logger.info(f"Applying pipe: {fn}")
+    _fn = _partial(_func_)
+    logger.info("Applying pipe: %s", _fn)
     if isinstance(data, dict):
-        if "concat_dataframes" in str(fn):
-            return fn(data, pipe)
-        else:
-            dfs = {}
-            for df_no, df_name in enumerate(data):
-                df_each = data[df_name]
-                logger.info(
-                    f"Applying pipe to dataframe [{df_name}], {(df_no+1)}/{len(data)}"
-                )
-                pipe[_Keys.SUFFIX.value] = df_name
-                dfs[df_name] = fn(df_each, pipe)
-            return dfs
-    else:
-        return fn(data, pipe)
+        if "concat_dataframes" in str(_fn):
+            return _fn(data, pipe)
+        dfs = {}
+        for df_no, df_name in enumerate(data):
+            df_each = data[df_name]
+
+            logger.info(
+                "Applying pipe to dataframe [%s], %d/%d", df_name, df_no + 1, len(data)
+            )
+
+            pipe[_Keys.SUFFIX.value] = df_name
+            dfs[df_name] = _fn(df_each, pipe)
+        return dfs
+    return _fn(data, pipe)
 
 
 def _dependencies(_key=None, _path=None):
@@ -1333,6 +1335,7 @@ def _set_workspace(
     workspace=None,
     project=None,
     task=None,
+    init_envs=True,
     log_level=None,
     autotime=True,
     retina=True,
@@ -1352,4 +1355,7 @@ def _set_workspace(
         _load_extentions(exts=["autotime"])
     if retina:
         _set_matplotlib_formats("retina")
-    return ProjectConfig()
+    prj_config = ProjectConfig()
+    if init_envs:
+        _init_env_(verbose=verbose)
+    return prj_config

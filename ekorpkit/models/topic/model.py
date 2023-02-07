@@ -96,8 +96,8 @@ class TopicModel:
         self.summary_file = Path(self.files.summary)
         self.summaries = []
         if self.summary_file.is_file():
-            df = eKonf.load_data(self.summary_file, index_col=0)
-            for row in df.itertuples():
+            data = eKonf.load_data(self.summary_file, index_col=0)
+            for row in data.itertuples():
                 self.summaries.append(ModelSummary(*row[1:]))
 
         self.corpus_key_path = Path(self.files.corpus_key)

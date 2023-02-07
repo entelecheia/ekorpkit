@@ -299,7 +299,7 @@ class eKonf:
         _load_dotenv(verbose, override)
 
     @staticmethod
-    def _init_env_(cfg, verbose=False):
+    def _init_env_(cfg=None, verbose=False):
         return _init_env_(cfg, verbose=verbose)
 
     @staticmethod
@@ -972,6 +972,7 @@ class eKonf:
         workspace=None,
         project=None,
         task=None,
+        init_envs=True,
         log_level=None,
         autotime=True,
         retina=True,
@@ -979,13 +980,14 @@ class eKonf:
         **kwargs,
     ) -> ProjectConfig:
         return _set_workspace(
-            workspace,
-            project,
-            task,
-            log_level,
-            autotime,
-            retina,
-            verbose,
+            workspace=workspace,
+            project=project,
+            task=task,
+            init_envs=init_envs,
+            log_level=log_level,
+            autotime=autotime,
+            retina=retina,
+            verbose=verbose,
             **kwargs,
         )
 

@@ -8,7 +8,7 @@ defaults:
   - mode: default
   - task: default
   # - path: _default_
-  # - project: default
+  - project: default
   # - corpus: __init__
   # - corpus/builtin: __init__
   # - dataset: __init__

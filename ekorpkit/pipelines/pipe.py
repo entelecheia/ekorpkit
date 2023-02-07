@@ -770,8 +770,7 @@ def extract_tokens(df, args):
         extract_func = tokenizer.extract_nouns
     else:
         extract_func = tokenizer.extract_tokens
-    log.info(f"extract_func: {extract_func}")
-
+    log.info("extract_func: %s", extract_func)
     for key in apply_to:
         with elapsed_timer(format_time=True) as elapsed:
             df[key] = eKonf.apply(
@@ -782,7 +781,7 @@ def extract_tokens(df, args):
                 use_batcher=use_batcher,
                 minibatch_size=minibatch_size,
             )
-            log.info(" >> elapsed time to extract tokens: {}".format(elapsed()))
+            log.info(" >> elapsed time to extract tokens: %s", elapsed())
     return df
 
 
