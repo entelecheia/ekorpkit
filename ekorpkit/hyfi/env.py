@@ -169,6 +169,7 @@ class Secrets(BaseSettings):
 
 
 class ProjectPathConfig(BaseModel):
+    config_name: str = None
     workspace: str = None
     project: str = "ekorpkit-default"
     data: str = None
@@ -190,13 +191,13 @@ class ProjectPathConfig(BaseModel):
     class Config:
         extra = "allow"
 
-    def __init__(self, **data: Any):
+    def __init__(self, config_name: str = "__init__", **data: Any):
         if not data:
-            data = _compose("path=__project__")
+            data = _compose(f"path={config_name}")
             logger.info(
                 "There are no arguments to initilize a config, using default config."
             )
-        super().__init__(**data)
+        super().__init__(config_name=config_name, **data)
 
     @property
     def log_dir(self):
@@ -226,10 +227,10 @@ class ProjectConfig(BaseModel):
         extra = "allow"
         arbitrary_types_allowed = True
 
-    def __init__(self, **data: Any):
+    def __init__(self, config_name: str = "__init__", **data: Any):
         if not data:
-            data = _compose("project=__init__")
-        super().__init__(**data)
+            data = _compose(f"project={config_name}")
+        super().__init__(config_name=config_name, **data)
         if self.envs.EKORPKIT_VERBOSE is not None:
             self.verbose = self.envs.EKORPKIT_VERBOSE
         self.envs.EKORPKIT_DATA_ROOT = str(self.path.data)

@@ -7,7 +7,6 @@ resources: ${.ekorpkit}/resources
 runtime: ${get_original_cwd:}
 archive: ${.data}/archive
 datasets: ${.data}/datasets
-corpus: ${.datasets}/corpus
 logs: ${.project}/logs
 models: ${.data}/models
 outputs: ${.project}/outputs
