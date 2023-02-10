@@ -1,16 +1,10 @@
-from .hyfi import global_env, hConf
+from .hyfi import hConf
 from .base import (
     __ekorpkit_path__,
-    _getLogger,
     _Defaults,
     _Keys,
     _SPLITS,
 )
-
-
-logger = _getLogger(__name__)
-
-global_env.hyfi_package_config_path = "pkg://ekorpkit.conf"
 
 
 class eKonf(hConf):

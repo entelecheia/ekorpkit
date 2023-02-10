@@ -8,7 +8,7 @@ from .hydra import (
 )
 
 
-logger = getLogger()
+logger = getLogger(__name__)
 
 
 def _pipe(data, pipe):

@@ -7,7 +7,7 @@ from .logging import getLogger
 from ..io.file import is_dir
 
 
-logger = getLogger()
+logger = getLogger(__name__)
 
 
 def getcwd():

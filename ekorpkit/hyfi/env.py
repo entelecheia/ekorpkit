@@ -14,7 +14,7 @@ from .utils.env import load_dotenv
 from .. import _version
 
 
-logger = getLogger()
+logger = getLogger(__name__)
 
 __hydra_version_base__ = "1.2"
 
@@ -25,6 +25,7 @@ def __version__():
 
 class GlobalEnviron(BaseSettings):
     hyfi_package_config_path: str = "pkg://ekorpkit.hyfi.conf"
+    hyfi_config_module: str = "ekorpkit.hyfi.conf"
     hyfi_user_config_path: str = None
     __hyfi_env_initilized__: bool = False
 
@@ -39,12 +40,17 @@ class GlobalEnviron(BaseSettings):
     @root_validator()
     def _check_and_set_values(cls, values):
         for k, v in values.items():
+            if k == "hyfi_package_config_path":
+                values["hyfi_config_module"] = v.replace("pkg://", "")
             if v is not None:
-                old_value = os.getenv(k.upper())
-                if old_value is None or old_value != str(v):
+                old_value = os.getenv(k.upper(), "")
+                if str(old_value).lower() != str(v).lower():
                     os.environ[k.upper()] = str(v)
-                    # logger.info(f"Set environment variable {k.upper()}={v}")
+                    logger.debug("Set environment variable %s=%s", k.upper(), str(v))
         return values
+
+
+__global_env__ = GlobalEnviron()
 
 
 class Environments(BaseSettings):
@@ -170,6 +176,7 @@ class Secrets(BaseSettings):
 
 class ProjectPathConfig(BaseModel):
     config_name: str = None
+    config_module: str = "ekorpkit.hyfi.conf"
     workspace: str = None
     project: str = "ekorpkit-default"
     data: str = None
@@ -191,13 +198,18 @@ class ProjectPathConfig(BaseModel):
     class Config:
         extra = "allow"
 
-    def __init__(self, config_name: str = "__init__", **data: Any):
+    def __init__(
+        self,
+        config_name: str = "__init__",
+        config_module: str = "ekorpkit.hyfi.conf",
+        **data: Any,
+    ):
         if not data:
-            data = _compose(f"path={config_name}")
-            logger.info(
+            data = _compose(f"path={config_name}", config_module=config_module)
+            logger.debug(
                 "There are no arguments to initilize a config, using default config."
             )
-        super().__init__(config_name=config_name, **data)
+        super().__init__(config_name=config_name, config_module=config_module, **data)
 
     @property
     def log_dir(self):
@@ -211,6 +223,8 @@ class ProjectPathConfig(BaseModel):
 
 
 class ProjectConfig(BaseModel):
+    config_name: str = None
+    config_module: str = "ekorpkit.hyfi.conf"
     project_name: str = "ekorpkit-project"
     task_name: str = None
     workspace_root: str = None
@@ -227,10 +241,19 @@ class ProjectConfig(BaseModel):
         extra = "allow"
         arbitrary_types_allowed = True
 
-    def __init__(self, config_name: str = "__init__", **data: Any):
+    def __init__(
+        self,
+        config_name: str = "__init__",
+        config_module: str = "ekorpkit.hyfi.conf",
+        **data: Any,
+    ):
         if not data:
-            data = _compose(f"project={config_name}")
-        super().__init__(config_name=config_name, **data)
+            data = _compose(f"project={config_name}", config_module=config_module)
+            logger.debug(
+                "There are no arguments to initilize a config, using default config."
+            )
+        super().__init__(config_name=config_name, config_module=config_module, **data)
+
         if self.envs.EKORPKIT_VERBOSE is not None:
             self.verbose = self.envs.EKORPKIT_VERBOSE
         self.envs.EKORPKIT_DATA_ROOT = str(self.path.data)
@@ -298,7 +321,8 @@ def _compose(
     return_as_dict: bool = False,
     throw_on_resolution_failure: bool = True,
     throw_on_missing: bool = False,
-    config_name="hconf",
+    config_name: str = None,
+    config_module: str = None,
     verbose: bool = False,
 ) -> Union[DictConfig, Dict]:
     """
@@ -314,6 +338,9 @@ def _compose(
 
     :return: The composed config
     """
+    config_module = config_module or __global_env__.hyfi_config_module
+    if verbose:
+        logger.info("config_module: %s", config_module)
     is_initialized = hydra.core.global_hydra.GlobalHydra.instance().is_initialized()
     if config_group:
         _task = config_group.split("=")
@@ -331,7 +358,7 @@ def _compose(
             cfg = hydra.compose(config_name=config_name, overrides=overrides)
         else:
             with hydra.initialize_config_module(
-                config_module="ekorpkit.hyfi.conf", version_base=__hydra_version_base__
+                config_module=config_module, version_base=__hydra_version_base__
             ):
                 cfg = hydra.compose(config_name=config_name, overrides=overrides)
         cfg = _select(
@@ -357,9 +384,10 @@ def _compose(
         cfg = hydra.compose(config_name=config_name, overrides=overrides)
     else:
         with hydra.initialize_config_module(
-            config_module="ekorpkit.hyfi.conf", version_base=__hydra_version_base__
+            config_module=config_module, version_base=__hydra_version_base__
         ):
             cfg = hydra.compose(config_name=config_name, overrides=overrides)
+
     if key and key != "task":
         cfg = _select(
             cfg,
@@ -368,8 +396,7 @@ def _compose(
             throw_on_missing=throw_on_missing,
             throw_on_resolution_failure=throw_on_resolution_failure,
         )
-    if verbose:
-        print(cfg)
+    logger.debug("Composed config: %s", OmegaConf.to_yaml(cfg))
     if return_as_dict and isinstance(cfg, DictConfig):
         return _to_dict(cfg)
     return cfg

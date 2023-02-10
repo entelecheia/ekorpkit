@@ -7,7 +7,7 @@ from .logging import getLogger
 from ..io.file import is_dir, is_file
 
 
-logger = getLogger()
+logger = getLogger(__name__)
 
 
 def gitclone(url, targetdir=None, verbose=False):

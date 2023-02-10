@@ -6,7 +6,7 @@ from .notebook import _clear_output
 from .logging import getLogger
 
 
-logger = getLogger()
+logger = getLogger(__name__)
 
 
 class GPUMon(Thread):

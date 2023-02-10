@@ -18,14 +18,14 @@ from .utils.func import (
 from .utils.env import getcwd, dotenv_values, load_dotenv
 from .utils.notebook import is_notebook
 from .env import (
-    GlobalEnviron,
     ProjectConfig,
-    __version__,
     _compose,
     _select,
     _to_dict,
     _to_config,
+    __global_env__,
     __hydra_version_base__,
+    __version__,
 )
 from .io.file import (
     _check_path,
@@ -37,10 +37,8 @@ from .io.cached_path import _path
 from .utils.batch import batcher
 
 
-logger = getLogger()
+logger = getLogger(__name__)
 
-
-__global_env__ = GlobalEnviron()
 
 DictKeyType = Union[str, int, Enum, float, bool]
 
@@ -378,14 +376,16 @@ OmegaConf.register_new_resolver(
 OmegaConf.register_new_resolver("dotenv_values", dotenv_values)
 
 
-def _init_env_(cfg=None, verbose=False):
+def _init_env_(
+    cfg=None, config_module: str = "ekorpkit.hyfi.conf", verbose: bool = False
+):
     load_dotenv(verbose=verbose)
     # if is_notebook():
     #     _log_level = os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
     #     # logger.basicConfig(level=_log_level, force=True)
 
     if cfg is None:
-        cfg = _compose(overrides=["+project=__init__"])
+        cfg = _compose(overrides=["+project=__init__"], config_module=config_module)
     if "project" not in cfg:
         if verbose:
             logger.warning("No project config found, skipping env initialization")

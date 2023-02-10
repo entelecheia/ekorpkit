@@ -11,7 +11,7 @@ from sentencepiece import SentencePieceProcessor
 from tqdm import trange, tqdm
 
 basicConfig()
-logger = getLogger()
+logger = getLogger(__name__)
 
 
 class SentencePieceExtractor:

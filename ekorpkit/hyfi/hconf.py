@@ -17,11 +17,7 @@ from .utils.notebook import (
     is_notebook,
     is_colab,
 )
-from .env import (
-    Environments, 
-    Secrets, 
-    ProjectConfig
-)
+from .env import Environments, Secrets, ProjectConfig
 from .hydra import (
     _compose,
     _select,
@@ -138,7 +134,8 @@ class hConf:
         return_as_dict: bool = False,
         throw_on_resolution_failure: bool = True,
         throw_on_missing: bool = False,
-        config_name="hconf",
+        config_name: str = None,
+        config_module: str = None,
         verbose: bool = False,
     ) -> Union[DictConfig, Dict]:
         return _compose(
@@ -148,6 +145,7 @@ class hConf:
             throw_on_resolution_failure=throw_on_resolution_failure,
             throw_on_missing=throw_on_missing,
             config_name=config_name,
+            config_module=config_module,
             verbose=verbose,
         )
 
