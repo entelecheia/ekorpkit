@@ -1,0 +1,39 @@
+ARG BUILD_FROM="entelecheia/ekorpkit:latest-pytorch1.11-runtime"
+FROM $BUILD_FROM
+
+RUN apt-get update \
+    && apt-get install -y --fix-missing openssh-server nodejs npm sudo\
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up locale
+RUN localedef -v -c -i en_US -f UTF-8 en_US.UTF-8 || true
+# Update nodejs
+RUN npm cache clean -f && npm install -g n && n lts
+
+# Set up jupyter notebook extensions
+RUN pip install --no-cache-dir --upgrade \
+    jupyter_nbextensions_configurator ipywidgets RISE \
+    jupyterlab \
+    jupyterlab_execute_time \
+    jupyterlab-git \
+    jupyterlab-vim \
+    jupytext \
+    ipympl \
+    ipython-autotime
+
+
+RUN jupyter nbextension enable --py widgetsnbextension
+RUN jupyter nbextensions_configurator enable
+RUN jupyter labextension install \
+    @jupyter-widgets/jupyterlab-manager \
+    jupyterlab-slide-mode-keyboard-shortcuts \
+    jupyter-matplotlib \
+    jupyterlab-spreadsheet
+
+RUN rm -rf /workspace && mkdir -p /workspace
+WORKDIR /workspace
+
+COPY ./scripts/devenv-entrypoint.sh ./
+RUN chmod 755 ./devenv-entrypoint.sh
+CMD ["bash"]

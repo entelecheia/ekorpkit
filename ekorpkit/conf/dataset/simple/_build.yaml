@@ -8,7 +8,7 @@ defaults:
 _target_: ekorpkit.datasets.build.DatasetBuilder
 name:
 category: general
-data_dir: ${dir.dataset}/simple/${.name}
+data_dir: ${path.datasets}/simple/${.name}
 filetype: .parquet
 verbose: ${oc.select:..verbose, true}
 

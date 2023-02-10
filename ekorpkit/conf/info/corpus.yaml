@@ -4,7 +4,7 @@ defaults:
   - override /cmd@_global_: info
 
 name: corpus
-data_dir: ${dir.corpus}
+data_dir: ${path.corpus}
 base_dir:
 info_source_dir: ekorpkit/conf/${.name}/builtin
 info_archive_dir: ekorpkit/resources/corpora

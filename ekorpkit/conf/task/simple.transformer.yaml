@@ -1,0 +1,7 @@
+defaults:
+  - /auto: default
+  - /batch: preds
+  - /project: default
+  - /path: _batch_
+
+name: simple-transformer

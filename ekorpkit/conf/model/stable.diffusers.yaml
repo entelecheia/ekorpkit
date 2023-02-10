@@ -1,0 +1,12 @@
+generate:
+  name: CompVis/stable-diffusion-v1-4
+  pipeline: StableDiffusionPipeline
+  revision: fp16 
+  use_auth_token: true
+  device: cuda:0
+inpaint:
+  name: runwayml/stable-diffusion-inpainting
+  pipeline: StableDiffusionInpaintPipeline
+  revision: fp16 
+  use_auth_token: true
+  device: cuda:0

@@ -1,0 +1,7 @@
+defaults:
+  - default
+
+output_extention: parquet
+limit: -1
+force_download: false
+compress: false

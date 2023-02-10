@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  ekorpkit:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+      args:
+        BUILD_FROM: $BUILD_FROM
+        PIP_PACKAGE_NAME: $PIP_PACKAGE_NAME
+    image: $IMAGE_NAME
+    container_name: $CONTAINER_NAME
+    env_file:
+      - .env
+    ulimits:
+      stack: 67108864
+      memlock: -1
+networks:
+  default:
+    name: $DOCKER_NETWORK_NAME
+    external: true

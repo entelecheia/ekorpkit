@@ -1,0 +1,10 @@
+clear_output: true
+show_prompt: true
+ncols: 3
+max_images: 12
+collage_width: 1200
+padding: 5
+bg_color: black
+crop_to_min_size: false
+show_filename: false
+fontsize: 12

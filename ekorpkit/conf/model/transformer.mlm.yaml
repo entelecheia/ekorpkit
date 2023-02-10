@@ -1,0 +1,5 @@
+defaults:
+  - transformer
+
+model_objective: mlm
+task_name: fill-mask

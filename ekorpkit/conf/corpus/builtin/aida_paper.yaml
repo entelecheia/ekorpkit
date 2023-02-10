@@ -30,7 +30,7 @@ column_info:
     keywords: str
 
 io:
-  data_dir: ${dir.archive}/datasets/source/aida
+  data_dir: ${path.archive}/datasets/source/aida
   data_sources: 
     train: aida_papers.zip
   loader:    

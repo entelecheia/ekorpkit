@@ -1,0 +1,4 @@
+input: ${..input}
+predicted: ${..predicted}
+pred_probs: ${..pred_probs}
+model_outputs: ${..model_outputs}

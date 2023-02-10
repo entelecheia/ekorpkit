@@ -6,10 +6,6 @@ from ekorpkit.pipelines.pipe import apply_pipeline
 from ekorpkit import eKonf
 
 
-DESCRIPTION = "ekorpkit datasets"
-LICENSE = "Copyright of the dataset is owned by the authors."
-
-
 log = logging.getLogger(__name__)
 
 
@@ -59,8 +55,8 @@ class BaseSet:
             self._info = eKonf.to_dict(self._info)
         self.filetype = self.args.get("filetype") or "parquet"
         self.filetype = "." + self.filetype.replace(".", "")
-        self.description = self.args.get("description", DESCRIPTION)
-        self.license = self.args.get("license", LICENSE)
+        self.description = self.args.get("description")
+        self.license = self.args.get("license")
         if self.verbose:
             log.info(
                 f"Intantiating a {self.__class__.__name__} [{self.name}] with a config:"
@@ -250,8 +246,8 @@ class BaseSet:
         if self._le is None:
             log.info("Label encoder is not fitted")
             self.fit_labelencoder(data)
-        _data = self._le.transform(data)
-        return _data
+        data_ = self._le.transform(data)
+        return data_
 
     def inverse_transform_labels(self, data):
         if not self._loaded:

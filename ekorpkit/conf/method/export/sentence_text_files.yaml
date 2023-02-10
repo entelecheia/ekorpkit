@@ -1,0 +1,7 @@
+export_name: sentence_chunks
+chunk_size: 10_000
+filename_fmt: "sent_chunk_{:04d}.txt"
+overwrite_chunks: false
+sample_frac: 0.1 # Sample a fraction of the dataset for training
+sample_name: sentence_sample/sentence_chunks_sampled.txt
+overwrite_sample: true

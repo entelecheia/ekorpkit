@@ -27,7 +27,7 @@ column_info:
     date: str
     category: str
 io:
-  data_dir: ${dir.archive}/datasets/source/nikl
+  data_dir: ${path.archive}/datasets/source/nikl
   data_sources: 
     train: 
       - NIKL_SPOKEN_v1.2.zip

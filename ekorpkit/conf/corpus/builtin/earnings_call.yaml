@@ -27,6 +27,6 @@ column_info:
     nos: str
 
 io:
-  data_dir:  ${dir.dataset}/source/${.name}
+  data_dir:  ${path.datasets}/source/${.name}
   data_sources: 
     train: ${..fetcher.output_file}

@@ -7,8 +7,12 @@ from tokenizers import (
     normalizers,
     pre_tokenizers,
 )
-from .models.branching import BranchingEntropy, BranchingEntropyTrainer
+from .models.branching import (
+    BranchingEntropy,
+    BranchingEntropyTrainer,
+)
 from .base import BaseTokenizer
+from ekorpkit import eKonf
 
 
 log = logging.getLogger(__name__)
@@ -23,10 +27,10 @@ class BranchingEntropyTokenizer(BaseTokenizer):
     def __init__(
         self,
         vocab: Optional[str] = None,
-        branching_threshold=0.2,
+        branching_threshold=0.0,
+        cohesion_threshold=0.0,
         whitespace_token="▁",
         whitespace_token_as_prefix=True,
-        replacement: str = "▁",
         add_prefix_space: bool = True,
         lowercase: bool = True,
         verbose=False,
@@ -37,6 +41,7 @@ class BranchingEntropyTokenizer(BaseTokenizer):
             tokenizer = BranchingEntropy(
                 vocab=vocab,
                 branching_threshold=branching_threshold,
+                cohesion_threshold=cohesion_threshold,
                 whitespace_token=whitespace_token,
                 whitespace_token_as_prefix=whitespace_token_as_prefix,
                 verbose=verbose,
@@ -48,24 +53,31 @@ class BranchingEntropyTokenizer(BaseTokenizer):
             normalizers.Nmt(),
             normalizers.NFKC(),
             normalizers.Replace(Regex(" {2,}"), " "),
+            normalizers.StripAccents(),
         ]
         if lowercase:
             normalizers_ += [normalizers.Lowercase()]
 
         tokenizer.normalizer = normalizers.Sequence(normalizers_)
-        tokenizer.pre_tokenizer = pre_tokenizers.Metaspace(
-            replacement=replacement, add_prefix_space=add_prefix_space
-        )
+        pre_tokenizers_ = [
+            pre_tokenizers.Metaspace(
+                replacement=whitespace_token, add_prefix_space=add_prefix_space
+            ),
+            pre_tokenizers.Punctuation(),
+            pre_tokenizers.UnicodeScripts(),
+            pre_tokenizers.Digits(individual_digits=True),
+        ]
+        tokenizer.pre_tokenizer = pre_tokenizers.Sequence(pre_tokenizers_)
         tokenizer.decoder = decoders.Metaspace(
-            replacement=replacement, add_prefix_space=add_prefix_space
+            replacement=whitespace_token, add_prefix_space=add_prefix_space
         )
 
         parameters = {
             "model": "BranchingEntropy",
             "branching_threshold": branching_threshold,
             "whitespace_token": whitespace_token,
+            "cohesion_threshold": cohesion_threshold,
             "whitespace_token_as_prefix": whitespace_token_as_prefix,
-            "replacement": replacement,
             "add_prefix_space": add_prefix_space,
         }
 
@@ -84,17 +96,20 @@ class BranchingEntropyTokenizer(BaseTokenizer):
         Train the model using the given files
         """
 
-        trainer = BranchingEntropyTrainer(
+        files = eKonf.get_filepaths(files)
+        num_files = len(files)
+        # create iterator for files
+        iterator = (open(f, "r", encoding="utf-8") for f in files)
+
+        self.train_from_iterator(
+            iterator,
             whitespace_token=whitespace_token,
             max_sentencepiece_length=max_sentencepiece_length,
             min_frequency=min_frequency,
             show_progress=show_progress,
             verbose=verbose,
+            length=num_files,
         )
-
-        if isinstance(files, str):
-            files = [files]
-        self._tokenizer.train(files, trainer=trainer)
 
     def train_from_iterator(
         self,
@@ -135,7 +150,7 @@ class BranchingEntropyTokenizer(BaseTokenizer):
         """
         if prefix is not None:
             folder = os.path.join(folder, prefix)
-        vocab = os.path.join(folder, "vocab.json")
+        vocab = os.path.join(folder, "vocab.json.zst")
         config = os.path.join(folder, "config.json")
 
         return BranchingEntropyTokenizer.from_file(vocab, config, **kwargs)
@@ -148,21 +163,34 @@ class BranchingEntropyTokenizer(BaseTokenizer):
 
         return BranchingEntropyTokenizer(vocab, **config)
 
-    def find_local_entropy(self, word, direction="forward"):
-        return self._tokenizer.find_local_entropy(word, direction=direction)
+    def find_local_entropy(self, word):
+        return self._tokenizer.find_local_entropy(word)
 
-    def plot_local_entropy(self, word, direction="forward", figsize=(12, 5)):
-        self._tokenizer.plot_local_entropy(word, direction=direction, figsize=figsize)
+    def show_local_entropy(self, word):
+        return self._tokenizer.show_local_entropy(word)
+
+    def plot_local_entropy(
+        self,
+        word,
+        figsize=(12, 5),
+    ):
+        return self._tokenizer.plot_local_entropy(word, figsize=figsize)
 
     def tokenize(
-        self, sequence, direction="forward", flatten=True, branching_threshold=None
+        self,
+        sequence,
+        flatten=True,
+        branching_threshold=None,
+        cohesion_threshold=None,
+        **kwargs,
     ):
         return self._tokenizer.tokenize(
             sequence,
-            direction=direction,
             flatten=flatten,
             branching_threshold=branching_threshold,
+            cohesion_threshold=cohesion_threshold,
+            **kwargs,
         )
 
-    def naive_segment(self, text, direction="forward"):
-        return self._tokenizer.naive_segment(text, direction=direction)
+    def naive_segment(self, text):
+        return self._tokenizer.naive_segment(text)

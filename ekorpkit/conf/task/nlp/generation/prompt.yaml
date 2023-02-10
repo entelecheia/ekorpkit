@@ -1,0 +1,35 @@
+defaults:
+  - /auto: default
+  - /batch: default
+  - /project: aiart
+  - /path: _batch_
+  - /dataset: language-modeling
+  - /model: transformer.clm
+  - /tokenizer: pretrained
+  - /training: prompt
+  - /_generate_: prompt
+
+_target_: ekorpkit.tasks.nlp.PromptGenerator
+name: prompt-generator
+device: "cuda:0"
+verbose: ${oc.select:..verbose, false}
+generated_prompts:
+dataset:
+  dataset_name: Gustavosta/Stable-Diffusion-Prompts
+  text_column_name: Prompt
+  validation_split_percentage:
+  mlm: false
+  line_by_line: true
+  pad_to_max_length: true
+  affix_bos_eos_to_sentences: false
+  group_by_shuffling: false
+model:
+  model_name: ekorpkit/stable-prompts
+  model_name_or_path: distilgpt2
+tokenizer:
+  add_special_tokens: true
+  bos_token: <bop>
+  eos_token: <eop>
+  pad_token: <pad>
+  # tokenizer_name_or_path: distilgpt2
+use_accelerator: false

@@ -4,7 +4,7 @@ defaults:
   - override /cmd@_global_: info
 
 name: t5
-data_dir: ${dir.dataset}/${.name}
+data_dir: ${path.datasets}/${.name}
 base_dir:
 info_source_dir: ekorpkit/conf/dataset/${.name}
 info_archive_dir: ekorpkit/resources/datasets/${.name}

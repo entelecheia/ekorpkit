@@ -2,3 +2,6 @@ defaults:
   - _default
   - model: default
   - /cache: archive
+
+model_dir: ${oc.select:..output_dir, ${.root}}
+model_file: ${oc.select:..model_file, null}

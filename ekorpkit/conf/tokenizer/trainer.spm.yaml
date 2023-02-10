@@ -1,0 +1,4 @@
+defaults:
+  - trainer
+  - override /model: tokenizer.spm
+  - override /_train_: tokenizer.spm

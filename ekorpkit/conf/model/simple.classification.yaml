@@ -1,0 +1,15 @@
+model_name_or_path:
+model_name: ${..name}-${.task_name}
+model_dir:
+model_type:
+config_name:
+config_overrides:
+task_name: classification
+log_dir:
+cache_dir:
+device: "cuda:-1"
+wandb_project: ${..project.project_name}/${..name}
+wandb_group: ${.model_name_or_path}
+ignore_existing_model_output: false
+use_model_name_or_path: true
+num_labels:

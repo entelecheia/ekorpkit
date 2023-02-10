@@ -1,0 +1,4 @@
+defaults:
+  - classification
+  - override /columns: model.simple.classification
+  - override /columns/eval: simple.classification

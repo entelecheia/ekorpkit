@@ -1,0 +1,7 @@
+uri:
+extract_archive: true
+force_extract: false
+return_parent_dir: true
+cache_dir: ${oc.select:..path.cache_dir,${oc.env:EKORPKIT_PROJECT_ROOT,./}/.cache}
+verbose: ${oc.select:..verbose, false}
+path: ${cached_path:${.uri},${.extract_archive},${.force_extract},${.return_parent_dir},${.cache_dir},${.verbose}}

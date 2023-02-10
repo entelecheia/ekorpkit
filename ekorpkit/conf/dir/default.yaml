@@ -1,15 +1,16 @@
-archive: ${.data}/archive
-cache: ${.workspace}/.cache
-corpus: ${.dataset}/corpus
-data: ${alt:${oc.env:EKORPKIT_DATA_DIR,null},${.workspace}/data}
-dataset: ${.data}/datasets
-ekorpkit: ${__ekorpkit_path__:}
+workspace: ${oc.select:..workspace_dir,${.home}/.ekorpkit}
+project: ${.workspace}/projects/${oc.select:..project_name,${oc.env:EKORPKIT_PROJECT_NAME,ekorpkit-default}}
+data: ${alt:${oc.env:EKORPKIT_DATA_ROOT,null},${.workspace}/data}
 home: ${__home_path__:}
+ekorpkit: ${__ekorpkit_path__:}
+resource: ${.ekorpkit}/resources
+runtime: ${get_original_cwd:}
+archive: ${.data}/archive
+corpus: ${.dataset}/corpus
+dataset: ${.data}/datasets
 log: ${.project}/logs
 model: ${.data}/models
 output: ${.project}/outputs
-project: ${.workspace}/projects/${project.name}
-resource: ${.ekorpkit}/resources
-runtime: ${get_original_cwd:}
+cache: ${.workspace}/.cache
 tmp: ${.workspace}/.tmp
-workspace: ${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.home}/.ekorpkit}
+library: ${join_path:${.data}, libs}

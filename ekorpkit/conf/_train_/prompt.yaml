@@ -1,0 +1,7 @@
+pretrained_model_name_or_path: distilgpt2 # bigscience/bloom-560m
+prompt_column: Prompt
+split: train
+shuffle_prompts: false
+num_shuffles: 4
+batch_size: 10000
+padding: max_length

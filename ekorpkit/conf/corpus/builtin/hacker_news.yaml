@@ -22,7 +22,7 @@ column_info:
     text: str
 
 io:
-  data_dir:  ${dir.archive}/datasets/source/the_pile
+  data_dir:  ${path.archive}/datasets/source/the_pile
   data_sources: 
     train: train
     test: test

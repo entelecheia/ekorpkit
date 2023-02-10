@@ -9,13 +9,14 @@ from ekorpkit import eKonf
 log = logging.getLogger(__name__)
 
 
-def confusion_matrix(ax=None, x=None, y=None, data=None, **kwargs):
+def confusion_matrix(ax=None, x=None, y=None, data=None, verbose=False, **kwargs):
     rcParams = {} or kwargs.get(eKonf.Keys.rcPARAMS)
     _ax_cfg_ = {} or kwargs.get("_ax_")
     if ax is None:
         ax = plt.gca()
 
-    log.info(f"Confusion matrix: {kwargs}")
+    if verbose:
+        log.info(f"Confusion matrix: {kwargs}")
 
     display_labels = kwargs.get("display_labels") or "auto"
     matrix_labels = kwargs.get("matrix_labels")

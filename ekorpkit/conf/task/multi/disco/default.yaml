@@ -1,0 +1,59 @@
+defaults:
+  - /module: disco_diffusion
+  - /path: disco_diffusion
+  - /batch: disco_diffusion
+  - imagine: default
+  - parameters: default
+  - model: default
+  - model_map: default
+  - diffusion_model: default
+  - midas: default
+  - download: default
+  - /collage: default
+
+_target_: ekorpkit.models.disco.base.DiscoDiffusion
+name: disco-diffusion
+version: v5.61
+autoload: true
+verbose: ${oc.select:..verbose, false}
+device: ${oc.env:CUDA_VISIBLE_DEVICES,0}
+text_prompts:
+  0:
+    - At a special meeting, hawkish central bankers are poised to raise the target rates, Trending on artstation.
+  100:
+    - This set of prompts start at frame 100
+    - This prompt has weight five:5
+image_prompts:
+  # 0:['ImagePromptsWorkButArentVeryGood.png:2',],
+
+config:
+  text_prompts: ${..text_prompts}
+  image_prompts: ${..image_prompts}
+  intermediate_saves: 0
+  steps_per_checkpoint:
+  batch_num:
+  stop_on_next_loop: false
+  side_x:
+  side_y:
+  calc_frames_skip_steps:
+  start_frame:
+  start_sample:
+  seed:
+
+output:
+  root: ${..path.output_dir}/${..name}
+  batch_configs_dir: ${.root}/batch_configs
+  batch_dir: ${.root}/${..config.batch_name}
+  retain_dir: ${.batch_dir}/retained
+  partial_dir: ${.batch_dir}/partials
+  video_frames_dir: ${.batch_dir}/video_frames
+  flo_dir: ${.video_frames_dir}/out_flo_fwd
+  temp_flo_dir: ${.video_frames_dir}/temp_flo
+  flo_fwd_dir: ${.video_frames_dir}/out_flo_fwd
+  flo_out_dir: ${.batch_dir}/flow
+  blend_out_dir: ${.batch_dir}/blend
+  prev_frame_path: ${.batch_dir}/prev_frame.png
+  prev_frame_scaled_path: ${.batch_dir}/prev_frame_scaled.png
+  progress_path: ${.batch_dir}/progress.png
+  warped_path: ${.batch_dir}/warped.png
+  old_frame_scaled_path: ${.batch_dir}/old_frame_scaled.png

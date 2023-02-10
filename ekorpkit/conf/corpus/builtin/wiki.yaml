@@ -1,0 +1,54 @@
+defaults:
+  - _build
+  - /io/fetcher: wiki
+  - /preprocessor/normalizer: formal_en
+  - /preprocessor/segmenter: pysbd
+  - override /io/loader/parser: jsonlines
+
+name: ${.lang}wiki
+fullname: Wikipedia Corpus (${.lang})
+description: Wikipedia
+lang: en
+category: formal
+domain: general
+license: 'CC Attribution / Share-Alike 3.0'
+homepage: https://${.lang}.wikipedia.org
+version: 1.0.0
+column_info:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    curid: str
+    url: str
+    title: str
+
+io:
+  lang: ${..lang}
+  data_sources:
+    train: '**/*'
+  loader:
+    data:
+      field: 
+      item:
+        curid: id
+        url: url
+        title: title
+        text: text
+  fetcher:
+    lang: ${..lang}
+pipeline:        
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 30

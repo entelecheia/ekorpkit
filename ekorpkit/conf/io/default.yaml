@@ -1,0 +1,8 @@
+defaults:
+  - /cache: file
+
+name: ${oc.select:..name,''}
+data_dir: ${path.archive}/datasets/source/${.name}
+filetype: ${oc.select:..filetype,.parquet}
+num_workers: ${oc.select:..num_workers,1}
+verbose: ${oc.select:..verbose, true}

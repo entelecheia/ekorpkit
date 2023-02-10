@@ -1,0 +1,4 @@
+defaults:
+  - tokenizer
+
+trainer_type: huggingface

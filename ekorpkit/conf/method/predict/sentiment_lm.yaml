@@ -1,0 +1,7 @@
+defaults:
+  - sentiment
+  
+lexicon_features:
+features:
+  - polarity
+  - uncertainty

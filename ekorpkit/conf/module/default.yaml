@@ -1,0 +1,2 @@
+library_dir: ${oc.select:..path.library_dir, libs}
+modules:

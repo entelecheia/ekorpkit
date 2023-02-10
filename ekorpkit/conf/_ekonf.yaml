@@ -1,0 +1,33 @@
+# @package _global_
+defaults:
+  - _self_
+  - about: default
+  # - dir: default
+  # - env: default
+  - mode: default
+  # - path: _default_
+  # - project: default
+  # - corpus: __init__
+  # - corpus/builtin: __init__
+  # - dataset: __init__
+  # - io: __init__
+  # - model: __init__
+  # - model/transformer: __init__
+  - task: __init__
+  # - task/multi: __init__
+  # - task/nlp: __init__
+  # - tokenizer: __init__
+  # - transformer: __init__
+  # - pipeline: __init__
+  # - preprocessor/normalizer: __init__
+  # - preprocessor/segmenter: __init__
+  # - preprocessor/tokenizer: __init__
+  # - visualize: __init__
+
+  - override hydra/help: help
+  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: colorlog
+
+hydra:
+  searchpath:
+    - ${oc.env:EKORPKIT_CONFIG_DIR,pkg://ekorpkit/conf}

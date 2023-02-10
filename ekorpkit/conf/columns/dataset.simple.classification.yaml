@@ -1,0 +1,4 @@
+defaults:
+  - dataset.simple
+  
+labels: labels

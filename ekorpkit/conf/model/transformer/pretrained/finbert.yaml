@@ -1,3 +1,0 @@
-model_type: bert
-model_name: finbert
-model_uri: ProsusAI/finbert

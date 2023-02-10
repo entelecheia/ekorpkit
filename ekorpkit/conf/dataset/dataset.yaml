@@ -1,5 +1,5 @@
 defaults:
-  - default
+  - _default_
 
 _target_: ekorpkit.datasets.dataset.Dataset
 auto:

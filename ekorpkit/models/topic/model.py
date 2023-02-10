@@ -10,9 +10,8 @@ from datetime import datetime
 from tqdm.auto import tqdm
 import numpy as np
 from ekorpkit import eKonf
-from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.hyfi.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
-from ekorpkit.io.file import save_dataframe, load_dataframe
 from ekorpkit.visualize.wordcloud import generate_wordclouds, savefig
 from ekorpkit.pipelines.pipe import apply
 
@@ -96,8 +95,8 @@ class TopicModel:
         self.summary_file = Path(self.files.summary)
         self.summaries = []
         if self.summary_file.is_file():
-            df = eKonf.load_data(self.summary_file, index_col=0)
-            for row in df.itertuples():
+            data = eKonf.load_data(self.summary_file, index_col=0)
+            for row in data.itertuples():
                 self.summaries.append(ModelSummary(*row[1:]))
 
         self.corpus_key_path = Path(self.files.corpus_key)

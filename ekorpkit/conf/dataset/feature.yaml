@@ -6,5 +6,5 @@ defaults:
 
 _target_: ekorpkit.datasets.feature.FeatureSet
 name:
-data_dir: ${dir.dataset}/features
+data_dir: ${path.datasets}/features
 data_file:

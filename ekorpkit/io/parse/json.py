@@ -5,10 +5,10 @@ import jsonpath_ng as jpath
 import logging
 from hydra.utils import instantiate
 from omegaconf.listconfig import ListConfig
-from ekorpkit.utils.func import any_to_utf8
+from ekorpkit.hyfi.utils.func import any_to_utf8
 from tqdm.auto import tqdm
 from joblib import Parallel, delayed
-from ekorpkit.utils.batch.batcher import tqdm_joblib
+from ekorpkit.hyfi.utils.batch.batcher import tqdm_joblib
 
 
 log = logging.getLogger(__name__)

@@ -4,4 +4,4 @@ defaults:
 
 _target_: ekorpkit.datasets.datasets.Datasets
 name:
-data_dir: ${dir.dataset}/simple
+data_dir: ${path.datasets}/simple

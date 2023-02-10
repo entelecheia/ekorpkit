@@ -14,7 +14,8 @@ nltk: all, tokenize, nltk, tokenize-en
 sacremoses: all, tokenize
 emoji<2.0: all, tokenize, dataset
 spacy: tokenize
-# sentencepiece: tokenize
+sentencepiece: tokenize
+tokenizers: tokenize
 
 tomotopy: all, topic
 wordcloud: all, topic, visualize
@@ -32,16 +33,17 @@ html-to-json: all, parser, html
 fasttext-langdetect: parser, langdetect
 cssutils: all, parser, edgar
 
-accelerate: all, transformers, model
 evaluate: all, transformers, model
 simpletransformers>=0.63: all, transformers, model
-datasets: all, transformers, dataset, model
+datasets: all, transformers, dataset, model, art, tokenize
 # torch: transformers
 tensorflow: all, model
 # tf-nightly: transformers, model
 flaml: automl, model, all
 yellowbrick: yellowbrick
 scipy: automl, model, all
+wandb: all, model, art
+GPUtil: all, model, art
 
 boto3>=1.0,<2.0: aws, cached-path
 google-api-python-client: google
@@ -55,8 +57,9 @@ ray: ddbackend
 
 # sysrsync: fetch
 wget: all, fetch, dataset
+pycurl: all, fetch, dataset
 py7zr: all, fetch, dataset
-zstandard: all, fetch, dataset
+zstandard: all, fetch, dataset, tokenize
 # cached-path: fetch, dataset
 
 pymongo: database
@@ -66,14 +69,14 @@ pymongo: database
 plotly: all, doc, visualize
 kaleido: all, doc, visualize
 rich: all, doc, visualize
-matplotlib: all, doc, visualize
+matplotlib: all, doc, visualize, art
 seaborn: all, doc, visualize
-Pillow<9.1.0: all, doc, visualize
+Pillow<9.1.0: all, doc, visualize, art
 
 tensorflow-datasets: dataset
 # tensorflow-io: dataset
 lsh: all, dataset
-orjson: all, dataset, parser
+orjson: all, dataset, parser, fetch, tokenize
 datasketch: all, dataset
 pysimdjson: all, dataset, parser
 p_tqdm: all, dataset, parser
@@ -98,9 +101,10 @@ jax: dalle-mini, art
 flax: art, dalle-mini
 unidecode: art, disco
 opencv-python==4.5.5.64: art, disco
+diffusers: art, stable, all
 
 cleanlab: label, all
 # snorkel: label
-rubrix: label
+argilla: label
 
 dicttoxml: all, xml

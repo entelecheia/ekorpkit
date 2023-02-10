@@ -1,0 +1,16 @@
+defaults:
+  - /auto: default
+  - /batch: default
+  - /project: aiart
+  - /path: _batch_
+  - /module: default
+  - /collage: default
+  - /model: stable.diffusers
+  - /imagine: stable.diffusers
+
+_target_: ekorpkit.models.art.stable.StableDiffusion
+autoload: false
+name: stable-diffusion
+verbose: ${oc.select:..verbose, false}
+batch:
+  device: "cuda:0"

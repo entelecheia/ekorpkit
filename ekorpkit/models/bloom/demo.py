@@ -2,7 +2,7 @@ import logging
 import torch
 from transformers import pipeline
 from huggingface_hub import InferenceApi
-from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.hyfi.utils.func import elapsed_timer
 from ekorpkit import eKonf
 
 

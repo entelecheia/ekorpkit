@@ -1,0 +1,14 @@
+defaults:
+  - /auto: default
+  - /batch: default
+  - /project: language-modeling
+  - /path: _batch_
+  - /dataset: huggingface
+  - /_train_: tokenizer.huggingface
+  - /_export_: sentence_text_files
+  - /model: tokenizer.unigram
+
+_target_: ekorpkit.tokenizers.trainer.TokenizerTrainer
+name: tokenizer-trainer
+dataset:
+  shuffle: true

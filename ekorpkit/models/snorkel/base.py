@@ -3,13 +3,13 @@ import pandas as pd
 from ekorpkit import eKonf
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
-from ekorpkit.models.snorkel.labeling import (
+from snorkel.labeling import (
     LabelingFunction,
     PandasLFApplier,
     LFAnalysis,
 )
-from ekorpkit.models.snorkel.labeling.model import LabelModel
-from ekorpkit.models.snorkel.analysis import metric_score
+from snorkel.labeling.model import LabelModel
+from snorkel.analysis import metric_score
 
 
 log = logging.getLogger(__name__)

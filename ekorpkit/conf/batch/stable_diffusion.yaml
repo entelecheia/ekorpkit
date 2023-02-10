@@ -1,0 +1,12 @@
+defaults:
+  - default
+
+display_collage: true
+save_collage: true
+num_samples: 1
+num_images_per_prompt: 1
+batch_run_params:
+batch_run_pairs:
+clear_output: true
+max_display_image_width: 1000
+device: "cuda:0"

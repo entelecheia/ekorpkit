@@ -1,6 +1,7 @@
 #!/bin/sh
 
-BRANCH=${1:-dev/0.1.39}
+TEST_BRANCH=${1:-dev/0.1.40}
 
-git clone https://github.com/entelecheia/ekorpkit.git --branch $BRANCH --single-branch
-cd ekorpkit
+git clone https://github.com/entelecheia/ekorpkit.git --branch "$TEST_BRANCH" --single-branch
+
+cd ekorpkit || exit

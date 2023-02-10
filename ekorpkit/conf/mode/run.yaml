@@ -3,4 +3,4 @@ defaults:
   - default
 
 project: 
-  name: ${app_name}
+  project_name: ${app_name}

@@ -1,0 +1,13 @@
+dataset_name:
+data_dir: ${oc.select:..path.data_dir, null}
+data_files: ${oc.select:..data_files, null}
+concat_data: false
+data_columns: ${oc.select:..data_columns, null}
+test_size:
+dev_size:
+shuffle: false
+seed:
+encode_labels: false
+label_column_name: labels
+class_cloumn_name: classes
+verbose: ${oc.select:..project.verbose, false}

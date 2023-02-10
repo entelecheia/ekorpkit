@@ -1,3 +1,4 @@
+.resources
 .tmp
 commandStore.vscode.json
 .pre-commit-config.yaml
@@ -9,7 +10,6 @@ node_modules/
 logs/
 workspace/
 .history/
-.vscode/
 TODO
 core
 .ekorpkit/
@@ -153,8 +153,9 @@ dmypy.json
 .pyre/
 
 .env*
-!.env.project
+!.env
 !.env.vault
 !.env.example
 
 .release-it.json
+.flaskenv*

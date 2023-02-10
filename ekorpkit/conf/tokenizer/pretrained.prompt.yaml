@@ -1,0 +1,7 @@
+defaults:
+  - pretrained
+
+# bos_token: <bop>
+# eos_token: <eop>
+pad_token: <pad>
+add_special_tokens: true

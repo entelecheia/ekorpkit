@@ -1,0 +1,20 @@
+# @package _global_
+defaults:
+  - _self_
+  - about: run
+  - cmd: default
+  # - dir: default
+  - env: run
+  - mode: run
+  - path: __project__
+  - run: null
+  - workflow: null
+
+  - override hydra/help: help
+  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: colorlog
+
+ekorpkit:
+hydra:
+  searchpath:
+    - ${oc.env:EKORPKIT_CONFIG_DIR,${check_path:./config,pkg://ekorpkit/conf}}

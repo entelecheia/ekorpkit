@@ -1,0 +1,25 @@
+tokenizer_name: ${oc.select:..model.model_name,null}
+tokenizer_name_or_path: ${oc.select:..model.model_name_or_path,null}
+pretrained_tokenizer_file:
+tokenizer_dir:
+model_dir:
+model_type:
+truncation: true
+model_max_length:
+return_length: true
+unk_token: 
+bos_token: 
+eos_token: 
+pad_token: 
+cls_token: 
+sep_token: 
+mask_token: 
+additional_special_tokens:
+add_special_tokens: false
+padding: max_length
+padding_side: right
+cache_dir:
+use_fast_tokenizer: true
+model_revision: main
+use_auth_token: false
+ignore_model_path: false

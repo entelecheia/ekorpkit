@@ -239,8 +239,11 @@ class UnigramTrainer(Trainer):
         """To turn off pruning, just set max_rounds=1"""
         words = []
         iterator = tqdm(texts) if self.show_progress else texts
-        for text in iterator:
-            words += self.pre_tokenize(text)
+        for text_batch in iterator:
+            if isinstance(text_batch, str):
+                text_batch = [text_batch]
+            for text in text_batch:
+                words += self.pre_tokenize(text)
         text = "".join(words)
         tokens, characters = self.initialize_vocab(words)
         vocab_size = self.vocab_size

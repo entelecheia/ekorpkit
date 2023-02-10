@@ -1,16 +1,4 @@
-import math
-from scipy.special import digamma
-
-
-def entropy(trie, word):
-    leafs = trie.get_leafs(word)
-    val = trie.get_value(word)
-    logsum = digamma(sum(leafs) + val)
-    entropy = 0
-    for freq in leafs:
-        logprob = digamma(freq) - logsum
-        entropy += math.exp(logprob) * logprob
-    return -1 * entropy
+from copy import deepcopy
 
 
 class Trie:
@@ -29,6 +17,13 @@ class Trie:
                 node[ch] = {}
             node = node[ch]
         node[self.end_symbol] = value
+
+    def get_value_pos(self, word, pos):
+        if self.direction == "backward":
+            # reverse the word
+            word = word[::-1]
+        char = word[pos]
+        return self.get_value(char)
 
     def get_value(self, word):
         if self.direction == "backward":
@@ -65,8 +60,7 @@ class Trie:
             if ch not in node:
                 return []
             node = node[ch]
-        children = node.copy()
-        return children
+        return node
 
     def get_values_of_children(self, word):
         children = self.get_children(word)
@@ -84,15 +78,16 @@ class Trie:
 
     def get_leafs(self, word):
         node = self.get_children(word)
+        node = deepcopy(node)
         if not node:
             return []
-        if self.end_symbol in node:
-            _ = node.pop(self.end_symbol)
         return self._get_leafs(node)
 
     def _get_leafs(self, node):
-        if self.end_symbol in node:
+        if self.end_symbol in node and len(node) == 1:
             return [node[self.end_symbol]]
+        elif self.end_symbol in node and len(node) > 1:
+            _ = node.pop(self.end_symbol)
         leafs = []
         for child in node:
             leafs += self._get_leafs(node[child])

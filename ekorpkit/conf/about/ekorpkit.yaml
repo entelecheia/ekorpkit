@@ -1,0 +1,5 @@
+name: ekorpkit
+author: Young Joon Lee
+description: eKorpkit provides a flexible interface for NLP and ML research pipelines such as extraction, transformation, tokenization, training, and visualization.
+website: https://entelecheia.github.io/ekorpkit-book/
+version: ${__version__:}

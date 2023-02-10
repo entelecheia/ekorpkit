@@ -24,7 +24,7 @@ class SimpleT5(SimpleTrainer):
 
     def convert_to_train(self):
         train_data, dev_data, test_data = super().convert_to_train()
-        prefix_col = self._train_[self.Keys.PREFIX]
+        prefix_col = self.columns.train[self.Keys.PREFIX]
         task_prefix = self.args.task_prefix._train_
         if task_prefix is not None:
             train_data[prefix_col] = task_prefix
@@ -39,7 +39,7 @@ class SimpleT5(SimpleTrainer):
 
         args = self.args
 
-        if not self.splits:
+        if not self.raw_datasets:
             self.load_datasets()
         train_data, dev_data, test_data = self.convert_to_train()
         if self.verbose:
@@ -49,7 +49,7 @@ class SimpleT5(SimpleTrainer):
             args.model_type,
             args.model_uri,
             cuda_device=args.cuda_device,
-            args=self._model_cfg,
+            args=self.trainer,
         )
 
         # Train the model
@@ -72,12 +72,12 @@ class SimpleT5(SimpleTrainer):
         if model_dir is None:
             model_dir = self.args.config.best_model_dir
         if pred_args is not None:
-            self._model_cfg.update(pred_args)
+            self.trainer.update(pred_args)
 
-        self.model = T5Model(self.args.model_type, model_dir, args=self._model_cfg)
+        self.model = T5Model(self.args.model_type, model_dir, args=self.trainer)
         log.info(f"Loaded model from {model_dir}")
 
-    def _predict(self, data: list):
+    def predict_data(self, data: list):
         if self.model is None:
             self.load_model()
 
@@ -85,8 +85,8 @@ class SimpleT5(SimpleTrainer):
         return preds
 
     def convert_to_predict(self, data):
-        input_col = self._predict_[self.Keys.INPUT]
-        prefix_col = self._predict_[self.Keys.PREFIX]
+        input_col = self.columns.predict[self.Keys.INPUT]
+        prefix_col = self.columns.predict[self.Keys.PREFIX]
         task_prefix = self.args.task_prefix._predict_
         if task_prefix is not None:
             data[prefix_col] = task_prefix
@@ -103,7 +103,7 @@ class SimpleT5(SimpleTrainer):
         return data_to_predict
 
     def append_predictions(self, df, preds):
-        predicted_col = self._predict_[self.Keys.PREDICTED]
+        predicted_col = self.columns.predict[self.Keys.PREDICTED]
         if self.args.config.num_return_sequences > 1:
             preds = [pred[0] for pred in preds]
         df[predicted_col] = preds

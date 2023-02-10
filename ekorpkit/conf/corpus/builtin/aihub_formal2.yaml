@@ -28,7 +28,7 @@ column_info:
     filename: str
 
 io:
-  data_dir:  ${dir.archive}/datasets/source/aihub/전문분야 말뭉치
+  data_dir:  ${path.archive}/datasets/source/aihub/전문분야 말뭉치
   data_sources:
     train: 
       - Training/[원천]전문분야_train.zip

@@ -1,0 +1,3 @@
+x: ${..columns.x}
+predicted: ${..columns.predicted}
+actual: ${..columns.actual}

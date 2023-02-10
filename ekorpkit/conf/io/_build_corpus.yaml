@@ -2,7 +2,7 @@ defaults:
   - _build
   - loader: parser
 
-data_dir: ${dir.archive}/datasets/source/${.name}
+data_dir: ${path.archive}/datasets/source/${.name}
 force:
   summarize: true
   preprocess: true

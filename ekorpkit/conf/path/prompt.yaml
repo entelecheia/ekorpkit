@@ -1,0 +1,5 @@
+defaults:
+  - _batch_
+
+task_name: disco-imagen
+output_dir: ${mkdir:${join_path:${.root},outputs/stable-prompt}}

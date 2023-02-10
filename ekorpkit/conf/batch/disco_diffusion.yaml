@@ -1,0 +1,14 @@
+batch_name: disco-batch
+batch_num:
+random_seed: true
+seed:
+resume_run: false
+resume_latest: false
+display_collage: true
+save_collage: true
+num_samples: 1
+num_images_per_prompt: 1
+batch_run_params:
+batch_run_pairs:
+clear_output: true
+max_display_image_width: 1000

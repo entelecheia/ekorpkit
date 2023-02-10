@@ -1,0 +1,15 @@
+# @package _global_
+defaults:
+  - /auto: default
+  - /batch: default
+  - /project: aiart
+  - /path: _batch_
+  - /module: default
+  - /collage: default
+  - /model: stable.diffusers
+  - /imagine: stable.diffusers
+
+_target_: ekorpkit.tasks.multi.stable.StableDiffusion
+name: stable-diffusion
+batch:
+  device: "cuda:0"

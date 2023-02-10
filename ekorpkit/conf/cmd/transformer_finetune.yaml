@@ -1,6 +1,0 @@
-# @package _global_
-defaults:
-  - default
-
-_config_: 
-  - model.transformer

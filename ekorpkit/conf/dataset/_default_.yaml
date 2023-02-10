@@ -1,0 +1,16 @@
+defaults:
+  - /column_info: simple
+  - /path: _default_
+  - /auto: load_build
+  - /force: _build
+  - /info: _build_dataset
+  - /project: dataset
+
+_target_: ekorpkit.datasets.dataset.Dataset
+name: ${oc.select:.builtin.name, null}
+data_dir: ${.project.path.datasets}/dataset
+filetype: ${oc.select:.builtin.filetype, .parquet}
+use_name_as_subdir: true
+auto:
+  build: false
+verbose: ${oc.select:.project.verbose, false}

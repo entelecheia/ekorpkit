@@ -3,6 +3,7 @@ import shutil
 import os
 import tarfile
 import zipfile
+import pycurl
 from tqdm.auto import tqdm
 from urllib import request
 from ekorpkit import eKonf
@@ -85,7 +86,73 @@ def web_download(
     with tqdm(
         unit="B", unit_scale=True, miniters=1, desc=f"[{filename}] download {filename}"
     ) as t:
+
+        def _reporthook(pbar):
+            last_b = [0]
+
+            def inner(b=1, bsize=1, tsize=None):
+                """
+                Args:
+                    b (int, optional): Number of blocks just transferred [default: 1].
+                    bsize (int, optional): Size of each block (in tqdm units) [default: 1].
+                    tsize (int, optional): Total size (in tqdm units). If [default: None] remains unchanged.
+                """
+                if tsize is not None:
+                    pbar.total = tsize
+                pbar.update((b - last_b[0]) * bsize)
+                last_b[0] = b
+
+            return inner
+
         request.urlretrieve(url, filename=local_path, reporthook=_reporthook(t))
+
+
+def curl(url, local_path, filename="", force_download=False, verbose=True, **kwargs):
+    if filename == "":
+        filename = os.path.basename(local_path)
+    site = request.urlopen(url)
+    meta = site.info()
+    remote_size = int(meta["Content-Length"])
+    if (
+        (not force_download)
+        and os.path.exists(local_path)
+        and (os.stat(local_path).st_size == remote_size)
+    ):
+        if verbose:
+            print(f"[{filename}] is already downloaded at {local_path}")
+        return None
+    filename = os.path.basename(local_path)
+    if not os.path.exists(os.path.dirname(local_path)):
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
+
+    # create a progress bar and update it manually
+    with tqdm(
+        total=remote_size,
+        unit="iB",
+        unit_scale=True,
+        desc=f"[{filename}] download {filename}",
+    ) as pbar:
+        # store dotal dl's in an array (arrays work by reference)
+        total_dl_d = [0]
+
+        def _status(download_t, download_d, upload_t, upload_d, total=total_dl_d):
+            # increment the progress bar
+            pbar.update(download_d - total[0])
+            # update the total dl'd amount
+            total[0] = download_d
+
+        # download file using pycurl
+        with open(local_path, "wb") as f:
+            c = pycurl.Curl()
+            c.setopt(c.URL, url)
+            c.setopt(c.WRITEDATA, f)
+            # follow redirects:
+            c.setopt(c.FOLLOWLOCATION, True)
+            # custom progress bar
+            c.setopt(c.NOPROGRESS, False)
+            c.setopt(c.XFERINFOFUNCTION, _status)
+            c.perform()
+            c.close()
 
 
 def web_download_unzip(
@@ -136,25 +203,25 @@ def web_download_untar(
         return None
     data_root = os.path.dirname(tar_path)
     with tarfile.open(tar_path) as tar:
+
         def is_within_directory(directory, target):
-            
+
             abs_directory = os.path.abspath(directory)
             abs_target = os.path.abspath(target)
-        
+
             prefix = os.path.commonprefix([abs_directory, abs_target])
-            
+
             return prefix == abs_directory
-        
+
         def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
-        
+
             for member in tar.getmembers():
                 member_path = os.path.join(path, member.name)
                 if not is_within_directory(path, member_path):
                     raise Exception("Attempted Path Traversal in Tar File")
-        
-            tar.extractall(path, members, numeric_owner=numeric_owner) 
-            
-        
+
+            tar.extractall(path, members, numeric_owner=numeric_owner)
+
         safe_extract(tar, data_root)
     if verbose:
         print(f"decompress {tar_path}")
@@ -207,25 +274,25 @@ def gdrive_download_untar(
         return None
     data_root = os.path.dirname(local_path)
     with tarfile.open(local_path) as tar:
+
         def is_within_directory(directory, target):
-            
+
             abs_directory = os.path.abspath(directory)
             abs_target = os.path.abspath(target)
-        
+
             prefix = os.path.commonprefix([abs_directory, abs_target])
-            
+
             return prefix == abs_directory
-        
+
         def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
-        
+
             for member in tar.getmembers():
                 member_path = os.path.join(path, member.name)
                 if not is_within_directory(path, member_path):
                     raise Exception("Attempted Path Traversal in Tar File")
-        
-            tar.extractall(path, members, numeric_owner=numeric_owner) 
-            
-        
+
+            tar.extractall(path, members, numeric_owner=numeric_owner)
+
         safe_extract(tar, data_root)
     if verbose:
         print(f"decompress {local_path}")
@@ -261,35 +328,3 @@ def gdrive_download(
     )
     if verbose:
         print(f"download {filename}")
-
-
-def _reporthook(t):
-    """``reporthook`` to use with ``urllib.request`` that prints the process of the download.
-
-    Uses ``tqdm`` for progress bar.
-
-    **Reference:**
-    https://github.com/tqdm/tqdm
-
-    Args:
-        t (tqdm.tqdm) Progress bar.
-
-    Example:
-        >>> with tqdm(unit='B', unit_scale=True, miniters=1, desc=filename) as t:  # doctest: +SKIP
-        ...   urllib.request.urlretrieve(file_url, filename=full_path, reporthook=reporthook(t))
-    """
-    last_b = [0]
-
-    def inner(b=1, bsize=1, tsize=None):
-        """
-        Args:
-            b (int, optional): Number of blocks just transferred [default: 1].
-            bsize (int, optional): Size of each block (in tqdm units) [default: 1].
-            tsize (int, optional): Total size (in tqdm units). If [default: None] remains unchanged.
-        """
-        if tsize is not None:
-            t.total = tsize
-        t.update((b - last_b[0]) * bsize)
-        last_b[0] = b
-
-    return inner

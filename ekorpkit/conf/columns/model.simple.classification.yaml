@@ -1,0 +1,8 @@
+defaults:
+  - dataset.simple.classification
+
+input: ${.text}
+actual: ${.labels}
+predicted: pred_labels
+pred_probs: pred_probs
+model_outputs: raw_preds

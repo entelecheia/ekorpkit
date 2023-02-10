@@ -1,0 +1,12 @@
+defaults:
+  - transformer.trainer
+
+overwrite_output_dir: true
+do_train: true
+do_eval: false
+num_train_epochs: 1
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+prediction_loss_only: true
+logging_steps: 200
+save_steps: 0

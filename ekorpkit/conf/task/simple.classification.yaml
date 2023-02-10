@@ -1,0 +1,12 @@
+# @package _global_
+defaults:
+  - simple.transformer
+  - /dataset: dataframe
+  - /columns: model.simple.classification
+  - /model: simple.classification
+  - /trainer: simple.classification
+  - /columns/train: simple.classification
+  - /columns/predict: simple.classification
+  - /model/eval: simple.classification
+
+_target_: ekorpkit.models.transformer.SimpleClassification

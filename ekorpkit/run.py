@@ -1,5 +1,4 @@
 import subprocess
-import logging
 import hydra
 from ekorpkit import eKonf, __hydra_version_base__
 

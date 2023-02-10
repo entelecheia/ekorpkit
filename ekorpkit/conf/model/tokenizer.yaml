@@ -1,0 +1,4 @@
+model_name:
+model_dir: tokenizers
+model_type: unigram
+vocab_size: 30000

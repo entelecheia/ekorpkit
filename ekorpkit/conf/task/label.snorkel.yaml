@@ -1,0 +1,21 @@
+# @package _global_
+defaults:
+  - /auto: default
+  - /batch: default
+  - /project: data
+  - /path: _default_
+  - /dataset: dataframe
+  - /columns: snorkel
+
+_target_: ekorpkit.tasks.label.snorkel.base.BaseSnorkel
+_name_: snorkel
+name: ${._name_}
+dataset:
+  label_column_name: ${..columns.labels}
+  class_cloumn_name: ${..columns.classes}
+  test_split_ratio: 0.2
+  shuffle: true
+  encode_labels: true
+batch:
+  output_suffix: preds
+  output_extention: parquet

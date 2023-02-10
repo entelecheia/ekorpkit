@@ -1,0 +1,5 @@
+defaults:
+  - tokenizer
+
+trainer_type: spm
+dataset_type: text

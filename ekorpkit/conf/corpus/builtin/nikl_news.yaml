@@ -31,7 +31,7 @@ column_info:
     category: str
 
 io:    
-  data_dir: ${dir.archive}/datasets/source/nikl
+  data_dir: ${path.archive}/datasets/source/nikl
   data_sources: 
     train: 
       - NIKL_NEWSPAPER_v2.0.zip

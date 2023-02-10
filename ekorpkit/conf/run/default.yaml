@@ -1,0 +1,6 @@
+# @package _global_
+defaults:
+  - /project: default
+
+_target_: ekorpkit.cli.cmd
+_config_: about.app

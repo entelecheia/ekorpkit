@@ -7,7 +7,7 @@ defaults:
 
 _target_: ekorpkit.datasets.dataset.Dataset
 name: ${oc.select:.builtin.name, null}
-data_dir: ${dir.dataset}/dataset
+data_dir: ${path.datasets}/dataset
 filetype: ${oc.select:.builtin.filetype, .parquet}
 use_name_as_subdir: true
 auto:

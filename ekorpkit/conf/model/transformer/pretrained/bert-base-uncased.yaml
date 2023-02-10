@@ -1,3 +1,0 @@
-model_type: bert
-model_name: bert-base-uncased
-model_uri: bert-base-uncased

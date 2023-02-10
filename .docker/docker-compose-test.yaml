@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  ekorpkit:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile.test
+      args:
+        BUILD_FROM: $BUILD_FROM
+        TEST_BRANCH: $TEST_BRANCH
+        CODECOV_TOKEN: $CODECOV_TOKEN
+    image: $IMAGE_NAME
+    container_name: $CONTAINER_NAME
+    env_file:
+      - .env
+    ulimits:
+      stack: 67108864
+      memlock: -1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${CUDA_DEVICE_ID}"]
+              capabilities: [gpu]
+networks:
+  default:
+    name: $DOCKER_NETWORK_NAME
+    external: true
