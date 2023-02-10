@@ -8,7 +8,7 @@ eKorpkit provides a flexible interface for NLP and ML research pipelines such as
 
 This project is still under development. The API is subject to change. Until the first stable release, the version number will be 0.x.x. Please use it at your own risk. If you have any questions or suggestions, please feel free to contact me.
 
-Especially, some core configuration interface parts of the package will be carbed out and moved to a separate package. The package will be renamed to **hyfi** (Hydra Fast Interface). Image generation and visualization will be moved to a separate package. The package will be renamed to **ekaros** (from Íkaros[Icarus] in Greek mythology).
+Especially, some core configuration interface parts of the package will be carbed out and moved to a separate package. The package will be renamed to [**hyfi**](https://github.com/entelecheia/hyfi) (Hydra Fast Interface). Image generation and visualization will be moved to a separate package. The package will be renamed to [**ekaros**](https://github.com/entelecheia/ekaros) (from Íkaros[Icarus] in Greek mythology).
 
 
 ## Key features
