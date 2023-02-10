@@ -7,7 +7,7 @@ import textwrap
 from typing import List
 from PIL import ImageDraw, Image
 from pydantic import BaseModel
-from .utils import get_image_font, load_image, load_images, scale_image
+from .. import get_image_font, load_image, load_images, scale_image
 
 
 log = logging.getLogger(__name__)

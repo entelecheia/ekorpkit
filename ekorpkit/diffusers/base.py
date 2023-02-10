@@ -1,7 +1,7 @@
 import logging
 from ekorpkit import eKonf
-from ekorpkit.config import BaseBatchModel
-from ekorpkit.visualize.collage import collage, label_collage
+from .config import BaseBatchModel
+from ekorpkit.hyfi.image.collage import collage, label_collage
 from .config import (
     BatchImagineConfig,
     BatchConfig,

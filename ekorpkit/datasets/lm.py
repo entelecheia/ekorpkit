@@ -9,10 +9,10 @@ from datasets import load_dataset
 from pytablewriter import MarkdownTableWriter
 from tqdm.auto import tqdm
 
-from ekorpkit.utils.func import humanbytes, parse_size, utf8len
+from ekorpkit.hyfi.utils.func import humanbytes, parse_size, utf8len
 
 from ekorpkit import eKonf
-from ekorpkit.utils.func import change_directory
+from ekorpkit.hyfi.utils.func import change_directory
 from hydra.utils import instantiate
 
 from tqdm.auto import tqdm

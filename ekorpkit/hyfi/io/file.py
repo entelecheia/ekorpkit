@@ -4,7 +4,7 @@ import re
 import pandas as pd
 from glob import glob
 from pathlib import Path, PosixPath, WindowsPath
-from ekorpkit.utils.func import elapsed_timer
+from ..utils.func import elapsed_timer
 
 
 log = logging.getLogger(__name__)
@@ -329,3 +329,44 @@ def read(uri, mode="rb", encoding=None, head=None, **kwargs):
             if mode == "r" and head is not None and isinstance(head, int):
                 return f.read(head)
             return f.read()
+
+
+def is_file(a, *p):
+    _path = os.path.join(a, *p)
+    return Path(_path).is_file()
+
+
+def is_dir(a, *p):
+    _path = os.path.join(a, *p)
+    return Path(_path).is_dir()
+
+
+def _check_path(_path: str, alt_path: str = None):
+    if os.path.exists(_path):
+        return _path
+    else:
+        return alt_path
+
+
+def _mkdir(_path: str):
+    if _path is None:
+        return None
+    Path(_path).mkdir(parents=True, exist_ok=True)
+    return _path
+
+
+def _exists(a, *p):
+    if a is None:
+        return False
+    _path = os.path.join(a, *p)
+    return os.path.exists(_path)
+
+
+def _join_path(a, *p):
+    if p and p[0] is not None:
+        p = [str(_p) for _p in p]
+        if a is None:
+            return os.path.join(*p)
+        return os.path.join(a, *p)
+    else:
+        return a

@@ -9,7 +9,7 @@ from snorkel.labeling import (
 from snorkel.labeling.model import LabelModel
 from snorkel.analysis import metric_score
 from ekorpkit.datasets.config import DataframeConfig
-from ekorpkit.config import BaseBatchModel
+from ekorpkit.hyfi.config import BaseBatchModel
 
 
 log = logging.getLogger(__name__)

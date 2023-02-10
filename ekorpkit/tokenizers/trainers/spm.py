@@ -7,7 +7,7 @@ import sentencepiece as spm
 from tqdm.auto import tqdm
 from random import sample
 from ..config import ModelType, TrainerType
-from ekorpkit.utils.func import change_directory
+from ekorpkit.hyfi.utils.func import change_directory
 
 
 log = logging.getLogger(__name__)

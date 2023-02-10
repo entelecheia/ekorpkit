@@ -23,9 +23,9 @@ from .utils import (
     parse_key_frames,
     get_inbetweens,
 )
-from ekorpkit.utils.func import elapsed_timer
-from ekorpkit.visualize.motion import create_video as _create_video
-from ekorpkit.visualize.motion import extract_frames
+from ekorpkit.hyfi.utils.func import elapsed_timer
+from ekorpkit.hyfi.image.motion import create_video as _create_video
+from ekorpkit.hyfi.image.motion import extract_frames
 from ekorpkit.diffusers.base import BaseModel
 from ekorpkit.diffusers.config import AnimMode
 

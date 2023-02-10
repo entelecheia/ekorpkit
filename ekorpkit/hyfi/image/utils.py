@@ -1,8 +1,8 @@
 import io
 import numpy as np
 from PIL import Image, ImageFont
-from .base import get_plot_font
-from ekorpkit.io.file import read
+from .plot import get_plot_font
+from ..io.file import read
 
 
 def scale_image(
@@ -49,6 +49,7 @@ def load_image(
     mode="RGB",
     **kwargs
 ) -> Image.Image:
+    """Load image from file or URI."""
     from PIL import Image
 
     if isinstance(image_or_uri, Image.Image):
@@ -79,6 +80,7 @@ def load_images(
     mode="RGB",
     **kwargs
 ):
+    """Load images from files or URIs."""
     imgs = [
         load_image(
             image_or_uri,
@@ -104,6 +106,7 @@ def load_images(
 
 
 def get_image_font(fontname=None, fontsize=12):
+    """Get font for PIL image."""
     fontname, fontpath = get_plot_font(set_font_for_matplot=False, fontname=fontname)
     if fontpath:
         font = ImageFont.truetype(fontpath, fontsize)

@@ -7,7 +7,7 @@ from diffusers.schedulers.scheduling_pndm import PNDMScheduler
 from tqdm.auto import tqdm
 from PIL import Image, ImageDraw
 from ekorpkit import eKonf
-from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.hyfi.utils.func import elapsed_timer
 from ekorpkit.diffusers.base import BaseModel
 from ekorpkit.diffusers.config import (
     ImagineMode,

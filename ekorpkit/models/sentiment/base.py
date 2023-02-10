@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from enum import Enum
 from ekorpkit import eKonf
-from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.hyfi.utils.func import elapsed_timer
 
 
 log = logging.getLogger(__name__)

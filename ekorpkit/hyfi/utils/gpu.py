@@ -3,6 +3,10 @@ import time
 import gc
 from threading import Thread
 from .notebook import _clear_output
+from .logging import getLogger
+
+
+logger = getLogger()
 
 
 class GPUMon(Thread):
@@ -84,3 +88,43 @@ class GPUMon(Thread):
             torch.cuda.empty_cache()
         except ImportError:
             pass
+
+
+def _nvidia_smi():
+    import subprocess
+
+    nvidiasmi_output = subprocess.run(
+        ["nvidia-smi", "-L"], stdout=subprocess.PIPE
+    ).stdout.decode("utf-8")
+    return nvidiasmi_output
+
+
+def _is_cuda_available():
+    try:
+        import torch
+
+        return torch.cuda.is_available()
+    except ImportError:
+        return False
+
+
+def _set_cuda(device=0):
+    try:
+        import torch
+
+        _names = []
+        if isinstance(device, str):
+            device = device.replace("cuda:", "")
+            ids = device.split(",")
+        else:
+            ids = [str(device)]
+        for id in ids:
+            _device_name = torch.cuda.get_device_name(int(id))
+            _names.append(f"{_device_name} (id:{id})")
+        logger.info(f"Setting cuda device to {_names}")
+        device = ", ".join(ids)
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = device
+    except ImportError:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+        raise Exception("Cuda device not found")

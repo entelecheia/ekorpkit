@@ -1,11 +1,12 @@
 import os
-from ekorpkit.base import _getLogger, _env_set
+from .logging import getLogger
+from .env import set_osenv
 
 
-logger = _getLogger(__name__)
+logger = getLogger(__name__)
 
 
-def _mount_google_drive(
+def mount_google_drive(
     workspace=None,
     project=None,
     mountpoint="/content/drive",
@@ -20,10 +21,10 @@ def _mount_google_drive(
         if isinstance(workspace, str):
             if not workspace.startswith(os.path.sep) and not workspace.startswith(".."):
                 workspace = os.path.join(mountpoint, workspace)
-            _env_set("EKORPKIT_WORKSPACE_ROOT", workspace)
+            set_osenv("EKORPKIT_WORKSPACE_ROOT", workspace)
             logger.info(f"Setting EKORPKIT_WORKSPACE_ROOT to {workspace}")
         if isinstance(project, str):
-            _env_set("EKORPKIT_PROJECT_NAME", project)
+            set_osenv("EKORPKIT_PROJECT_NAME", project)
             logger.info(f"Setting EKORPKIT_PROJECT_NAME to {project}")
     except ImportError:
         logger.warning("Google Colab not detected.")

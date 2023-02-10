@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 from ekorpkit import eKonf
-from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.hyfi.utils.func import elapsed_timer
 from .corpus import Corpus
 from .base import BaseSet
 

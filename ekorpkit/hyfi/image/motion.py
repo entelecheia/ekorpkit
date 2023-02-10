@@ -2,8 +2,8 @@ import os
 import logging
 import subprocess
 from pathlib import Path
-from ekorpkit.io.file import get_filepaths
-from ekorpkit.utils.notebook import _display_image
+from ..io.file import get_filepaths
+from ..utils.notebook import _display_image
 
 
 log = logging.getLogger(__name__)
@@ -23,6 +23,9 @@ def make_gif(
     force=False,
     **kwargs,
 ):
+    """
+    Create a GIF from a list of images or a list of filenames.
+    """
     from PIL import Image
 
     log.info(f"Making GIF from {filename_patterns}")
@@ -63,6 +66,9 @@ def make_gif(
 def extract_frames(
     video_path, extract_nth_frame, extracted_frame_dir, frame_filename="%04d.jpg"
 ):
+    """
+    Extract frames from a video.
+    """
     log.info(f"Exporting Video Frames (1 every {extract_nth_frame})...")
     try:
         for f in Path(f"{extracted_frame_dir}").glob("*.jpg"):
@@ -102,7 +108,10 @@ def extract_frames(
 def create_video(
     base_dir, video_path, input_url, fps, start_number, vframes, force=False
 ):
-
+    """
+    Create a video from a list of images.
+    """
+    
     log.info(f"Creating video from {input_url}")
     if os.path.exists(video_path) and not force:
         log.info(f"Skipping video creation, already exists: {video_path}")

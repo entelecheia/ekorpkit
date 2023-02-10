@@ -3,7 +3,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from tqdm.auto import tqdm
 from joblib import Parallel, delayed
-from ekorpkit.utils.batch.batcher import tqdm_joblib
+from ekorpkit.hyfi.utils.batch.batcher import tqdm_joblib
 
 
 class EarningsCall:

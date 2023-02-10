@@ -1,6 +1,5 @@
 import logging
 import random
-import inspect
 from omegaconf import DictConfig
 from pathlib import Path
 from pydantic import (
@@ -12,8 +11,20 @@ from typing import (
     Optional,
     Union,
 )
-from ekorpkit import eKonf
-from .base import Environments, Secrets, ProjectConfig
+from ..hydra import (
+    _compose,
+    _merge,
+    _to_config,
+    _merge,
+    _print,
+    _methods,
+    _to_dict,
+    _save,
+    _save_json,
+    _load,
+)
+from ..env import Environments, Secrets, ProjectConfig
+from ..utils.lib import ensure_import_module
 
 
 logger = logging.getLogger(__name__)
@@ -30,7 +41,7 @@ class PathConfig(BaseModel):
 
     def __init__(self, **data: Any):
         if not data:
-            data = eKonf.compose("path=__batch__")
+            data = _compose("path=__batch__")
             logger.info(
                 "There are no arguments to initilize a config, using default config."
             )
@@ -96,7 +107,7 @@ class BaseBatchConfig(BaseModel):
 
     def __init__(self, **data):
         if not data:
-            data = eKonf.compose("batch")
+            data = _compose("batch")
             logger.info(
                 f"There is no batch in the config, using default batch: {data.batch_name}"
             )
@@ -219,9 +230,9 @@ class BaseConfigModel(BaseModel):
         **args,
     ):
         if config_group is not None:
-            args = eKonf.merge(eKonf.compose(config_group), args)
+            args = _merge(_compose(config_group), args)
         else:
-            args = eKonf.to_config(args)
+            args = _to_config(args)
         super().__init__(config_name=config_name, config_group=config_group, **args)
 
         object.__setattr__(self, "_config_", args)
@@ -237,7 +248,7 @@ class BaseConfigModel(BaseModel):
     def set_root_dir(self, root_dir: Union[str, Path]):
         path = self.config.path
         if path is None:
-            path = eKonf.compose("path=_batch_")
+            path = _compose("path=_batch_")
             logger.info(
                 f"There is no path in the config, using default path: {path.root}"
             )
@@ -311,10 +322,10 @@ class BaseConfigModel(BaseModel):
         return self.project.verbose
 
     def autorun(self):
-        return eKonf.methods(self.auto, self)
+        return _methods(self.auto, self)
 
     def show_config(self):
-        eKonf.print(self.dict())
+        _print(self.dict())
 
     def load_modules(self):
         """Load the modules"""
@@ -331,7 +342,7 @@ class BaseConfigModel(BaseModel):
             syspath = module.get("syspath")
             if syspath is not None:
                 syspath = library_dir / syspath
-            eKonf.ensure_import_module(name, libpath, liburi, specname, syspath)
+            ensure_import_module(name, libpath, liburi, specname, syspath)
 
     def reset(self, objects=None):
         """Reset the memory cache"""
@@ -339,7 +350,7 @@ class BaseConfigModel(BaseModel):
             for obj in objects:
                 del obj
         try:
-            from ekorpkit.utils.gpu import GPUMon
+            from ..utils.gpu import GPUMon
 
             GPUMon.release_gpu_memory()
         except ImportError:
@@ -441,7 +452,7 @@ class BaseBatchModel(BaseConfigModel):
         if config is not None:
             self._config_ = config
         logger.info(f"Saving config to {self.batch.config_filepath}")
-        cfg = eKonf.to_dict(self.config)
+        cfg = _to_dict(self.config)
         if exclude is None:
             exclude = self.__config__.exclude
 
@@ -458,14 +469,14 @@ class BaseBatchModel(BaseConfigModel):
                     exclude = [exclude]
                 for key in exclude:
                     args.pop(key, None)
-        eKonf.save(args, self.batch.config_filepath)
+        _save(args, self.batch.config_filepath)
         self.save_settings(exclude=exclude)
         return self.batch.config_filename
 
     def save_settings(self, exclude=None, exclude_none=True):
         def dumper(obj):
             if isinstance(obj, DictConfig):
-                return eKonf.to_dict(obj)
+                return _to_dict(obj)
             return str(obj)
 
         if exclude is None:
@@ -473,7 +484,7 @@ class BaseBatchModel(BaseConfigModel):
         config = self.dict(exclude=exclude, exclude_none=exclude_none)
         if self.verbose:
             logger.info(f"Saving config to {self.batch.config_jsonpath}")
-        eKonf.save_json(config, self.batch.config_jsonpath, default=dumper)
+        _save_json(config, self.batch.config_jsonpath, default=dumper)
 
     def load_config(
         self,
@@ -497,10 +508,10 @@ class BaseBatchModel(BaseConfigModel):
             _path = self.batch.config_filepath
             if _path.is_file():
                 logger.info(f"Loading config from {_path}")
-                batch_cfg = eKonf.load(_path)
+                batch_cfg = _load(_path)
                 if self.verbose:
                     logger.info("Merging config with the loaded config")
-                cfg = eKonf.merge(cfg, batch_cfg)
+                cfg = _merge(cfg, batch_cfg)
             else:
                 logger.info(f"No config file found at {_path}")
                 batch_num = None
@@ -509,7 +520,7 @@ class BaseBatchModel(BaseConfigModel):
 
         if self.verbose:
             logger.info(f"Merging config with args: {args}")
-        self._config_ = eKonf.merge(cfg, args)
+        self._config_ = _merge(cfg, args)
 
         self.batch_num = batch_num
         self.batch_name = batch_name
@@ -518,4 +529,4 @@ class BaseBatchModel(BaseConfigModel):
 
     def show_config(self, batch_name=None, batch_num=None):
         self.load_config(batch_name, batch_num)
-        eKonf.print(self.dict())
+        _print(self.dict())

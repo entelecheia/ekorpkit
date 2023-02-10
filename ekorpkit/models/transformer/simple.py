@@ -7,7 +7,7 @@ from scipy.special import softmax
 from simpletransformers.classification import ClassificationModel
 from abc import abstractmethod
 from ekorpkit import eKonf
-from ekorpkit.config import BaseBatchModel
+from ekorpkit.hyfi.config import BaseBatchModel
 from ekorpkit.datasets.config import DataframeConfig
 from ekorpkit.base import _Keys as Keys
 from .config import (

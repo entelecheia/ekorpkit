@@ -4,7 +4,7 @@ import jax
 import jax.numpy as jnp
 from functools import partial
 from ekorpkit import eKonf
-from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.hyfi.utils.func import elapsed_timer
 from transformers import CLIPProcessor, FlaxCLIPModel
 from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key, shard

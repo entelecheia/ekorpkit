@@ -1,0 +1,15 @@
+# @package _global_
+defaults:
+  - _self_
+  - about: __init__
+  - mode: __init__
+  - task: null
+
+  - override hydra/help: help
+  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: colorlog
+
+hydra:
+  searchpath:
+    - ${oc.env:hyfi_PACKAGE_CONFIG_PATH,pkg://ekorpkit/hyfi/conf}
+    - ${oc.env:hyfi_USER_CONFIG_PATH,pkg://ekorpkit/hyfi/conf}

@@ -3,6 +3,8 @@ import time
 import os
 import re
 import datetime
+import itertools
+from typing import List, Type
 from contextlib import contextmanager
 from timeit import default_timer
 from functools import partial
@@ -23,7 +25,7 @@ def _elapser(start, end):
 
 @contextmanager
 def elapsed_timer(format_time=False):
-    '''A context manager that yields a function that returns the elapsed time'''
+    """A context manager that yields a function that returns the elapsed time"""
     start = default_timer()
     # elapser = lambda: default_timer() - start
     elapser = partial(_elapser_timer, start)
@@ -36,12 +38,12 @@ def elapsed_timer(format_time=False):
 
 
 def lower_case_with_underscores(string):
-    '''Converts 'CamelCased' to 'camel_cased'.'''
+    """Converts 'CamelCased' to 'camel_cased'."""
     return re.sub(r"\s+", "_", string.lower()).replace("-", "_")
 
 
 def ordinal(num):
-    '''Return the ordinal of a number as a string.'''
+    """Return the ordinal of a number as a string."""
     return "%d%s" % (
         num,
         "tsnrhtdd"[(num // 10 % 10 != 1) * (num % 10 < 4) * num % 10 :: 4],
@@ -81,7 +83,7 @@ def change_directory(directory):
 
 
 def fancy_print(*args, color=None, bold=False, **kwargs):
-    '''Print with color and bold'''
+    """Print with color and bold"""
     if bold:
         print("\033[1m", end="")
 
@@ -193,3 +195,135 @@ def get_modified_time(path):
         "%Y-%m-%d %H:%M:%S", time.localtime(modTimesinceEpoc)
     )
     return modificationTime
+
+
+def _today(_format="%Y-%m-%d"):
+    from datetime import datetime
+
+    if _format is None:
+        return datetime.today().date()
+    else:
+        return datetime.today().strftime(_format)
+
+
+def _now(_format="%Y-%m-%d %H:%M:%S"):
+    from datetime import datetime
+
+    if _format is None:
+        return datetime.now()
+    else:
+        return datetime.now().strftime(_format)
+
+
+def _strptime(
+    _date_str: str,
+    _format: str = "%Y-%m-%d",
+):
+    from datetime import datetime
+
+    return datetime.strptime(_date_str, _format)
+
+
+def _to_dateparm(_date, _format="%Y-%m-%d"):
+    from datetime import datetime
+
+    _dtstr = datetime.strftime(_date, _format)
+    _dtstr = "${to_datetime:" + _dtstr + "," + _format + "}"
+    return _dtstr
+
+
+def _to_datetime(data, _format=None, _columns=None, **kwargs):
+    import pandas as pd
+    from datetime import datetime
+
+    if isinstance(data, datetime):
+        return data
+    elif isinstance(data, str):
+        if _format is None:
+            _format = "%Y-%m-%d"
+        return datetime.strptime(data, _format)
+    elif isinstance(data, int):
+        return datetime.fromtimestamp(data)
+    elif isinstance(data, pd.DataFrame):
+        if _columns:
+            if isinstance(_columns, str):
+                _columns = [_columns]
+            for _col in _columns:
+                data[_col] = pd.to_datetime(data[_col], format=_format, **kwargs)
+        return data
+    else:
+        return data
+
+
+def _to_numeric(data, _columns=None, errors="coerce", downcast=None, **kwargs):
+    import pandas as pd
+
+    if isinstance(data, str):
+        return float(data)
+    elif isinstance(data, int):
+        return data
+    elif isinstance(data, float):
+        return data
+    elif isinstance(data, pd.DataFrame):
+        if _columns:
+            if isinstance(_columns, str):
+                _columns = [_columns]
+            for _col in _columns:
+                data[_col] = pd.to_numeric(data[_col], errors=errors, downcast=downcast)
+        return data
+    else:
+        return data
+
+
+def _human_readable_type_name(t: Type) -> str:
+    """
+    Generates a useful-for-humans label for a type.
+    For builtin types, it's just the class name (eg "str" or "int").
+    For other types, it includes the module (eg "pathlib.Path").
+    """
+    module = t.__module__
+    if module == "builtins":
+        return t.__qualname__
+    elif module.split(".")[0] == "ekorpkit":
+        module = "ekorpkit"
+
+    try:
+        return module + "." + t.__qualname__
+    except AttributeError:
+        return str(t)
+
+
+def _readable_types_list(type_list: List[Type]) -> str:
+    return ", ".join(_human_readable_type_name(t) for t in type_list)
+
+
+def _dict_product(dicts):
+    """
+    >>> list(dict_product(dict(number=[1,2], character='ab')))
+    [{'character': 'a', 'number': 1},
+     {'character': 'a', 'number': 2},
+     {'character': 'b', 'number': 1},
+     {'character': 'b', 'number': 2}]
+    """
+    return (dict(zip(dicts, x)) for x in itertools.product(*dicts.values()))
+
+
+def _dict_to_dataframe(data, orient="columns", dtype=None, columns=None):
+    import pandas as pd
+
+    return pd.DataFrame.from_dict(data, orient=orient, dtype=dtype, columns=columns)
+
+
+def _records_to_dataframe(
+    data, index=None, exclude=None, columns=None, coerce_float=False, nrows=None
+):
+    import pandas as pd
+
+    return pd.DataFrame.from_records(
+        data,
+        index=index,
+        exclude=exclude,
+        columns=columns,
+        coerce_float=coerce_float,
+        nrows=nrows,
+    )

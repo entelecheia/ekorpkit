@@ -10,9 +10,8 @@ from datetime import datetime
 from tqdm.auto import tqdm
 import numpy as np
 from ekorpkit import eKonf
-from ekorpkit.utils.func import elapsed_timer
+from ekorpkit.hyfi.utils.func import elapsed_timer
 from ekorpkit.io.load.list import load_wordlist, save_wordlist
-from ekorpkit.io.file import save_dataframe, load_dataframe
 from ekorpkit.visualize.wordcloud import generate_wordclouds, savefig
 from ekorpkit.pipelines.pipe import apply
 

@@ -1,13 +1,13 @@
-import logging
 import os
 import subprocess
 import sys
 import importlib
 from pathlib import Path
-from ekorpkit.base import _is_dir, _is_file
+from .logging import getLogger
+from ..io.file import is_dir, is_file
 
 
-log = logging.getLogger(__name__)
+logger = getLogger()
 
 
 def gitclone(url, targetdir=None, verbose=False):
@@ -22,7 +22,7 @@ def gitclone(url, targetdir=None, verbose=False):
     if verbose:
         print(res)
     else:
-        log.info(res)
+        logger.info(res)
 
 
 def pip(
@@ -57,12 +57,12 @@ def pip(
         _cmd.append(f"--{k}")
     _cmd.append(name)
     if verbose:
-        log.info(f"Installing: {' '.join(_cmd)}")
+        logger.info(f"Installing: {' '.join(_cmd)}")
     res = subprocess.run(_cmd, stdout=subprocess.PIPE).stdout.decode("utf-8")
     if verbose:
         print(res)
     else:
-        log.info(res)
+        logger.info(res)
 
 
 def pipi(name, verbose=False):
@@ -72,7 +72,7 @@ def pipi(name, verbose=False):
     if verbose:
         print(res)
     else:
-        log.info(res)
+        logger.info(res)
 
 
 def pipie(name, verbose=False):
@@ -82,7 +82,7 @@ def pipie(name, verbose=False):
     if verbose:
         print(res)
     else:
-        log.info(res)
+        logger.info(res)
 
 
 def apti(name, verbose=False):
@@ -92,15 +92,15 @@ def apti(name, verbose=False):
     if verbose:
         print(res)
     else:
-        log.info(res)
+        logger.info(res)
 
 
 def load_module_from_file(name, libpath, specname=None):
     module_path = os.path.join(libpath, name.replace(".", os.path.sep))
-    if _is_file(module_path + ".py"):
+    if is_file(module_path + ".py"):
         module_path = module_path + ".py"
     else:
-        if _is_dir(module_path):
+        if is_dir(module_path):
             module_path = os.path.join(module_path, "__init__.py")
         else:
             module_path = str(Path(module_path).parent / "__init__.py")
@@ -119,10 +119,10 @@ def ensure_import_module(name, libpath, liburi, specname=None, syspath=None):
             importlib.import_module(specname)
         else:
             importlib.import_module(name)
-        log.info(f"{name} imported")
+        logger.info(f"{name} imported")
     except ImportError:
         if not os.path.exists(libpath):
-            log.info(f"{libpath} not found, cloning from {liburi}")
+            logger.info(f"{libpath} not found, cloning from {liburi}")
             gitclone(liburi, libpath)
         if not syspath:
             syspath = libpath
@@ -130,4 +130,40 @@ def ensure_import_module(name, libpath, liburi, specname=None, syspath=None):
             sys.path.append(syspath)
         load_module_from_file(name, syspath, specname)
         specname = specname or name
-        log.info(f"{name} not imported, loading from {syspath} as {specname}")
+        logger.info(f"{name} not imported, loading from {syspath} as {specname}")
+
+
+def _dependencies(_key=None, _path=None):
+    import re
+    from collections import defaultdict
+
+    if _path is None:
+        _path = os.path.join(
+            os.path.dirname(__file__), "resources", "requirements-extra.yaml"
+        )
+
+    with open(_path) as fp:
+        extra_deps = defaultdict(set)
+        for k in fp:
+            if k.strip() and not k.startswith("#"):
+                tags = set()
+                if ":" in k:
+                    k, v = k.split(":")
+                    tags.update(vv.strip() for vv in v.split(","))
+                tags.add(re.split("[<=>]", k.strip())[0])
+                for t in tags:
+                    extra_deps[t].add(k.strip())
+
+        # add tag `exhaustive` at the end
+        extra_deps["exhaustive"] = set(vv for v in extra_deps.values() for vv in v)
+
+    if _key is None or _key == "keys":
+        tags = []
+        for tag, deps in extra_deps.items():
+            if len(deps) > 1:
+                tags.append(tag)
+        return tags
+    else:
+        return extra_deps[_key]
+
+

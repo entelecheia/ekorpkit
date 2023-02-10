@@ -1,13 +1,13 @@
 import logging
 import os
 import sys
-from ekorpkit.io.file import read
+from ..io.file import read
 
 
 logger = logging.getLogger(__name__)
 
 
-def _is_notebook():
+def is_notebook():
     try:
         get_ipython
     except NameError:
@@ -24,7 +24,7 @@ def _is_notebook():
         return False  # Other type
 
 
-def _is_colab():
+def is_colab():
     is_colab = "google.colab" in sys.modules
     if is_colab:
         logger.info("Google Colab detected.")
@@ -40,7 +40,7 @@ def _get_display():
         logger.info("ipywidgets not installed.")
         return None
 
-    if _is_notebook():
+    if is_notebook():
         return Output()
     else:
         return None
@@ -49,7 +49,7 @@ def _get_display():
 def _clear_output(wait=False):
     from IPython import display
 
-    if _is_notebook():
+    if is_notebook():
         display.clear_output(wait=wait)
 
 
@@ -64,7 +64,7 @@ def _display(
 ):
     from IPython import display
 
-    if _is_notebook() and objs is not None:
+    if is_notebook() and objs is not None:
         return display.display(
             *objs,
             include=include,
@@ -134,7 +134,7 @@ def _display_image(
     """
     from IPython import display
 
-    if _is_notebook():
+    if is_notebook():
         img = display.Image(
             data=data,
             url=url,
@@ -349,7 +349,7 @@ def _create_floatslider(
 
 
 def _load_extentions(exts=["autotime"]):
-    if _is_notebook():
+    if is_notebook():
         from IPython import get_ipython
 
         ip = get_ipython()
@@ -364,7 +364,7 @@ def _load_extentions(exts=["autotime"]):
 
 
 def _set_matplotlib_formats(*formats, **kwargs):
-    if _is_notebook():
+    if is_notebook():
         from IPython.display import set_matplotlib_formats
 
         set_matplotlib_formats(*formats, **kwargs)

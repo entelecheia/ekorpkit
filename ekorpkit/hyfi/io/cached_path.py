@@ -1,9 +1,8 @@
 import os
 import logging
 import gdown
-import shutil
 from pathlib import Path
-from ekorpkit.io.fetch.cached_path import _cached_path as _cpath
+from .cpath import _cached_path as _cpath
 
 # import cached_path as _cpath
 
@@ -199,3 +198,21 @@ def extractall(path, to=None, force_extract=False):
         f.extractall(path=to)
 
     return to, filelist(f)
+
+
+def _path(
+    url_or_filename,
+    extract_archive: bool = False,
+    force_extract: bool = False,
+    return_parent_dir: bool = False,
+    cache_dir=None,
+    verbose: bool = False,
+):
+    return cached_path(
+        url_or_filename,
+        extract_archive=extract_archive,
+        force_extract=force_extract,
+        return_parent_dir=return_parent_dir,
+        cache_dir=cache_dir,
+        verbose=verbose,
+    )
