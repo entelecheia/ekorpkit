@@ -44,7 +44,7 @@ ENV WORKSPACE_LOCATION $WORKSPACE_LOCATION
 ENV WORKSPACE_ROOT $WORKSPACE_ROOT
 ENV SYSTEM_HOSTNAME $SYSTEM_HOSTNAME
 ENV EKORPKIT_SRC_DIR $EKORPKIT_SRC_DIR
-ENV APPLY_ROOTMOI=0
+ENV DOTFILES_APPLY_ROOTMOI=0
 ENV REMOTE_CONTAINERS=1
 # ENV DOTFILES_DEBUG=1
 
@@ -58,9 +58,9 @@ WORKDIR $EKORPKIT_SRC_DIR
 
 # install requirements
 RUN pip install --no-cache-dir -e "."
-COPY requirements-dev.txt .
+COPY ./.docker/scripts/requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
-COPY ./scripts/devenv-entrypoint.sh ./scripts
-RUN sudo chmod 755 ./scripts/devenv-entrypoint.sh
+COPY ./.docker/scripts/devenv-entrypoint.sh /home/$USERNAME/scripts
+RUN sudo chmod 755 /home/$USERNAME/scripts/devenv-entrypoint.sh
 CMD ["zsh"]

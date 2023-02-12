@@ -21,7 +21,7 @@ services:
     hostname: $CONTAINER_HOSTNAME
     command:
       - bash 
-      - ./scripts/devenv-entrypoint.sh
+      - /home/$USERNAME/scripts/devenv-entrypoint.sh
     environment:
       HOST_JUPYTER_IP: $HOST_JUPYTER_IP
       HOST_JUPYTER_PORT: $HOST_JUPYTER_PORT
@@ -55,7 +55,7 @@ services:
   ngrok:
     image: wernight/ngrok:latest
     ports:
-      - 4840
+      - $NGROK_DOCKER_PORT:$NGROK_DOCKER_PORT
     environment:
       NGROK_AUTH: $NGROK_AUTH
       NGROK_PORT: $NGROK_PORT
