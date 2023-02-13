@@ -2,14 +2,14 @@ import os
 import logging
 import hydra
 from .base import __hydra_version_base__
-from .hconf import hConf
+from .hconf import HiConf
 
 
 log = logging.getLogger(__name__)
 
 
 def cmd(**args):
-    hConf.run(args)
+    HiConf.run(args)
 
 
 def about(**args):
@@ -33,23 +33,23 @@ def hydra_main(cfg) -> None:
 
     if verbose:
         log.info("## Command Line Interface for %s ##" % app_name)
-    hConf._init_env_(cfg, verbose)
+    HiConf._init_env_(cfg, verbose)
 
     if print_config:
         if print_resolved_config:
             log.info("## hydra configuration resolved ##")
-            hConf.pprint(cfg)
+            HiConf.pprint(cfg)
         else:
             log.info("## hydra configuration ##")
-            print(hConf.to_yaml(cfg))
+            print(HiConf.to_yaml(cfg))
 
     if verbose:
         log.info(f"Hydra working directory : {os.getcwd()}")
         log.info(f"Orig working directory  : {hydra.utils.get_original_cwd()}")
 
-    hConf.instantiate(cfg)
+    HiConf.instantiate(cfg)
 
-    hConf._stop_env_(cfg, verbose)
+    HiConf._stop_env_(cfg, verbose)
 
 
 if __name__ == "__main__":

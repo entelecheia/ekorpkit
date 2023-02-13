@@ -23,7 +23,7 @@ def __version__():
     return _version.get_versions()["version"]
 
 
-class GlobalEnviron(BaseSettings):
+class HyfiConfig(BaseSettings):
     hyfi_package_config_path: str = "pkg://ekorpkit.hyfi.conf"
     hyfi_config_module: str = "ekorpkit.hyfi.conf"
     hyfi_user_config_path: str = None
@@ -50,7 +50,7 @@ class GlobalEnviron(BaseSettings):
         return values
 
 
-__global_env__ = GlobalEnviron()
+__global_config__ = HyfiConfig()
 
 
 class Environments(BaseSettings):
@@ -338,7 +338,7 @@ def _compose(
 
     :return: The composed config
     """
-    config_module = config_module or __global_env__.hyfi_config_module
+    config_module = config_module or __global_config__.hyfi_config_module
     if verbose:
         logger.info("config_module: %s", config_module)
     is_initialized = hydra.core.global_hydra.GlobalHydra.instance().is_initialized()

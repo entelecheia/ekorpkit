@@ -1,4 +1,4 @@
-from .hconf import hConf
+from .hconf import HiConf
 from .base import (
     global_env,
 )

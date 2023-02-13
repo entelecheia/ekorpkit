@@ -1,7 +1,7 @@
 version: 1
 formatters:
   simple:
-    format: '[ekorpkit-%(levelname)s]: %(message)s'
+    format: '[${hydra.help.app_name}-%(levelname)s]: %(message)s'
 handlers:
   console:
     class: logging.StreamHandler

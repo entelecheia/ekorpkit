@@ -1,5 +1,4 @@
 dotenv_path: ${..path.runtime}/.env
-dotenv: # ${dotenv_values:${.dotenv_path}}
 distributed_framework:
   backend: joblib
   initialize: true
@@ -17,9 +16,3 @@ batcher:
   task_num_cpus: 1
   task_num_gpus: 0
   verbose: 10
-# os:
-  # MODIN_ENGINE: ray
-  # MODIN_CPUS: ${oc.select:..distributed_framework.num_workers,50}
-  # MODIN_OUT_OF_CORE: 'true'
-  # MALLOC_TRIM_THRESHOLD_: 65536
-  # CACHED_PATH_CACHE_ROOT: ${project.path.cache}/cached_path

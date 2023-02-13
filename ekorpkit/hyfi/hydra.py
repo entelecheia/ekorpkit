@@ -23,7 +23,7 @@ from .env import (
     _select,
     _to_dict,
     _to_config,
-    __global_env__,
+    __global_config__,
     __hydra_version_base__,
     __version__,
 )
@@ -231,7 +231,7 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
              if _target_ is a callable: the return value of the call
     """
     verbose = config.get(_SpecialKeys.VERBOSE, False)
-    if not __global_env__.__hyfi_env_initilized__:
+    if not __global_config__.__hyfi_env_initilized__:
         _init_env_(config, verbose=verbose)
     if not _is_instantiatable(config):
         if verbose:
@@ -349,7 +349,7 @@ def __home_path__():
 
 
 def __search_package_path__():
-    return __global_env__.hyfi_package_config_path
+    return __global_config__.hyfi_package_config_path
 
 
 OmegaConf.register_new_resolver("__hyfi_path__", __hyfi_path__)
@@ -422,7 +422,7 @@ def _init_env_(
         )
         if verbose:
             logger.info(f"initialized batcher with {batcher.batcher_instance}")
-    __global_env__.__hyfi_env_initilized__ = True
+    __global_config__.__hyfi_env_initilized__ = True
     return ProjectConfig()
 
 

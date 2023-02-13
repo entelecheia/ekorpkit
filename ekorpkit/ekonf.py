@@ -1,4 +1,4 @@
-from .hyfi import hConf
+from .hyfi import HiConf
 from .base import (
     __ekorpkit_path__,
     _Defaults,
@@ -7,7 +7,7 @@ from .base import (
 )
 
 
-class eKonf(hConf):
+class eKonf(HiConf):
     """ekorpkit config primary class"""
 
     __ekorpkit_path__ = __ekorpkit_path__()

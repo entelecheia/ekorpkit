@@ -104,7 +104,7 @@ class HiEnvConfig:
         return Secrets()
 
 
-class hConf:
+class HiConf:
     """hyfi config primary class"""
 
     __version__ = __version__()
