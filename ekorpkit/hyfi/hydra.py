@@ -231,8 +231,8 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
              if _target_ is a callable: the return value of the call
     """
     verbose = config.get(_SpecialKeys.VERBOSE, False)
-    if not __global_config__.__hyfi_env_initilized__:
-        _init_env_(config, verbose=verbose)
+    if not __global_config__.__initilized__:
+        __global_config__.initialize()
     if not _is_instantiatable(config):
         if verbose:
             logger.info("Config is not instantiatable, returning config")
@@ -374,83 +374,6 @@ OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
 )
 OmegaConf.register_new_resolver("dotenv_values", dotenv_values)
-
-
-def _init_env_(
-    cfg=None, config_module: str = "ekorpkit.hyfi.conf", verbose: bool = False
-):
-    load_dotenv(verbose=verbose)
-    # if is_notebook():
-    #     _log_level = os.environ.get("EKORPKIT_LOG_LEVEL", "INFO")
-    #     # logger.basicConfig(level=_log_level, force=True)
-
-    if cfg is None:
-        cfg = _compose(overrides=["+project=__init__"], config_module=config_module)
-    if "project" not in cfg:
-        if verbose:
-            logger.warning("No project config found, skipping env initialization")
-        return
-    env = cfg.project.env
-
-    backend = env.distributed_framework.backend
-
-    if env.distributed_framework.initialize:
-        backend_handle = None
-        if backend == "ray":
-            import ray
-
-            ray_cfg = env.get("ray", None)
-            ray_cfg = _to_container(ray_cfg, resolve=True)
-            if verbose:
-                logger.info(f"initializing ray with {ray_cfg}")
-            ray.init(**ray_cfg)
-            backend_handle = ray
-
-        elif backend == "dask":
-            from dask.distributed import Client
-
-            dask_cfg = env.get("dask", None)
-            dask_cfg = _to_container(dask_cfg, resolve=True)
-            if verbose:
-                logger.info(f"initializing dask client with {dask_cfg}")
-            client = Client(**dask_cfg)
-            if verbose:
-                logger.info(client)
-
-        batcher.batcher_instance = batcher.Batcher(
-            backend_handle=backend_handle, **env.batcher
-        )
-        if verbose:
-            logger.info(f"initialized batcher with {batcher.batcher_instance}")
-    __global_config__.__hyfi_env_initilized__ = True
-    return ProjectConfig()
-
-
-def _stop_env_(cfg, verbose=False):
-    if "project" not in cfg:
-        if verbose:
-            logger.warning(f"No project config found in {cfg}")
-        return
-    env = cfg.project.env
-    backend = env.distributed_framework.backend
-    if verbose:
-        logger.info(f"stopping {backend}, if running")
-
-    if env.distributed_framework.initialize:
-        if backend == "ray":
-            import ray
-
-            if ray.is_initialized():
-                ray.shutdown()
-                if verbose:
-                    logger.info("shutting down ray")
-
-        # elif modin_engine == 'dask':
-        #     from dask.distributed import Client
-
-        #     if Client.initialized():
-        #         client.close()
-        #         log.info(f'shutting down dask client')
 
 
 def _getsource(obj):

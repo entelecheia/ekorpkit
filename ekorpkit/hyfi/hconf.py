@@ -1,6 +1,57 @@
 from pathlib import Path
-from omegaconf import SCMode, DictConfig, ListConfig
-from typing import Any, List, IO, Dict, Union, Tuple
+from typing import IO, Any, Dict, List, Tuple, Union
+
+from omegaconf import DictConfig, ListConfig, SCMode
+
+from .env import DotEnvConfig, ProjectConfig, __global_config__
+from .hydra import (
+    DictKeyType,
+    __home_path__,
+    __hyfi_path__,
+    __version__,
+    _compose,
+    _ensure_kwargs,
+    _ensure_list,
+    _function,
+    _getsource,
+    _instantiate,
+    _is_config,
+    _is_instantiatable,
+    _is_list,
+    _load,
+    _load_json,
+    _merge,
+    _methods,
+    _partial,
+    _print,
+    _run,
+    _save,
+    _save_json,
+    _select,
+    _SpecialKeys,
+    _to_config,
+    _to_container,
+    _to_dict,
+    _to_yaml,
+    _update,
+    _viewsource,
+)
+from .io.cached_path import _path
+from .io.file import _exists, _join_path, _mkdir, is_dir, is_file
+from .pipe import _apply, _pipe
+from .utils.env import get_osenv, load_dotenv, set_osenv
+from .utils.func import (
+    _dict_product,
+    _dict_to_dataframe,
+    _records_to_dataframe,
+    _to_dateparm,
+    _to_datetime,
+    _to_numeric,
+)
+from .utils.google import mount_google_drive
+from .utils.gpu import _nvidia_smi, _set_cuda
+from .utils.lib import _dependencies
+from .utils.logging import getLogger, setLogger
 from .utils.notebook import (
     _clear_output,
     _cprint,
@@ -14,117 +65,41 @@ from .utils.notebook import (
     _display_image,
     _get_display,
     _hide_code_in_slideshow,
-    is_notebook,
-    is_colab,
-)
-from .env import Environments, Secrets, ProjectConfig
-from .hydra import (
-    _compose,
-    _select,
-    _to_dict,
-    _to_config,
-    __home_path__,
-    __hyfi_path__,
-    __version__,
-    _load,
-    _load_json,
-    _merge,
-    _methods,
-    _ensure_kwargs,
-    _ensure_list,
-    _function,
-    _getsource,
-    _init_env_,
-    _instantiate,
-    _is_config,
-    _is_instantiatable,
-    _is_list,
-    _SpecialKeys,
-    _partial,
-    _print,
-    _run,
-    _save,
-    _save_json,
-    _to_container,
-    _to_yaml,
-    _update,
-    _viewsource,
-    _stop_env_,
-    DictKeyType,
-)
-from .utils.env import (
-    load_dotenv,
-    set_osenv,
-    get_osenv,
-)
-from .utils.func import (
-    _to_dateparm,
-    _to_datetime,
-    _to_numeric,
-    _dict_product,
-    _dict_to_dataframe,
-    _records_to_dataframe,
-)
-from .io.file import (
-    _mkdir,
-    _exists,
-    _join_path,
-    is_dir,
-    is_file,
-)
-from .pipe import _apply, _pipe
-from .utils.logging import getLogger, setLogger
-from .io.cached_path import _path
-from .utils.lib import _dependencies
-from .utils.gpu import (
-    _nvidia_smi,
-    _set_cuda,
-)
-from .utils.google import mount_google_drive
-from .utils.notebook import (
     _load_extentions,
     _set_matplotlib_formats,
+    is_colab,
+    is_notebook,
 )
-
 
 logger = getLogger(__name__)
 
 
-class HiEnvConfig:
-    @property
-    def envs(self):
-        return Environments()
-
-    @property
-    def environ(self):
-        return get_osenv()
-
-    @property
-    def secrets(self):
-        return Secrets()
-
-
-class HiConf:
+class HyFI:
     """hyfi config primary class"""
 
     __version__ = __version__()
     __hyfi_path__ = __hyfi_path__()
     __home_path__ = __home_path__()
-    os: HiEnvConfig = HiEnvConfig()
+    config = __global_config__
     SpeicialKeys = _SpecialKeys
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
 
     @staticmethod
-    def envs() -> Environments:
-        """Return the current environments"""
-        return Environments()
+    def initialize(config: Union[DictConfig, Dict] = None):
+        """Initialize the global config"""
+        __global_config__.initialize(config)
 
     @staticmethod
-    def secrets() -> Secrets:
-        """Return the current secrets"""
-        return Secrets()
+    def terminate():
+        """Terminate the global config"""
+        __global_config__.terminate()
+
+    @staticmethod
+    def envs() -> DotEnvConfig:
+        """Return the current environments"""
+        return DotEnvConfig()
 
     @staticmethod
     def compose(
@@ -298,14 +273,6 @@ class HiConf:
         override: bool = False,
     ):
         load_dotenv(verbose, override)
-
-    @staticmethod
-    def _init_env_(cfg=None, verbose=False):
-        return _init_env_(cfg, verbose=verbose)
-
-    @staticmethod
-    def _stop_env_(cfg, verbose=False):
-        _stop_env_(cfg, verbose=verbose)
 
     @staticmethod
     def path(
@@ -969,35 +936,27 @@ class HiConf:
         )
 
     @staticmethod
-    def set_workspace(
+    def init_project(
         workspace=None,
         project=None,
         task=None,
-        init_envs=True,
         log_level=None,
         autotime=True,
         retina=True,
         verbose=None,
         **kwargs,
     ) -> ProjectConfig:
-        envs = Environments(EKORPKIT_VERBOSE=verbose)
-        if isinstance(workspace, str):
-            envs.EKORPKIT_WORKSPACE_ROOT = workspace
-        if isinstance(project, str):
-            envs.EKORPKIT_PROJECT_NAME = project
-        if isinstance(task, str):
-            envs.EKORPKIT_TASK_NAME = task
-        if isinstance(log_level, str):
-            envs.EKORPKIT_LOG_LEVEL = log_level
-            setLogger(log_level)
-        if autotime:
-            _load_extentions(exts=["autotime"])
-        if retina:
-            _set_matplotlib_formats("retina")
-        prj_config = ProjectConfig()
-        if init_envs:
-            _init_env_(verbose=verbose)
-        return prj_config
+        __global_config__.init_project(
+            workspace=workspace,
+            project=project,
+            task=task,
+            log_level=log_level,
+            autotime=autotime,
+            retina=retina,
+            verbose=verbose,
+            **kwargs,
+        )
+        return __global_config__.project
 
     @staticmethod
     def scale_image(

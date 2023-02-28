@@ -1,3 +1,4 @@
+"""Environment variable utilities"""
 import os
 import dotenv
 import hydra
@@ -19,6 +20,7 @@ def getcwd():
 
 
 def dotenv_values(dotenv_path=None, **kwargs):
+    """Load dotenv file and return a dict of key/value pairs"""
     config = dotenv.dotenv_values(dotenv_path=dotenv_path, **kwargs)
     return dict(config)
 
@@ -26,11 +28,12 @@ def dotenv_values(dotenv_path=None, **kwargs):
 def load_dotenv(
     verbose: bool = False,
     override: bool = False,
+    dotenv_dir: str = None,
+    dotenv_filename: str = ".env",
 ):
-    original_cwd = getcwd()
-    config_dir = os.environ.get("EKORPKIT_CONFIG_DIR")
-    dotenv_dir = config_dir or original_cwd
-    dotenv_path = Path(dotenv_dir, ".env")
+    """Load dotenv file from the given directory or from the current directory"""
+    dotenv_dir = dotenv_dir or getcwd()
+    dotenv_path = Path(dotenv_dir, dotenv_filename)
     if dotenv_path.is_file():
         dotenv.load_dotenv(dotenv_path=dotenv_path, verbose=verbose, override=override)
         if verbose:
@@ -53,6 +56,7 @@ def load_dotenv(
 
 
 def get_osenv(key: str = None, default: str = None) -> Any:
+    """Get the value of an environment variable or return the default value"""
     load_dotenv()
     if key:
         return os.environ.get(key, default)
@@ -60,6 +64,7 @@ def get_osenv(key: str = None, default: str = None) -> Any:
 
 
 def set_osenv(key: str, value: Any) -> None:
+    """Set the value of an environment variable"""
     if value and is_dir(value):
         value = os.path.abspath(value)
     pre_val = os.environ.get(key)

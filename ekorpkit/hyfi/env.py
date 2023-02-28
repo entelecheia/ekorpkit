@@ -1,18 +1,17 @@
 import os
-import hydra
-from omegaconf import OmegaConf, SCMode, DictConfig, ListConfig
-from pydantic.env_settings import SettingsSourceCallable
-from pydantic import BaseModel, BaseSettings, SecretStr, root_validator, validator
-from pydantic.utils import ROOT_KEY
-from omegaconf import DictConfig
-from typing import Any, Union, Tuple, Optional, List, Dict
 from pathlib import Path
-from .utils.env import load_dotenv
-from .utils.logging import getLogger
-from .utils.notebook import is_notebook
-from .utils.env import load_dotenv
-from .. import _version
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import hydra
+from omegaconf import DictConfig, ListConfig, OmegaConf, SCMode
+from pydantic import BaseModel, BaseSettings, SecretStr, root_validator, validator
+from pydantic.env_settings import SettingsSourceCallable
+
+from .. import _version
+from .utils.batch import batcher
+from .utils.env import load_dotenv
+from .utils.logging import getLogger, setLogger
+from .utils.notebook import _load_extentions, _set_matplotlib_formats, is_notebook
 
 logger = getLogger(__name__)
 
@@ -20,52 +19,165 @@ __hydra_version_base__ = "1.2"
 
 
 def __version__():
+    """Returns the version of HyFI"""
     return _version.get_versions()["version"]
 
 
-class HyfiConfig(BaseSettings):
-    hyfi_package_config_path: str = "pkg://ekorpkit.hyfi.conf"
-    hyfi_config_module: str = "ekorpkit.hyfi.conf"
-    hyfi_user_config_path: str = None
-    __hyfi_env_initilized__: bool = False
+class DistFramwork(BaseModel):
+    """Distributed Framework Configuration"""
+
+    backend: str = "joblib"
+    initialize: bool = False
+    num_workers: int = 1
+
+
+class BatcherConfig(BaseModel):
+    """Batcher Configuration"""
+
+    procs: int = 1
+    minibatch_size: int = 1_000
+    backend: str = "joblib"
+    task_num_cpus: int = 1
+    task_num_gpus: int = 0
+    verbose: int = 10
+
+
+class JobLibConfig(BaseModel):
+    """JobLib Configuration"""
+
+    config_name: str = "__init__"
+    distributed_framework: DistFramwork = DistFramwork()
+    batcher: BatcherConfig = BatcherConfig()
+    __initilized__: bool = False
 
     class Config:
-        env_prefix = ""
-        case_sentive = False
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        validate_assignment = True
+        extra = "allow"
+        underscore_attrs_are_private = True
+
+    def __init__(
+        self,
+        config_name: str = "__init__",
+        **data: Any,
+    ):
+        if not data:
+            data = _compose(f"joblib={config_name}")
+            logger.debug(
+                "There are no arguments to initilize a config, using default config."
+            )
+        super().__init__(config_name=config_name, **data)
+
+    def init_backend(
+        self,
+    ):
+        """Initialize the backend for joblib"""
+        backend = self.distributed_framework.backend
+
+        if self.distributed_framework.initialize:
+            backend_handle = None
+            if backend == "ray":
+                import ray
+
+                ray_cfg = {"num_cpus": self.distributed_framework.num_workers}
+                logger.info(f"initializing ray with {ray_cfg}")
+                ray.init(**ray_cfg)
+                backend_handle = ray
+
+            elif backend == "dask":
+                from dask.distributed import Client
+
+                dask_cfg = {"n_workers": self.distributed_framework.num_workers}
+                logger.info(f"initializing dask client with {dask_cfg}")
+                client = Client(**dask_cfg)
+                logger.debug(client)
+
+            batcher.batcher_instance = batcher.Batcher(
+                backend_handle=backend_handle, **self.batcher.dict()
+            )
+            logger.info(f"initialized batcher with {batcher.batcher_instance}")
+        self.__initilized__ = True
+
+    def stop_backend(self):
+        """Stop the backend for joblib"""
+        backend = self.distributed_framework.backend
+        logger.info(f"stopping distributed framework")
+
+        if self.distributed_framework.initialize:
+            if backend == "ray":
+                import ray
+
+                if ray.is_initialized():
+                    ray.shutdown()
+                    logger.info("shutting down ray")
+
+            # elif modin_engine == 'dask':
+            #     from dask.distributed import Client
+
+            #     if Client.initialized():
+            #         client.close()
+            #         log.info(f'shutting down dask client')
+
+
+class PathConfig(BaseModel):
+    config_name: str = "__init__"
+    dotenv_path: str = None
+    workspace: str = None
+    project: str = "ekorpkit-default"
+    data: str = None
+    home: str = None
+    ekorpkit: str = None
+    resources: str = None
+    runtime: str = None
+    archive: str = None
+    corpus: str = None
+    datasets: str = None
+    logs: str = None
+    models: str = None
+    outputs: str = None
+    cache: str = None
+    tmp: str = None
+    library: str = None
+    verbose: bool = False
+
+    class Config:
         extra = "allow"
 
-    @root_validator()
-    def _check_and_set_values(cls, values):
-        for k, v in values.items():
-            if k == "hyfi_package_config_path":
-                values["hyfi_config_module"] = v.replace("pkg://", "")
-            if v is not None:
-                old_value = os.getenv(k.upper(), "")
-                if str(old_value).lower() != str(v).lower():
-                    os.environ[k.upper()] = str(v)
-                    logger.debug("Set environment variable %s=%s", k.upper(), str(v))
-        return values
+    def __init__(
+        self,
+        config_name: str = "__init__",
+        **data: Any,
+    ):
+        if not data:
+            data = _compose(f"path={config_name}")
+            logger.debug(
+                "There are no arguments to initilize a config, using default config."
+            )
+        super().__init__(config_name=config_name, **data)
+
+    @property
+    def log_dir(self):
+        Path(self.logs).mkdir(parents=True, exist_ok=True)
+        return Path(self.logs).absolute()
+
+    @property
+    def cache_dir(self):
+        Path(self.cache).mkdir(parents=True, exist_ok=True)
+        return Path(self.cache).absolute()
 
 
-__global_config__ = HyfiConfig()
+class DotEnvConfig(BaseSettings):
+    """Environment variables for HyFI"""
 
-
-class Environments(BaseSettings):
-    """Environment variables for ekorpkit"""
-
-    EKORPKIT_CONFIG_DIR: Optional[str]
-    EKORPKIT_WORKSPACE_ROOT: Optional[str]
-    EKORPKIT_PROJECT_NAME: Optional[str]
-    EKORPKIT_TASK_NAME: Optional[str]
-    EKORPKIT_PROJECT_ROOT: Optional[str]
-    EKORPKIT_DATA_ROOT: Optional[str]
-    EKORPKIT_LOG_LEVEL: Optional[str]
-    EKORPKIT_VERBOSE: Optional[Union[bool, str, int]]
+    # Internal
+    HYFI_WORKSPACE_ROOT: Optional[str]
+    HYFI_PROJECT_NAME: Optional[str]
+    HYFI_TASK_NAME: Optional[str]
+    HYFI_PROJECT_ROOT: Optional[str]
+    HYFI_DATA_ROOT: Optional[str]
+    HYFI_LOG_LEVEL: Optional[str]
+    HYFI_VERBOSE: Optional[Union[bool, str, int]]
     NUM_WORKERS: Optional[int]
-    KMP_DUPLICATE_LIB_OK: Optional[str]
+    CACHED_PATH_CACHE_ROOT: Optional[str]
+    # For other packages
     CUDA_DEVICE_ORDER: Optional[str]
     CUDA_VISIBLE_DEVICES: Optional[str]
     WANDB_PROJECT: Optional[str]
@@ -76,46 +188,7 @@ class Environments(BaseSettings):
     LABEL_STUDIO_SERVER: Optional[str]
     KMP_DUPLICATE_LIB_OK: Optional[str] = "True"
     TOKENIZERS_PARALLELISM: Optional[bool] = False
-    CACHED_PATH_CACHE_ROOT: Optional[str]
-
-    class Config:
-        env_prefix = ""
-        env_nested_delimiter = "__"
-        case_sentive = False
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        validate_assignment = True
-        extra = "allow"
-
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings: SettingsSourceCallable,
-            env_settings: SettingsSourceCallable,
-            file_secret_settings: SettingsSourceCallable,
-        ) -> Tuple[SettingsSourceCallable, ...]:
-            load_dotenv()
-            return env_settings, file_secret_settings, init_settings
-
-    @root_validator()
-    def _check_and_set_values(cls, values):
-        verbose = values.get("EKORPKIT_VERBOSE")
-        workspace = values.get("EKORPKIT_WORKSPACE_ROOT")
-        project = values.get("EKORPKIT_PROJECT_NAME")
-        if workspace is not None and project is not None:
-            project_dir = os.path.join(workspace, "projects", project)
-            values["EKORPKIT_PROJECT_ROOT"] = project_dir
-        for k, v in values.items():
-            if v is not None:
-                old_value = os.getenv(k.upper())
-                if old_value is None or old_value != str(v):
-                    os.environ[k.upper()] = str(v)
-                    if verbose:
-                        logger.info(f"Set environment variable {k.upper()}={v}")
-        return values
-
-
-class Secrets(BaseSettings):
+    # API Keys and Tokens
     WANDB_API_KEY: Optional[SecretStr]
     HUGGING_FACE_HUB_TOKEN: Optional[SecretStr]
     ECOS_API_KEY: Optional[SecretStr]
@@ -145,87 +218,25 @@ class Secrets(BaseSettings):
 
     @root_validator()
     def _check_and_set_values(cls, values):
+        workspace = values.get("HYFI_WORKSPACE_ROOT")
+        project = values.get("HYFI_PROJECT_NAME")
+        if workspace is not None and project is not None:
+            project_dir = os.path.join(workspace, "projects", project)
+            values["HYFI_PROJECT_ROOT"] = project_dir
         for k, v in values.items():
             if v is not None:
                 old_value = os.getenv(k.upper())
-                if old_value is None or old_value != v.get_secret_value():
-                    os.environ[k.upper()] = v.get_secret_value()
-                    logger.info(f"Set environment variable {k.upper()}={v}")
+                if old_value is None or old_value != str(v):
+                    os.environ[k.upper()] = str(v)
+                    logger.debug(f"Set environment variable {k.upper()}={v}")
         return values
-
-    def init_huggingface_hub(self):
-        from huggingface_hub import notebook_login
-        from huggingface_hub.hf_api import HfFolder
-
-        if (
-            self.HUGGING_FACE_HUB_TOKEN is None
-            and self.HF_USER_ACCESS_TOKEN is not None
-        ):
-            self.HUGGING_FACE_HUB_TOKEN = self.HF_USER_ACCESS_TOKEN
-
-        local_token = HfFolder.get_token()
-        if local_token is None:
-            if is_notebook():
-                notebook_login()
-            else:
-                logger.info(
-                    "huggingface_hub.notebook_login() is only available in notebook,"
-                    "set HUGGING_FACE_HUB_TOKEN manually"
-                )
-
-
-class ProjectPathConfig(BaseModel):
-    config_name: str = None
-    config_module: str = "ekorpkit.hyfi.conf"
-    workspace: str = None
-    project: str = "ekorpkit-default"
-    data: str = None
-    home: str = None
-    ekorpkit: str = None
-    resources: str = None
-    runtime: str = None
-    archive: str = None
-    corpus: str = None
-    datasets: str = None
-    logs: str = None
-    models: str = None
-    outputs: str = None
-    cache: str = None
-    tmp: str = None
-    library: str = None
-    verbose: bool = False
-
-    class Config:
-        extra = "allow"
-
-    def __init__(
-        self,
-        config_name: str = "__init__",
-        config_module: str = "ekorpkit.hyfi.conf",
-        **data: Any,
-    ):
-        if not data:
-            data = _compose(f"path={config_name}", config_module=config_module)
-            logger.debug(
-                "There are no arguments to initilize a config, using default config."
-            )
-        super().__init__(config_name=config_name, config_module=config_module, **data)
-
-    @property
-    def log_dir(self):
-        Path(self.logs).mkdir(parents=True, exist_ok=True)
-        return Path(self.logs).absolute()
-
-    @property
-    def cache_dir(self):
-        Path(self.cache).mkdir(parents=True, exist_ok=True)
-        return Path(self.cache).absolute()
 
 
 class ProjectConfig(BaseModel):
-    config_name: str = None
-    config_module: str = "ekorpkit.hyfi.conf"
-    project_name: str = "ekorpkit-project"
+    """Project Config"""
+
+    config_name: str = "__init__"
+    project_name: str = "hyfi-project"
     task_name: str = None
     workspace_root: str = None
     project_root: str = None
@@ -233,9 +244,11 @@ class ProjectConfig(BaseModel):
     use_huggingface_hub: bool = False
     use_wandb: bool = False
     version: str = __version__()
-    path: ProjectPathConfig = None
-    env: DictConfig = None
     verbose: bool = False
+    # Config Classes
+    dotenv: DotEnvConfig = None
+    joblib: JobLibConfig = None
+    path: PathConfig = None
 
     class Config:
         extra = "allow"
@@ -244,40 +257,14 @@ class ProjectConfig(BaseModel):
     def __init__(
         self,
         config_name: str = "__init__",
-        config_module: str = "ekorpkit.hyfi.conf",
         **data: Any,
     ):
         if not data:
-            data = _compose(f"project={config_name}", config_module=config_module)
+            data = _compose(f"project={config_name}")
             logger.debug(
                 "There are no arguments to initilize a config, using default config."
             )
-        super().__init__(config_name=config_name, config_module=config_module, **data)
-
-        if self.envs.EKORPKIT_VERBOSE is not None:
-            self.verbose = self.envs.EKORPKIT_VERBOSE
-        self.envs.EKORPKIT_DATA_ROOT = str(self.path.data)
-        self.envs.CACHED_PATH_CACHE_ROOT = str(self.path.cache_dir / "cached_path")
-        wandb_dir = str(self.path.log_dir)
-        self.envs.WANDB_DIR = wandb_dir
-        project_name = self.project_name.replace("/", "-").replace("\\", "-")
-        self.envs.WANDB_PROJECT = project_name
-        task_name = self.task_name.replace("/", "-").replace("\\", "-")
-        notebook_name = self.path.log_dir / f"{task_name}-nb"
-        notebook_name.mkdir(parents=True, exist_ok=True)
-        self.envs.WANDB_NOTEBOOK_NAME = str(notebook_name)
-        self.envs.WANDB_SILENT = str(not self.verbose)
-        if self.use_wandb:
-            try:
-                import wandb
-
-                wandb.init(project=self.project_name)
-            except ImportError:
-                logger.warning(
-                    "wandb is not installed, please install it to use wandb."
-                )
-        if self.use_huggingface_hub:
-            self.secrets.init_huggingface_hub()
+        super().__init__(config_name=config_name, **data)
 
     @validator("project_name", allow_reuse=True)
     def _validate_project_name(cls, v):
@@ -293,20 +280,152 @@ class ProjectConfig(BaseModel):
     def project_dir(self):
         return Path(self.path.project)
 
-    @property
-    def envs(self):
-        return Environments()
+    def init_project(self):
+        self.dotenv = DotEnvConfig()
+        if self.path is None:
+            self.path = PathConfig()
+        if self.joblib is None:
+            self.joblib = JobLibConfig()
 
-    @property
-    def secrets(self):
-        return Secrets()
+        if self.dotenv.HYFI_VERBOSE is not None:
+            self.verbose = self.dotenv.HYFI_VERBOSE
+        self.dotenv.HYFI_DATA_ROOT = str(self.path.data)
+        self.dotenv.CACHED_PATH_CACHE_ROOT = str(self.path.cache_dir / "cached_path")
+        wandb_dir = str(self.path.log_dir)
+        self.dotenv.WANDB_DIR = wandb_dir
+        project_name = self.project_name.replace("/", "-").replace("\\", "-")
+        self.dotenv.WANDB_PROJECT = project_name
+        task_name = self.task_name.replace("/", "-").replace("\\", "-")
+        notebook_name = self.path.log_dir / f"{task_name}-nb"
+        notebook_name.mkdir(parents=True, exist_ok=True)
+        self.dotenv.WANDB_NOTEBOOK_NAME = str(notebook_name)
+        self.dotenv.WANDB_SILENT = str(not self.verbose)
+        if self.use_wandb:
+            try:
+                import wandb
+
+                wandb.init(project=self.project_name)
+            except ImportError:
+                logger.warning(
+                    "wandb is not installed, please install it to use wandb."
+                )
+        if self.use_huggingface_hub:
+            self.init_huggingface_hub()
+
+    def init_huggingface_hub(self):
+        """Initialize huggingface_hub"""
+        from huggingface_hub import notebook_login
+        from huggingface_hub.hf_api import HfFolder
+
+        self.dotenv = DotEnvConfig()
+        if (
+            self.dotenv.HUGGING_FACE_HUB_TOKEN is None
+            and self.dotenv.HF_USER_ACCESS_TOKEN is not None
+        ):
+            self.dotenv.HUGGING_FACE_HUB_TOKEN = self.dotenv.HF_USER_ACCESS_TOKEN
+
+        local_token = HfFolder.get_token()
+        if local_token is None:
+            if is_notebook():
+                notebook_login()
+            else:
+                logger.info(
+                    "huggingface_hub.notebook_login() is only available in notebook,"
+                    "set HUGGING_FACE_HUB_TOKEN manually"
+                )
 
 
-class DynamicBaseModel(BaseModel):
-    def __init__(__pydantic_self__, **data: Any) -> None:
-        if __pydantic_self__.__custom_root_type__ and data.keys() != {ROOT_KEY}:
-            data = {ROOT_KEY: data}
-        super().__init__(**data)
+def _check_and_set_value(key, value):
+    """Check and set value to environment variable"""
+    env_key = key.upper()
+    if value is not None:
+        old_value = os.getenv(env_key, "")
+        if str(old_value).lower() != str(value).lower():
+            os.environ[env_key] = str(value)
+            logger.debug("Set environment variable %s=%s", env_key, str(value))
+    return value
+
+
+class HyfiConfig(BaseModel):
+    """HyFI config primary class"""
+
+    hyfi_package_config_path: str = "pkg://ekorpkit.hyfi.conf"
+    hyfi_config_module: str = "ekorpkit.hyfi.conf"
+    hyfi_user_config_path: str = None
+
+    project: ProjectConfig = None
+    __initilized__: bool = False
+
+    class Config:
+        underscore_attrs_are_private = True
+        validate_assignment = True
+        extra = "allow"
+
+    @validator("hyfi_user_config_path")
+    def _validate_hyfi_user_config_path(cls, v):
+        return _check_and_set_value("hyfi_user_config_path", v)
+
+    def init_project(
+        self,
+        workspace=None,
+        project=None,
+        task=None,
+        log_level=None,
+        autotime=True,
+        retina=True,
+        verbose=None,
+        **kwargs,
+    ):
+        envs = DotEnvConfig(HYFI_VERBOSE=verbose)
+        if isinstance(workspace, str):
+            envs.HYFI_WORKSPACE_ROOT = workspace
+        if isinstance(project, str):
+            envs.HYFI_PROJECT_NAME = project
+        if isinstance(task, str):
+            envs.HYFI_TASK_NAME = task
+        if isinstance(log_level, str):
+            envs.HYFI_LOG_LEVEL = log_level
+            setLogger(log_level)
+        if autotime:
+            _load_extentions(exts=["autotime"])
+        if retina:
+            _set_matplotlib_formats("retina")
+        self.initialize()
+
+    def initialize(self, config: Union[DictConfig, Dict] = None):
+        if self.__initilized__:
+            return
+        if config is None:
+            config = _compose(
+                overrides=["+project=__init__"], config_module=self.hyfi_config_module
+            )
+            logger.debug("Using default config.")
+        if "project" not in config:
+            logger.warning(
+                "No project config found, skip project config initialization."
+            )
+            return
+
+        self.project = ProjectConfig(**config["project"])
+        self.project.init_project()
+        self.project.joblib.init_backend()
+        self.__initilized__ = True
+
+    def terminate(self):
+        if not self.__initilized__:
+            return
+        if self.project is not None:
+            self.project.joblib.stop_backend()
+        self.__initilized__ = False
+
+    def __repr__(self):
+        return f"HyFIConfig(project={self.project})"
+
+    def __str__(self):
+        return self.__repr__()
+
+
+__global_config__ = HyfiConfig()
 
 
 class Dummy:

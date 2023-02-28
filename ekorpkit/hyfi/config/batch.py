@@ -1,31 +1,24 @@
 import logging
 import random
-from omegaconf import DictConfig
 from pathlib import Path
-from pydantic import (
-    BaseModel,
-    validator,
-)
-from typing import (
-    Any,
-    Optional,
-    Union,
-)
+from typing import Any, Optional, Union
+
+from omegaconf import DictConfig
+from pydantic import BaseModel, validator
+
+from ..env import ProjectConfig
 from ..hydra import (
     _compose,
+    _load,
     _merge,
-    _to_config,
-    _merge,
-    _print,
     _methods,
-    _to_dict,
+    _print,
     _save,
     _save_json,
-    _load,
+    _to_config,
+    _to_dict,
 )
-from ..env import Environments, Secrets, ProjectConfig
 from ..utils.lib import ensure_import_module
-
 
 logger = logging.getLogger(__name__)
 
@@ -276,14 +269,6 @@ class BaseConfigModel(BaseModel):
     @property
     def output_dir(self):
         return self.path.output_dir
-
-    @property
-    def envs(self):
-        return Environments()
-
-    @property
-    def secrets(self):
-        return Secrets()
 
     @property
     def project_name(self):
