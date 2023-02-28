@@ -23,6 +23,18 @@ def __version__():
     return _version.get_versions()["version"]
 
 
+class AboutConfig(BaseModel):
+    """About Configuration"""
+
+    name: str = "HyFI"
+    author: str = "entelecheia"
+    description: str = (
+        "Hydra Fast Interface (Hydra and Pydantic based interface framework)"
+    )
+    website: str = "https://entelecheia.cc"
+    version: str = __version__()
+
+
 class DistFramwork(BaseModel):
     """Distributed Framework Configuration"""
 
@@ -353,10 +365,22 @@ class HyfiConfig(BaseModel):
     hyfi_config_module: str = "ekorpkit.hyfi.conf"
     hyfi_user_config_path: str = None
 
+    debug_mode: bool = False
+    print_config: bool = False
+    print_resolved_config: bool = False
+    verbose: bool = False
+    logging_level: str = "WARNING"
+
+    hydra: DictConfig = None
+
+    about: AboutConfig = AboutConfig()
     project: ProjectConfig = None
+
+    __version__: str = __version__()
     __initilized__: bool = False
 
     class Config:
+        arbitrary_types_allowed = True
         underscore_attrs_are_private = True
         validate_assignment = True
         extra = "allow"
@@ -365,7 +389,18 @@ class HyfiConfig(BaseModel):
     def _validate_hyfi_user_config_path(cls, v):
         return _check_and_set_value("hyfi_user_config_path", v)
 
-    def init_project(
+    @validator("logging_level")
+    def _validate_logging_level(cls, v, values):
+        verbose = values.get("verbose", False)
+        if verbose and v == "WARNING":
+            v = "INFO"
+        logger.setLevel(v)
+        return v
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+
+    def init_notebook(
         self,
         workspace=None,
         project=None,
@@ -376,6 +411,7 @@ class HyfiConfig(BaseModel):
         verbose=None,
         **kwargs,
     ):
+        """Initialize project in notebook"""
         envs = DotEnvConfig(HYFI_VERBOSE=verbose)
         if isinstance(workspace, str):
             envs.HYFI_WORKSPACE_ROOT = workspace
@@ -393,6 +429,7 @@ class HyfiConfig(BaseModel):
         self.initialize()
 
     def initialize(self, config: Union[DictConfig, Dict] = None):
+        """Initialize hyfi config"""
         if self.__initilized__:
             return
         if config is None:
@@ -406,12 +443,15 @@ class HyfiConfig(BaseModel):
             )
             return
 
+        if "about" in config:
+            self.about = AboutConfig(**config["about"])
         self.project = ProjectConfig(**config["project"])
         self.project.init_project()
         self.project.joblib.init_backend()
         self.__initilized__ = True
 
     def terminate(self):
+        """Terminate hyfi config"""
         if not self.__initilized__:
             return
         if self.project is not None:

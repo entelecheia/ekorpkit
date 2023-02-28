@@ -1,13 +1,10 @@
 # @package _global_
-app_name: ${about.name}
-name: ${oc.env:EKORPKIT_PROJECT_NAME,ekorpkit-project}
-root: ${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.project.path.home}/.ekorpkit}
 debug_mode: false
 print_config: false
 print_resolved_config: true
-# num_workers: ${alt:${oc.env:NUM_WORKERS,null},1}
 verbose: false
 ignore_warnings: true
+logging_level: ${oc.env:HYFI_LOG_LEVEL,WARNING}
 
 hydra:
   job:
@@ -26,4 +23,4 @@ hydra:
       file:
         level: ${hydra.job_logging.root.level}
     root:
-      level: ${oc.env:EKORPKIT_LOG_LEVEL,INFO}
+      level: ${oc.env:HYFI_LOG_LEVEL,INFO}

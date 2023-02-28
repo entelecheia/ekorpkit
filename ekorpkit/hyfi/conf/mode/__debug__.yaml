@@ -6,9 +6,7 @@ debug_mode: true
 print_config: true
 verbose: true
 ignore_warnings: false
-env:
-  os:
-    HYDRA_FULL_ERROR: 1
+logging_level: ${oc.env:HYFI_LOG_LEVEL,DEBUG}
 hydra:
   verbose: false
   job_logging:

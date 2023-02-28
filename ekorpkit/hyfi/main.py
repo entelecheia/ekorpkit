@@ -8,7 +8,6 @@ from .hydra import (
     DictKeyType,
     __home_path__,
     __hyfi_path__,
-    __version__,
     _compose,
     _ensure_kwargs,
     _ensure_list,
@@ -65,8 +64,6 @@ from .utils.notebook import (
     _display_image,
     _get_display,
     _hide_code_in_slideshow,
-    _load_extentions,
-    _set_matplotlib_formats,
     is_colab,
     is_notebook,
 )
@@ -77,11 +74,11 @@ logger = getLogger(__name__)
 class HyFI:
     """hyfi config primary class"""
 
-    __version__ = __version__()
-    __hyfi_path__ = __hyfi_path__()
-    __home_path__ = __home_path__()
     config = __global_config__
     SpeicialKeys = _SpecialKeys
+    __version__ = __global_config__.__version__
+    __hyfi_path__ = __hyfi_path__()
+    __home_path__ = __home_path__()
 
     def __init__(self) -> None:
         raise NotImplementedError("Use one of the static construction functions")
@@ -946,7 +943,7 @@ class HyFI:
         verbose=None,
         **kwargs,
     ) -> ProjectConfig:
-        __global_config__.init_project(
+        __global_config__.init_notebook(
             workspace=workspace,
             project=project,
             task=task,

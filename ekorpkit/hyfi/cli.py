@@ -1,51 +1,55 @@
-import os
+"""Command line interface for HyFI"""
 import logging
+import os
+
 import hydra
-from .base import __hydra_version_base__
-from .hconf import HyFI
 
+from .env import HyfiConfig, __hydra_version_base__
+from .main import HyFI, getLogger
 
-log = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def cmd(**args):
+    """Run the command defined in the config file"""
     HyFI.run(args)
 
 
 def about(**args):
-    # from . import __version__
-    args = args["about"]
-    name = args.get("name")
+    """Print the about information"""
+    cfg = HyfiConfig(**args)
+    name = cfg.about.name
     print()
-    for k, v in args.items():
+    for k, v in cfg.about.dict().items():
         print(f"{k:11} : {v}")
-    print(f"\nExecute `{name} --help` to see what eKorpkit provides")
+    print(f"\nExecute `{name} --help` to see what you can do with {name}")
 
 
 @hydra.main(
     config_path="conf", config_name="config", version_base=__hydra_version_base__
 )
 def hydra_main(cfg) -> None:
-    verbose = cfg.verbose
-    app_name = cfg.about.name
-    print_config = cfg.print_config
-    print_resolved_config = cfg.print_resolved_config
+    hyfi = HyfiConfig(**cfg)
+    verbose = hyfi.verbose
+    app_name = hyfi.about.name
+    print_config = hyfi.print_config
+    print_resolved_config = hyfi.print_resolved_config
 
     if verbose:
-        log.info("## Command Line Interface for %s ##" % app_name)
+        print("## Command Line Interface for %s ##" % app_name)
     HyFI.initialize(cfg)
 
     if print_config:
         if print_resolved_config:
-            log.info("## hydra configuration resolved ##")
+            logger.info("## hydra configuration resolved ##")
             HyFI.pprint(cfg)
         else:
-            log.info("## hydra configuration ##")
+            logger.info("## hydra configuration ##")
             print(HyFI.to_yaml(cfg))
 
     if verbose:
-        log.info(f"Hydra working directory : {os.getcwd()}")
-        log.info(f"Orig working directory  : {hydra.utils.get_original_cwd()}")
+        logger.info(f"Hydra working directory : {os.getcwd()}")
+        logger.info(f"Orig working directory  : {hydra.utils.get_original_cwd()}")
 
     HyFI.instantiate(cfg)
 

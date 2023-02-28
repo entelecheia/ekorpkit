@@ -1,10 +1,5 @@
+from .base import _SPLITS, __ekorpkit_path__, _Defaults, _Keys
 from .hyfi import HyFI
-from .base import (
-    __ekorpkit_path__,
-    _Defaults,
-    _Keys,
-    _SPLITS,
-)
 
 
 class eKonf(HyFI):

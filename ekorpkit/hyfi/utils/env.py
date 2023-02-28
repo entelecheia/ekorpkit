@@ -26,10 +26,10 @@ def dotenv_values(dotenv_path=None, **kwargs):
 
 
 def load_dotenv(
-    verbose: bool = False,
     override: bool = False,
     dotenv_dir: str = None,
     dotenv_filename: str = ".env",
+    verbose: bool = False,
 ):
     """Load dotenv file from the given directory or from the current directory"""
     dotenv_dir = dotenv_dir or getcwd()

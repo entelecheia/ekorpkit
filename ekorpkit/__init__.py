@@ -4,3 +4,4 @@ from . import _version
 
 __version__ = _version.get_versions()["version"]
 global_config.hyfi_package_config_path = "pkg://ekorpkit.conf"
+global_config.__version__ = __version__
