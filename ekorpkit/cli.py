@@ -1,7 +1,7 @@
+from hyfi import getLogger, hydra_main
+
 from ekorpkit import eKonf
 from ekorpkit.info.docs import make_table
-
-from hyfi import getLogger, hydra_main
 
 logger = getLogger(__name__)
 
