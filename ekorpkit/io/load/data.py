@@ -5,8 +5,8 @@ import pandas as pd
 from tqdm.auto import tqdm
 from ekorpkit.io.parse.json import parse_data
 from joblib import Parallel, delayed
-from ekorpkit.hyfi.utils.batch.batcher import tqdm_joblib
-from ekorpkit.hyfi.io.file import get_files_from_archive, get_filepaths
+from hyfi.utils.batch.batcher import tqdm_joblib
+from hyfi.io.file import get_files_from_archive, get_filepaths
 from ekorpkit import eKonf
 
 

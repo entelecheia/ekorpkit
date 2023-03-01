@@ -4,7 +4,7 @@ from pathlib import Path
 from omegaconf import DictConfig
 from pydantic import BaseModel, Field
 from typing import Optional
-from ekorpkit.hyfi.config import BaseBatchConfig
+from hyfi.config import BaseBatchConfig
 from transformers import (
     CONFIG_MAPPING,
     AutoConfig,

@@ -14,7 +14,7 @@ from datasets import load_dataset, DatasetDict
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from ekorpkit import eKonf
-from ekorpkit.hyfi.config import BaseConfigModel
+from hyfi.config import BaseConfigModel
 from ekorpkit.base import _SPLITS as SPLITS
 from ekorpkit.info.column import BaseInfo
 from ekorpkit.info.stat import SummaryInfo

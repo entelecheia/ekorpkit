@@ -13,10 +13,10 @@ from tokenizers import (
     pre_tokenizers,
 )
 from .config import ModelType, TrainerType, DatasetType
-from ekorpkit.hyfi.config import BaseBatchModel
+from hyfi.config import BaseBatchModel
 from ekorpkit.datasets.config import DatasetConfig
 from ekorpkit import eKonf
-from ekorpkit.hyfi.utils.func import change_directory
+from hyfi.utils.func import change_directory
 
 
 log = logging.getLogger(__name__)

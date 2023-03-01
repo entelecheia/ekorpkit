@@ -1,5 +1,5 @@
 from .ekonf import eKonf
-from .hyfi import global_config, about
+from hyfi import global_config, about
 from . import _version
 
 __version__ = _version.get_versions()["version"]

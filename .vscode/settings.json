@@ -1,7 +1,6 @@
 {
-    "files.associations": {
-        ".docker.*": "shellscript",
-    },
-    "python.linting.mypyEnabled": true,
-    "python.linting.enabled": false
+  "python.linting.mypyEnabled": false,
+  "python.linting.enabled": false,
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": false
 }

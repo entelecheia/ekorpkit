@@ -9,7 +9,7 @@ from omegaconf.dictconfig import DictConfig
 from pytablewriter import MarkdownTableWriter
 from pytablewriter.style import Style
 from pathlib import Path
-from ekorpkit.hyfi.utils.func import humanbytes, get_modified_time
+from hyfi.utils.func import humanbytes, get_modified_time
 import ekorpkit
 
 

@@ -4,10 +4,10 @@ from pydantic import BaseModel, BaseSettings, SecretStr, root_validator, validat
 from omegaconf import DictConfig
 from typing import Any, Union, Tuple, Optional
 from pathlib import Path
-from .hyfi.utils.env import load_dotenv
-from .hyfi.utils.logging import getLogger
-from .hyfi.utils.notebook import is_notebook
-from .hyfi import HyFI
+from hyfi.utils.env import load_dotenv
+from hyfi.utils.logging import getLogger
+from hyfi.utils.notebook import is_notebook
+from hyfi import HyFI
 from . import _version
 
 
@@ -21,8 +21,8 @@ def __version__():
 
 
 class HyfiConfig(BaseSettings):
-    hyfi_package_config_path: str = "pkg://ekorpkit.hyfi.conf"
-    hyfi_config_module: str = "ekorpkit.hyfi.conf"
+    hyfi_package_config_path: str = "pkg://hyfi.conf"
+    hyfi_config_module: str = "hyfi.conf"
     hyfi_user_config_path: str = None
     __hyfi_env_initilized__: bool = False
 
@@ -173,7 +173,7 @@ class Secrets(BaseSettings):
 
 class ProjectPathConfig(BaseModel):
     config_name: str = None
-    config_module: str = "ekorpkit.hyfi.conf"
+    config_module: str = "hyfi.conf"
     workspace: str = None
     project: str = "ekorpkit-default"
     data: str = None
@@ -198,7 +198,7 @@ class ProjectPathConfig(BaseModel):
     def __init__(
         self,
         config_name: str = "__init__",
-        config_module: str = "ekorpkit.hyfi.conf",
+        config_module: str = "hyfi.conf",
         **data: Any,
     ):
         if not data:
@@ -221,7 +221,7 @@ class ProjectPathConfig(BaseModel):
 
 class ProjectConfig(BaseModel):
     config_name: str = None
-    config_module: str = "ekorpkit.hyfi.conf"
+    config_module: str = "hyfi.conf"
     project_name: str = "ekorpkit-project"
     task_name: str = None
     workspace_root: str = None
@@ -241,7 +241,7 @@ class ProjectConfig(BaseModel):
     def __init__(
         self,
         config_name: str = "__init__",
-        config_module: str = "ekorpkit.hyfi.conf",
+        config_module: str = "hyfi.conf",
         **data: Any,
     ):
         if not data:

@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import logging
 from ekorpkit import eKonf
-from ekorpkit.hyfi.utils.func import elapsed_timer
+from hyfi.utils.func import elapsed_timer
 from .dataset import Dataset
 from .base import BaseSet
 

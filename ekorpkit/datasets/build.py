@@ -1,6 +1,6 @@
 import logging
 from ekorpkit import eKonf
-from ekorpkit.hyfi.utils.func import elapsed_timer
+from hyfi.utils.func import elapsed_timer
 from ekorpkit.pipelines.pipe import apply_pipeline
 
 

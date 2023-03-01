@@ -2,8 +2,8 @@ import logging
 import time
 from pathlib import Path
 from ekorpkit import eKonf
-from ekorpkit.hyfi.utils.func import humanbytes, get_modified_time
-from ekorpkit.hyfi.utils.func import elapsed_timer
+from hyfi.utils.func import humanbytes, get_modified_time
+from hyfi.utils.func import elapsed_timer
 
 
 log = logging.getLogger(__name__)

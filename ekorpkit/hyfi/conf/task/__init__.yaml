@@ -1,5 +1,0 @@
-# @package _global_
-defaults:
-  - /project: __init__
-
-_target_: ekorpkit.hyfi.cli.about

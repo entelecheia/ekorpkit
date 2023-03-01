@@ -3,7 +3,7 @@ import codecs
 import pandas as pd
 from pathlib import Path
 from glob import glob
-from ekorpkit.hyfi.utils.func import ordinal
+from hyfi.utils.func import ordinal
 
 
 class ESGReport:

@@ -1,5 +1,5 @@
 from .base import _SPLITS, __ekorpkit_path__, _Defaults, _Keys
-from .hyfi import HyFI
+from hyfi import HyFI
 
 
 class eKonf(HyFI):

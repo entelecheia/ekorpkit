@@ -1,7 +1,7 @@
 import logging
 import os
 from ekorpkit import eKonf
-from ekorpkit.hyfi.config import BaseBatchModel, BaseBatchConfig
+from hyfi.config import BaseBatchModel, BaseBatchConfig
 
 
 log = logging.getLogger(__name__)

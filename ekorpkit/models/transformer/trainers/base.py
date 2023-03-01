@@ -24,7 +24,7 @@ from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
 from .config import LMModelConfig, LMTrainingDatasetConfig, LM_MAPPING
 from ekorpkit.tokenizers.config import TokenizerConfig
-from ekorpkit.hyfi.config import BaseBatchModel
+from hyfi.config import BaseBatchModel
 from ekorpkit import eKonf
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.

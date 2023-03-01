@@ -6,7 +6,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, Union, List
 from pydantic import BaseModel, validator, PrivateAttr
-from ekorpkit.hyfi.config import BaseBatchConfig
+from hyfi.config import BaseBatchConfig
 from ekorpkit import eKonf
 
 

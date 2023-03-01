@@ -2,7 +2,7 @@ import logging
 import pandas as pd
 import numpy as np
 from ekorpkit import eKonf
-from ekorpkit.hyfi.utils.func import elapsed_timer
+from hyfi.utils.func import elapsed_timer
 from .base import BaseSentimentAnalyser, _Keys
 
 

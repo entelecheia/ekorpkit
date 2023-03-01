@@ -11,7 +11,7 @@ def get_about():
     about = {}
     basedir = os.path.abspath(os.path.dirname(__file__))
     with open(
-        os.path.join(basedir, "ekorpkit", "conf", "about", "default.yaml")
+        os.path.join(basedir, "ekorpkit", "conf", "about", "ekorpkit.yaml")
     ) as f:
         for line in f:
             k, v = line.split(": ")

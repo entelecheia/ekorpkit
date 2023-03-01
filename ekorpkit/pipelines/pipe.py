@@ -6,7 +6,7 @@ import pandas as pd
 from collections import OrderedDict
 from functools import reduce
 from ekorpkit.utils import print_status
-from ekorpkit.hyfi.utils.func import elapsed_timer
+from hyfi.utils.func import elapsed_timer
 from ekorpkit import eKonf
 
 
