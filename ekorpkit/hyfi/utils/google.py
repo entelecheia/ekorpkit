@@ -1,3 +1,4 @@
+"""Google Colab utilities."""
 import os
 from .logging import getLogger
 from .env import set_osenv
@@ -7,12 +8,13 @@ logger = getLogger(__name__)
 
 
 def mount_google_drive(
-    workspace=None,
-    project=None,
-    mountpoint="/content/drive",
-    force_remount=False,
-    timeout_ms=120000,
-):
+    workspace: str = None,
+    project: str = None,
+    mountpoint: str = "/content/drive",
+    force_remount: bool = False,
+    timeout_ms: int = 120000,
+) -> None:
+    """Mount Google Drive to Colab."""
     try:
         from google.colab import drive
 

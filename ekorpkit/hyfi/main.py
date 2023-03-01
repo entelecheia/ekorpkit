@@ -48,7 +48,7 @@ from .utils.func import (
 )
 from .utils.google import mount_google_drive
 from .utils.gpu import nvidia_smi, set_cuda
-from .utils.lib import _dependencies
+from .utils.lib import dependencies
 from .utils.logging import getLogger, setLogger
 from .utils.notebook import (
     clear_output,
@@ -375,7 +375,7 @@ class HyFI:
 
     @staticmethod
     def dependencies(_key=None, path=None):
-        return _dependencies(_key, path)
+        return dependencies(_key, path)
 
     @staticmethod
     def ensure_list(value):

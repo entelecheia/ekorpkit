@@ -1,16 +1,21 @@
+"""Utilities for loading libraries and dependencies."""
+import importlib
 import os
 import subprocess
 import sys
-import importlib
 from pathlib import Path
-from .logging import getLogger
-from ..io.file import is_dir, is_file
 
+from ..io.file import is_dir, is_file
+from .logging import getLogger
 
 logger = getLogger(__name__)
 
 
-def gitclone(url, targetdir=None, verbose=False):
+def gitclone(
+    url: str,
+    targetdir: str = None,
+    verbose: bool = False,
+) -> None:
     if targetdir:
         res = subprocess.run(
             ["git", "clone", url, targetdir], stdout=subprocess.PIPE
@@ -26,17 +31,18 @@ def gitclone(url, targetdir=None, verbose=False):
 
 
 def pip(
-    name,
-    upgrade=False,
-    prelease=False,
-    editable=False,
-    quiet=True,
-    find_links=None,
-    requirement=None,
-    force_reinstall=False,
-    verbose=False,
+    name: str,
+    upgrade: bool = False,
+    prelease: bool = False,
+    editable: bool = False,
+    quiet: bool = True,
+    find_links: str = None,
+    requirement: bool = None,
+    force_reinstall: bool = False,
+    verbose: bool = False,
     **kwargs,
-):
+) -> None:
+    """Install a package using pip."""
     _cmd = ["pip", "install"]
     if upgrade:
         _cmd.append("--upgrade")
@@ -65,7 +71,8 @@ def pip(
         logger.info(res)
 
 
-def pipi(name, verbose=False):
+def pipi(name: str, verbose: bool = False) -> None:
+    """Install a package using pip."""
     res = subprocess.run(
         ["pip", "install", name], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
@@ -75,7 +82,8 @@ def pipi(name, verbose=False):
         logger.info(res)
 
 
-def pipie(name, verbose=False):
+def pipie(name: str, verbose: bool = False) -> None:
+    """Install a editable package using pip."""
     res = subprocess.run(
         ["git", "install", "-e", name], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
@@ -85,7 +93,8 @@ def pipie(name, verbose=False):
         logger.info(res)
 
 
-def apti(name, verbose=False):
+def apti(name: str, verbose: bool = False) -> None:
+    """Install a package using apt."""
     res = subprocess.run(
         ["apt", "install", name], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
@@ -95,7 +104,8 @@ def apti(name, verbose=False):
         logger.info(res)
 
 
-def load_module_from_file(name, libpath, specname=None):
+def load_module_from_file(name: str, libpath: str, specname: str = None) -> None:
+    """Load a module from a file"""
     module_path = os.path.join(libpath, name.replace(".", os.path.sep))
     if is_file(module_path + ".py"):
         module_path = module_path + ".py"
@@ -113,7 +123,10 @@ def load_module_from_file(name, libpath, specname=None):
     spec.loader.exec_module(module)
 
 
-def ensure_import_module(name, libpath, liburi, specname=None, syspath=None):
+def ensure_import_module(
+    name: str, libpath: str, liburi: str, specname: str = None, syspath: str = None
+) -> None:
+    """Ensure a module is imported, if not, clone it from a git repo and load it"""
     try:
         if specname:
             importlib.import_module(specname)
@@ -133,7 +146,8 @@ def ensure_import_module(name, libpath, liburi, specname=None, syspath=None):
         logger.info(f"{name} not imported, loading from {syspath} as {specname}")
 
 
-def _dependencies(_key=None, _path=None):
+def dependencies(_key: str = None, _path: str = None) -> dict:
+    """Load dependencies from a yaml file."""
     import re
     from collections import defaultdict
 
@@ -165,5 +179,3 @@ def _dependencies(_key=None, _path=None):
         return tags
     else:
         return extra_deps[_key]
-
-
