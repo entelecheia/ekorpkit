@@ -1,8 +1,11 @@
+"""Image utils."""
 import io
+
 import numpy as np
 from PIL import Image, ImageFont
-from .plot import get_plot_font
+
 from ..io.file import read
+from .plot import get_plot_font
 
 
 def scale_image(

@@ -7,20 +7,20 @@ from omegaconf import DictConfig, ListConfig, OmegaConf, SCMode
 from pydantic import BaseModel, BaseSettings, SecretStr, root_validator, validator
 from pydantic.env_settings import SettingsSourceCallable
 
-from .. import _version
 from .utils.batch import batcher
 from .utils.env import load_dotenv
 from .utils.logging import getLogger, setLogger
-from .utils.notebook import _load_extentions, _set_matplotlib_formats, is_notebook
+from .utils.notebook import load_extentions, set_matplotlib_formats, is_notebook
 
 logger = getLogger(__name__)
 
 __hydra_version_base__ = "1.2"
+__config_module__ = "ekorpkit.hyfi.conf"
 
 
 def __version__():
     """Returns the version of HyFI"""
-    return _version.get_versions()["version"]
+    return "0.1.0"
 
 
 class AboutConfig(BaseModel):
@@ -33,6 +33,9 @@ class AboutConfig(BaseModel):
     )
     website: str = "https://entelecheia.cc"
     version: str = __version__()
+
+
+__about__ = AboutConfig()
 
 
 class DistFramwork(BaseModel):
@@ -72,7 +75,7 @@ class JobLibConfig(BaseModel):
         **data: Any,
     ):
         if not data:
-            data = _compose(f"joblib={config_name}")
+            data = _compose(f"joblib={config_name}", config_module=__config_module__)
             logger.debug(
                 "There are no arguments to initilize a config, using default config."
             )
@@ -111,8 +114,11 @@ class JobLibConfig(BaseModel):
     def stop_backend(self):
         """Stop the backend for joblib"""
         backend = self.distributed_framework.backend
-        logger.info(f"stopping distributed framework")
+        if batcher.batcher_instance:
+            logger.info(f"stopping batcher")
+            del batcher.batcher_instance
 
+        logger.info(f"stopping distributed framework")
         if self.distributed_framework.initialize:
             if backend == "ray":
                 import ray
@@ -159,7 +165,7 @@ class PathConfig(BaseModel):
         **data: Any,
     ):
         if not data:
-            data = _compose(f"path={config_name}")
+            data = _compose(f"path={config_name}", config_module=__config_module__)
             logger.debug(
                 "There are no arguments to initilize a config, using default config."
             )
@@ -255,7 +261,6 @@ class ProjectConfig(BaseModel):
     description: str = None
     use_huggingface_hub: bool = False
     use_wandb: bool = False
-    version: str = __version__()
     verbose: bool = False
     # Config Classes
     dotenv: DotEnvConfig = None
@@ -272,7 +277,7 @@ class ProjectConfig(BaseModel):
         **data: Any,
     ):
         if not data:
-            data = _compose(f"project={config_name}")
+            data = _compose(f"project={config_name}", config_module=__config_module__)
             logger.debug(
                 "There are no arguments to initilize a config, using default config."
             )
@@ -291,6 +296,10 @@ class ProjectConfig(BaseModel):
     @property
     def project_dir(self):
         return Path(self.path.project)
+
+    @property
+    def version(self):
+        return __about__.version
 
     def init_project(self):
         self.dotenv = DotEnvConfig()
@@ -362,7 +371,7 @@ class HyfiConfig(BaseModel):
     """HyFI config primary class"""
 
     hyfi_package_config_path: str = "pkg://ekorpkit.hyfi.conf"
-    hyfi_config_module: str = "ekorpkit.hyfi.conf"
+    hyfi_config_module: str = __config_module__
     hyfi_user_config_path: str = None
 
     debug_mode: bool = False
@@ -385,6 +394,16 @@ class HyfiConfig(BaseModel):
         validate_assignment = True
         extra = "allow"
 
+    @root_validator()
+    def _check_and_set_values(cls, values):
+        key = "hyfi_package_config_path"
+        val = _check_and_set_value(key, values.get(key))
+        values[key] = val
+        if val is not None:
+            key = "hyfi_config_module"
+            values[key] = _check_and_set_value(key, val.replace("pkg://", ""))
+        return values
+
     @validator("hyfi_user_config_path")
     def _validate_hyfi_user_config_path(cls, v):
         return _check_and_set_value("hyfi_user_config_path", v)
@@ -399,8 +418,9 @@ class HyfiConfig(BaseModel):
 
     def __init__(self, **data: Any):
         super().__init__(**data)
+        self.about = __about__
 
-    def init_notebook(
+    def init_workspace(
         self,
         workspace=None,
         project=None,
@@ -422,10 +442,11 @@ class HyfiConfig(BaseModel):
         if isinstance(log_level, str):
             envs.HYFI_LOG_LEVEL = log_level
             setLogger(log_level)
+            logger.setLevel(log_level)
         if autotime:
-            _load_extentions(exts=["autotime"])
+            load_extentions(exts=["autotime"])
         if retina:
-            _set_matplotlib_formats("retina")
+            set_matplotlib_formats("retina")
         self.initialize()
 
     def initialize(self, config: Union[DictConfig, Dict] = None):
@@ -434,17 +455,15 @@ class HyfiConfig(BaseModel):
             return
         if config is None:
             config = _compose(
-                overrides=["+project=__init__"], config_module=self.hyfi_config_module
+                overrides=["+project=__init__"], config_module=__config_module__
             )
             logger.debug("Using default config.")
+
         if "project" not in config:
             logger.warning(
                 "No project config found, skip project config initialization."
             )
             return
-
-        if "about" in config:
-            self.about = AboutConfig(**config["about"])
         self.project = ProjectConfig(**config["project"])
         self.project.init_project()
         self.project.joblib.init_backend()
@@ -463,6 +482,10 @@ class HyfiConfig(BaseModel):
 
     def __str__(self):
         return self.__repr__()
+
+    @property
+    def app_version(self):
+        return self.about.app_version
 
 
 __global_config__ = HyfiConfig()
@@ -498,8 +521,8 @@ def _compose(
     :return: The composed config
     """
     config_module = config_module or __global_config__.hyfi_config_module
-    if verbose:
-        logger.info("config_module: %s", config_module)
+    # if verbose:
+    logger.info("config_module: %s", config_module)
     is_initialized = hydra.core.global_hydra.GlobalHydra.instance().is_initialized()
     if config_group:
         _task = config_group.split("=")
@@ -535,8 +558,8 @@ def _compose(
             overrides.append(overide)
         else:
             overrides = [overide]
-    if verbose:
-        logger.info(f"compose config with overrides: {overrides}")
+    # if verbose:
+    logger.info(f"compose config with overrides: {overrides}")
     if is_initialized:
         if verbose:
             logger.info("Hydra is already initialized")

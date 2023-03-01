@@ -1,13 +1,15 @@
+"""Utilities for working with notebooks.""" ""
 import logging
 import os
 import sys
-from ..io.file import read
 
+from ..io.file import read
 
 logger = logging.getLogger(__name__)
 
 
 def is_notebook():
+    """Check if the code is running in a notebook."""
     try:
         get_ipython
     except NameError:
@@ -25,6 +27,7 @@ def is_notebook():
 
 
 def is_colab():
+    """Check if the code is running in Google Colab."""
     is_colab = "google.colab" in sys.modules
     if is_colab:
         logger.info("Google Colab detected.")
@@ -33,7 +36,8 @@ def is_colab():
     return is_colab
 
 
-def _get_display():
+def get_display():
+    """Get the display object for the current environment."""
     try:
         from ipywidgets import Output
     except ImportError:
@@ -46,14 +50,15 @@ def _get_display():
         return None
 
 
-def _clear_output(wait=False):
+def clear_output(wait=False):
+    """Clear the output of the current notebook."""
     from IPython import display
 
     if is_notebook():
         display.clear_output(wait=wait)
 
 
-def _display(
+def display(
     *objs,
     include=None,
     exclude=None,
@@ -62,6 +67,7 @@ def _display(
     display_id=None,
     **kwargs,
 ):
+    """Display an object in the current notebook."""
     from IPython import display
 
     if is_notebook() and objs is not None:
@@ -76,7 +82,7 @@ def _display(
         )
 
 
-def _display_image(
+def display_image(
     data=None,
     url=None,
     filename=None,
@@ -151,9 +157,11 @@ def _display_image(
         return display.display(img)
 
 
-def _hide_code_in_slideshow():
-    from IPython import display
+def hide_code_in_slideshow():
+    """Hide code in slideshow."""
     import binascii
+
+    from IPython import display
 
     uid = binascii.hexlify(os.urandom(8)).decode()
     html = """<div id="%s"></div>
@@ -176,18 +184,19 @@ def _hide_code_in_slideshow():
 
 
 def colored_str(s, color="black"):
+    """Colored string."""
     # return "<text style=color:{}>{}</text>".format(color, s)
     return "<text style=color:{}>{}</text>".format(color, s.replace("\n", "<br>"))
 
 
-def _cprint(str_tuples):
+def cprint(str_tuples):
     from IPython.display import HTML as html_print
     from IPython.display import display
 
     display(html_print(" ".join([colored_str(ti, color=ci) for ti, ci in str_tuples])))
 
 
-def _create_dropdown(
+def create_dropdown(
     options,
     value,
     description,
@@ -196,6 +205,7 @@ def _create_dropdown(
     layout=None,
     **kwargs,
 ):
+    """Create a dropdown widget."""
     import ipywidgets as widgets
 
     layout = (
@@ -213,7 +223,7 @@ def _create_dropdown(
     return dropdown
 
 
-def _create_textarea(
+def create_textarea(
     value,
     description,
     placeholder="",
@@ -222,6 +232,7 @@ def _create_textarea(
     layout=None,
     **kwargs,
 ):
+    """Create a textarea widget."""
     import ipywidgets as widgets
 
     layout = (
@@ -239,7 +250,8 @@ def _create_textarea(
     return textarea
 
 
-def _create_button(description, button_style="", icon="check", layout=None, **kwargs):
+def create_button(description, button_style="", icon="check", layout=None, **kwargs):
+    """Create a button widget."""
     import ipywidgets as widgets
 
     layout = (
@@ -255,7 +267,7 @@ def _create_button(description, button_style="", icon="check", layout=None, **kw
     return button
 
 
-def _create_radiobutton(
+def create_radiobutton(
     options,
     description,
     value=None,
@@ -264,6 +276,7 @@ def _create_radiobutton(
     layout=None,
     **kwargs,
 ):
+    """Create a radiobutton widget."""
     import ipywidgets as widgets
 
     layout = (
@@ -281,13 +294,14 @@ def _create_radiobutton(
     return radiobutton
 
 
-def _create_image(
+def create_image(
     filename=None,
     format=None,
     width=None,
     height=None,
     **kwargs,
 ):
+    """Create an image widget."""
     import ipywidgets as widgets
 
     # from urllib.request import urlopen
@@ -310,7 +324,7 @@ def _create_image(
     return image
 
 
-def _create_floatslider(
+def create_floatslider(
     min=0.0,
     max=1.0,
     step=0.1,
@@ -325,6 +339,7 @@ def _create_floatslider(
     layout=None,
     **kwargs,
 ):
+    """Create a float slider widget."""
     import ipywidgets as widgets
 
     layout = (
@@ -348,7 +363,8 @@ def _create_floatslider(
     return slider
 
 
-def _load_extentions(exts=["autotime"]):
+def load_extentions(exts=["autotime"]):
+    """Load extentions."""
     if is_notebook():
         from IPython import get_ipython
 
@@ -363,7 +379,8 @@ def _load_extentions(exts=["autotime"]):
                 ip.magic("load_ext {}".format(ext))
 
 
-def _set_matplotlib_formats(*formats, **kwargs):
+def set_matplotlib_formats(*formats, **kwargs):
+    """Set matplotlib formats."""
     if is_notebook():
         from IPython.display import set_matplotlib_formats
 

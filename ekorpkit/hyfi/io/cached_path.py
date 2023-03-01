@@ -1,12 +1,14 @@
 import os
-import logging
-import gdown
 from pathlib import Path
+
+import gdown
+
+from ..utils.logging import getLogger
 from .cpath import _cached_path as _cpath
 
 # import cached_path as _cpath
 
-log = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def cached_path(
@@ -20,7 +22,7 @@ def cached_path(
     if url_or_filename is None:
         return None
     if verbose:
-        log.info(
+        logger.info(
             "caching path: {}, extract_archive: {}, force_extract: {}, cache_dir: {}".format(
                 url_or_filename, extract_archive, force_extract, cache_dir
             )
@@ -49,14 +51,14 @@ def cached_path(
                 cache_dir=cache_dir,
             ).as_posix()
 
-        log.info(f"cached path: {_path}")
+        logger.info(f"cached path: {_path}")
 
         if Path(_path).is_file():
             _parent_dir = Path(_path).parent
         elif Path(_path).is_dir():
             _parent_dir = Path(_path)
         else:
-            log.warning(f"Unknown path: {_path}")
+            logger.warning(f"Unknown path: {_path}")
             return None
 
         if return_parent_dir:
@@ -65,7 +67,7 @@ def cached_path(
             return _path
 
     except Exception as e:
-        log.error(e)
+        logger.error(e)
         return None
 
 
@@ -83,7 +85,7 @@ def cached_gdown(
     """
 
     if verbose:
-        log.info(f"Downloading {url}...")
+        logger.info(f"Downloading {url}...")
     if cache_dir is None:
         cache_dir = Path.home() / ".ekorpkit" / ".cache" / "gdown"
     else:
@@ -129,7 +131,7 @@ def cached_gdown(
         return cache_path
 
     else:
-        log.warning(f"Unknown url: {url}")
+        logger.warning(f"Unknown url: {url}")
         return None
 
 
@@ -159,7 +161,7 @@ def extractall(path, to=None, force_extract=False):
     elif path.endswith(".tar.bz2") or path.endswith(".tbz"):
         opener, mode = tarfile.open, "r:bz2"
     else:
-        log.warning(
+        logger.warning(
             "Could not extract '%s' as no appropriate " "extractor is found" % path
         )
         return path, None
@@ -198,21 +200,3 @@ def extractall(path, to=None, force_extract=False):
         f.extractall(path=to)
 
     return to, filelist(f)
-
-
-def _path(
-    url_or_filename,
-    extract_archive: bool = False,
-    force_extract: bool = False,
-    return_parent_dir: bool = False,
-    cache_dir=None,
-    verbose: bool = False,
-):
-    return cached_path(
-        url_or_filename,
-        extract_archive=extract_archive,
-        force_extract=force_extract,
-        return_parent_dir=return_parent_dir,
-        cache_dir=cache_dir,
-        verbose=verbose,
-    )

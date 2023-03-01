@@ -1,11 +1,10 @@
 """Command line interface for HyFI"""
-import logging
 import os
 
 import hydra
 
 from .env import HyfiConfig, __hydra_version_base__
-from .main import HyFI, getLogger
+from .main import DictConfig, HyFI, getLogger
 
 logger = getLogger(__name__)
 
@@ -25,10 +24,8 @@ def about(**args):
     print(f"\nExecute `{name} --help` to see what you can do with {name}")
 
 
-@hydra.main(
-    config_path="conf", config_name="config", version_base=__hydra_version_base__
-)
-def hydra_main(cfg) -> None:
+def cli_main(cfg: DictConfig) -> None:
+    """Main function for the command line interface"""
     hyfi = HyfiConfig(**cfg)
     verbose = hyfi.verbose
     app_name = hyfi.about.name
@@ -56,6 +53,13 @@ def hydra_main(cfg) -> None:
     HyFI.terminate()
 
 
+def hydra_main() -> None:
+    """Main function for the command line interface of Hydra"""
+    hydra.main(
+        config_path="conf", config_name="config", version_base=__hydra_version_base__
+    )(cli_main)()
+
+
 if __name__ == "__main__":
-    # hydra.initialize_config_module
+    """Run the command line interface"""
     hydra_main()

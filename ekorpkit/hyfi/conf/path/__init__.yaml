@@ -1,4 +1,4 @@
-dotenv_path: ${..path.runtime}/.env
+dotenv_path: ${.runtime}/.env
 workspace: ${oc.select:..workspace_root,${.home}/.ekorpkit}
 project: ${.workspace}/projects/${oc.select:..project_name,${oc.env:EKORPKIT_PROJECT_NAME,ekorpkit-default}}
 data: ${alt:${oc.env:EKORPKIT_DATA_ROOT,null},${.workspace}/data}

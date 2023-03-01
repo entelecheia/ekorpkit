@@ -1,6 +1,6 @@
 from tqdm.auto import tqdm
 
-from .hydra import _partial, _SpecialKeys
+from .hydra import SpecialKeys, _partial
 from .utils.batch import batcher, decorator_apply
 from .utils.logging import getLogger
 
@@ -8,7 +8,7 @@ logger = getLogger(__name__)
 
 
 def _pipe(data, pipe):
-    _func_ = pipe.get(_SpecialKeys.FUNC)
+    _func_ = pipe.get(SpecialKeys.FUNC)
     _fn = _partial(_func_)
     logger.info("Applying pipe: %s", _fn)
     if isinstance(data, dict):
@@ -22,7 +22,7 @@ def _pipe(data, pipe):
                 "Applying pipe to dataframe [%s], %d/%d", df_name, df_no + 1, len(data)
             )
 
-            pipe[_SpecialKeys.SUFFIX.value] = df_name
+            pipe[SpecialKeys.SUFFIX.value] = df_name
             dfs[df_name] = _fn(df_each, pipe)
         return dfs
     return _fn(data, pipe)
@@ -35,7 +35,6 @@ def _apply(
     use_batcher=True,
     minibatch_size=None,
     num_workers=None,
-    verbose=False,
     **kwargs,
 ):
     batcher_instance = batcher.batcher_instance
@@ -63,6 +62,6 @@ def _apply(
             return results
 
     if batcher_instance is None:
-        logger.warning("Warning: batcher not initialized")
+        logger.info("Warning: batcher not initialized")
     tqdm.pandas(desc=description)
     return series.progress_apply(func)

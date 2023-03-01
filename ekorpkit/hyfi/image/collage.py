@@ -1,19 +1,23 @@
+"""Collage of images.""" ""
 import io
 import logging
 import os
-import numpy as np
-import matplotlib.pyplot as plt
 import textwrap
 from typing import List
-from PIL import ImageDraw, Image
-from pydantic import BaseModel
-from .. import get_image_font, load_image, load_images, scale_image
 
+import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image, ImageDraw
+from pydantic import BaseModel
+
+from .utils import get_image_font, load_image, load_images, scale_image
 
 log = logging.getLogger(__name__)
 
 
 class Collage(BaseModel):
+    """Collage of images."""
+
     image: Image.Image
     width: int
     height: int
@@ -144,7 +148,9 @@ def label_collage(
         title = "\n".join(
             sum(
                 [
-                    textwrap.wrap(t, width=int(collage.width / 15 * 12 / title_fontsize))
+                    textwrap.wrap(
+                        t, width=int(collage.width / 15 * 12 / title_fontsize)
+                    )
                     for t in title.split("\n")
                 ],
                 [],
@@ -249,6 +255,9 @@ def convert_image(
     fontcolor=None,
     return_as_array=False,
 ):
+    """
+    Convert an image to a PIL Image.
+    """
     img = load_image(image_or_uri)
     if isinstance(image_or_uri, str) and filename is None:
         filename = os.path.basename(image_or_uri)
@@ -264,6 +273,9 @@ def convert_image(
 
 
 def gallery(array, ncols=7):
+    """
+    Create a gallery of images from a numpy array.
+    """
     nindex, height, width, intensity = array.shape
     nrows = nindex // ncols
     assert nindex == nrows * ncols

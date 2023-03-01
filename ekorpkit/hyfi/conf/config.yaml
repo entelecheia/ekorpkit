@@ -11,7 +11,7 @@ defaults:
 
 hyfi_package_config_path: ${oc.env:HYFI_PACKAGE_CONFIG_PATH,${__search_package_path__:}}
 hyfi_config_module: ${oc.env:HYFI_CONFIG_MODULE,ekorpkit.hyfi.conf}
-hyfi_user_config_path: ${oc.env:HYFI_USER_CONFIG_PATH,${check_path:./conf,pkg://ekorpkit/hyfi/conf}}
+hyfi_user_config_path: ${oc.env:HYFI_USER_CONFIG_PATH,.}
 hydra:
   searchpath:
     - ${hyfi_package_config_path}

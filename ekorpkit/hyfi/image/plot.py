@@ -1,12 +1,14 @@
+"""Plotting functions"""
 import os
-import logging
 import platform
-import matplotlib.pyplot as plt
-from matplotlib import font_manager, rc
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+from matplotlib import font_manager, rc
 
-log = logging.getLogger(__name__)
+from ..utils.logging import getLogger
+
+logger = getLogger(__name__)
 
 
 def get_plot_font(
@@ -35,12 +37,12 @@ def get_plot_font(
             else:
                 fontpath = None
         if verbose:
-            log.info(f"Font path: {fontpath}")
+            logger.info(f"Font path: {fontpath}")
 
     if fontpath is None or not Path(fontpath).is_file():
         fontname = None
         fontpath = None
-        log.warning(f"Font file does not exist at {fontpath}")
+        logger.warning(f"Font file does not exist at {fontpath}")
         if platform.system() == "Linux":
             font_install_help = """
             apt install fontconfig
@@ -57,9 +59,9 @@ def get_plot_font(
             plt.rcParams["axes.unicode_minus"] = False
             font_family = plt.rcParams["font.family"]
             if verbose:
-                log.info(f"font family: {font_family}")
+                logger.info(f"font family: {font_family}")
         if verbose:
-            log.info(f"font name: {fontname}")
+            logger.info(f"font name: {fontname}")
     return fontname, fontpath
 
 

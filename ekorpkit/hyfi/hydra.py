@@ -11,23 +11,12 @@ from typing import IO, Any, Dict, List, Tuple, Union
 import hydra
 from omegaconf import DictConfig, ListConfig, OmegaConf, SCMode
 
-from .env import (
-    ProjectConfig,
-    __global_config__,
-    __hydra_version_base__,
-    __version__,
-    _compose,
-    _select,
-    _to_config,
-    _to_dict,
-)
-from .io.cached_path import _path
-from .io.file import _check_path, _exists, _join_path, _mkdir
-from .utils.batch import batcher
+from .env import __global_config__, __hydra_version_base__, _compose, _select, _to_dict
+from .io.cached_path import cached_path
+from .io.file import check_path, exists, join_path, mkdir
 from .utils.env import dotenv_values, getcwd
-from .utils.func import _strptime, _today, lower_case_with_underscores
+from .utils.func import strptime, today, lower_case_with_underscores
 from .utils.logging import getLogger
-from .utils.notebook import is_notebook
 
 logger = getLogger(__name__)
 
@@ -35,7 +24,7 @@ logger = getLogger(__name__)
 DictKeyType = Union[str, int, Enum, float, bool]
 
 
-class _SpecialKeys(str, Enum):
+class SpecialKeys(str, Enum):
     """Special keys in configs used by hyfi."""
 
     CALL = "_call_"
@@ -81,7 +70,7 @@ def _is_list(
 
 
 def _is_instantiatable(cfg: Any):
-    return _is_config(cfg) and _SpecialKeys.TARGET in cfg
+    return _is_config(cfg) and SpecialKeys.TARGET in cfg
 
 
 def _load(file_: Union[str, Path, IO[Any]]) -> Union[DictConfig, ListConfig]:
@@ -170,7 +159,7 @@ def _to_container(
 
 def _run(config: Any, **kwargs: Any) -> Any:
     config = _merge(config, kwargs)
-    _config_ = config.get(_SpecialKeys.CONFIG)
+    _config_ = config.get(SpecialKeys.CONFIG)
     if _config_ is None:
         logger.warning("No _config_ specified in config")
         return None
@@ -189,7 +178,7 @@ def _partial(
         return None
     elif config_group is not None:
         config = _compose(config_group=config_group)
-    kwargs[_SpecialKeys.PARTIAL] = True
+    kwargs[SpecialKeys.PARTIAL] = True
     return _instantiate(config, *args, **kwargs)
 
 
@@ -222,18 +211,18 @@ def _instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
     :return: if _target_ is a class name: the instantiated object
              if _target_ is a callable: the return value of the call
     """
-    verbose = config.get(_SpecialKeys.VERBOSE, False)
+    verbose = config.get(SpecialKeys.VERBOSE, False)
     if not __global_config__.__initilized__:
         __global_config__.initialize()
     if not _is_instantiatable(config):
         if verbose:
             logger.info("Config is not instantiatable, returning config")
         return config
-    _recursive_ = config.get(_SpecialKeys.RECURSIVE, False)
-    if _SpecialKeys.RECURSIVE not in kwargs:
-        kwargs[_SpecialKeys.RECURSIVE.value] = _recursive_
+    _recursive_ = config.get(SpecialKeys.RECURSIVE, False)
+    if SpecialKeys.RECURSIVE not in kwargs:
+        kwargs[SpecialKeys.RECURSIVE.value] = _recursive_
     if verbose:
-        logger.info("instantiating %s ...", config.get(_SpecialKeys.TARGET))
+        logger.info("instantiating %s ...", config.get(SpecialKeys.TARGET))
     return hydra.utils.instantiate(config, *args, **kwargs)
 
 
@@ -243,8 +232,8 @@ def _methods(cfg: Any, obj: object, return_function=False):
         logger.info("No method defined to call")
         return
 
-    if isinstance(cfg, dict) and _SpecialKeys.METHOD in cfg:
-        _method_ = cfg[_SpecialKeys.METHOD]
+    if isinstance(cfg, dict) and SpecialKeys.METHOD in cfg:
+        _method_ = cfg[SpecialKeys.METHOD]
     elif isinstance(cfg, dict):
         _method_ = cfg
     elif isinstance(cfg, str):
@@ -261,13 +250,13 @@ def _methods(cfg: Any, obj: object, return_function=False):
         logger.info(f"Calling {_method_}")
         return _fn(**cfg)
     elif isinstance(_method_, dict):
-        if _SpecialKeys.CALL in _method_:
-            _call_ = _method_.pop(_SpecialKeys.CALL)
+        if SpecialKeys.CALL in _method_:
+            _call_ = _method_.pop(SpecialKeys.CALL)
         else:
             _call_ = True
         if _call_:
-            _fn = getattr(obj, _method_[_SpecialKeys.METHOD_NAME])
-            _parms = _method_.pop(_SpecialKeys.rcPARAMS, {})
+            _fn = getattr(obj, _method_[SpecialKeys.METHOD_NAME])
+            _parms = _method_.pop(SpecialKeys.rcPARAMS, {})
             if return_function:
                 if not _parms:
                     logger.info(f"Returning function {_fn}")
@@ -284,13 +273,13 @@ def _methods(cfg: Any, obj: object, return_function=False):
             if isinstance(_each_method, str):
                 getattr(obj, _each_method)()
             elif isinstance(_each_method, dict):
-                if _SpecialKeys.CALL in _each_method:
-                    _call_ = _each_method.pop(_SpecialKeys.CALL)
+                if SpecialKeys.CALL in _each_method:
+                    _call_ = _each_method.pop(SpecialKeys.CALL)
                 else:
                     _call_ = True
                 if _call_:
-                    getattr(obj, _each_method[_SpecialKeys.METHOD_NAME])(
-                        **_each_method[_SpecialKeys.rcPARAMS]
+                    getattr(obj, _each_method[SpecialKeys.METHOD_NAME])(
+                        **_each_method[SpecialKeys.rcPARAMS]
                     )
                 else:
                     logger.info(f"Skipping call to {_each_method}")
@@ -302,19 +291,19 @@ def _function(cfg: Any, _name_, return_function=False, **parms):
         logger.info("No function defined to execute")
         return None
 
-    if _SpecialKeys.FUNC not in cfg:
+    if SpecialKeys.FUNC not in cfg:
         logger.info("No function defined to execute")
         return None
 
-    _functions_ = cfg[_SpecialKeys.FUNC]
+    _functions_ = cfg[SpecialKeys.FUNC]
     fn = _partial(_functions_[_name_])
     if _name_ in cfg:
         _parms = cfg[_name_]
         _parms = {**_parms, **parms}
     else:
         _parms = parms
-    if _SpecialKeys.EXEC in _parms:
-        _exec_ = _parms.pop(_SpecialKeys.EXEC)
+    if SpecialKeys.EXEC in _parms:
+        _exec_ = _parms.pop(SpecialKeys.EXEC)
     else:
         _exec_ = True
     if _exec_:
@@ -347,21 +336,20 @@ def __search_package_path__():
 OmegaConf.register_new_resolver("__hyfi_path__", __hyfi_path__)
 OmegaConf.register_new_resolver("__search_package_path__", __search_package_path__)
 OmegaConf.register_new_resolver("__home_path__", __home_path__)
-OmegaConf.register_new_resolver("__version__", __version__)
-OmegaConf.register_new_resolver("today", _today)
-OmegaConf.register_new_resolver("to_datetime", _strptime)
+OmegaConf.register_new_resolver("today", today)
+OmegaConf.register_new_resolver("to_datetime", strptime)
 OmegaConf.register_new_resolver("iif", lambda cond, t, f: t if cond else f)
 OmegaConf.register_new_resolver("alt", lambda val, alt: val if val else alt)
 OmegaConf.register_new_resolver("randint", random.randint, use_cache=True)
 OmegaConf.register_new_resolver("get_method", hydra.utils.get_method)
 OmegaConf.register_new_resolver("get_original_cwd", getcwd)
-OmegaConf.register_new_resolver("exists", _exists)
-OmegaConf.register_new_resolver("join_path", _join_path)
-OmegaConf.register_new_resolver("mkdir", _mkdir)
+OmegaConf.register_new_resolver("exists", exists)
+OmegaConf.register_new_resolver("join_path", join_path)
+OmegaConf.register_new_resolver("mkdir", mkdir)
 OmegaConf.register_new_resolver("dirname", os.path.dirname)
 OmegaConf.register_new_resolver("basename", os.path.basename)
-OmegaConf.register_new_resolver("check_path", _check_path)
-OmegaConf.register_new_resolver("cached_path", _path)
+OmegaConf.register_new_resolver("check_path", check_path)
+OmegaConf.register_new_resolver("cached_path", cached_path)
 OmegaConf.register_new_resolver(
     "lower_case_with_underscores", lower_case_with_underscores
 )
@@ -372,8 +360,8 @@ def _getsource(obj):
     """Return the source code of the object."""
     try:
         if _is_config(obj):
-            if _SpecialKeys.TARGET in obj:
-                target_string = obj[_SpecialKeys.TARGET]
+            if SpecialKeys.TARGET in obj:
+                target_string = obj[SpecialKeys.TARGET]
                 mod_name, object_name = target_string.rsplit(".", 1)
                 mod = importlib.import_module(mod_name)
                 obj = getattr(mod, object_name)

@@ -1,12 +1,13 @@
+"""Motion image processing functions."""
 import os
-import logging
 import subprocess
 from pathlib import Path
+
 from ..io.file import get_filepaths
-from ..utils.notebook import _display_image
+from ..utils.logging import getLogger
+from ..utils.notebook import display_image
 
-
-log = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def make_gif(
@@ -28,17 +29,17 @@ def make_gif(
     """
     from PIL import Image
 
-    log.info(f"Making GIF from {filename_patterns}")
+    logger.info(f"Making GIF from {filename_patterns}")
     if os.path.exists(output_filepath) and not force:
-        log.info(f"Skipping GIF creation, already exists: {output_filepath}")
-        log.info("If you want to re-create the GIF, set force=True")
+        logger.info(f"Skipping GIF creation, already exists: {output_filepath}")
+        logger.info("If you want to re-create the GIF, set force=True")
     else:
         if image_filepaths is None:
             image_filepaths = sorted(
                 get_filepaths(filename_patterns, base_dir=base_dir)
             )
         if not image_filepaths:
-            log.warning("no images found")
+            logger.warning("no images found")
             return
         frames = [Image.open(image) for image in image_filepaths]
         if len(frames) > 0:
@@ -55,10 +56,10 @@ def make_gif(
             )
             print(f"Saved GIF to {output_filepath}")
         else:
-            log.warning(f"No frames found for {filename_patterns}")
+            logger.warning(f"No frames found for {filename_patterns}")
 
     if show and os.path.exists(output_filepath):
-        _display_image(data=open(output_filepath, "rb").read(), width=width)
+        display_image(data=open(output_filepath, "rb").read(), width=width)
 
     return output_filepath
 
@@ -69,12 +70,12 @@ def extract_frames(
     """
     Extract frames from a video.
     """
-    log.info(f"Exporting Video Frames (1 every {extract_nth_frame})...")
+    logger.info(f"Exporting Video Frames (1 every {extract_nth_frame})...")
     try:
         for f in Path(f"{extracted_frame_dir}").glob("*.jpg"):
             f.unlink()
     except FileNotFoundError:
-        log.info(f"No video frames found in {extracted_frame_dir}")
+        logger.info(f"No video frames found in {extracted_frame_dir}")
     vf = f"select=not(mod(n\,{extract_nth_frame}))"
 
     ffmpeg_path = "/usr/bin/ffmpeg"
@@ -100,7 +101,7 @@ def extract_frames(
             stdout=subprocess.PIPE,
         ).stdout.decode("utf-8")
     else:
-        log.warning(
+        logger.warning(
             f"WARNING!\n\nVideo not found: {video_path}.\nPlease check your video path."
         )
 
@@ -111,11 +112,11 @@ def create_video(
     """
     Create a video from a list of images.
     """
-    
-    log.info(f"Creating video from {input_url}")
+
+    logger.info(f"Creating video from {input_url}")
     if os.path.exists(video_path) and not force:
-        log.info(f"Skipping video creation, already exists: {video_path}")
-        log.info("If you want to re-create the video, set force=True")
+        logger.info(f"Skipping video creation, already exists: {video_path}")
+        logger.info("If you want to re-create the video, set force=True")
         return video_path
 
     cmd = [

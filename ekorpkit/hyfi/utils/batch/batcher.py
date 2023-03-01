@@ -1,16 +1,17 @@
-import logging
-import multiprocessing
-from contextlib import closing
-import scipy.sparse as ssp
-import random
-import pandas as pd
-from math import ceil
-from tqdm.auto import tqdm
+"""Batcher class for handling parallel jobs on minibatches"""
 import contextlib
+import multiprocessing
+import random
+from contextlib import closing
+from math import ceil
 
-batcher_instance = None
+import pandas as pd
+import scipy.sparse as ssp
+from tqdm.auto import tqdm
 
-log = logging.getLogger(__name__)
+from ..logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class Batcher(object):
@@ -271,7 +272,7 @@ class Batcher(object):
         if verbose is None:
             verbose = self.verbose
         if verbose > 1:
-            log.info(
+            logger.info(
                 "%s %s %s %s %s %s %s %s %s %s %s %s %s %s"
                 % (
                     " backend:",
@@ -292,7 +293,7 @@ class Batcher(object):
             )
 
         if verbose > 10:
-            log.info(
+            logger.info(
                 "%s %s %s %s %s %s %s %s"
                 % (
                     " len(data):",
@@ -410,7 +411,7 @@ class Batcher(object):
         if merge_output:
             return self.merge_batches(self.collect_batches(results, backend=backend))
         if verbose > 2:
-            log.info(
+            logger.info(
                 "%s %s %s %s %s %s %s"
                 % (
                     " Task:",
@@ -463,6 +464,9 @@ class Batcher(object):
     def __setstate__(self, params):
         for key in params:
             setattr(self, key, params[key])
+
+
+batcher_instance: Batcher = None
 
 
 @contextlib.contextmanager

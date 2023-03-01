@@ -1,15 +1,20 @@
-import GPUtil
-import time
+"""GPU utilities"""
 import gc
+import os
+import time
 from threading import Thread
-from .notebook import _clear_output
-from .logging import getLogger
 
+import GPUtil
+
+from .logging import getLogger
+from .notebook import clear_output
 
 logger = getLogger(__name__)
 
 
 class GPUMon(Thread):
+    """Monitor GPU usage in a separate thread"""
+
     def __init__(self, delay=10, show_current_time=True, clear_output=True):
         super(GPUMon, self).__init__()
         self.stopped = False
@@ -21,7 +26,7 @@ class GPUMon(Thread):
     def run(self):
         while not self.stopped:
             if self.clear_output:
-                _clear_output()
+                clear_output()
             if self.show_current_time:
                 print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
             GPUtil.showUtilization()
@@ -90,7 +95,8 @@ class GPUMon(Thread):
             pass
 
 
-def _nvidia_smi():
+def nvidia_smi():
+    """Run nvidia-smi and return the output as a string"""
     import subprocess
 
     nvidiasmi_output = subprocess.run(
@@ -99,7 +105,8 @@ def _nvidia_smi():
     return nvidiasmi_output
 
 
-def _is_cuda_available():
+def is_cuda_available():
+    """Check if cuda is available"""
     try:
         import torch
 
@@ -108,7 +115,8 @@ def _is_cuda_available():
         return False
 
 
-def _set_cuda(device=0):
+def set_cuda(device=0):
+    """Set cuda device to use"""
     try:
         import torch
 

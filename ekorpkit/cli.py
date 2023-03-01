@@ -1,10 +1,9 @@
-import logging
 from ekorpkit import eKonf
 from ekorpkit.info.docs import make_table
-from .hyfi import hydra_main
 
+from .hyfi import getLogger, hydra_main
 
-log = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def listup(**args):

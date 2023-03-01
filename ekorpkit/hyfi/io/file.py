@@ -1,16 +1,20 @@
-import logging
+"""File I/O functions"""
 import os
 import re
-import pandas as pd
 from glob import glob
 from pathlib import Path, PosixPath, WindowsPath
+from typing import List, Union
+
+import pandas as pd
+
 from ..utils.func import elapsed_timer
+from ..utils.logging import getLogger
+
+logger = getLogger(__name__)
 
 
-log = logging.getLogger(__name__)
-
-
-def is_valid_regex(expr):
+def is_valid_regex(expr: str) -> bool:
+    """Check if a string is a valid regular expression"""
     try:
         if expr.startswith("r:"):
             expr = expr[2:]
@@ -22,7 +26,8 @@ def is_valid_regex(expr):
         return False
 
 
-def glob_re(pattern, base_dir, recursive=False):
+def glob_re(pattern: str, base_dir: str, recursive: bool = False) -> list:
+    """Glob files matching a regular expression"""
     if is_valid_regex(pattern):
         pattern = pattern[2:]
         pattern = re.compile(pattern)
@@ -47,8 +52,13 @@ def glob_re(pattern, base_dir, recursive=False):
 
 
 def get_filepaths(
-    filename_patterns, base_dir=None, recursive=True, verbose=False, **kwargs
-):
+    filename_patterns: Union[str, PosixPath, WindowsPath],
+    base_dir: Union[str, PosixPath, WindowsPath] = None,
+    recursive: bool = True,
+    verbose: bool = False,
+    **kwargs,
+) -> List[str]:
+    """Get a list of filepaths from a list of filename patterns"""
     if isinstance(filename_patterns, (PosixPath, WindowsPath)):
         filename_patterns = str(filename_patterns)
     if isinstance(filename_patterns, str):
@@ -71,31 +81,32 @@ def get_filepaths(
             filepaths += glob_re(file, base_dir, recursive=recursive)
     filepaths = [fp for fp in filepaths if Path(fp).is_file()]
     if verbose:
-        log.info(f"Processing [{len(filepaths)}] files from {filename_patterns}")
+        logger.info(f"Processing [{len(filepaths)}] files from {filename_patterns}")
 
     return filepaths
 
 
 def get_files_from_archive(archive_path, filetype=None):
+    """Get a list of files from an archive"""
     import tarfile
     from zipfile import ZipFile
 
     if ".tar.gz" in archive_path:
-        log.info(f"::Extracting files from {archive_path} with tar.gz")
+        logger.info(f"::Extracting files from {archive_path} with tar.gz")
         archive_handle = tarfile.open(archive_path, "r:gz")
         files = [
             (file, file.name) for file in archive_handle.getmembers() if file.isfile()
         ]
         open_func = archive_handle.extractfile
     elif ".tar.bz2" in archive_path:
-        log.info(f"::Extracting files from {archive_path} with tar.bz2")
+        logger.info(f"::Extracting files from {archive_path} with tar.bz2")
         archive_handle = tarfile.open(archive_path, "r:bz2")
         files = [
             (file, file.name) for file in archive_handle.getmembers() if file.isfile()
         ]
         open_func = archive_handle.extractfile
     elif ".zip" in archive_path:
-        log.info(f"::Extracting files from {archive_path} with zip")
+        logger.info(f"::Extracting files from {archive_path} with zip")
         archive_handle = ZipFile(archive_path)
         files = [
             (file, file.encode("cp437").decode("euc-kr"))
@@ -113,21 +124,22 @@ def get_files_from_archive(archive_path, filetype=None):
     return files, archive_handle, open_func
 
 
-def is_dataframe(data):
+def is_dataframe(data) -> bool:
+    """Check if data is a pandas dataframe"""
     return isinstance(data, pd.DataFrame)
 
 
 def concat_data(
     data,
     columns=None,
-    add_key_as_name=False,
-    name_column="_name_",
-    ignore_index=True,
-    verbose=False,
+    add_key_as_name: bool = False,
+    name_column: str = "_name_",
+    ignore_index: bool = True,
     **kwargs,
 ):
+    """Concatenate dataframes"""
     if isinstance(data, dict):
-        log.info(f"Concatenating {len(data)} dataframes")
+        logger.info(f"Concatenating {len(data)} dataframes")
         dfs = []
         for df_name in data:
             df_each = data[df_name]
@@ -142,17 +154,18 @@ def concat_data(
         else:
             return None
     elif isinstance(data, list):
-        log.info(f"Concatenating {len(data)} dataframes")
+        logger.info(f"Concatenating {len(data)} dataframes")
         if len(data) > 0:
             return pd.concat(data, ignore_index=ignore_index)
         else:
             return None
     else:
-        log.warning("Warning: data is not a dict")
+        logger.warning("Warning: data is not a dict")
         return data
 
 
 def load_data(filename, base_dir=None, filetype=None, verbose=False, **kwargs):
+    """Load data from a file or a list of files"""
     concatenate = kwargs.pop("concatenate", False)
     ignore_index = kwargs.pop("ignore_index", False)
     if filename is not None:
@@ -171,7 +184,7 @@ def load_data(filename, base_dir=None, filetype=None, verbose=False, **kwargs):
     else:
         filepaths = get_filepaths(filename)
     if verbose:
-        log.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
+        logger.info(f"Loading {len(filepaths)} dataframes from {filepaths}")
 
     data = {
         os.path.basename(f): load_dataframe(
@@ -188,18 +201,19 @@ def load_data(filename, base_dir=None, filetype=None, verbose=False, **kwargs):
         else:
             return data
     else:
-        log.warning(f"No files found for {filename}")
+        logger.warning(f"No files found for {filename}")
         return None
 
 
 def load_dataframe(
-    filename,
-    base_dir=None,
-    columns=None,
+    filename: str,
+    base_dir: str = None,
+    columns: list = None,
     index_col=None,
-    verbose=False,
+    verbose: bool = False,
     **kwargs,
-):
+) -> pd.DataFrame:
+    """Load a dataframe from a file"""
     dtype = kwargs.pop("dtype", None)
     if isinstance(dtype, list):
         dtype = {k: "str" for k in dtype}
@@ -220,10 +234,10 @@ def load_dataframe(
             filepath = filename
 
         if not os.path.exists(filepath):
-            log.warning(f"File {filepath} does not exist")
+            logger.warning(f"File {filepath} does not exist")
             return None
     if verbose:
-        log.info(f"Loading data from {filepath}")
+        logger.info(f"Loading data from {filepath}")
     with elapsed_timer(format_time=True) as elapsed:
         if "csv" in filetype or "tsv" in filetype:
             delimiter = kwargs.pop("delimiter", "\t") if "tsv" in filetype else None
@@ -243,21 +257,22 @@ def load_dataframe(
             columns = [c for c in columns if c in data.columns]
             data = data[columns]
         if verbose:
-            log.info(" >> elapsed time to load data: {}".format(elapsed()))
+            logger.info(" >> elapsed time to load data: {}".format(elapsed()))
     return data
 
 
 def save_data(
-    data,
-    filename,
-    base_dir=None,
+    data: Union[pd.DataFrame, dict],
+    filename: str,
+    base_dir: str = None,
     columns=None,
     index=False,
     filetype="parquet",
-    suffix=None,
-    verbose=False,
+    suffix: str = None,
+    verbose: bool = False,
     **kwargs,
 ):
+    """Save data to a file"""
     fileinfo = os.path.splitext(filename)
     filename = fileinfo[0]
     filetype = fileinfo[1] if len(fileinfo) > 1 else filetype
@@ -288,7 +303,7 @@ def save_data(
                 **kwargs,
             )
     elif is_dataframe(data):
-        log.info(f"Saving dataframe to {filepath}")
+        logger.info(f"Saving dataframe to {filepath}")
         if isinstance(columns, list):
             columns = [c for c in columns if c in data.columns]
             data = data[columns]
@@ -302,12 +317,13 @@ def save_data(
             else:
                 raise ValueError("filetype must be .csv or .parquet")
             if verbose:
-                log.info(" >> elapsed time to save data: {}".format(elapsed()))
+                logger.info(" >> elapsed time to save data: {}".format(elapsed()))
     else:
         raise ValueError(f"Unsupported data type: {type(data)}")
 
 
-def read(uri, mode="rb", encoding=None, head=None, **kwargs):
+def read(uri, mode="rb", encoding=None, head=None, **kwargs) -> bytes:
+    """Read data from a file or url"""
     uri = str(uri)
     if uri.startswith("http"):
         import requests
@@ -331,38 +347,44 @@ def read(uri, mode="rb", encoding=None, head=None, **kwargs):
             return f.read()
 
 
-def is_file(a, *p):
+def is_file(a, *p) -> bool:
+    """Check if path is a file"""
     _path = os.path.join(a, *p)
     return Path(_path).is_file()
 
 
-def is_dir(a, *p):
+def is_dir(a, *p) -> bool:
+    """Check if path is a directory"""
     _path = os.path.join(a, *p)
     return Path(_path).is_dir()
 
 
-def _check_path(_path: str, alt_path: str = None):
+def check_path(_path: str, alt_path: str = None) -> str:
+    """Check if path exists, return alt_path if not"""
     if os.path.exists(_path):
         return _path
     else:
         return alt_path
 
 
-def _mkdir(_path: str):
+def mkdir(_path: str) -> str:
+    """Create directory if it does not exist"""
     if _path is None:
         return None
     Path(_path).mkdir(parents=True, exist_ok=True)
     return _path
 
 
-def _exists(a, *p):
+def exists(a, *p) -> bool:
+    """Check if path exists"""
     if a is None:
         return False
     _path = os.path.join(a, *p)
     return os.path.exists(_path)
 
 
-def _join_path(a, *p):
+def join_path(a, *p) -> str:
+    """Join path components intelligently."""
     if p and p[0] is not None:
         p = [str(_p) for _p in p]
         if a is None:

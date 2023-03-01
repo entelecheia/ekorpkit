@@ -1,4 +1,3 @@
-import logging
 import random
 from pathlib import Path
 from typing import Any, Optional, Union
@@ -6,21 +5,11 @@ from typing import Any, Optional, Union
 from omegaconf import DictConfig
 from pydantic import BaseModel, validator
 
-from ..env import ProjectConfig
-from ..hydra import (
-    _compose,
-    _load,
-    _merge,
-    _methods,
-    _print,
-    _save,
-    _save_json,
-    _to_config,
-    _to_dict,
-)
+from ..env import ProjectConfig, _to_config, _to_dict, getLogger
+from ..hydra import _compose, _load, _merge, _methods, _print, _save, _save_json
 from ..utils.lib import ensure_import_module
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 class PathConfig(BaseModel):

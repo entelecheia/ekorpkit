@@ -3,9 +3,10 @@ from typing import IO, Any, Dict, List, Tuple, Union
 
 from omegaconf import DictConfig, ListConfig, SCMode
 
-from .env import DotEnvConfig, ProjectConfig, __global_config__
+from .env import DotEnvConfig, ProjectConfig, __global_config__, _to_config
 from .hydra import (
     DictKeyType,
+    SpecialKeys,
     __home_path__,
     __hyfi_path__,
     _compose,
@@ -27,43 +28,41 @@ from .hydra import (
     _save,
     _save_json,
     _select,
-    _SpecialKeys,
-    _to_config,
     _to_container,
     _to_dict,
     _to_yaml,
     _update,
     _viewsource,
 )
-from .io.cached_path import _path
-from .io.file import _exists, _join_path, _mkdir, is_dir, is_file
+from .io.cached_path import cached_path
+from .io.file import exists, is_dir, is_file, join_path, mkdir
 from .pipe import _apply, _pipe
 from .utils.env import get_osenv, load_dotenv, set_osenv
 from .utils.func import (
-    _dict_product,
-    _dict_to_dataframe,
-    _records_to_dataframe,
-    _to_dateparm,
-    _to_datetime,
-    _to_numeric,
+    dict_product,
+    dict_to_dataframe,
+    records_to_dataframe,
+    to_dateparm,
+    to_datetime,
+    to_numeric,
 )
 from .utils.google import mount_google_drive
-from .utils.gpu import _nvidia_smi, _set_cuda
+from .utils.gpu import nvidia_smi, set_cuda
 from .utils.lib import _dependencies
 from .utils.logging import getLogger, setLogger
 from .utils.notebook import (
-    _clear_output,
-    _cprint,
-    _create_button,
-    _create_dropdown,
-    _create_floatslider,
-    _create_image,
-    _create_radiobutton,
-    _create_textarea,
-    _display,
-    _display_image,
-    _get_display,
-    _hide_code_in_slideshow,
+    clear_output,
+    cprint,
+    create_button,
+    create_dropdown,
+    create_floatslider,
+    create_image,
+    create_radiobutton,
+    create_textarea,
+    display,
+    display_image,
+    get_display,
+    hide_code_in_slideshow,
     is_colab,
     is_notebook,
 )
@@ -75,7 +74,7 @@ class HyFI:
     """hyfi config primary class"""
 
     config = __global_config__
-    SpeicialKeys = _SpecialKeys
+    SpeicialKeys = SpecialKeys
     __version__ = __global_config__.__version__
     __hyfi_path__ = __hyfi_path__()
     __home_path__ = __home_path__()
@@ -361,7 +360,7 @@ class HyFI:
             the resource.
 
         """
-        return _path(
+        return cached_path(
             url_or_filename,
             extract_archive=extract_archive,
             force_extract=force_extract,
@@ -384,11 +383,11 @@ class HyFI:
 
     @staticmethod
     def to_dateparm(_date, _format="%Y-%m-%d"):
-        return _to_dateparm(_date, _format)
+        return to_dateparm(_date, _format)
 
     @staticmethod
     def exists(a, *p):
-        return _exists(a, *p)
+        return exists(a, *p)
 
     @staticmethod
     def is_file(a, *p):
@@ -400,11 +399,11 @@ class HyFI:
 
     @staticmethod
     def mkdir(_path: str):
-        return _mkdir(_path)
+        return mkdir(_path)
 
     @staticmethod
     def join_path(a, *p):
-        return _join_path(a, *p)
+        return join_path(a, *p)
 
     @staticmethod
     def apply(
@@ -466,7 +465,7 @@ class HyFI:
 
         if filename is not None:
             filename = str(filename)
-        if _SpecialKeys.TARGET in kwargs:
+        if SpecialKeys.TARGET in kwargs:
             return _instantiate(
                 kwargs,
                 filename=filename,
@@ -547,7 +546,7 @@ class HyFI:
 
     @staticmethod
     def nvidia_smi():
-        return _nvidia_smi()
+        return nvidia_smi()
 
     @staticmethod
     def ensure_import_module(name, libpath, liburi, specname=None, syspath=None):
@@ -625,11 +624,11 @@ class HyFI:
 
     @staticmethod
     def to_datetime(data, _format=None, _columns=None, **kwargs):
-        return _to_datetime(data, _format, _columns, **kwargs)
+        return to_datetime(data, _format, _columns, **kwargs)
 
     @staticmethod
     def to_numeric(data, _columns=None, errors="coerce", downcast=None, **kwargs):
-        return _to_numeric(data, _columns, errors, downcast, **kwargs)
+        return to_numeric(data, _columns, errors, downcast, **kwargs)
 
     @staticmethod
     def getLogger(
@@ -645,7 +644,7 @@ class HyFI:
 
     @staticmethod
     def set_cuda(device=0):
-        return _set_cuda(device)
+        return set_cuda(device)
 
     @staticmethod
     def mount_google_drive(
@@ -669,7 +668,7 @@ class HyFI:
 
     @staticmethod
     def clear_output(wait=False):
-        return _clear_output(wait)
+        return clear_output(wait)
 
     @staticmethod
     def display(
@@ -681,7 +680,7 @@ class HyFI:
         display_id=None,
         **kwargs,
     ):
-        return _display(
+        return display(
             *objs,
             include=include,
             exclude=exclude,
@@ -705,7 +704,7 @@ class HyFI:
         metadata=None,
         **kwargs,
     ):
-        return _display_image(
+        return display_image(
             data=data,
             url=url,
             filename=filename,
@@ -762,29 +761,29 @@ class HyFI:
 
     @staticmethod
     def dict_product(dicts):
-        return _dict_product(dicts)
+        return dict_product(dicts)
 
     @staticmethod
     def get_display():
-        return _get_display()
+        return get_display()
 
     @staticmethod
     def hide_code_in_slideshow():
-        return _hide_code_in_slideshow()
+        return hide_code_in_slideshow()
 
     @staticmethod
     def cprint(str_color_tuples, **kwargs):
-        return _cprint(str_color_tuples)
+        return cprint(str_color_tuples)
 
     @staticmethod
     def dict_to_dataframe(data, orient="columns", dtype=None, columns=None):
-        return _dict_to_dataframe(data, orient, dtype, columns)
+        return dict_to_dataframe(data, orient, dtype, columns)
 
     @staticmethod
     def records_to_dataframe(
         data, index=None, exclude=None, columns=None, coerce_float=False, nrows=None
     ):
-        return _records_to_dataframe(data, index, exclude, columns, coerce_float, nrows)
+        return records_to_dataframe(data, index, exclude, columns, coerce_float, nrows)
 
     @staticmethod
     def create_dropdown(
@@ -796,7 +795,7 @@ class HyFI:
         layout=None,
         **kwargs,
     ):
-        return _create_dropdown(
+        return create_dropdown(
             options,
             value,
             description,
@@ -816,7 +815,7 @@ class HyFI:
         layout=None,
         **kwargs,
     ):
-        return _create_textarea(
+        return create_textarea(
             value,
             description,
             placeholder,
@@ -830,7 +829,7 @@ class HyFI:
     def create_button(
         description, button_style="", icon="check", layout=None, **kwargs
     ):
-        return _create_button(description, button_style, icon, layout, **kwargs)
+        return create_button(description, button_style, icon, layout, **kwargs)
 
     @staticmethod
     def create_radiobutton(
@@ -842,7 +841,7 @@ class HyFI:
         layout=None,
         **kwargs,
     ):
-        return _create_radiobutton(
+        return create_radiobutton(
             options,
             description,
             value,
@@ -860,7 +859,7 @@ class HyFI:
         height=None,
         **kwargs,
     ):
-        return _create_image(filename, format, width, height, **kwargs)
+        return create_image(filename, format, width, height, **kwargs)
 
     @staticmethod
     def create_floatslider(
@@ -878,7 +877,7 @@ class HyFI:
         layout=None,
         **kwargs,
     ):
-        return _create_floatslider(
+        return create_floatslider(
             min,
             max,
             step,
@@ -933,7 +932,7 @@ class HyFI:
         )
 
     @staticmethod
-    def init_project(
+    def init_workspace(
         workspace=None,
         project=None,
         task=None,
@@ -943,7 +942,7 @@ class HyFI:
         verbose=None,
         **kwargs,
     ) -> ProjectConfig:
-        __global_config__.init_notebook(
+        __global_config__.init_workspace(
             workspace=workspace,
             project=project,
             task=task,
@@ -989,7 +988,7 @@ class HyFI:
 
         src = str(src)
         dst = str(dst)
-        _mkdir(dst)
+        mkdir(dst)
         shutil.copy(src, dst, follow_symlinks=follow_symlinks)
         logger.info(f"copied {src} to {dst}")
 
