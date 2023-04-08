@@ -20,7 +20,7 @@
 [release-date-image]: https://img.shields.io/github/release-date/entelecheia/ekorpkit
 [release-url]: https://github.com/entelecheia/ekorpkit/releases
 [jupyter-book-image]: https://jupyterbook.org/en/stable/_images/badge.svg
-[jupyter book]: https://entelecheia.cc
+[jupyter book]: https://ekorpkit.entelecheia.ai
 [codeql-image]: https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml/badge.svg
 [codeql-url]: https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml
 [test-image]: https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml/badge.svg
@@ -30,7 +30,7 @@
 [codecov-image]: https://codecov.io/gh/entelecheia/ekorpkit/branch/main/graph/badge.svg?token=8I4ORHRREL
 [codecov-url]: https://codecov.io/gh/entelecheia/ekorpkit
 [repo-url]: https://github.com/entelecheia/ekorpkit
-[docs-url]: https://entelecheia.cc
+[docs-url]: https://ekorpkit.entelecheia.ai
 [changelog]: https://github.com/entelecheia/ekorpkit/blob/main/CHANGELOG.md
 [contributing guidelines]: https://github.com/entelecheia/ekorpkit/blob/main/CONTRIBUTING.md
 
@@ -74,7 +74,7 @@ Especially, some core configuration interface parts of the package will be carbe
 
 ## [Tutorials](https://entelecheia.github.io/ekorpkit-book)
 
-Tutorials for [ekorpkit](https://github.com/entelecheia/ekorpkit) package can be found at https://entelecheia.github.io/ekorpkit-book/
+Tutorials for [ekorpkit](https://github.com/entelecheia/ekorpkit) package can be found at https://ekorpkit.entelecheia.ai.
 
 ## [Installation](https://entelecheia.github.io/ekorpkit-book/docs/basics/install.html)
 
