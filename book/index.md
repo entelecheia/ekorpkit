@@ -1,9 +1,21 @@
 # Introduction
 
+[![pypi-image]][pypi-url]
+[![version-image]][release-url]
+[![release-date-image]][release-url]
+[![license-image]][license-url]
 [![home-img]][home-url]
 [![course-img]][course-url]
 [![research-img]][research-url]
 [![last-commit-img]][last-commit-url]
+
+[pypi-image]: https://badge.fury.io/py/ekorpkit.svg
+[pypi-url]: https://pypi.org/project/ekorpkit
+[license-image]: https://img.shields.io/github/license/entelecheia/ekorpkit
+[license-url]: https://github.com/entelecheia/ekorpkit/blob/main/LICENSE
+[version-image]: https://img.shields.io/github/v/release/entelecheia/ekorpkit?sort=semver
+[release-date-image]: https://img.shields.io/github/release-date/entelecheia/ekorpkit
+[release-url]: https://github.com/entelecheia/ekorpkit/releases
 
 [home-img]: https://img.shields.io/badge/home-entelecheia.me-blue
 [home-url]: https://entelecheia.me
@@ -16,71 +28,44 @@
 [last-commit-img]: https://img.shields.io/github/last-commit/entelecheia/lecture?label=last%20update
 [last-commit-url]: https://github.com/entelecheia/lecture
 
-## ἐντελέχεια in Artificial Intelligence
+## Introduction
 
-```{youtube} p0ZGCfjusIA
-:width: 100%
-```
+eKorpkit is a powerful software tool that helps facilitate natural language processing (NLP) and machine learning (ML) research by providing a flexible interface for various stages of a research pipeline, such as data extraction, preprocessing, training, and visualization. The use of the [Hydra](https://hydra.cc/) and [pydantic](https://pydantic-docs.helpmanual.io) libraries for configuration management and validation makes it more flexible and efficient to use. It also designed to be user-friendly, extensible and shareable.
 
-As artificial intelligence (AI) steadily develops and transforms, it carries the capacity to reshape numerous facets of our existence. While advancing, it is vital not only to concentrate on its technical prowess but also to contemplate the ethical and societal consequences. We can take inspiration from Aristotle's ancient Greek idea of entelecheia, which conveys the notion of achieving one's full potential or accomplishing one's purpose.
+As Artificial Intelligence (AI) becomes more advanced, it is essential to consider not just its technical capabilities but also its ethical and societal implications. In this context, the ancient Greek concept of entelecheia, coined by Aristotle, is particularly relevant. The term refers to the state of having achieved one's full potential or the realization of one's purpose. In the context of AI, entelecheia can be understood as the ability of these technologies to fully realize their potential and perform their intended functions in an optimal way.
 
-In the context of AI, entelecheia suggests that these technologies should effectively achieve their intended goals while incorporating human-like intelligence features such as understanding context, handling uncertainty, and adapting to change. Additionally, AI should adhere to ethical guidelines that resonate with societal values.
+eKorpkit is designed with the principles of entelecheia in mind. It allows NLP and ML researchers to design, implement, and evaluate their models in a way that takes into account the underlying principles of human intelligence, such as the ability to understand context, handle ambiguity, and adapt to changing conditions.
 
-Natural language processing (NLP) is an area where AI can make a significant impact. NLP uses algorithms to understand, interpret, and generate human language. To unlock NLP's full potential, it's essential to design it in a manner that genuinely mirrors human language comprehension, capturing the nuances of context and meaning.
+## Key features
 
-AI also has the potential to greatly influence finance and economics by analyzing market data, executing trades, identifying risks, and forecasting market trends. Ensuring these technologies align with societal values, such as fairness and privacy, is of utmost importance.
+### Easy Configuration
 
-Additionally, there's increasing concern about AI systems that can imitate or even surpass human intelligence, commonly known as AGI or Strong AI. The creation and implementation of such technologies must follow a well-defined ethical framework that safeguards humanity's well-being.
+- You can compose your configuration dynamically, enabling you to easily get the perfect configuration for each research.
+- You can override everything from the command line, which makes experimentation fast, and removes the need to maintain multiple similar configuration files.
+- With a help of the **eKonf** class, it is also easy to compose configurations in a jupyter notebook environment.
 
-Aristotle's concept of entelecheia can provide valuable guidance for AI, underlining the importance of realizing its full potential and achieving intended goals. As AI advances, we must address its ethical and societal consequences and strive for entelecheia, ensuring AI serves the greater good of humanity.
+### No Boilerplate
 
-## LectureBot for ἐντελέχεια.άι
+- eKorpkit lets you focus on the problem at hand instead of spending time on boilerplate code like command line flags, loading configuration files, logging etc.
 
-[![chrome-web-store-image]][chrome-web-store-url]
-[![version-image]][release-url]
-[![release-date-image]][release-url]
-[![license-image]][license-url]
+### Workflows
 
-<!-- Links: -->
+- A workflow is a configurable automated process that will run one or more jobs.
+- You can divide your research into several unit jobs (tasks), then combine those jobs into one workflow.
+- You can have multiple workflows, each of which can perform a different set of tasks.
 
-[chrome-web-store-image]: https://img.shields.io/chrome-web-store/v/lfgfgbomindbccgidgalhhndggddpagd
-[chrome-web-store-url]: https://chrome.google.com/webstore/detail/lecturebot-for-%E1%BC%90%CE%BD%CF%84%CE%B5%CE%BB%CE%AD%CF%87%CE%B5%CE%B9%CE%B1/lfgfgbomindbccgidgalhhndggddpagd
-[license-image]: https://img.shields.io/github/license/entelecheia/entelecheia-lecture-bot
-[license-url]: https://github.com/entelecheia/entelecheia-lecture-bot/blob/main/LICENSE
-[version-image]: https://img.shields.io/github/v/release/entelecheia/entelecheia-lecture-bot?sort=semver
-[release-date-image]: https://img.shields.io/github/release-date/entelecheia/entelecheia-lecture-bot
-[release-url]: https://github.com/entelecheia/entelecheia-lecture-bot/releases
-[repo-url]: https://github.com/entelecheia/entelecheia-lecture-bot
-[docs-url]: https://lecture-bot.entelecheia.ai
-[changelog]: https://github.com/entelecheia/entelecheia-lecture-bot/blob/main/docs/CHANGELOG.md
-[contributing guidelines]: https://github.com/entelecheia/entelecheia-lecture-bot/blob/main/CONTRIBUTING.md
+### Sharable and Reproducible
 
-<!-- Links: -->
+- With eKorpkit, you can easily share your datasets and models.
+- Sharing configs along with datasets and models makes every research reproducible.
+- You can share each unit jobs or an entire workflow.
 
-```{youtube} 0aAeqGBcN3Q
-:width: 100%
-```
+### Pluggable Architecture
 
-## Table of Contents
+- eKorpkit has a pluggable architecture, enabling it to combine with your own implementation.
+
+## Contents
 
 ```{tableofcontents}
 
 ```
-
-<!-- Links: -->
-
-[hyperfast python template]: https://github.com/entelecheia/hyperfast-python-template
-[license-image]: https://img.shields.io/github/license/entelecheia/lecture
-[license-url]: https://github.com/entelecheia/lecture/blob/main/LICENSE
-[version-image]: https://img.shields.io/github/v/release/entelecheia/lecture?sort=semver
-[release-date-image]: https://img.shields.io/github/release-date/entelecheia/lecture
-[release-url]: https://github.com/entelecheia/lecture/releases
-[conventional-commits-image]: https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white
-[jupyter-book-image]: https://jupyterbook.org/en/stable/_images/badge.svg
-[repo-url]: https://github.com/entelecheia/lecture
-[pypi-url]: https://pypi.org/project/lecture
-[docs-url]: https://lecture.entelecheia.ai
-[changelog]: https://github.com/entelecheia/lecture/blob/main/CHANGELOG.md
-[contributing guidelines]: https://github.com/entelecheia/lecture/blob/main/CONTRIBUTING.md
-
-<!-- Links: -->

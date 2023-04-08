@@ -1,7 +1,6 @@
 .resources
 .tmp
 commandStore.vscode.json
-.pre-commit-config.yaml
 *_tmp_*
 tmp
 package-lock.json
@@ -13,8 +12,8 @@ workspace/
 TODO
 core
 .ekorpkit/
-figs/
-/*.png
+# figs/
+# /*.png
 /pretrained
 
 # Byte-compiled / optimized / DLL files

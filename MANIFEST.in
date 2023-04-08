@@ -1,8 +1,0 @@
-include requirements.txt
-include requirements-extra.txt
-graft ekorpkit
-recursive-exclude * *.py[co]
-global-exclude __pycache__
-global-exclude .ekorpkit
-include versioneer.py
-include ekorpkit/_version.py
