@@ -10,32 +10,6 @@
 [![codecov-image]][codecov-url]
 [![license-image]][license-url]
 
-<!-- Links: -->
-
-[pypi-image]: https://badge.fury.io/py/ekorpkit.svg
-[pypi-url]: https://pypi.org/project/ekorpkit
-[license-image]: https://img.shields.io/github/license/entelecheia/ekorpkit
-[license-url]: https://github.com/entelecheia/ekorpkit/blob/main/LICENSE
-[version-image]: https://img.shields.io/github/v/release/entelecheia/ekorpkit?sort=semver
-[release-date-image]: https://img.shields.io/github/release-date/entelecheia/ekorpkit
-[release-url]: https://github.com/entelecheia/ekorpkit/releases
-[jupyter-book-image]: https://jupyterbook.org/en/stable/_images/badge.svg
-[jupyter book]: https://ekorpkit.entelecheia.ai
-[codeql-image]: https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml/badge.svg
-[codeql-url]: https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml
-[test-image]: https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml/badge.svg
-[test-url]: https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml
-[circleci-image]: https://circleci.com/gh/entelecheia/ekorpkit/tree/main.svg?style=shield
-[circleci-url]: https://circleci.com/gh/entelecheia/ekorpkit/tree/main
-[codecov-image]: https://codecov.io/gh/entelecheia/ekorpkit/branch/main/graph/badge.svg?token=8I4ORHRREL
-[codecov-url]: https://codecov.io/gh/entelecheia/ekorpkit
-[repo-url]: https://github.com/entelecheia/ekorpkit
-[docs-url]: https://ekorpkit.entelecheia.ai
-[changelog]: https://github.com/entelecheia/ekorpkit/blob/main/CHANGELOG.md
-[contributing guidelines]: https://github.com/entelecheia/ekorpkit/blob/main/CONTRIBUTING.md
-
-<!-- Links: -->
-
 eKorpkit provides a flexible interface for NLP and ML research pipelines such as extraction, transformation, tokenization, training, and visualization. Its powerful config composition is backed by [Hydra](https://hydra.cc/).
 
 ## Warning: This is a work in progress
@@ -133,3 +107,29 @@ Contributions are welcome! Please see the [contributing guidelines] for more inf
 
 - This project is released under the [MIT License][license-url].
 - Each corpus adheres to its own license policy. Please check the license of the corpus before using it!
+
+<!-- Links: -->
+
+[pypi-image]: https://badge.fury.io/py/ekorpkit.svg
+[pypi-url]: https://pypi.org/project/ekorpkit
+[license-image]: https://img.shields.io/github/license/entelecheia/ekorpkit
+[license-url]: https://github.com/entelecheia/ekorpkit/blob/main/LICENSE
+[version-image]: https://img.shields.io/github/v/release/entelecheia/ekorpkit?sort=semver
+[release-date-image]: https://img.shields.io/github/release-date/entelecheia/ekorpkit
+[release-url]: https://github.com/entelecheia/ekorpkit/releases
+[jupyter-book-image]: https://jupyterbook.org/en/stable/_images/badge.svg
+[jupyter book]: https://ekorpkit.entelecheia.ai
+[codeql-image]: https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml/badge.svg
+[codeql-url]: https://github.com/entelecheia/ekorpkit/actions/workflows/codeql-analysis.yml
+[test-image]: https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml/badge.svg
+[test-url]: https://github.com/entelecheia/ekorpkit/actions/workflows/test.yaml
+[circleci-image]: https://circleci.com/gh/entelecheia/ekorpkit/tree/main.svg?style=shield
+[circleci-url]: https://circleci.com/gh/entelecheia/ekorpkit/tree/main
+[codecov-image]: https://codecov.io/gh/entelecheia/ekorpkit/branch/main/graph/badge.svg?token=8I4ORHRREL
+[codecov-url]: https://codecov.io/gh/entelecheia/ekorpkit
+[repo-url]: https://github.com/entelecheia/ekorpkit
+[docs-url]: https://ekorpkit.entelecheia.ai
+[changelog]: https://github.com/entelecheia/ekorpkit/blob/main/CHANGELOG.md
+[contributing guidelines]: https://github.com/entelecheia/ekorpkit/blob/main/CONTRIBUTING.md
+
+<!-- Links: -->
