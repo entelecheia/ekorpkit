@@ -9,27 +9,6 @@
 [![research-img]][research-url]
 [![last-commit-img]][last-commit-url]
 
-[pypi-image]: https://badge.fury.io/py/ekorpkit.svg
-[pypi-url]: https://pypi.org/project/ekorpkit
-[license-image]: https://img.shields.io/github/license/entelecheia/ekorpkit
-[license-url]: https://github.com/entelecheia/ekorpkit/blob/main/LICENSE
-[version-image]: https://img.shields.io/github/v/release/entelecheia/ekorpkit?sort=semver
-[release-date-image]: https://img.shields.io/github/release-date/entelecheia/ekorpkit
-[release-url]: https://github.com/entelecheia/ekorpkit/releases
-
-[home-img]: https://img.shields.io/badge/home-entelecheia.me-blue
-[home-url]: https://ekorpkit.me
-[course-img]: https://img.shields.io/badge/course-entelecheia.ai-blue
-[course-url]: https://course.entelecheia.ai
-[research-img]: https://img.shields.io/badge/research-entelecheia.ai-blue
-[research-url]: https://research.entelecheia.ai
-[linkedin-img]: https://img.shields.io/badge/LinkedIn-blue?logo=linkedin
-[linkedin-url]: https://www.linkedin.com/in/entelecheia/
-[last-commit-img]: https://img.shields.io/github/last-commit/entelecheia/lecture?label=last%20update
-[last-commit-url]: https://github.com/entelecheia/lecture
-
-## Introduction
-
 eKorpkit is a powerful software tool that helps facilitate natural language processing (NLP) and machine learning (ML) research by providing a flexible interface for various stages of a research pipeline, such as data extraction, preprocessing, training, and visualization. The use of the [Hydra](https://hydra.cc/) and [pydantic](https://pydantic-docs.helpmanual.io) libraries for configuration management and validation makes it more flexible and efficient to use. It also designed to be user-friendly, extensible and shareable.
 
 As Artificial Intelligence (AI) becomes more advanced, it is essential to consider not just its technical capabilities but also its ethical and societal implications. In this context, the ancient Greek concept of entelecheia, coined by Aristotle, is particularly relevant. The term refers to the state of having achieved one's full potential or the realization of one's purpose. In the context of AI, entelecheia can be understood as the ability of these technologies to fully realize their potential and perform their intended functions in an optimal way.
@@ -69,3 +48,21 @@ eKorpkit is designed with the principles of entelecheia in mind. It allows NLP a
 ```{tableofcontents}
 
 ```
+
+[pypi-image]: https://badge.fury.io/py/ekorpkit.svg
+[pypi-url]: https://pypi.org/project/ekorpkit
+[license-image]: https://img.shields.io/github/license/entelecheia/ekorpkit
+[license-url]: https://github.com/entelecheia/ekorpkit/blob/main/LICENSE
+[version-image]: https://img.shields.io/github/v/release/entelecheia/ekorpkit?sort=semver
+[release-date-image]: https://img.shields.io/github/release-date/entelecheia/ekorpkit
+[release-url]: https://github.com/entelecheia/ekorpkit/releases
+[home-img]: https://img.shields.io/badge/home-entelecheia.me-blue
+[home-url]: https://ekorpkit.me
+[course-img]: https://img.shields.io/badge/course-entelecheia.ai-blue
+[course-url]: https://course.entelecheia.ai
+[research-img]: https://img.shields.io/badge/research-entelecheia.ai-blue
+[research-url]: https://research.entelecheia.ai
+[linkedin-img]: https://img.shields.io/badge/LinkedIn-blue?logo=linkedin
+[linkedin-url]: https://www.linkedin.com/in/entelecheia/
+[last-commit-img]: https://img.shields.io/github/last-commit/entelecheia/lecture?label=last%20update
+[last-commit-url]: https://github.com/entelecheia/lecture
