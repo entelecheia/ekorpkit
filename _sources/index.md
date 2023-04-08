@@ -18,7 +18,7 @@
 [release-url]: https://github.com/entelecheia/ekorpkit/releases
 
 [home-img]: https://img.shields.io/badge/home-entelecheia.me-blue
-[home-url]: https://ekorpkit.entelecheia.ai
+[home-url]: https://ekorpkit.me
 [course-img]: https://img.shields.io/badge/course-entelecheia.ai-blue
 [course-url]: https://course.entelecheia.ai
 [research-img]: https://img.shields.io/badge/research-entelecheia.ai-blue
