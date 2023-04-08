@@ -1,0 +1,1601 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>N-Gram model for ngram lexicon features &#8212; ekorpkit</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-examples.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.bundle.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-shadow.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-punk.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-borderless.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/micromodal.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../../_static/tabs.js"></script>
+    <script src="../../../_static/js/hoverxref.js"></script>
+    <script src="../../../_static/js/tooltipster.bundle.min.js"></script>
+    <script src="../../../_static/js/micromodal.min.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"tex": {"macros": {"N": "\\mathbb{N}", "floor": ["\\lfloor#1\\rfloor", 1], "bmat": ["\\left[\\begin{array}"], "emat": ["\\end{array}\\right]"]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://unpkg.com/mermaid@9.4.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/models/ngram/ngram_for_lexicons';</script>
+    <link rel="canonical" href="https://ekorpkit.entelecheia.ai/tutorials/models/ngram/ngram_for_lexicons.html" />
+    <link rel="shortcut icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="N-Gram model for unigram lexicon features" href="ngram_for_words.html" />
+    <link rel="prev" title="N-Grams" href="ngram.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">ekorpkit</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Introduction
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Basics</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/index.html">Getting started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/usage.html">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/features/index.html">Key features</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/easy_config.html">Easy Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/no_boiler.html">No Boilerplate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/workflows.html">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/share.html">Sharable and Reproducible</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/plug.html">Pluggable Architece</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../config/index.html">Configuring ekorpkit</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../config/eKonf.html">Using eKonf class</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../datasets/index.html">Datasets</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/corpus.html">Build and Load Corpora</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/dataset.html">Build and Load Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/pipeline.html">Corpus task pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../automl/index.html">Auto ML</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../embeddings/index.html">Word Embeddings</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../embeddings/word2vec_basics.html">Word2Vec Basics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../embeddings/eval_vectors.html">Evaluate pretrained embeddings</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">N-Grams</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ngram.html">N-Grams</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">N-Gram model for ngram lexicon features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ngram_for_words.html">N-Gram model for unigram lexicon features</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../sentiment/index.html">Sentiment Analyers</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/lbsa_en.html">Lexicon-based Sentiment Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/financial_phrasebank_lm.html">Evaluate LM with financial phrasebank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/sentiment.html">LM Dictionary vs. finbert vs. T5</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../transformers/index.html">Transformers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../pipelines/index.html">Pipelines</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pipelines/pipeline.html">Instantiating pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../preprocessors/index.html">Preprocessors</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/normalizer/index.html">Normalizers</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/normalizer/normalizer.html">Normalizers</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/segmenter/index.html">Segmenters</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/segmenter/segmenter.html">Segmenters</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/tokenizer/index.html">Tokenizers</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/tokenizer/mecab.html">Mecab Tokenizer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../visualizers/index.html">Visualizers</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../visualizers/plot.html">Plots</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow/index.html">Workflows</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../datasets/ekorpkot_corpus.html">The eKorpkit Corpus</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://entelecheia.me">entelecheia.me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/index.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/cite.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-launch-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Launch interactive content">
+    <i class="fas fa-rocket"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://colab.research.google.com/github/entelecheia/ekorpkit/blob/main/book/tutorials/models/ngram/ngram_for_lexicons.ipynb" target="_blank"
+   class="btn btn-sm dropdown-item"
+   title="Launch onColab"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  
+    <img src="../../../_static/images/logo_colab.png">
+  </span>
+<span class="btn__text-container">Colab</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="initThebeSBT()"
+  class="btn btn-sm btn-launch-thebe dropdown-item"
+  title="Launch Thebe"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-play"></i>
+  </span>
+<span class="btn__text-container">Live Code</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit/issues/new?title=Issue%20on%20page%20%2Ftutorials/models/ngram/ngram_for_lexicons.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/tutorials/models/ngram/ngram_for_lexicons.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>N-Gram model for ngram lexicon features</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-a-ngram-model-with-mpko-lexicon-scores">Load a ngram model with MPKO lexicon scores</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="n-gram-model-for-ngram-lexicon-features">
+<h1>N-Gram model for ngram lexicon features<a class="headerlink" href="#n-gram-model-for-ngram-lexicon-features" title="Permalink to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ekorpkit</span> <span class="kn">import</span> <span class="n">eKonf</span>
+
+<span class="n">eKonf</span><span class="o">.</span><span class="n">setLogger</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;version:&quot;</span><span class="p">,</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;is notebook?&quot;</span><span class="p">,</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">is_notebook</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;is colab?&quot;</span><span class="p">,</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">is_colab</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;evironment varialbles:&quot;</span><span class="p">)</span>
+<span class="n">eKonf</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">eKonf</span><span class="o">.</span><span class="n">env</span><span class="p">()</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.base:IPython version: (6, 9, 0), client: jupyter_client
+INFO:ekorpkit.base:Google Colab not detected.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>version: 0.1.35+1.gbeed9e1
+is notebook? True
+is colab? False
+evironment varialbles:
+{&#39;CUDA_DEVICE_ORDER&#39;: None,
+ &#39;CUDA_VISIBLE_DEVICES&#39;: None,
+ &#39;EKORPKIT_CONFIG_DIR&#39;: &#39;/workspace/projects/ekorpkit-book/config&#39;,
+ &#39;EKORPKIT_DATA_DIR&#39;: None,
+ &#39;EKORPKIT_LOG_LEVEL&#39;: &#39;WARNING&#39;,
+ &#39;EKORPKIT_PROJECT&#39;: &#39;ekorpkit-book&#39;,
+ &#39;EKORPKIT_WORKSPACE_ROOT&#39;: &#39;/workspace&#39;,
+ &#39;KMP_DUPLICATE_LIB_OK&#39;: &#39;TRUE&#39;,
+ &#39;NUM_WORKERS&#39;: 230}
+</pre></div>
+</div>
+</div>
+</div>
+<section id="load-a-ngram-model-with-mpko-lexicon-scores">
+<h2>Load a ngram model with MPKO lexicon scores<a class="headerlink" href="#load-a-ngram-model-with-mpko-lexicon-scores" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ngram_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;model/ngram=mpko_lex&quot;</span><span class="p">)</span>
+<span class="n">ngram_cfg</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">ngram_cfg</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">load</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">ngram</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">ngram_cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.base:instantiating ekorpkit.models.ngram.ngram.Ngrams...
+INFO:ekorpkit.preprocessors.tokenizer:Initializing mecab with {&#39;userdic_path&#39;: None, &#39;backend&#39;: &#39;mecab-python3&#39;, &#39;verbose&#39;: False}...
+INFO:ekorpkit.preprocessors.tokenizer:instantiating ekorpkit.preprocessors.stopwords.Stopwords...
+INFO:ekorpkit.base:Calling load_candidates
+INFO:ekorpkit.io.file:Processing [1] files from [&#39;/workspace/projects/ekorpkit/ekorpkit/resources/lexicons/mpko/mp_polarity_lexicon_lex.parquet&#39;]
+INFO:ekorpkit.io.file:Loading 1 dataframes from [&#39;/workspace/projects/ekorpkit/ekorpkit/resources/lexicons/mpko/mp_polarity_lexicon_lex.parquet&#39;]
+INFO:ekorpkit.io.file:Loading data from /workspace/projects/ekorpkit/ekorpkit/resources/lexicons/mpko/mp_polarity_lexicon_lex.parquet
+INFO:ekorpkit.io.file: &gt;&gt; elapsed time to load data: 0:00:00.035776
+INFO:ekorpkit.models.ngram.ngram:loaded 23956 candidates
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of candidates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ngram</span><span class="o">.</span><span class="n">candidates</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Number of candidates: 23956
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ngram</span><span class="o">.</span><span class="n">export_ngrams</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[((&#39;투기/NNG&#39;, &#39;억제/NNG&#39;),
+  score(word=&#39;투기/NNG;억제/NNG&#39;, label=1, polarity=0.9984224740344032, intensity=76.89998054169148, pos_score=842.336810100104, neg_score=10.95366740233997)),
+ ((&#39;금리/NNG&#39;, &#39;상승/NNG&#39;),
+  score(word=&#39;금리/NNG;상승/NNG&#39;, label=1, polarity=0.9976489029338528, intensity=74.78067419154141, pos_score=852.2582592674567, neg_score=11.396771538653194)),
+ ((&#39;채권/NNG&#39;, &#39;가격/NNG&#39;, &#39;하락/NNG&#39;),
+  score(word=&#39;채권/NNG;가격/NNG;하락/NNG&#39;, label=1, polarity=0.9965068843156996, intensity=71.85459337496019, pos_score=830.1285320910899, neg_score=11.552894437231236)),
+ ((&#39;인플레이션/NNG&#39;, &#39;압력/NNG&#39;),
+  score(word=&#39;인플레이션/NNG;압력/NNG&#39;, label=1, polarity=0.9962771197986816, intensity=71.29298491650549, pos_score=851.9671447928356, neg_score=11.950224075911729)),
+ ((&#39;물가/NNG&#39;, &#39;상승/NNG&#39;),
+  score(word=&#39;물가/NNG;상승/NNG&#39;, label=1, polarity=0.9892951767944276, intensity=57.572641724969934, pos_score=840.8393220118454, neg_score=14.604841758497308)),
+ ((&#39;부동산/NNG&#39;, &#39;가격/NNG&#39;, &#39;상승/NNG&#39;),
+  score(word=&#39;부동산/NNG;가격/NNG;상승/NNG&#39;, label=1, polarity=0.9892690707366624, intensity=57.53110616205035, pos_score=850.132566974034, neg_score=14.776920238234757)),
+ ((&#39;요금/NNG&#39;, &#39;인상/NNG&#39;),
+  score(word=&#39;요금/NNG;인상/NNG&#39;, label=1, polarity=0.9226025183563592, intensity=19.822968765773577, pos_score=845.4185241017657, neg_score=42.64843142776217)),
+ ((&#39;상방/NNG&#39;, &#39;압력/NNG&#39;),
+  score(word=&#39;상방/NNG;압력/NNG&#39;, label=1, polarity=0.9205443517087604, intensity=19.41688981090808, pos_score=829.3004950427758, neg_score=42.71026426574706))]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="s2">&quot;투기를 억제하기 위해 금리를 인상해야 한다.&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">ngram</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;투기/NNG&#39;, &#39;억제/NNG&#39;, &#39;하/XSV&#39;, &#39;금리/NNG&#39;, &#39;인상/NNG&#39;, &#39;해야/XSV&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tokens</span> <span class="o">=</span> <span class="n">ngram</span><span class="o">.</span><span class="n">ngramize_sentence</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;투기/NNG&#39;, &#39;억제/NNG;금리/NNG;인상/NNG&#39;, &#39;하/XSV&#39;, &#39;해야/XSV&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corpus_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;corpus&quot;</span><span class="p">)</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;bok_minutes&quot;</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="s2">&quot;/workspace/data/datasets/corpus/ekorpkit&quot;</span>
+<span class="n">corpus</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">corpus_cfg</span><span class="p">)</span>
+<span class="n">corpus</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.datasets.base:Loaded info file: /workspace/data/datasets/corpus/ekorpkit/bok_minutes/info-bok_minutes.yaml
+INFO:ekorpkit.io.file:Processing [1] files from [&#39;bok_minutes-train.parquet&#39;]
+INFO:ekorpkit.io.file:Loading 1 dataframes from [&#39;/workspace/data/datasets/corpus/ekorpkit/bok_minutes/bok_minutes-train.parquet&#39;]
+INFO:ekorpkit.io.file:Loading data from /workspace/data/datasets/corpus/ekorpkit/bok_minutes/bok_minutes-train.parquet
+INFO:ekorpkit.info.column:index: index, index of data: None, columns: [&#39;id&#39;, &#39;text&#39;], id: [&#39;id&#39;]
+INFO:ekorpkit.info.column:Adding id [split] to [&#39;id&#39;]
+INFO:ekorpkit.info.column:Added id [split], now [&#39;id&#39;, &#39;split&#39;]
+INFO:ekorpkit.info.column:Added a column [split] with value [train]
+INFO:ekorpkit.io.file:Processing [1] files from [&#39;meta-bok_minutes-train.parquet&#39;]
+INFO:ekorpkit.io.file:Loading 1 dataframes from [&#39;/workspace/data/datasets/corpus/ekorpkit/bok_minutes/meta-bok_minutes-train.parquet&#39;]
+INFO:ekorpkit.io.file:Loading data from /workspace/data/datasets/corpus/ekorpkit/bok_minutes/meta-bok_minutes-train.parquet
+INFO:ekorpkit.info.column:Added a column [split] with value [train]
+INFO:ekorpkit.info.column:No timestamp key found
+INFO:ekorpkit.io.file:Concatenating 1 dataframes
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>text</th>
+      <th>split</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td>Economic Situation\n일부 위원은 이번 전망에서 올해 소비자물가 상승...</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <th>182</th>
+      <td>182</td>
+      <td>Economic Situation\n일부 위원은 감염병 재확산에도 불구하고 성장경로...</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <th>183</th>
+      <td>183</td>
+      <td>Economic Situation\n일부 위원은 이번 전망내용을 보면 성장은 하방리...</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <th>184</th>
+      <td>184</td>
+      <td>Economic Situation\n일부 위원은 우크라이나 사태, 공급망 차질, 중...</td>
+      <td>train</td>
+    </tr>
+    <tr>
+      <th>185</th>
+      <td>185</td>
+      <td>Economic Situation\n일부 위원은 향후 국내외 경제흐름이 인플레이션에...</td>
+      <td>train</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ngram</span><span class="o">.</span><span class="n">_ngram</span><span class="o">.</span><span class="n">max_window</span> <span class="o">=</span> <span class="mi">7</span>
+<span class="n">ngram</span><span class="o">.</span><span class="n">_ngram</span><span class="o">.</span><span class="n">max_skip</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">_ngrams</span> <span class="o">=</span> <span class="n">ngram</span><span class="o">.</span><span class="n">find_ngrams</span><span class="p">(</span>
+    <span class="n">corpus</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ignore_scores</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strip_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_surfaces_to_score</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.io.file:Concatenating 1 dataframes
+INFO:ekorpkit.models.ngram.ngram:found 99 ngrams
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input above-output-prompt docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_ngrams</span>
+</pre></div>
+</div>
+</div>
+<details class="hide below-input">
+<summary aria-label="Toggle hidden content">
+<span class="collapsed">Show code cell output</span>
+<span class="expanded">Hide code cell output</span>
+</summary>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;경제/NNG;성장/NNG&#39;: {&#39;polarity&#39;: 0.5204387993211343, &#39;count&#39;: 1},
+ &#39;근원/NNG;인플레이션/NNG;상승/NNG&#39;: {&#39;polarity&#39;: 0.2543270656612199, &#39;count&#39;: 1},
+ &#39;소매/NNG;판매/NNG;부진/NNG&#39;: {&#39;polarity&#39;: -0.0916732941026204, &#39;count&#39;: 1},
+ &#39;하락/NNG&#39;: {&#39;polarity&#39;: -0.9974931628848912, &#39;count&#39;: 5},
+ &#39;가격/NNG;상승/NNG&#39;: {&#39;polarity&#39;: 0.0582057939293445, &#39;count&#39;: 1},
+ &#39;높/VA;경제/NNG;성장/NNG&#39;: {&#39;polarity&#39;: 0.6785215318580916, &#39;count&#39;: 2},
+ &#39;경제/NNG;낮/VA&#39;: {&#39;polarity&#39;: 0.1811089746302118, &#39;count&#39;: 1},
+ &#39;투자/NNG;축소/NNG&#39;: {&#39;polarity&#39;: -0.0091250155342883, &#39;count&#39;: 1},
+ &#39;실적/NNG;예상/NNG;하회/NNG&#39;: {&#39;polarity&#39;: -0.0633039043188929, &#39;count&#39;: 1},
+ &#39;투자/NNG;수요/NNG;부진/NNG&#39;: {&#39;polarity&#39;: -0.0567764807675792, &#39;count&#39;: 1},
+ &#39;실망/NNG&#39;: {&#39;polarity&#39;: -0.0537436125235228, &#39;count&#39;: 1},
+ &#39;고용/NNG;악화/NNG&#39;: {&#39;polarity&#39;: -0.624421305209124, &#39;count&#39;: 1},
+ &#39;실업/NNG;증가/NNG&#39;: {&#39;polarity&#39;: -0.0971255742845687, &#39;count&#39;: 2},
+ &#39;악화/NNG;경제/NNG;성장/NNG&#39;: {&#39;polarity&#39;: -0.4967007039179579, &#39;count&#39;: 1},
+ &#39;예상/NNG;낮/VA&#39;: {&#39;polarity&#39;: -0.5326471339885891, &#39;count&#39;: 1},
+ &#39;성장/NNG;전망/NNG;낙관/NNG&#39;: {&#39;polarity&#39;: 0.5580236567891682, &#39;count&#39;: 1},
+ &#39;생산/NNG;예상/NNG;하회/NNG&#39;: {&#39;polarity&#39;: -0.0150834451089284, &#39;count&#39;: 1},
+ &#39;성장/NNG;효과/NNG&#39;: {&#39;polarity&#39;: 0.5699464628899542, &#39;count&#39;: 1},
+ &#39;전망/NNG;낙관/NNG&#39;: {&#39;polarity&#39;: 0.2062637762448329, &#39;count&#39;: 1},
+ &#39;낮/VA;효과/NNG&#39;: {&#39;polarity&#39;: -0.5461373569685195, &#39;count&#39;: 1},
+ &#39;예상/NNG;좋/VA&#39;: {&#39;polarity&#39;: -0.0557501757063274, &#39;count&#39;: 1},
+ &#39;수출/NNG;호조/NNG&#39;: {&#39;polarity&#39;: 0.046887575975538, &#39;count&#39;: 2},
+ &#39;비관/NNG&#39;: {&#39;polarity&#39;: -0.8859526730258452, &#39;count&#39;: 1},
+ &#39;부진/NNG;둔화/NNG&#39;: {&#39;polarity&#39;: -0.0912906274268463, &#39;count&#39;: 1},
+ &#39;우려/NNG&#39;: {&#39;polarity&#39;: -0.1406548563507243, &#39;count&#39;: 6},
+ &#39;예상/NNG;저조/NNG&#39;: {&#39;polarity&#39;: -0.1340445578640994, &#39;count&#39;: 1},
+ &#39;예상/NNG;수출/NNG;호조/NNG&#39;: {&#39;polarity&#39;: 0.0810811306501646, &#39;count&#39;: 1},
+ &#39;투자/NNG;부진/NNG&#39;: {&#39;polarity&#39;: -0.0358596445136938, &#39;count&#39;: 1},
+ &#39;마이너스/NNG&#39;: {&#39;polarity&#39;: -0.1030866691840481, &#39;count&#39;: 1},
+ &#39;플러스/NNG&#39;: {&#39;polarity&#39;: 0.0729897565573511, &#39;count&#39;: 1},
+ &#39;경상/NNG;수지/NNG;흑자/NNG;축소/NNG&#39;: {&#39;polarity&#39;: 0.6100019195528328, &#39;count&#39;: 1},
+ &#39;절상/NNG;높/VA&#39;: {&#39;polarity&#39;: 0.2064970496728622, &#39;count&#39;: 1},
+ &#39;절상/NNG&#39;: {&#39;polarity&#39;: 0.2248293260757415, &#39;count&#39;: 2},
+ &#39;원화/NNG;절상/NNG&#39;: {&#39;polarity&#39;: 0.2283740928971028, &#39;count&#39;: 4},
+ &#39;경상/NNG;수지/NNG;악화/NNG&#39;: {&#39;polarity&#39;: 0.4781920955534715, &#39;count&#39;: 1},
+ &#39;경제/NNG;호조/NNG&#39;: {&#39;polarity&#39;: 0.0116789494143074, &#39;count&#39;: 1},
+ &#39;경제/NNG;금리/NNG;인상/NNG&#39;: {&#39;polarity&#39;: 0.5658462544072831, &#39;count&#39;: 1},
+ &#39;절하/NNG;압력/NNG&#39;: {&#39;polarity&#39;: 0.155950847361199, &#39;count&#39;: 1},
+ &#39;억제/NNG&#39;: {&#39;polarity&#39;: 0.326535478405863, &#39;count&#39;: 1},
+ &#39;전망/NNG;상방/NNG;위험/NNG&#39;: {&#39;polarity&#39;: 0.0312150518237321, &#39;count&#39;: 1},
+ &#39;하방/NNG&#39;: {&#39;polarity&#39;: -0.4744352510470996, &#39;count&#39;: 1},
+ &#39;위험/NNG&#39;: {&#39;polarity&#39;: -0.0392922310459082, &#39;count&#39;: 1},
+ &#39;부담/NNG&#39;: {&#39;polarity&#39;: 0.1193824753107514, &#39;count&#39;: 2},
+ &#39;채산성/NNG;악화/NNG&#39;: {&#39;polarity&#39;: -0.0157042395284593, &#39;count&#39;: 1},
+ &#39;흡수/NNG&#39;: {&#39;polarity&#39;: 0.1052117397374828, &#39;count&#39;: 1},
+ &#39;유가상승/NNG&#39;: {&#39;polarity&#39;: 0.1500311576257382, &#39;count&#39;: 1},
+ &#39;우려/NNG;장기/NNG;금리/NNG;상승/NNG&#39;: {&#39;polarity&#39;: 0.0134427632446614, &#39;count&#39;: 1},
+ &#39;수요/NNG;우려/NNG&#39;: {&#39;polarity&#39;: -0.0918677556352442, &#39;count&#39;: 1},
+ &#39;전혀/MAG;배제/NNG;없/VA&#39;: {&#39;polarity&#39;: -0.1933336885173837, &#39;count&#39;: 1},
+ &#39;부동산/NNG;완화/NNG&#39;: {&#39;polarity&#39;: 0.0690010084274728, &#39;count&#39;: 1},
+ &#39;하락/NNG;효과/NNG&#39;: {&#39;polarity&#39;: -0.111084426490321, &#39;count&#39;: 1},
+ &#39;성장/NNG&#39;: {&#39;polarity&#39;: 0.984967006613283, &#39;count&#39;: 2},
+ &#39;콜/NNG;금리/NNG;하회/NNG&#39;: {&#39;polarity&#39;: -0.0961084710137678, &#39;count&#39;: 2},
+ &#39;금리/NNG;상승/NNG;압력/NNG&#39;: {&#39;polarity&#39;: 0.6004337207083972, &#39;count&#39;: 1},
+ &#39;예상/NNG;하락/NNG&#39;: {&#39;polarity&#39;: -0.0506031051653062, &#39;count&#39;: 1},
+ &#39;경기/NNG;회복/NNG;약화/NNG&#39;: {&#39;polarity&#39;: -0.0824761286136887, &#39;count&#39;: 1},
+ &#39;금리/NNG;상승/NNG&#39;: {&#39;polarity&#39;: 0.9976489029338528, &#39;count&#39;: 2},
+ &#39;통화/NNG;안정/NNG&#39;: {&#39;polarity&#39;: 0.1292155158174954, &#39;count&#39;: 2},
+ &#39;신용/NNG;위험/NNG&#39;: {&#39;polarity&#39;: -0.0726718274475546, &#39;count&#39;: 1},
+ &#39;개선/NNG;감소/NNG&#39;: {&#39;polarity&#39;: -0.3814854010419736, &#39;count&#39;: 1},
+ &#39;통화/NNG;완화/NNG&#39;: {&#39;polarity&#39;: -0.4727497709698944, &#39;count&#39;: 1},
+ &#39;정책/NNG;금리/NNG;인상/NNG&#39;: {&#39;polarity&#39;: 0.5521129348341561, &#39;count&#39;: 1},
+ &#39;지표/NNG;개선/NNG&#39;: {&#39;polarity&#39;: -0.0035818427597022, &#39;count&#39;: 1},
+ &#39;실물/NNG;지표/NNG;부진/NNG&#39;: {&#39;polarity&#39;: -0.2066858972925152, &#39;count&#39;: 1},
+ &#39;상방/NNG&#39;: {&#39;polarity&#39;: 0.5519829582971086, &#39;count&#39;: 2},
+ &#39;위험/NNG;경기/NNG;회복/NNG&#39;: {&#39;polarity&#39;: -0.0385253826251357, &#39;count&#39;: 1},
+ &#39;악화/NNG;경기/NNG;회복/NNG&#39;: {&#39;polarity&#39;: -0.617631638579763, &#39;count&#39;: 1},
+ &#39;수출/NNG;안정/NNG&#39;: {&#39;polarity&#39;: 0.0440460547178473, &#39;count&#39;: 1},
+ &#39;저조/NNG&#39;: {&#39;polarity&#39;: 0.0177873650568067, &#39;count&#39;: 1},
+ &#39;선행/NNG;지표/NNG;부진/NNG&#39;: {&#39;polarity&#39;: -0.0199889873426576, &#39;count&#39;: 1},
+ &#39;내수/NNG;부진/NNG&#39;: {&#39;polarity&#39;: -0.1709311969620205, &#39;count&#39;: 2},
+ &#39;기업/NNG;경기/NNG;회복/NNG&#39;: {&#39;polarity&#39;: 0.006634211288978, &#39;count&#39;: 1},
+ &#39;원가/NNG;상승/NNG;부담/NNG&#39;: {&#39;polarity&#39;: 0.1232732711368559, &#39;count&#39;: 1},
+ &#39;금리/NNG;축소/NNG&#39;: {&#39;polarity&#39;: -0.5971977095938265, &#39;count&#39;: 1},
+ &#39;감속/NNG&#39;: {&#39;polarity&#39;: 0.0080444727468427, &#39;count&#39;: 1},
+ &#39;실적/NNG;좋/VA&#39;: {&#39;polarity&#39;: -0.0068061537817557, &#39;count&#39;: 1},
+ &#39;실물/NNG;경제/NNG;회복/NNG&#39;: {&#39;polarity&#39;: -0.0766779037357372, &#39;count&#39;: 3},
+ &#39;예상/NNG;위험/NNG&#39;: {&#39;polarity&#39;: -0.0668915359223978, &#39;count&#39;: 1},
+ &#39;경기/NNG;회복/NNG&#39;: {&#39;polarity&#39;: -0.0735204089304163, &#39;count&#39;: 1},
+ &#39;원자재/NNG;가격/NNG;상승/NNG;물가/NNG;상승/NNG&#39;: {&#39;polarity&#39;: 0.2154711102466537,
+  &#39;count&#39;: 1},
+ &#39;완화/NNG&#39;: {&#39;polarity&#39;: -0.9865071267692084, &#39;count&#39;: 3},
+ &#39;임금/NNG;상승/NNG&#39;: {&#39;polarity&#39;: 0.251653255581853, &#39;count&#39;: 1},
+ &#39;호황/NNG&#39;: {&#39;polarity&#39;: -0.5670415201898105, &#39;count&#39;: 1},
+ &#39;물가/NNG;상승/NNG;압력/NNG;부담/NNG&#39;: {&#39;polarity&#39;: 0.3241736252714733, &#39;count&#39;: 1},
+ &#39;긴축/NNG&#39;: {&#39;polarity&#39;: 0.9816490650480136, &#39;count&#39;: 1},
+ &#39;부작용/NNG&#39;: {&#39;polarity&#39;: 0.1239555469103132, &#39;count&#39;: 1},
+ &#39;우려/NNG;없/VA&#39;: {&#39;polarity&#39;: -0.0854520733277373, &#39;count&#39;: 1},
+ &#39;회복/NNG;부진/NNG&#39;: {&#39;polarity&#39;: -0.589052894650519, &#39;count&#39;: 1},
+ &#39;물가/NNG;상승/NNG;압력/NNG;증대/NNG&#39;: {&#39;polarity&#39;: 0.3357430815609288, &#39;count&#39;: 1},
+ &#39;경제/NNG;안정/NNG&#39;: {&#39;polarity&#39;: 0.2199968495401089, &#39;count&#39;: 1},
+ &#39;당분간/MAG;금융/NNG;완화/NNG&#39;: {&#39;polarity&#39;: 0.043402847939571, &#39;count&#39;: 1},
+ &#39;물가/NNG;불안/NNG&#39;: {&#39;polarity&#39;: 0.2565098460919433, &#39;count&#39;: 1},
+ &#39;인플레이션/NNG;우려/NNG;긴축/NNG&#39;: {&#39;polarity&#39;: 0.6437711822554745, &#39;count&#39;: 1},
+ &#39;노동/NNG;비용/NNG;상승/NNG&#39;: {&#39;polarity&#39;: 0.1822378047658608, &#39;count&#39;: 1},
+ &#39;상방/NNG;위험/NNG;높/VA&#39;: {&#39;polarity&#39;: 0.0880202683177656, &#39;count&#39;: 1},
+ &#39;경제/NNG;경기/NNG;부진/NNG&#39;: {&#39;polarity&#39;: -0.2716333349372742, &#39;count&#39;: 1},
+ &#39;위축/NNG&#39;: {&#39;polarity&#39;: -0.9964422143950517, &#39;count&#39;: 1},
+ &#39;금리/NNG;인상/NNG;강세/NNG&#39;: {&#39;polarity&#39;: 0.0129134781385689, &#39;count&#39;: 1},
+ &#39;금리/NNG;인상/NNG&#39;: {&#39;polarity&#39;: 0.6994401729370587, &#39;count&#39;: 1}}
+</pre></div>
+</div>
+</div>
+</details>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_features</span> <span class="o">=</span> <span class="n">ngram</span><span class="o">.</span><span class="n">find_features</span><span class="p">(</span><span class="n">corpus</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.io.file:Concatenating 1 dataframes
+INFO:ekorpkit.models.ngram.ngram:found 99 ngrams
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input above-output-prompt docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_features</span>
+</pre></div>
+</div>
+</div>
+<details class="hide below-input">
+<summary aria-label="Toggle hidden content">
+<span class="collapsed">Show code cell output</span>
+<span class="expanded">Hide code cell output</span>
+</summary>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;경제/NNG;성장/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.5204387993211343,
+  &#39;intensity&#39;: 3.261446146626619,
+  &#39;pos_score&#39;: 53.81467139538686,
+  &#39;neg_score&#39;: 16.50024834874201,
+  &#39;count&#39;: 1},
+ &#39;근원/NNG;인플레이션/NNG;상승/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.2543270656612199,
+  &#39;intensity&#39;: 1.7920432753856634,
+  &#39;pos_score&#39;: 21.20702197813539,
+  &#39;neg_score&#39;: 11.8339898759261,
+  &#39;count&#39;: 1},
+ &#39;소매/NNG;판매/NNG;부진/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0916732941026204,
+  &#39;intensity&#39;: 1.3059461234579393,
+  &#39;pos_score&#39;: 9.189591593573098,
+  &#39;neg_score&#39;: 12.001111517788454,
+  &#39;count&#39;: 1},
+ &#39;하락/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.9974931628848912,
+  &#39;intensity&#39;: 72.9138425756711,
+  &#39;pos_score&#39;: 11.736812558265145,
+  &#39;neg_score&#39;: 855.7761032135043,
+  &#39;count&#39;: 5},
+ &#39;가격/NNG;상승/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0582057939293445,
+  &#39;intensity&#39;: 1.2262908563119794,
+  &#39;pos_score&#39;: 48.02782791432222,
+  &#39;neg_score&#39;: 39.16511948785461,
+  &#39;count&#39;: 1},
+ &#39;높/VA;경제/NNG;성장/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.6785215318580916,
+  &#39;intensity&#39;: 5.199694562432672,
+  &#39;pos_score&#39;: 73.22699602618275,
+  &#39;neg_score&#39;: 14.082941824168143,
+  &#39;count&#39;: 2},
+ &#39;경제/NNG;낮/VA&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.1811089746302118,
+  &#39;intensity&#39;: 1.5501092214953294,
+  &#39;pos_score&#39;: 21.669653563484243,
+  &#39;neg_score&#39;: 13.97943658613964,
+  &#39;count&#39;: 1},
+ &#39;투자/NNG;축소/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0091250155342883,
+  &#39;intensity&#39;: 1.1188750598079322,
+  &#39;pos_score&#39;: 10.458357442455542,
+  &#39;neg_score&#39;: 11.701595308920178,
+  &#39;count&#39;: 1},
+ &#39;실적/NNG;예상/NNG;하회/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0633039043188929,
+  &#39;intensity&#39;: 1.2380396748705451,
+  &#39;pos_score&#39;: 9.713568012585942,
+  &#39;neg_score&#39;: 12.025782584134824,
+  &#39;count&#39;: 1},
+ &#39;투자/NNG;수요/NNG;부진/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0567764807675792,
+  &#39;intensity&#39;: 1.2229774652283765,
+  &#39;pos_score&#39;: 10.392762753906064,
+  &#39;neg_score&#39;: 12.71011464949192,
+  &#39;count&#39;: 1},
+ &#39;실망/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0537436125235228,
+  &#39;intensity&#39;: 1.216047806723007,
+  &#39;pos_score&#39;: 10.346163668657969,
+  &#39;neg_score&#39;: 12.581429637268782,
+  &#39;count&#39;: 1},
+ &#39;고용/NNG;악화/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.624421305209124,
+  &#39;intensity&#39;: 4.3600524860915,
+  &#39;pos_score&#39;: 10.127504081094196,
+  &#39;neg_score&#39;: 44.15644934667655,
+  &#39;count&#39;: 1},
+ &#39;실업/NNG;증가/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0971255742845687,
+  &#39;intensity&#39;: 1.3194718505392606,
+  &#39;pos_score&#39;: 10.05414441207916,
+  &#39;neg_score&#39;: 13.266160532995055,
+  &#39;count&#39;: 2},
+ &#39;악화/NNG;경제/NNG;성장/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.4967007039179579,
+  &#39;intensity&#39;: 3.0682824682654,
+  &#39;pos_score&#39;: 15.946938520568368,
+  &#39;neg_score&#39;: 48.92971188516611,
+  &#39;count&#39;: 1},
+ &#39;예상/NNG;낮/VA&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.5326471339885891,
+  &#39;intensity&#39;: 3.364305915031035,
+  &#39;pos_score&#39;: 11.779731291822346,
+  &#39;neg_score&#39;: 39.63061966255409,
+  &#39;count&#39;: 1},
+ &#39;성장/NNG;전망/NNG;낙관/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.5580236567891682,
+  &#39;intensity&#39;: 3.6036372579674505,
+  &#39;pos_score&#39;: 61.81830128426434,
+  &#39;neg_score&#39;: 17.154418399795194,
+  &#39;count&#39;: 1},
+ &#39;생산/NNG;예상/NNG;하회/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0150834451089284,
+  &#39;intensity&#39;: 1.1313557088355493,
+  &#39;pos_score&#39;: 9.981679719918851,
+  &#39;neg_score&#39;: 11.292830334898222,
+  &#39;count&#39;: 1},
+ &#39;성장/NNG;효과/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.5699464628899542,
+  &#39;intensity&#39;: 3.723970125561121,
+  &#39;pos_score&#39;: 49.41961036762734,
+  &#39;neg_score&#39;: 13.270678523550425,
+  &#39;count&#39;: 1},
+ &#39;전망/NNG;낙관/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.2062637762448329,
+  &#39;intensity&#39;: 1.6283551214550651,
+  &#39;pos_score&#39;: 87.74148702047394,
+  &#39;neg_score&#39;: 53.88350849541341,
+  &#39;count&#39;: 1},
+ &#39;낮/VA;효과/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.5461373569685195,
+  &#39;intensity&#39;: 3.486829016468275,
+  &#39;pos_score&#39;: 12.007542432500443,
+  &#39;neg_score&#39;: 41.868247370116606,
+  &#39;count&#39;: 1},
+ &#39;예상/NNG;좋/VA&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0557501757063274,
+  &#39;intensity&#39;: 1.2206276635151885,
+  &#39;pos_score&#39;: 10.829911833706351,
+  &#39;neg_score&#39;: 13.219289977652473,
+  &#39;count&#39;: 1},
+ &#39;수출/NNG;호조/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.046887575975538,
+  &#39;intensity&#39;: 1.2005578436143531,
+  &#39;pos_score&#39;: 14.679689176358789,
+  &#39;neg_score&#39;: 12.227390170693218,
+  &#39;count&#39;: 2},
+ &#39;비관/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.8859526730258452,
+  &#39;intensity&#39;: 14.32253807263303,
+  &#39;pos_score&#39;: 58.77991551102222,
+  &#39;neg_score&#39;: 841.8775778127684,
+  &#39;count&#39;: 1},
+ &#39;부진/NNG;둔화/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0912906274268463,
+  &#39;intensity&#39;: 1.3050027523052066,
+  &#39;pos_score&#39;: 11.20825418213661,
+  &#39;neg_score&#39;: 14.626802556224618,
+  &#39;count&#39;: 1},
+ &#39;우려/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.1406548563507243,
+  &#39;intensity&#39;: 1.433426758407487,
+  &#39;pos_score&#39;: 13.79774259344573,
+  &#39;neg_score&#39;: 19.77805343906382,
+  &#39;count&#39;: 6},
+ &#39;예상/NNG;저조/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.1340445578640994,
+  &#39;intensity&#39;: 1.415405971524219,
+  &#39;pos_score&#39;: 11.3938308957494,
+  &#39;neg_score&#39;: 16.126896288380845,
+  &#39;count&#39;: 1},
+ &#39;예상/NNG;수출/NNG;호조/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0810811306501646,
+  &#39;intensity&#39;: 1.2801818841583474,
+  &#39;pos_score&#39;: 16.01598104589441,
+  &#39;neg_score&#39;: 12.510707458123482,
+  &#39;count&#39;: 1},
+ &#39;투자/NNG;부진/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0358596445136938,
+  &#39;intensity&#39;: 1.1760482096124063,
+  &#39;pos_score&#39;: 10.476135132730851,
+  &#39;neg_score&#39;: 12.320439966505749,
+  &#39;count&#39;: 1},
+ &#39;마이너스/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.1030866691840481,
+  &#39;intensity&#39;: 1.3344425639455602,
+  &#39;pos_score&#39;: 10.736145941980764,
+  &#39;neg_score&#39;: 14.32677011771053,
+  &#39;count&#39;: 1},
+ &#39;플러스/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0729897565573511,
+  &#39;intensity&#39;: 1.260824071955346,
+  &#39;pos_score&#39;: 14.200712242550363,
+  &#39;neg_score&#39;: 11.26304022775138,
+  &#39;count&#39;: 1},
+ &#39;경상/NNG;수지/NNG;흑자/NNG;축소/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.6100019195528328,
+  &#39;intensity&#39;: 4.178738920458982,
+  &#39;pos_score&#39;: 103.87449222349149,
+  &#39;neg_score&#39;: 24.857856449208885,
+  &#39;count&#39;: 1},
+ &#39;절상/NNG;높/VA&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.2064970496728622,
+  &#39;intensity&#39;: 1.629103182609869,
+  &#39;pos_score&#39;: 24.457662521938783,
+  &#39;neg_score&#39;: 15.012960985538632,
+  &#39;count&#39;: 1},
+ &#39;절상/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.2248293260757415,
+  &#39;intensity&#39;: 1.6892557023222454,
+  &#39;pos_score&#39;: 25.892033788702214,
+  &#39;neg_score&#39;: 15.327480471492889,
+  &#39;count&#39;: 2},
+ &#39;원화/NNG;절상/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.2283740928971028,
+  &#39;intensity&#39;: 1.7012059040923952,
+  &#39;pos_score&#39;: 27.48521557243343,
+  &#39;neg_score&#39;: 16.156313298887223,
+  &#39;count&#39;: 4},
+ &#39;경상/NNG;수지/NNG;악화/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.4781920955534715,
+  &#39;intensity&#39;: 2.932855322012729,
+  &#39;pos_score&#39;: 91.3427114176571,
+  &#39;neg_score&#39;: 31.14463599076254,
+  &#39;count&#39;: 1},
+ &#39;경제/NNG;호조/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0116789494143074,
+  &#39;intensity&#39;: 1.1241794102874298,
+  &#39;pos_score&#39;: 13.337885034388988,
+  &#39;neg_score&#39;: 11.86455196771373,
+  &#39;count&#39;: 1},
+ &#39;경제/NNG;금리/NNG;인상/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.5658462544072831,
+  &#39;intensity&#39;: 3.681884691016604,
+  &#39;pos_score&#39;: 42.605771658013424,
+  &#39;neg_score&#39;: 11.571728946853456,
+  &#39;count&#39;: 1},
+ &#39;절하/NNG;압력/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.155950847361199,
+  &#39;intensity&#39;: 1.4763779518417686,
+  &#39;pos_score&#39;: 20.2058156189916,
+  &#39;neg_score&#39;: 13.68607245440439,
+  &#39;count&#39;: 1},
+ &#39;억제/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.326535478405863,
+  &#39;intensity&#39;: 2.0802422997550942,
+  &#39;pos_score&#39;: 22.594305108083084,
+  &#39;neg_score&#39;: 10.8613814413557,
+  &#39;count&#39;: 1},
+ &#39;전망/NNG;상방/NNG;위험/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0312150518237321,
+  &#39;intensity&#39;: 1.1658916520421658,
+  &#39;pos_score&#39;: 14.95827528763208,
+  &#39;neg_score&#39;: 12.829901699211325,
+  &#39;count&#39;: 1},
+ &#39;하방/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.4744352510470996,
+  &#39;intensity&#39;: 2.904251967991333,
+  &#39;pos_score&#39;: 15.565935574694668,
+  &#39;neg_score&#39;: 45.20739902643329,
+  &#39;count&#39;: 1},
+ &#39;위험/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0392922310459082,
+  &#39;intensity&#39;: 1.1836132309079384,
+  &#39;pos_score&#39;: 15.706926885027544,
+  &#39;neg_score&#39;: 18.59092647802221,
+  &#39;count&#39;: 1},
+ &#39;부담/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.1193824753107514,
+  &#39;intensity&#39;: 1.3765025447218744,
+  &#39;pos_score&#39;: 14.462013361611486,
+  &#39;neg_score&#39;: 10.506346985746816,
+  &#39;count&#39;: 2},
+ &#39;채산성/NNG;악화/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0157042395284593,
+  &#39;intensity&#39;: 1.1326645045452064,
+  &#39;pos_score&#39;: 15.067416684170016,
+  &#39;neg_score&#39;: 17.066328053351608,
+  &#39;count&#39;: 1},
+ &#39;흡수/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.1052117397374828,
+  &#39;intensity&#39;: 1.3399319840226835,
+  &#39;pos_score&#39;: 13.075991433392248,
+  &#39;neg_score&#39;: 9.758697896094766,
+  &#39;count&#39;: 1},
+ &#39;유가상승/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.1500311576257382,
+  &#39;intensity&#39;: 1.459644483090467,
+  &#39;pos_score&#39;: 18.344871899170798,
+  &#39;neg_score&#39;: 12.56804113035092,
+  &#39;count&#39;: 1},
+ &#39;우려/NNG;장기/NNG;금리/NNG;상승/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0134427632446614,
+  &#39;intensity&#39;: 1.1278792966071522,
+  &#39;pos_score&#39;: 11.386901587900123,
+  &#39;neg_score&#39;: 10.095851233508595,
+  &#39;count&#39;: 1},
+ &#39;수요/NNG;우려/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0918677556352442,
+  &#39;intensity&#39;: 1.3064258280930992,
+  &#39;pos_score&#39;: 12.209263564394975,
+  &#39;neg_score&#39;: 15.95049726252161,
+  &#39;count&#39;: 1},
+ &#39;전혀/MAG;배제/NNG;없/VA&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.1933336885173837,
+  &#39;intensity&#39;: 1.5872556240160312,
+  &#39;pos_score&#39;: 10.68551836965644,
+  &#39;neg_score&#39;: 16.960649127763794,
+  &#39;count&#39;: 1},
+ &#39;부동산/NNG;완화/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0690010084274728,
+  &#39;intensity&#39;: 1.251401829605053,
+  &#39;pos_score&#39;: 11.835969874246365,
+  &#39;neg_score&#39;: 9.458168906450966,
+  &#39;count&#39;: 1},
+ &#39;하락/NNG;효과/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.111084426490321,
+  &#39;intensity&#39;: 1.3548343875629658,
+  &#39;pos_score&#39;: 14.454222843917568,
+  &#39;neg_score&#39;: 19.58307815443769,
+  &#39;count&#39;: 1},
+ &#39;성장/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.984967006613283,
+  &#39;intensity&#39;: 51.40690016495882,
+  &#39;pos_score&#39;: 842.3395061901749,
+  &#39;neg_score&#39;: 16.38572844282002,
+  &#39;count&#39;: 2},
+ &#39;콜/NNG;금리/NNG;하회/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0961084710137678,
+  &#39;intensity&#39;: 1.31693664989185,
+  &#39;pos_score&#39;: 10.204432310024266,
+  &#39;neg_score&#39;: 13.438590900411508,
+  &#39;count&#39;: 2},
+ &#39;금리/NNG;상승/NNG;압력/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.6004337207083972,
+  &#39;intensity&#39;: 4.062325614818798,
+  &#39;pos_score&#39;: 43.31227845878329,
+  &#39;neg_score&#39;: 10.661941598375602,
+  &#39;count&#39;: 1},
+ &#39;예상/NNG;하락/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0506031051653062,
+  &#39;intensity&#39;: 1.2089175938706724,
+  &#39;pos_score&#39;: 10.85390866198234,
+  &#39;neg_score&#39;: 13.121481143735744,
+  &#39;count&#39;: 1},
+ &#39;경기/NNG;회복/NNG;약화/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0824761286136887,
+  &#39;intensity&#39;: 1.2834842924386862,
+  &#39;pos_score&#39;: 11.629648459487758,
+  &#39;neg_score&#39;: 14.926471124336302,
+  &#39;count&#39;: 1},
+ &#39;금리/NNG;상승/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.9976489029338528,
+  &#39;intensity&#39;: 74.78067419154141,
+  &#39;pos_score&#39;: 852.2582592674567,
+  &#39;neg_score&#39;: 11.396771538653194,
+  &#39;count&#39;: 2},
+ &#39;통화/NNG;안정/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.1292155158174954,
+  &#39;intensity&#39;: 1.402557946927129,
+  &#39;pos_score&#39;: 18.19379611881449,
+  &#39;neg_score&#39;: 12.971867692650676,
+  &#39;count&#39;: 2},
+ &#39;신용/NNG;위험/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0726718274475546,
+  &#39;intensity&#39;: 1.2600165993911436,
+  &#39;pos_score&#39;: 11.76594815221796,
+  &#39;neg_score&#39;: 14.825289979370185,
+  &#39;count&#39;: 1},
+ &#39;개선/NNG;감소/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.3814854010419736,
+  &#39;intensity&#39;: 2.3417715500464165,
+  &#39;pos_score&#39;: 17.685057124364075,
+  &#39;neg_score&#39;: 41.41436363478148,
+  &#39;count&#39;: 1},
+ &#39;통화/NNG;완화/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.4727497709698944,
+  &#39;intensity&#39;: 2.89237187982404,
+  &#39;pos_score&#39;: 16.50920582948091,
+  &#39;neg_score&#39;: 47.7507626994177,
+  &#39;count&#39;: 1},
+ &#39;정책/NNG;금리/NNG;인상/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.5521129348341561,
+  &#39;intensity&#39;: 3.546226821494842,
+  &#39;pos_score&#39;: 44.62936011092256,
+  &#39;neg_score&#39;: 12.585026947630476,
+  &#39;count&#39;: 1},
+ &#39;지표/NNG;개선/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0035818427597022,
+  &#39;intensity&#39;: 1.1073947464102936,
+  &#39;pos_score&#39;: 10.6772094134589,
+  &#39;neg_score&#39;: 11.82388561078692,
+  &#39;count&#39;: 1},
+ &#39;실물/NNG;지표/NNG;부진/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.2066858972925152,
+  &#39;intensity&#39;: 1.6293855612816797,
+  &#39;pos_score&#39;: 10.253607490392032,
+  &#39;neg_score&#39;: 16.707079995894457,
+  &#39;count&#39;: 1},
+ &#39;상방/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.5519829582971086,
+  &#39;intensity&#39;: 3.544980494814778,
+  &#39;pos_score&#39;: 55.57686459549216,
+  &#39;neg_score&#39;: 15.677622112952132,
+  &#39;count&#39;: 2},
+ &#39;위험/NNG;경기/NNG;회복/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0385253826251357,
+  &#39;intensity&#39;: 1.1819186254357306,
+  &#39;pos_score&#39;: 12.70529424149125,
+  &#39;neg_score&#39;: 15.016623905659843,
+  &#39;count&#39;: 1},
+ &#39;악화/NNG;경기/NNG;회복/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.617631638579763,
+  &#39;intensity&#39;: 4.271078956642339,
+  &#39;pos_score&#39;: 12.83794761673379,
+  &#39;neg_score&#39;: 54.831887912308346,
+  &#39;count&#39;: 1},
+ &#39;수출/NNG;안정/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0440460547178473,
+  &#39;intensity&#39;: 1.1941905366679304,
+  &#39;pos_score&#39;: 13.680594215706703,
+  &#39;neg_score&#39;: 11.455955976572,
+  &#39;count&#39;: 1},
+ &#39;저조/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0177873650568067,
+  &#39;intensity&#39;: 1.1370480237635,
+  &#39;pos_score&#39;: 14.42350403167657,
+  &#39;neg_score&#39;: 12.685043841803978,
+  &#39;count&#39;: 1},
+ &#39;선행/NNG;지표/NNG;부진/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0199889873426576,
+  &#39;intensity&#39;: 1.1417418479314083,
+  &#39;pos_score&#39;: 9.390936181680598,
+  &#39;neg_score&#39;: 10.722024829877933,
+  &#39;count&#39;: 1},
+ &#39;내수/NNG;부진/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.1709311969620205,
+  &#39;intensity&#39;: 1.5195229768755596,
+  &#39;pos_score&#39;: 12.414048837496496,
+  &#39;neg_score&#39;: 18.86343244463125,
+  &#39;count&#39;: 2},
+ &#39;기업/NNG;경기/NNG;회복/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.006634211288978,
+  &#39;intensity&#39;: 1.1136679199548705,
+  &#39;pos_score&#39;: 11.902794943942045,
+  &#39;neg_score&#39;: 10.687921175303662,
+  &#39;count&#39;: 1},
+ &#39;원가/NNG;상승/NNG;부담/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.1232732711368559,
+  &#39;intensity&#39;: 1.3867444414893304,
+  &#39;pos_score&#39;: 15.26778989503723,
+  &#39;neg_score&#39;: 11.009807891236246,
+  &#39;count&#39;: 1},
+ &#39;금리/NNG;축소/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.5971977095938265,
+  &#39;intensity&#39;: 4.0202811335591,
+  &#39;pos_score&#39;: 8.97710684608576,
+  &#39;neg_score&#39;: 36.09049328726282,
+  &#39;count&#39;: 1},
+ &#39;감속/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0080444727468427,
+  &#39;intensity&#39;: 1.1165959286727123,
+  &#39;pos_score&#39;: 15.18652778243845,
+  &#39;neg_score&#39;: 13.60073719818282,
+  &#39;count&#39;: 1},
+ &#39;실적/NNG;좋/VA&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0068061537817557,
+  &#39;intensity&#39;: 1.1140573454235554,
+  &#39;pos_score&#39;: 10.622596779105454,
+  &#39;neg_score&#39;: 11.834181969235033,
+  &#39;count&#39;: 1},
+ &#39;실물/NNG;경제/NNG;회복/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0766779037357372,
+  &#39;intensity&#39;: 1.2695470677121787,
+  &#39;pos_score&#39;: 13.027022085992792,
+  &#39;neg_score&#39;: 16.53841769029394,
+  &#39;count&#39;: 3},
+ &#39;예상/NNG;위험/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0668915359223978,
+  &#39;intensity&#39;: 1.2464054941783642,
+  &#39;pos_score&#39;: 18.120859202481878,
+  &#39;neg_score&#39;: 22.585938469205978,
+  &#39;count&#39;: 1},
+ &#39;경기/NNG;회복/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0735204089304163,
+  &#39;intensity&#39;: 1.262028690856419,
+  &#39;pos_score&#39;: 12.625816071313652,
+  &#39;neg_score&#39;: 15.934142127473908,
+  &#39;count&#39;: 1},
+ &#39;원자재/NNG;가격/NNG;상승/NNG;물가/NNG;상승/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.2154711102466537,
+  &#39;intensity&#39;: 1.6582092384588167,
+  &#39;pos_score&#39;: 20.89884086625913,
+  &#39;neg_score&#39;: 12.603259215756788,
+  &#39;count&#39;: 1},
+ &#39;완화/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.9865071267692084,
+  &#39;intensity&#39;: 52.69200707267185,
+  &#39;pos_score&#39;: 15.989943057821629,
+  &#39;neg_score&#39;: 842.5421926943574,
+  &#39;count&#39;: 3},
+ &#39;임금/NNG;상승/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.251653255581853,
+  &#39;intensity&#39;: 1.7824034161386677,
+  &#39;pos_score&#39;: 19.75105481210894,
+  &#39;neg_score&#39;: 11.081136084723676,
+  &#39;count&#39;: 1},
+ &#39;호황/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.5670415201898105,
+  &#39;intensity&#39;: 3.690895781961134,
+  &#39;pos_score&#39;: 13.582274862786392,
+  &#39;neg_score&#39;: 50.13076100049504,
+  &#39;count&#39;: 1},
+ &#39;물가/NNG;상승/NNG;압력/NNG;부담/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.3241736252714733,
+  &#39;intensity&#39;: 2.069877612835401,
+  &#39;pos_score&#39;: 24.474028414635477,
+  &#39;neg_score&#39;: 11.823901211777429,
+  &#39;count&#39;: 1},
+ &#39;긴축/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.9816490650480136,
+  &#39;intensity&#39;: 47.49363193796548,
+  &#39;pos_score&#39;: 856.5967773721211,
+  &#39;neg_score&#39;: 18.03603435700554,
+  &#39;count&#39;: 1},
+ &#39;부작용/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.1239555469103132,
+  &#39;intensity&#39;: 1.388549530972376,
+  &#39;pos_score&#39;: 17.179605625383722,
+  &#39;neg_score&#39;: 12.37233907914913,
+  &#39;count&#39;: 1},
+ &#39;우려/NNG;없/VA&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.0854520733277373,
+  &#39;intensity&#39;: 1.2907042758536815,
+  &#39;pos_score&#39;: 13.242924123126324,
+  &#39;neg_score&#39;: 17.092698790525013,
+  &#39;count&#39;: 1},
+ &#39;회복/NNG;부진/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.589052894650519,
+  &#39;intensity&#39;: 3.92684349653929,
+  &#39;pos_score&#39;: 11.327536547899486,
+  &#39;neg_score&#39;: 44.481463224930216,
+  &#39;count&#39;: 1},
+ &#39;물가/NNG;상승/NNG;압력/NNG;증대/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.3357430815609288,
+  &#39;intensity&#39;: 2.121325885847345,
+  &#39;pos_score&#39;: 24.465613653707315,
+  &#39;neg_score&#39;: 11.533170748036548,
+  &#39;count&#39;: 1},
+ &#39;경제/NNG;안정/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.2199968495401089,
+  &#39;intensity&#39;: 1.6731336424466166,
+  &#39;pos_score&#39;: 20.298009367909096,
+  &#39;neg_score&#39;: 12.131732249569376,
+  &#39;count&#39;: 1},
+ &#39;당분간/MAG;금융/NNG;완화/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.043402847939571,
+  &#39;intensity&#39;: 1.1927543434530097,
+  &#39;pos_score&#39;: 12.986952121888462,
+  &#39;neg_score&#39;: 10.888203587916848,
+  &#39;count&#39;: 1},
+ &#39;물가/NNG;불안/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.2565098460919433,
+  &#39;intensity&#39;: 1.7999624924381648,
+  &#39;pos_score&#39;: 22.17223780684725,
+  &#39;neg_score&#39;: 12.318166572912045,
+  &#39;count&#39;: 1},
+ &#39;인플레이션/NNG;우려/NNG;긴축/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.6437711822554745,
+  &#39;intensity&#39;: 4.636171827335574,
+  &#39;pos_score&#39;: 57.611129302828815,
+  &#39;neg_score&#39;: 12.42644393875672,
+  &#39;count&#39;: 1},
+ &#39;노동/NNG;비용/NNG;상승/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.1822378047658608,
+  &#39;intensity&#39;: 1.5535205446644311,
+  &#39;pos_score&#39;: 16.585003135718075,
+  &#39;neg_score&#39;: 10.675753978715823,
+  &#39;count&#39;: 1},
+ &#39;상방/NNG;위험/NNG;높/VA&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0880202683177656,
+  &#39;intensity&#39;: 1.29704908247557,
+  &#39;pos_score&#39;: 16.25718553399367,
+  &#39;neg_score&#39;: 12.533978670232688,
+  &#39;count&#39;: 1},
+ &#39;경제/NNG;경기/NNG;부진/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.2716333349372742,
+  &#39;intensity&#39;: 1.855564639106718,
+  &#39;pos_score&#39;: 12.474966192540206,
+  &#39;neg_score&#39;: 23.14810614092938,
+  &#39;count&#39;: 1},
+ &#39;위축/NNG&#39;: {&#39;label&#39;: -1,
+  &#39;polarity&#39;: -0.9964422143950517,
+  &#39;intensity&#39;: 70.3434157525109,
+  &#39;pos_score&#39;: 12.105451312956726,
+  &#39;neg_score&#39;: 851.5387945790937,
+  &#39;count&#39;: 1},
+ &#39;금리/NNG;인상/NNG;강세/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.0129134781385689,
+  &#39;intensity&#39;: 1.12676768211432,
+  &#39;pos_score&#39;: 11.815540041518986,
+  &#39;neg_score&#39;: 10.48622553617064,
+  &#39;count&#39;: 1},
+ &#39;금리/NNG;인상/NNG&#39;: {&#39;label&#39;: 1,
+  &#39;polarity&#39;: 0.6994401729370587,
+  &#39;intensity&#39;: 5.596730769609167,
+  &#39;pos_score&#39;: 57.26147602559678,
+  &#39;neg_score&#39;: 10.231236481220892,
+  &#39;count&#39;: 1}}
+</pre></div>
+</div>
+</div>
+</details>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "entelecheia/ekorpkit",
+            ref: "main",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/models/ngram"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="ngram.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">N-Grams</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="ngram_for_words.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">N-Gram model for unigram lexicon features</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-a-ngram-model-with-mpko-lexicon-scores">Load a ngram model with MPKO lexicon scores</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By <a href="https://entelecheia.me">Young Joon Lee</a>
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

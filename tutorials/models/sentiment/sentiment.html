@@ -1,0 +1,1092 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>LM Dictionary vs. finbert vs. T5 &#8212; ekorpkit</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-examples.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.bundle.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-shadow.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-punk.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-borderless.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/micromodal.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../../_static/tabs.js"></script>
+    <script src="../../../_static/js/hoverxref.js"></script>
+    <script src="../../../_static/js/tooltipster.bundle.min.js"></script>
+    <script src="../../../_static/js/micromodal.min.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"tex": {"macros": {"N": "\\mathbb{N}", "floor": ["\\lfloor#1\\rfloor", 1], "bmat": ["\\left[\\begin{array}"], "emat": ["\\end{array}\\right]"]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="application/vnd.jupyter.widget-state+json">{"state": {"02584045073142f5ac9328d0eca15b4b": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "03685e93074a4994bdc0b35a03ca17be": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "0554bdf4050b4b2bb5d7ed0026597451": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "05c4ceaae57d45e4910125fcb111a1dd": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_2b6c8aa3048240ec80f13872b317da12", "style": "IPY_MODEL_ce34e857f4d547c7acd68f2b44f87f61", "value": "apply len_bytes to num_bytes: 100%"}}, "06cdaba815784d5bb5a66f2b8b7d1d21": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_cacaeb68e515494a81c75ba315c1ba7d", "IPY_MODEL_7cb780fc141646f88053a0f733f5cfdb", "IPY_MODEL_33bbd444da7c47948992c1a4422d2a1c"], "layout": "IPY_MODEL_d912037225fd47608425a7200433e767"}}, "06fbf01a8eac457f8da8e842f7e04284": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "07082cfa5c43401db1871ebe36c4af97": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "0746fdfca89749d7891adc0a9637cc04": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "076973f4bb4744e3b63c2a7f369fccbb": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "07d4180a859f4960a243836faa545593": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_b1004d29742b491ab54563caa76690fb", "IPY_MODEL_99b51d3fd62548f7ab902d146453eabb", "IPY_MODEL_e075df3e6b7345e6beab56660838f045"], "layout": "IPY_MODEL_a75481a64f17477b9224e0b937533dd6"}}, "07eb21202f26436ea774914d94a4d4e0": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "087eb416839647f2a4045bcd36fe0dd6": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "0961949f94f145b7a626cda55ffb28b4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "LabelModel", "state": {"layout": "IPY_MODEL_6f1987cff46e4cc28749122041c82f52", "style": "IPY_MODEL_e3c618236e3640afad1b9f5353b0fb8e"}}, "0b3e9a9dfb88411a995c7ce617d5bed1": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_7f8871e5d51b42bdaf6734f32b926f45", "style": "IPY_MODEL_27a4f43f38344de7ab20cf9d9dfcb789", "value": " 362/362 [00:00&lt;00:00, 1794.68it/s]"}}, "0b6de6100c224087aba1ffe9a6e72cb3": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "0bdcc30cd34142c282d4bcd9979cc0f3": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "0bf60517c1de4e25a8a6a6a361a672f7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"layout": "IPY_MODEL_bb9c0e39a48c4545940b05a2b84469b3", "max": 1, "style": "IPY_MODEL_58b75924096a4373be8f3c753a417f11", "value": 1}}, "0c5985a3cd3b4c749eb3bb1ce3c27d93": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_6b13ff0d166a4a9591fa2cd531f43bf2", "style": "IPY_MODEL_b62a0aa7dd874e2fad84f5285b6249a7", "value": " 362/362 [00:00&lt;00:00, 21045.06it/s]"}}, "0dccba75c11c4dd59cb56fcea11f7ea4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_b569b626ed454eb88cc2df38726b35ef", "IPY_MODEL_f77af39df9c140aca0f729e703e1fb59", "IPY_MODEL_3aa59df07e7d4e9bae34b2a66f670724"], "layout": "IPY_MODEL_fa6620d97bb44e67a0abc7aee80ff470"}}, "0ef65f1b8ea247de96195f160a59790a": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "0f61d178f8f6450b931c631a6e7a9e18": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "11e6af3ea4944f24965efed6b01c28a5": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "11e6be247f364b708942c54c3dd924b9": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "1240f41fd3c64dfe940639ed29fb8c86": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "124349f807914df0990df9d475254a36": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_59df1ad0c2cf47a9bd6fb73d869fecfe", "style": "IPY_MODEL_746e5f5b510d4886994c97f912fae46b", "value": " 362/362 [00:00&lt;00:00, 1834.46it/s]"}}, "14b4395dd1934f4cb80df72b1a2349b7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "14d27e7e5d934848811b5f4f5367652e": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "16e09cb0138143a7aed5038d7d8a71dc": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "17baa05e7a2845fcbcc1eca897b50931": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "18309405a61843a683ce3ba0f4f5fed8": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_0b6de6100c224087aba1ffe9a6e72cb3", "style": "IPY_MODEL_29dc73807d8045e9b21bcc5cea769622", "value": " 15/15 [00:00&lt;00:00, 27.40it/s]"}}, "1880c0cc53c949399e4814bdd10acc69": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "1959b5de1dee4ac69b868a9df4921618": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "1b31cfff42744fde925d183496f2cbc0": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "1c4ce44e4d844172ad7c689bedf52c07": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "1d826a9cf4b34e35a917f260773338f9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "1de8dacab0804043ace0430a6f60c4de": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "1e6ea285a10d45c88cb2210e29f443e4": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "1f4025321a4f4f53a08f8c277ecfeee7": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "222aadf3a6df45768edb89c94fae67ed": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"layout": "IPY_MODEL_cafc481b095a4e5386747a2432453a85", "max": 1, "style": "IPY_MODEL_e33e18948d204417b2a19b13c64cff73"}}, "23c394eafae4425cae30ec2de6e30041": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "2455bf06116d4988a5f23ae2cb0e98ca": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "24e9a09c3ac041c680d232c347120c3c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "2597de06f0c247879d4c43e7eb35634b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_8f7452396f764e7f8ccf222ff6a20ebe", "IPY_MODEL_d65f9b65486a4893b16fe0a565fe9fb4", "IPY_MODEL_682c39aad2294df3a8362b6e67afa974"], "layout": "IPY_MODEL_f6b42e4a6f794ed9a91964c10d3b23f9"}}, "266f50b03aab48db92cb9afd0b6b7f78": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "2760bf36073742d995cb2bf60d2928d3": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "27a4f43f38344de7ab20cf9d9dfcb789": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "2877e10d173e4f2686432b95f3c0f32c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "29936696e42849aa913493091542274f": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "29dc73807d8045e9b21bcc5cea769622": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "29f1adda06f14b57a2df624b24e73ee9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_4e1e45cf2fd149daa1b3ccbd9455d1bd", "max": 452, "style": "IPY_MODEL_9370732e48da404ba64998866a349415", "value": 452}}, "2a398c78e59d439198286fc4042e9eed": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "2b6c8aa3048240ec80f13872b317da12": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "2d36c60df2f34c24b426f393d1dd2ab5": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_0f61d178f8f6450b931c631a6e7a9e18", "style": "IPY_MODEL_e7c6775a0f004df4910aba856648e286", "value": " 1445/1445 [00:00&lt;00:00, 6133.15it/s]"}}, "2d3d845b7649478d9f76bb6929af10b6": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "2ebd5adc5f5543b4b35f54d808e6118c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_d4acf62e1ffe42fbb240f239ecb9be0c", "style": "IPY_MODEL_5833a308312a4950a915cb5bfc8a0c98", "value": "Epochs 0/2. Running Loss:    0.0001: 100%"}}, "2f6e8208a4e349198907ff530da5c5eb": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_8641c7365e6c4763ae99ad98b46eb517", "max": 452, "style": "IPY_MODEL_a35e8af5b51049eb9a428267047d7c56", "value": 452}}, "2f7335a18fcf4c6ea84446dbf5ff9d79": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_71f6306dade747418fca4533b83d0965", "max": 362, "style": "IPY_MODEL_6f5471be66d54d3ea3ac0d9560604bd7", "value": 362}}, "3074b5ed45144085ba8a16d18601e736": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "312247ea1f27423a95900b8200c111f1": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "3174963505df4af8b90cb105ef304585": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "31f026a28ca14eaf85c18b842f5fb4ec": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "321b19a340264921878bb6afdde65c00": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_6302bf8426ed44549a7c213bc3818403", "style": "IPY_MODEL_5912e0302aa44dc18fe108a1d926fb18", "value": "Epochs 1/2. Running Loss:    0.0003: 100%"}}, "33bbd444da7c47948992c1a4422d2a1c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_37ab5e2a03934ac0a878d148cc6841cc", "style": "IPY_MODEL_76a5b3ba316542e49a6f31d61dd5ec0c", "value": " 57/57 [00:02&lt;00:00, 24.54it/s]"}}, "35f2335202884f7f9637c09570f76147": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "VBoxModel", "state": {"children": ["IPY_MODEL_69c7e379d6f54f1e944f54bd098fa0a7", "IPY_MODEL_92a7fda363f9445bb91d44f500b2f2c4"], "layout": "IPY_MODEL_31f026a28ca14eaf85c18b842f5fb4ec"}}, "369bde1955b740868186581a8fb87e82": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_b99050a5b20e4aa989b22cda234a460f", "max": 1445, "style": "IPY_MODEL_16e09cb0138143a7aed5038d7d8a71dc", "value": 1445}}, "376c5e3b72974a2c81fda6705e7c3df0": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_d4c0c23da8aa41d9bac265873fc97354", "IPY_MODEL_2f6e8208a4e349198907ff530da5c5eb", "IPY_MODEL_87aad04cb4444cfb97b178c82acdfdb2"], "layout": "IPY_MODEL_986cf4d80df0449e95b35cdc6d79e6a2"}}, "37ab5e2a03934ac0a878d148cc6841cc": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "37eb6b440a804267a0089286ef814cca": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_e78fba94c4034cf6b1ce76eb0e53fa65", "max": 1445, "style": "IPY_MODEL_d778b5c13f7b4607a08efd9c923c2ba4", "value": 1445}}, "383c4787e00843c780ae4ffbc45856ed": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "396e7d4283f94b4d9c67e28802cbecbd": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "3a2f6b19275044399204442d2788d961": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "3a445dd50d2247b7bfa7055bf7a5f1b4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_976317fe683b468f89ed5bff4f47eac7", "max": 57, "style": "IPY_MODEL_fc8554eb00a54dfbbb5bf840252c2a98", "value": 57}}, "3aa59df07e7d4e9bae34b2a66f670724": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_673401000404432f8c10659675b57c70", "style": "IPY_MODEL_d75709f133614b97a43238ba28c92108", "value": " 46/46 [00:06&lt;00:00,  9.69it/s]"}}, "3b9426782d3240b5a87ebef81e0a2890": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "3d05bd0410e8475387e999684bd5abf4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "459fcfc6c137416d92d5275d6a08b3cc": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_e6e25503d01e4a98beebb9820aee638e", "IPY_MODEL_d7003cfde87d4af5b60d466dd6377d6c", "IPY_MODEL_71574010a32b4fecaeeeea24b742e897"], "layout": "IPY_MODEL_620dedee64f74fd99a52fbd2709a36a7"}}, "462d0d6a22434bde957164e39dba6dc1": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "46662777404746e9bf0d6e955e6dc0ae": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_f6ef2e848adb45b09ebdfadce6e53f4e", "style": "IPY_MODEL_3d05bd0410e8475387e999684bd5abf4", "value": "100%"}}, "46d1fa2f7c314d69b14f1496c648e9a6": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "470e7b6880c4412a9ec44bfcb26653a8": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "474e89437c15488ab2c00cf0bfcb80ff": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "47833b1cdfd84467b98edf3d3008b1ac": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_7fc4cbc6cace4124bbfbff49dec97631", "style": "IPY_MODEL_8dae1d27f93c4efeb933aa2591de496b", "value": " 2/2 [00:23&lt;00:00, 10.97s/it]"}}, "47bf9cefe6be49a3b55e094e2d7acc0d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_48f99e90261f4ee485ffb4c496c39f81", "IPY_MODEL_bd026b3746f84765be44ef2c67b77113", "IPY_MODEL_87b66681db344ddfbce8fb8e63eea559"], "layout": "IPY_MODEL_1959b5de1dee4ac69b868a9df4921618"}}, "487edbf2941e4efe876e482640e860a2": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "48f99e90261f4ee485ffb4c496c39f81": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_a32519e31d784917825a07b797473c2e", "style": "IPY_MODEL_2a398c78e59d439198286fc4042e9eed", "value": "Epoch 2 of 2: 100%"}}, "4a2519f4e4fe486ba100fa249f4b49e1": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "4aaf277641ee47f289665bf79e4d2075": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "4b27bd3ee67840cbbae7fbb18030e523": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "4c1a0be8c9334e3eaadda8ed79a3f4c2": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "4c2eb2d821324561b1d2c12c81dd69ca": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_cc98212675c64a639a260660b31d4f05", "style": "IPY_MODEL_ca290c23ef18400b99f57bd40670e713", "value": " 452/452 [00:00&lt;00:00, 5979.56it/s]"}}, "4cdc1d1e94674523a77795a82e71037f": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "4e1e45cf2fd149daa1b3ccbd9455d1bd": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "4e5557dfdb324455bc69e52f9708a594": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "4f78063db5c648409721825d59b72ae2": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "4fce9caa42f44898aa306eccb9c309a8": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_4a2519f4e4fe486ba100fa249f4b49e1", "style": "IPY_MODEL_14b4395dd1934f4cb80df72b1a2349b7", "value": "100%"}}, "4fd1053b94244a95be407b0fbcf8e3fe": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "50f45dcb50a24220a98362508206bed7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "5115f7e3b9f54978b0e4841a4b09df00": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "516123a2c4be4f25856973c7af501cb0": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "5369ed34506949c99a2c6e8c3b15c2e7": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "5833a308312a4950a915cb5bfc8a0c98": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "58490c4e8e494d08b71bc2d0f27f5bf8": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "58b75924096a4373be8f3c753a417f11": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "590d969fbf164ddbbe803aa5e181272e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_14d27e7e5d934848811b5f4f5367652e", "style": "IPY_MODEL_c6d8712b8ec94b8b90575c1fefdf201e", "value": " 181/181 [00:27&lt;00:00,  6.68it/s]"}}, "5912e0302aa44dc18fe108a1d926fb18": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "59df1ad0c2cf47a9bd6fb73d869fecfe": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "5a1f399376fc468586a190a854ac5b48": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "5a4027ffe1764fafa9fccae6a3ada5ab": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_312247ea1f27423a95900b8200c111f1", "style": "IPY_MODEL_1240f41fd3c64dfe940639ed29fb8c86", "value": " 46/46 [00:05&lt;00:00,  9.74it/s]"}}, "5e6274c435ba41939eb70aa6eed11c36": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "5ff254d724144dde985443ee796a6f59": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_1e6ea285a10d45c88cb2210e29f443e4", "style": "IPY_MODEL_e2e527e4257f430491e2d29de3ae977e", "value": "100%"}}, "609ad62952504e48acc794ef20cd245f": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"layout": "IPY_MODEL_e4c99a4b79a14a88a2be91403c64195b", "max": 1, "style": "IPY_MODEL_7ee18e1f7e5b4de0bbb1c7107883fd00", "value": 1}}, "6138759e1ff84774beb3fd24518d05e6": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "620dedee64f74fd99a52fbd2709a36a7": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "626985f6208a4d09be6d44c9dc275825": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_769b4b6bfaf04615b622bf4962db24a7", "IPY_MODEL_ca1cda6147e7430bae76cfbd45f0c156", "IPY_MODEL_47833b1cdfd84467b98edf3d3008b1ac"], "layout": "IPY_MODEL_06fbf01a8eac457f8da8e842f7e04284"}}, "6302bf8426ed44549a7c213bc3818403": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "63f036cba4a74bf4bdcc04bd611ad7c9": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "64b6683476594ae89d54328b5d96483a": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "66ee426877a34c03a0f70e2280c635d8": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "670a90fd94334f9c9230caf549790d5c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "673401000404432f8c10659675b57c70": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "677f793883b14400b0f5fe4f26632779": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "682c39aad2294df3a8362b6e67afa974": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_8a76f12f5a8643bca4043c8c7e19607c", "style": "IPY_MODEL_f50505a56e5f4382884360ebe887b29b", "value": " 1445/1445 [00:17&lt;00:00, 93.62it/s]"}}, "6870e3d876314d8aa91304d44fc71f6e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_a9d77a8e18764192bdd1f4c7a619f4a3", "style": "IPY_MODEL_1c4ce44e4d844172ad7c689bedf52c07", "value": " 15/15 [00:00&lt;00:00, 27.18it/s]"}}, "68e36e211f0c4f7694386b7672fd1251": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "69611ee1263541eaa1bf5874862c3880": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_2ebd5adc5f5543b4b35f54d808e6118c", "IPY_MODEL_fef6ad02e0994545b41e45b1fd30db50", "IPY_MODEL_dc92055021ee4973b0f4915b6b74d3d7"], "layout": "IPY_MODEL_4c1a0be8c9334e3eaadda8ed79a3f4c2"}}, "696fd4bbc30848289eb077c2dce14e41": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "69c7e379d6f54f1e944f54bd098fa0a7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "LabelModel", "state": {"layout": "IPY_MODEL_5e6274c435ba41939eb70aa6eed11c36", "style": "IPY_MODEL_9dc30472bdaf4fb1826c1e1639c20312"}}, "69dfcbce2e274a83b1543e8349588145": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "6ae61dffcf1c441a966a128f7c2e4ef8": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_e016c83834a54daaa370a6b40d5f9d98", "style": "IPY_MODEL_763635ea551b483faa650425a2470741", "value": "100%"}}, "6b013abd1e96418097e603a292a39bf4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "6b13ff0d166a4a9591fa2cd531f43bf2": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "6c272d905a3340ce8dc42b1250136156": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "6c69b16918aa4a9daf56ef7e3f1ad151": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_b10e9c3183084f7886a27e2d3f888fef", "style": "IPY_MODEL_9985e41ecd604348a573b2abdc8583d6", "value": "apply len_bytes to num_bytes: 100%"}}, "6cefde944472460b835a73c47169e2e7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "6d158029cd544c53bb31822c69b2b93b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "6dffd434be604d99b50760c7b1ff9a93": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_eddd581ad4e64c85a2859e3373f95ef1", "IPY_MODEL_dd6e2df319834d00a662c3e1fb69d07b", "IPY_MODEL_7f52fb4cf4de4f4f8a6eb7d6e1e23835"], "layout": "IPY_MODEL_64b6683476594ae89d54328b5d96483a"}}, "6f197118bffd4f988e37a4c3407372e7": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "6f1987cff46e4cc28749122041c82f52": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "6f5471be66d54d3ea3ac0d9560604bd7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "70a8a38974fb4f1faf98d9e31e1e0099": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "71574010a32b4fecaeeeea24b742e897": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_ab01885832ea48edbe53857e9a550495", "style": "IPY_MODEL_4f78063db5c648409721825d59b72ae2", "value": " 362/362 [00:03&lt;00:00, 90.33it/s]"}}, "71c279cc4dea4acd9ba6317494da0c1f": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_c9c8da5c73f94ce29a528dcfbe3f62c1", "IPY_MODEL_90cded4310534067bc940bf790983754", "IPY_MODEL_a84a5de6913347408da02fbb0c7b4154"], "layout": "IPY_MODEL_bc75a9ebdbd546d9a3c62402e3ea5897"}}, "71f6306dade747418fca4533b83d0965": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "746e5f5b510d4886994c97f912fae46b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "74c3eb1e6af7443cb7ec1d826ed2b9cb": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "74f1c383f60d4fc2afd08adf3d7fa346": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "7575331387b24c778f2d84b3654b0abf": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "763635ea551b483faa650425a2470741": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "769b4b6bfaf04615b622bf4962db24a7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_9e1fe2055adc4a51b178582b79095e0b", "style": "IPY_MODEL_6cefde944472460b835a73c47169e2e7", "value": "Epoch 2 of 2: 100%"}}, "76a5b3ba316542e49a6f31d61dd5ec0c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "77725a0636bf47bda39f7b05d0b3ef77": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_d3d1681e89c64bb59995e91a1def647b", "IPY_MODEL_fa7310ff4d2f4ecf98a4e551c8668a3a", "IPY_MODEL_5a4027ffe1764fafa9fccae6a3ada5ab"], "layout": "IPY_MODEL_63f036cba4a74bf4bdcc04bd611ad7c9"}}, "77ab5945b41e4b66b589d463ebe1052a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"layout": "IPY_MODEL_aea52d48a1fd4a4bb6b1ad2528c41eaf", "max": 1, "style": "IPY_MODEL_ef7b00fb4ec044059c65613b2ebac276"}}, "7821efb164fe4dcea242aa9bd16a10bf": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "783c5f0470f24d828e756cea30194279": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_81284470b0dd41a28654a1f85ca72664", "max": 15, "style": "IPY_MODEL_a133ab0e90b6430988d1e1907303389a", "value": 15}}, "7a92b1e517d84ac7bacb1bbbb6e63963": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_b74ee8efd23747acbd9bcf3b1098ab29", "IPY_MODEL_9f2860b6c875448da176203662fdaa5e", "IPY_MODEL_18309405a61843a683ce3ba0f4f5fed8"], "layout": "IPY_MODEL_85116b9226ae4cfd957a3e91b816dfb5"}}, "7cb780fc141646f88053a0f733f5cfdb": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_97a4027935dc495ea6f38aaacf493bc5", "max": 57, "style": "IPY_MODEL_076973f4bb4744e3b63c2a7f369fccbb", "value": 57}}, "7d4d5f3fcb824d55917a8c82cc1f7df8": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "7ee18e1f7e5b4de0bbb1c7107883fd00": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "7f2e1b2036044921acd4d2230426002b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "7f52fb4cf4de4f4f8a6eb7d6e1e23835": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_677f793883b14400b0f5fe4f26632779", "style": "IPY_MODEL_46d1fa2f7c314d69b14f1496c648e9a6", "value": " 452/452 [00:00&lt;00:00, 1833.59it/s]"}}, "7f8871e5d51b42bdaf6734f32b926f45": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "7fc4cbc6cace4124bbfbff49dec97631": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "7fe9832864be435381b5afe62fb2cd6d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_07eb21202f26436ea774914d94a4d4e0", "style": "IPY_MODEL_03685e93074a4994bdc0b35a03ca17be", "value": " 1445/1445 [00:00&lt;00:00, 1971.95it/s]"}}, "81284470b0dd41a28654a1f85ca72664": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "8219665a2b3c46808135d778d0280bc0": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "85116b9226ae4cfd957a3e91b816dfb5": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "8641c7365e6c4763ae99ad98b46eb517": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "87aad04cb4444cfb97b178c82acdfdb2": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_3b9426782d3240b5a87ebef81e0a2890", "style": "IPY_MODEL_8219665a2b3c46808135d778d0280bc0", "value": " 452/452 [00:00&lt;00:00, 5853.79it/s]"}}, "87b66681db344ddfbce8fb8e63eea559": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_d0c87013d3364b81b7133a05567882ac", "style": "IPY_MODEL_bcd963221a6544daabd150594af27588", "value": " 2/2 [01:11&lt;00:00, 34.60s/it]"}}, "8a76f12f5a8643bca4043c8c7e19607c": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "8dae1d27f93c4efeb933aa2591de496b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "8f7452396f764e7f8ccf222ff6a20ebe": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_07082cfa5c43401db1871ebe36c4af97", "style": "IPY_MODEL_d9ff93da52e14fab9e9ecd09f4004228", "value": "Predicting [text]: 100%"}}, "8f7c30f5ccb448f1ba095039299f2068": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "90cded4310534067bc940bf790983754": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_3174963505df4af8b90cb105ef304585", "max": 452, "style": "IPY_MODEL_1d826a9cf4b34e35a917f260773338f9", "value": 452}}, "9128f021d9e042e18384b51cac1443b8": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "9200ca4f69114063adf05ff41c382b7b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_474e89437c15488ab2c00cf0bfcb80ff", "max": 1445, "style": "IPY_MODEL_3a2f6b19275044399204442d2788d961", "value": 1445}}, "92a7fda363f9445bb91d44f500b2f2c4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"layout": "IPY_MODEL_470e7b6880c4412a9ec44bfcb26653a8", "max": 1, "style": "IPY_MODEL_9c0f7db9512c463ab04b7d5a3e65d34a"}}, "9370732e48da404ba64998866a349415": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "93a1f9a5ab6a49cb8d3ab57e7a2b3300": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "942c85b902b944019417ea47df964398": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "958615a51e844b95ad74019002e73f97": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "976317fe683b468f89ed5bff4f47eac7": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "97a4027935dc495ea6f38aaacf493bc5": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "986cf4d80df0449e95b35cdc6d79e6a2": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "9985e41ecd604348a573b2abdc8583d6": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "99b51d3fd62548f7ab902d146453eabb": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_2455bf06116d4988a5f23ae2cb0e98ca", "max": 452, "style": "IPY_MODEL_4cdc1d1e94674523a77795a82e71037f", "value": 452}}, "9b76ebff45cc4197a5a1a47b051c6dec": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_74f1c383f60d4fc2afd08adf3d7fa346", "style": "IPY_MODEL_50f45dcb50a24220a98362508206bed7", "value": "Running Evaluation: 100%"}}, "9b98ab7371cb49248bcf9d149ac4eb3c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "9c0f7db9512c463ab04b7d5a3e65d34a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "9c416639ce5c495b977b6ccf4aec3eb9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "9d218bfaa18d4bbf84c127a5eea55ece": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "9dc30472bdaf4fb1826c1e1639c20312": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "9e1fe2055adc4a51b178582b79095e0b": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "9f2860b6c875448da176203662fdaa5e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_942c85b902b944019417ea47df964398", "max": 15, "style": "IPY_MODEL_a91e0f9873d44f1189ea51e82f7850eb", "value": 15}}, "9f870a7a317f4410bd5cfdf6d93b3512": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_a05452b65d0e4337813560c4c4c89fb1", "style": "IPY_MODEL_9c416639ce5c495b977b6ccf4aec3eb9", "value": " 192/192 [00:00&lt;00:00, 10.5kiB/s]"}}, "a05452b65d0e4337813560c4c4c89fb1": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "a1069f7ecbdb496ca03de184c4f209e9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "a129db9c410c40968937dfc6ee5806ac": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "a133ab0e90b6430988d1e1907303389a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "a2c8ebbe3b01477987f304ca42322776": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "a2d990f800e64382a24a972ad0fb4219": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_9b76ebff45cc4197a5a1a47b051c6dec", "IPY_MODEL_783c5f0470f24d828e756cea30194279", "IPY_MODEL_6870e3d876314d8aa91304d44fc71f6e"], "layout": "IPY_MODEL_69dfcbce2e274a83b1543e8349588145"}}, "a32519e31d784917825a07b797473c2e": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "a35e8af5b51049eb9a428267047d7c56": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "a3696e1fb7da445dac0c25e9dfec4fd6": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "a55de7c4a1874d9aadc03013e07cfc24": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "a75481a64f17477b9224e0b937533dd6": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "a84a5de6913347408da02fbb0c7b4154": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_5a1f399376fc468586a190a854ac5b48", "style": "IPY_MODEL_17baa05e7a2845fcbcc1eca897b50931", "value": " 452/452 [00:00&lt;00:00, 25907.75it/s]"}}, "a8ed6441236d46e790ebc6a6c792cd5d": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "a91e0f9873d44f1189ea51e82f7850eb": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "a9d77a8e18764192bdd1f4c7a619f4a3": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "ab01885832ea48edbe53857e9a550495": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "abc6983d417746bb9fdd44907522a567": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "ae3a1c53450c403dbed11cfad1bd07a1": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "aea52d48a1fd4a4bb6b1ad2528c41eaf": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "af34200af75e4c5e9fce564847132e0e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_46662777404746e9bf0d6e955e6dc0ae", "IPY_MODEL_369bde1955b740868186581a8fb87e82", "IPY_MODEL_7fe9832864be435381b5afe62fb2cd6d"], "layout": "IPY_MODEL_2760bf36073742d995cb2bf60d2928d3"}}, "af5a83f44b9a49cb82d877f4d350bf63": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_321b19a340264921878bb6afdde65c00", "IPY_MODEL_b4ca338c9faa4f4a9125f00a790487e8", "IPY_MODEL_590d969fbf164ddbbe803aa5e181272e"], "layout": "IPY_MODEL_68e36e211f0c4f7694386b7672fd1251"}}, "b1004d29742b491ab54563caa76690fb": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_74c3eb1e6af7443cb7ec1d826ed2b9cb", "style": "IPY_MODEL_2877e10d173e4f2686432b95f3c0f32c", "value": "Predicting [text]: 100%"}}, "b10e9c3183084f7886a27e2d3f888fef": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "b152f35baabf47febf6bc4fc458d16c5": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_d21838a279fd4150b469183006f38577", "IPY_MODEL_df06173b35854843924743e6f2041a93", "IPY_MODEL_9f870a7a317f4410bd5cfdf6d93b3512"], "layout": "IPY_MODEL_11e6be247f364b708942c54c3dd924b9"}}, "b32a2000b09845f0a8177bb9f5e1303e": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "b4ca338c9faa4f4a9125f00a790487e8": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_4aaf277641ee47f289665bf79e4d2075", "max": 181, "style": "IPY_MODEL_383c4787e00843c780ae4ffbc45856ed", "value": 181}}, "b4e90afc6fea4f19a9281300eb275b37": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_6ae61dffcf1c441a966a128f7c2e4ef8", "IPY_MODEL_37eb6b440a804267a0089286ef814cca", "IPY_MODEL_2d36c60df2f34c24b426f393d1dd2ab5"], "layout": "IPY_MODEL_487edbf2941e4efe876e482640e860a2"}}, "b569b626ed454eb88cc2df38726b35ef": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_abc6983d417746bb9fdd44907522a567", "style": "IPY_MODEL_7575331387b24c778f2d84b3654b0abf", "value": "Epochs 0/2. Running Loss:    0.6930: 100%"}}, "b5b7be3cecda4738873acfb4b418ef81": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "VBoxModel", "state": {"children": ["IPY_MODEL_dd2fea6e116149b0a66e2faf5ad4ed80", "IPY_MODEL_f5ea7540900d4a39be8ec1e9919c2611"], "layout": "IPY_MODEL_e078e82c51a944a6ae287b88fc3ad0d3"}}, "b62a0aa7dd874e2fad84f5285b6249a7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "b63272753de249459764c861c265d25c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "LabelModel", "state": {"layout": "IPY_MODEL_d3949d098fdc474c8fcfae910292322d", "style": "IPY_MODEL_23c394eafae4425cae30ec2de6e30041"}}, "b73b9dc2a8f74bd88bfe314ad7189747": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "LabelModel", "state": {"layout": "IPY_MODEL_d4ddbc335a204e119e47b4140e010a71", "style": "IPY_MODEL_9d218bfaa18d4bbf84c127a5eea55ece", "value": "0.013 MB of 0.013 MB uploaded (0.000 MB deduped)\r"}}, "b74ee8efd23747acbd9bcf3b1098ab29": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_1880c0cc53c949399e4814bdd10acc69", "style": "IPY_MODEL_cb119598f16a4a62ae57b543949a2210", "value": "100%"}}, "b82ae4667c9340529afd1342c22c4c0d": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "b894ba0a4db048b396cfa45e933cc4fd": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_05c4ceaae57d45e4910125fcb111a1dd", "IPY_MODEL_9200ca4f69114063adf05ff41c382b7b", "IPY_MODEL_c9541b713c864f0486035d66f600d266"], "layout": "IPY_MODEL_58490c4e8e494d08b71bc2d0f27f5bf8"}}, "b99050a5b20e4aa989b22cda234a460f": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "ba45cb1ec2e64af58ae13a807825c27d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "bb9c0e39a48c4545940b05a2b84469b3": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "bbe538d740ee4ec5bf7753360f000b98": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_e6637663ae50432a8024283abb33518c", "IPY_MODEL_3a445dd50d2247b7bfa7055bf7a5f1b4", "IPY_MODEL_c047ddd299b948b08fabc2c91c9025af"], "layout": "IPY_MODEL_4b27bd3ee67840cbbae7fbb18030e523"}}, "bc75a9ebdbd546d9a3c62402e3ea5897": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "bcd963221a6544daabd150594af27588": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "bd026b3746f84765be44ef2c67b77113": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_02584045073142f5ac9328d0eca15b4b", "max": 2, "style": "IPY_MODEL_fb39cb0c6f2a4ff5a01e5a7e4b931a76", "value": 2}}, "bd7c7f8d5a7c453280e6961fcbaaf9df": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "c047ddd299b948b08fabc2c91c9025af": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_6c272d905a3340ce8dc42b1250136156", "style": "IPY_MODEL_5115f7e3b9f54978b0e4841a4b09df00", "value": " 57/57 [00:01&lt;00:00, 41.23it/s]"}}, "c694aa4b7ca34f3aa48954be7fbb4c6d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_cfc8c730993e42fa99bbbba07b6880cc", "IPY_MODEL_2f7335a18fcf4c6ea84446dbf5ff9d79", "IPY_MODEL_124349f807914df0990df9d475254a36"], "layout": "IPY_MODEL_0554bdf4050b4b2bb5d7ed0026597451"}}, "c6d8712b8ec94b8b90575c1fefdf201e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "c9541b713c864f0486035d66f600d266": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_9128f021d9e042e18384b51cac1443b8", "style": "IPY_MODEL_8f7c30f5ccb448f1ba095039299f2068", "value": " 1445/1445 [00:00&lt;00:00, 65827.84it/s]"}}, "c9c8da5c73f94ce29a528dcfbe3f62c1": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_0bdcc30cd34142c282d4bcd9979cc0f3", "style": "IPY_MODEL_696fd4bbc30848289eb077c2dce14e41", "value": "apply len_bytes to num_bytes: 100%"}}, "ca1cda6147e7430bae76cfbd45f0c156": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_b82ae4667c9340529afd1342c22c4c0d", "max": 2, "style": "IPY_MODEL_a3696e1fb7da445dac0c25e9dfec4fd6", "value": 2}}, "ca290c23ef18400b99f57bd40670e713": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "cab1c24b189c46989c65c153dddc2e7c": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "cacaeb68e515494a81c75ba315c1ba7d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_7d4d5f3fcb824d55917a8c82cc1f7df8", "style": "IPY_MODEL_7f2e1b2036044921acd4d2230426002b", "value": "Generating outputs: 100%"}}, "cafc481b095a4e5386747a2432453a85": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "cb119598f16a4a62ae57b543949a2210": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "cb298f14ad02498a926b44043d7ad401": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "cc601352d0a444a6b484c881cce4ae2a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_cb298f14ad02498a926b44043d7ad401", "max": 362, "style": "IPY_MODEL_1de8dacab0804043ace0430a6f60c4de", "value": 362}}, "cc98212675c64a639a260660b31d4f05": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "ce34e857f4d547c7acd68f2b44f87f61": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "cfae8c2328f44ebf9504f847b99f4a4e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "cfc8c730993e42fa99bbbba07b6880cc": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_7821efb164fe4dcea242aa9bd16a10bf", "style": "IPY_MODEL_3074b5ed45144085ba8a16d18601e736", "value": "100%"}}, "d0c87013d3364b81b7133a05567882ac": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "d21838a279fd4150b469183006f38577": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_b32a2000b09845f0a8177bb9f5e1303e", "style": "IPY_MODEL_4fd1053b94244a95be407b0fbcf8e3fe", "value": "downloading: 100%"}}, "d372f531c23e4e1a875054a5d117835d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "d3949d098fdc474c8fcfae910292322d": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "d3d1681e89c64bb59995e91a1def647b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_2d3d845b7649478d9f76bb6929af10b6", "style": "IPY_MODEL_4e5557dfdb324455bc69e52f9708a594", "value": "Epochs 1/2. Running Loss:    0.4347: 100%"}}, "d4acf62e1ffe42fbb240f239ecb9be0c": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "d4c0c23da8aa41d9bac265873fc97354": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_0746fdfca89749d7891adc0a9637cc04", "style": "IPY_MODEL_a129db9c410c40968937dfc6ee5806ac", "value": "100%"}}, "d4ddbc335a204e119e47b4140e010a71": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "d5c52fd0897e4a6892041acf4b2acc5b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_4fce9caa42f44898aa306eccb9c309a8", "IPY_MODEL_de6ac234e7aa4203a5e385e948004a9d", "IPY_MODEL_0b3e9a9dfb88411a995c7ce617d5bed1"], "layout": "IPY_MODEL_1f4025321a4f4f53a08f8c277ecfeee7"}}, "d65f9b65486a4893b16fe0a565fe9fb4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_29936696e42849aa913493091542274f", "max": 1445, "style": "IPY_MODEL_bd7c7f8d5a7c453280e6961fcbaaf9df", "value": 1445}}, "d7003cfde87d4af5b60d466dd6377d6c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_d813e4f7922a44e8964c3131abaf0185", "max": 362, "style": "IPY_MODEL_66ee426877a34c03a0f70e2280c635d8", "value": 362}}, "d75709f133614b97a43238ba28c92108": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "d778b5c13f7b4607a08efd9c923c2ba4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "d813e4f7922a44e8964c3131abaf0185": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "d912037225fd47608425a7200433e767": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "d9ff93da52e14fab9e9ecd09f4004228": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "dc74d6eb8c594850b421e234730e9fd7": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "dc92055021ee4973b0f4915b6b74d3d7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_93a1f9a5ab6a49cb8d3ab57e7a2b3300", "style": "IPY_MODEL_516123a2c4be4f25856973c7af501cb0", "value": " 181/181 [00:27&lt;00:00,  6.04it/s]"}}, "dd2fea6e116149b0a66e2faf5ad4ed80": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "LabelModel", "state": {"layout": "IPY_MODEL_5369ed34506949c99a2c6e8c3b15c2e7", "style": "IPY_MODEL_d372f531c23e4e1a875054a5d117835d"}}, "dd6e2df319834d00a662c3e1fb69d07b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_ff6e3fde133d430795a9fd086bd9960e", "max": 452, "style": "IPY_MODEL_a2c8ebbe3b01477987f304ca42322776", "value": 452}}, "de6ac234e7aa4203a5e385e948004a9d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_e6caffbb3da343d38e1e35d68ebe25f2", "max": 362, "style": "IPY_MODEL_6b013abd1e96418097e603a292a39bf4", "value": 362}}, "df06173b35854843924743e6f2041a93": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_a8ed6441236d46e790ebc6a6c792cd5d", "max": 192, "style": "IPY_MODEL_9b98ab7371cb49248bcf9d149ac4eb3c", "value": 192}}, "e016c83834a54daaa370a6b40d5f9d98": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "e075df3e6b7345e6beab56660838f045": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_11e6af3ea4944f24965efed6b01c28a5", "style": "IPY_MODEL_266f50b03aab48db92cb9afd0b6b7f78", "value": " 452/452 [00:05&lt;00:00, 91.43it/s]"}}, "e078e82c51a944a6ae287b88fc3ad0d3": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "e2e527e4257f430491e2d29de3ae977e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "e2f72c6963774784ba9b8c7b797b8f95": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "e33e18948d204417b2a19b13c64cff73": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "e3c618236e3640afad1b9f5353b0fb8e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "e4c99a4b79a14a88a2be91403c64195b": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "e6348cbfc5e24b3fac7d5e6d222f8057": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_6c69b16918aa4a9daf56ef7e3f1ad151", "IPY_MODEL_cc601352d0a444a6b484c881cce4ae2a", "IPY_MODEL_0c5985a3cd3b4c749eb3bb1ce3c27d93"], "layout": "IPY_MODEL_6138759e1ff84774beb3fd24518d05e6"}}, "e6637663ae50432a8024283abb33518c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_087eb416839647f2a4045bcd36fe0dd6", "style": "IPY_MODEL_a1069f7ecbdb496ca03de184c4f209e9", "value": "Running Evaluation: 100%"}}, "e671e098f5964b38a48ed008c5f9c943": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "e6caffbb3da343d38e1e35d68ebe25f2": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "e6e25503d01e4a98beebb9820aee638e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_a55de7c4a1874d9aadc03013e07cfc24", "style": "IPY_MODEL_670a90fd94334f9c9230caf549790d5c", "value": "Predicting [text]: 100%"}}, "e758dda4b5734dcdb9512b2f4fb55c52": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "VBoxModel", "state": {"children": ["IPY_MODEL_b63272753de249459764c861c265d25c", "IPY_MODEL_77ab5945b41e4b66b589d463ebe1052a"], "layout": "IPY_MODEL_cab1c24b189c46989c65c153dddc2e7c"}}, "e78fba94c4034cf6b1ce76eb0e53fa65": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "e7c6775a0f004df4910aba856648e286": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "edc6c2c863704920a1b16a1d99e3582c": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "eddd581ad4e64c85a2859e3373f95ef1": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_0ef65f1b8ea247de96195f160a59790a", "style": "IPY_MODEL_958615a51e844b95ad74019002e73f97", "value": "100%"}}, "ef7b00fb4ec044059c65613b2ebac276": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "f4ee13392db043feab3d89b8d7f6a45f": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_5ff254d724144dde985443ee796a6f59", "IPY_MODEL_29f1adda06f14b57a2df624b24e73ee9", "IPY_MODEL_4c2eb2d821324561b1d2c12c81dd69ca"], "layout": "IPY_MODEL_ae3a1c53450c403dbed11cfad1bd07a1"}}, "f50505a56e5f4382884360ebe887b29b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "f5ea7540900d4a39be8ec1e9919c2611": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"layout": "IPY_MODEL_462d0d6a22434bde957164e39dba6dc1", "max": 1, "style": "IPY_MODEL_70a8a38974fb4f1faf98d9e31e1e0099"}}, "f6b42e4a6f794ed9a91964c10d3b23f9": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "f6ef2e848adb45b09ebdfadce6e53f4e": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "f77af39df9c140aca0f729e703e1fb59": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_dc74d6eb8c594850b421e234730e9fd7", "max": 46, "style": "IPY_MODEL_ba45cb1ec2e64af58ae13a807825c27d", "value": 46}}, "fa6620d97bb44e67a0abc7aee80ff470": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "fa7310ff4d2f4ecf98a4e551c8668a3a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_6f197118bffd4f988e37a4c3407372e7", "max": 46, "style": "IPY_MODEL_6d158029cd544c53bb31822c69b2b93b", "value": 46}}, "fac24e0e0622413b9303853990dc58f0": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "VBoxModel", "state": {"children": ["IPY_MODEL_0961949f94f145b7a626cda55ffb28b4", "IPY_MODEL_222aadf3a6df45768edb89c94fae67ed"], "layout": "IPY_MODEL_e671e098f5964b38a48ed008c5f9c943"}}, "fb39cb0c6f2a4ff5a01e5a7e4b931a76": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "fc8554eb00a54dfbbb5bf840252c2a98": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "fef6ad02e0994545b41e45b1fd30db50": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_396e7d4283f94b4d9c67e28802cbecbd", "max": 181, "style": "IPY_MODEL_24e9a09c3ac041c680d232c347120c3c", "value": 181}}, "ff671bcce56f4b6b9a623c0dde4c6e3c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "LabelModel", "state": {"layout": "IPY_MODEL_edc6c2c863704920a1b16a1d99e3582c", "style": "IPY_MODEL_cfae8c2328f44ebf9504f847b99f4a4e", "value": "0.015 MB of 0.015 MB uploaded (0.000 MB deduped)\r"}}, "ff6e3fde133d430795a9fd086bd9960e": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}}, "version_major": 2, "version_minor": 0}</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script crossorigin="anonymous" data-jupyter-widgets-cdn="https://cdn.jsdelivr.net/npm/" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <script src="https://unpkg.com/mermaid@9.4.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/models/sentiment/sentiment';</script>
+    <link rel="canonical" href="https://ekorpkit.entelecheia.ai/tutorials/models/sentiment/sentiment.html" />
+    <link rel="shortcut icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Transformers" href="../transformers/index.html" />
+    <link rel="prev" title="Evaluate LM with financial phrasebank" href="financial_phrasebank_lm.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">ekorpkit</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Introduction
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Basics</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/index.html">Getting started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/usage.html">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/features/index.html">Key features</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/easy_config.html">Easy Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/no_boiler.html">No Boilerplate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/workflows.html">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/share.html">Sharable and Reproducible</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/plug.html">Pluggable Architece</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../config/index.html">Configuring ekorpkit</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../config/eKonf.html">Using eKonf class</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../datasets/index.html">Datasets</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/corpus.html">Build and Load Corpora</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/dataset.html">Build and Load Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/pipeline.html">Corpus task pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../automl/index.html">Auto ML</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../embeddings/index.html">Word Embeddings</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../embeddings/word2vec_basics.html">Word2Vec Basics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../embeddings/eval_vectors.html">Evaluate pretrained embeddings</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../ngram/index.html">N-Grams</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ngram/ngram.html">N-Grams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ngram/ngram_for_lexicons.html">N-Gram model for ngram lexicon features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ngram/ngram_for_words.html">N-Gram model for unigram lexicon features</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Sentiment Analyers</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="lbsa_en.html">Lexicon-based Sentiment Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="financial_phrasebank_lm.html">Evaluate LM with financial phrasebank</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">LM Dictionary vs. finbert vs. T5</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../transformers/index.html">Transformers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../pipelines/index.html">Pipelines</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pipelines/pipeline.html">Instantiating pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../preprocessors/index.html">Preprocessors</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/normalizer/index.html">Normalizers</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/normalizer/normalizer.html">Normalizers</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/segmenter/index.html">Segmenters</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/segmenter/segmenter.html">Segmenters</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/tokenizer/index.html">Tokenizers</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/tokenizer/mecab.html">Mecab Tokenizer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../visualizers/index.html">Visualizers</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../visualizers/plot.html">Plots</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow/index.html">Workflows</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../datasets/ekorpkot_corpus.html">The eKorpkit Corpus</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://entelecheia.me">entelecheia.me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/index.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/cite.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-launch-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Launch interactive content">
+    <i class="fas fa-rocket"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://colab.research.google.com/github/entelecheia/ekorpkit/blob/main/book/tutorials/models/sentiment/sentiment.ipynb" target="_blank"
+   class="btn btn-sm dropdown-item"
+   title="Launch onColab"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  
+    <img src="../../../_static/images/logo_colab.png">
+  </span>
+<span class="btn__text-container">Colab</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="initThebeSBT()"
+  class="btn btn-sm btn-launch-thebe dropdown-item"
+  title="Launch Thebe"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-play"></i>
+  </span>
+<span class="btn__text-container">Live Code</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit/issues/new?title=Issue%20on%20page%20%2Ftutorials/models/sentiment/sentiment.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/tutorials/models/sentiment/sentiment.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>LM Dictionary vs. finbert vs. T5</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prepare-financial-phrasebank-dataset">Prepare <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instantiating-a-sentiment-analyser-class-with-financial-phrasebank-dataset">Instantiating a sentiment analyser class with <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instantiating-a-transformer-classficiation-model-with-financial-phrasebank-dataset">Instantiating a transformer classficiation model with <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instantiating-a-t5-classficiation-model-with-financial-phrasebank-dataset">Instantiating a T5 classficiation model with <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="lm-dictionary-vs-finbert-vs-t5">
+<h1>LM Dictionary vs. finbert vs. T5<a class="headerlink" href="#lm-dictionary-vs-finbert-vs-t5" title="Permalink to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">config</span> InlineBackend.figure_format=&#39;retina&#39;
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">ekorpkit</span> <span class="kn">import</span> <span class="n">eKonf</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">eKonf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.1.33+30.gbd0c674.dirty
+</pre></div>
+</div>
+</div>
+</div>
+<section id="prepare-financial-phrasebank-dataset">
+<h2>Prepare <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset<a class="headerlink" href="#prepare-financial-phrasebank-dataset" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds_name</span> <span class="o">=</span> <span class="s2">&quot;financial_phrasebank&quot;</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s1">&#39;dataset/simple=&#39;</span> <span class="o">+</span> <span class="n">ds_name</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="s1">&#39;../data/&#39;</span> <span class="o">+</span> <span class="n">ds_name</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">force</span><span class="o">.</span><span class="n">build</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">force</span><span class="o">.</span><span class="n">summarize</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>apply len_bytes to num_bytes: 100%|██████████| 207/207 [00:21&lt;00:00,  9.68it/s]
+apply len_bytes to num_bytes: 100%|██████████| 226/226 [00:04&lt;00:00, 51.35it/s] 
+apply len_bytes to num_bytes: 100%|██████████| 181/181 [00:00&lt;00:00, 697.31it/s]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s1">&#39;dataset&#39;</span><span class="p">)</span>
+<span class="n">ds_cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;financial_phrasebank&#39;</span>
+<span class="n">ds_cfg</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="s1">&#39;https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/financial_phrasebank.zip&#39;</span>
+<span class="n">ds_cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">ds_cfg</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">cached_path</span>
+<span class="n">ds_cfg</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">ds</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">ds_cfg</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Dataset : financial_phrasebank
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="instantiating-a-sentiment-analyser-class-with-financial-phrasebank-dataset">
+<h2>Instantiating a sentiment analyser class with <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset<a class="headerlink" href="#instantiating-a-sentiment-analyser-class-with-financial-phrasebank-dataset" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s1">&#39;model/sentiment=lm&#39;</span><span class="p">)</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s1">&#39;pipeline&#39;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">ds_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">_pipeline_</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;predict&#39;</span><span class="p">]</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;../data/predict&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ds_cfg</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.parquet&#39;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "399fe585b5d546d98fcd6dff07d4b622", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "c8f346d0b6da4640838d9ab160b72b63", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "d23325d455364cdab27a15f63e51babd", "version_major": 2, "version_minor": 0}</script><div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;train&#39;:          id                                               text    labels  \
+ index                                                                      
+ 0       655  Customers in a wide range of industries use ou...   neutral   
+ 1       634  The writing and publication of Lemmink+ñinen -...   neutral   
+ 2      1030  Sullivan said some of the boards `` really inv...   neutral   
+ 3       317  The six breweries recorded a 5.2 percent growt...  positive   
+ 4       868  In the second quarter of 2010 , the company &#39;s...  positive   
+ ...     ...                                                ...       ...   
+ 1440    136  In the fourth quarter of 2009 , Orion &#39;s net p...  positive   
+ 1441   2170  Profit for the period totalled EUR 1.1 mn , do...  negative   
+ 1442    344  The diluted loss per share narrowed to EUR 0.2...  positive   
+ 1443    573  LKAB , headquartered in Lulea , Sweden , is a ...   neutral   
+ 1444   1768  The EBRD is using its own funds to provide a 2...   neutral   
+ 
+                    subset  split  num_tokens  polarity polarity_label  \
+ index                                                                   
+ 0      sentences_allagree  train        15.0  0.000000        neutral   
+ 1      sentences_allagree  train        22.0  0.999999       positive   
+ 2      sentences_allagree  train        24.0  0.000000        neutral   
+ 3      sentences_allagree  train        27.0  0.000000        neutral   
+ 4      sentences_allagree  train        29.0 -0.999999       negative   
+ ...                   ...    ...         ...       ...            ...   
+ 1440   sentences_allagree  train        20.0  0.000000        neutral   
+ 1441   sentences_allagree  train        21.0  0.000000        neutral   
+ 1442   sentences_allagree  train        13.0 -0.999999       negative   
+ 1443   sentences_allagree  train        23.0  0.000000        neutral   
+ 1444   sentences_allagree  train        41.0  0.000000        neutral   
+ 
+        uncertainty  
+ index               
+ 0         0.000001  
+ 1         0.000001  
+ 2         0.000001  
+ 3         0.000001  
+ 4         0.000001  
+ ...            ...  
+ 1440      0.000001  
+ 1441      0.000001  
+ 1442      0.000001  
+ 1443      0.000001  
+ 1444      0.000001  
+ 
+ [1445 rows x 9 columns],
+ &#39;test&#39;:        id                                               text    labels  \
+ 0     505  Los Angeles-based Pacific Office Properties Tr...   neutral   
+ 1     783  Investors will continue being interested in th...  positive   
+ 2    2253  Repeats sees 2008 operating profit down y-y ( ...  negative   
+ 3    1374  The acquisition was financed with $ 2.56 billi...   neutral   
+ 4     243  Profit per share was EUR 1.03 , up from EUR 0....  positive   
+ ..    ...                                                ...       ...   
+ 447   605  The commission said the hydrogen peroxide and ...   neutral   
+ 448  2258  Sales in Finland decreased by 2.0 % , and inte...  negative   
+ 449   254  The earnings per share for the quarter came in...  positive   
+ 450  1390  The company can not give up palm oil altogethe...   neutral   
+ 451   181  Pretax profit rose to EUR 1,019 mn from EUR 1,...  positive   
+ 
+                  subset split  num_tokens  polarity polarity_label  \
+ 0    sentences_allagree  test        36.0       0.0        neutral   
+ 1    sentences_allagree  test        20.0       0.0        neutral   
+ 2    sentences_allagree  test        16.0       0.0        neutral   
+ 3    sentences_allagree  test        18.0       0.0        neutral   
+ 4    sentences_allagree  test        12.0       0.0        neutral   
+ ..                  ...   ...         ...       ...            ...   
+ 447  sentences_allagree  test        18.0       0.0        neutral   
+ 448  sentences_allagree  test        30.0       0.0        neutral   
+ 449  sentences_allagree  test        26.0       0.0        neutral   
+ 450  sentences_allagree  test        12.0       0.0        neutral   
+ 451  sentences_allagree  test        17.0       0.0        neutral   
+ 
+      uncertainty  
+ 0       0.000001  
+ 1       0.000001  
+ 2       0.000001  
+ 3       0.000001  
+ 4       0.000001  
+ ..           ...  
+ 447     0.000001  
+ 448     0.000001  
+ 449     0.000001  
+ 450     0.000001  
+ 451     0.000001  
+ 
+ [452 rows x 9 columns],
+ &#39;dev&#39;:        id                                               text    labels  \
+ 0    1449       The identity of the buyer is not yet known .   neutral   
+ 1     165  Operating profit rose to EUR 3.2 mn from EUR 1...  positive   
+ 2    1334  Previously , Grimaldi held a 46.43 pct stake i...   neutral   
+ 3     907  A total of $ 78 million will be invested in th...   neutral   
+ 4    1371  The 19,200-square metre technology center is l...   neutral   
+ ..    ...                                                ...       ...   
+ 357  1120  Under a preliminary estimation , the technolog...   neutral   
+ 358   404  Operating profit improved by 27 % to EUR 579.8...  positive   
+ 359  1708  Rohwedder Group is an automotive supplies , te...   neutral   
+ 360   225  In January-September 2007 , the group &#39;s net s...  positive   
+ 361  1008  Payment of shares shall be effected on subscri...   neutral   
+ 
+                  subset split  num_tokens  polarity polarity_label  \
+ 0    sentences_allagree   dev        10.0  0.000000        neutral   
+ 1    sentences_allagree   dev        18.0  0.000000        neutral   
+ 2    sentences_allagree   dev        21.0  0.000000        neutral   
+ 3    sentences_allagree   dev        13.0  0.000000        neutral   
+ 4    sentences_allagree   dev        15.0  0.000000        neutral   
+ ..                  ...   ...         ...       ...            ...   
+ 357  sentences_allagree   dev        15.0  0.000000        neutral   
+ 358  sentences_allagree   dev        17.0  0.999999       positive   
+ 359  sentences_allagree   dev        22.0  0.000000        neutral   
+ 360  sentences_allagree   dev        28.0  0.000000        neutral   
+ 361  sentences_allagree   dev         9.0  0.000000        neutral   
+ 
+      uncertainty  
+ 0       0.000001  
+ 1       0.000001  
+ 2       0.000001  
+ 3       0.000001  
+ 4       0.000001  
+ ..           ...  
+ 357     0.066668  
+ 358     0.000001  
+ 359     0.000001  
+ 360     0.000001  
+ 361     0.000001  
+ 
+ [362 rows x 9 columns]}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">output_dir</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">output_file</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>../data/predict
+financial_phrasebank.parquet
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tmp_df</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="s2">&quot;financial_phrasebank-dev.parquet&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">output_dir</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tmp_df</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt;
+RangeIndex: 362 entries, 0 to 361
+Data columns (total 9 columns):
+ #   Column          Non-Null Count  Dtype  
+---  ------          --------------  -----  
+ 0   id              362 non-null    int64  
+ 1   text            362 non-null    object 
+ 2   labels          362 non-null    object 
+ 3   subset          362 non-null    object 
+ 4   split           362 non-null    object 
+ 5   num_tokens      360 non-null    float64
+ 6   polarity        360 non-null    float64
+ 7   polarity_label  360 non-null    object 
+ 8   uncertainty     360 non-null    float64
+dtypes: float64(3), int64(1), object(5)
+memory usage: 25.6+ KB
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s1">&#39;model/eval=classification&#39;</span><span class="p">)</span>
+<span class="n">eval_cfg</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">actual</span> <span class="o">=</span> <span class="s1">&#39;labels&#39;</span>
+<span class="n">eval_cfg</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">predicted</span> <span class="o">=</span> <span class="s1">&#39;polarity_label&#39;</span>
+<span class="n">eval_cfg</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;positive&#39;</span><span class="p">,</span><span class="s1">&#39;neutral&#39;</span><span class="p">,</span><span class="s1">&#39;negative&#39;</span><span class="p">]</span>
+<span class="n">eval_cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="s1">&#39;../data/predict&#39;</span>
+<span class="n">eval_cfg</span><span class="o">.</span><span class="n">data_file</span> <span class="o">=</span> <span class="s1">&#39;financial_phrasebank-*.parquet&#39;</span>
+<span class="n">eval_cfg</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="s1">&#39;../data/eval&#39;</span>
+<span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">eval_cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Accuracy:  0.6421895861148198
+Precison:  0.6333030880769485
+Recall:  0.6421895861148198
+F1 Score:  0.5974587783784485
+Model Report: 
+___________________________________________________
+              precision    recall  f1-score   support
+
+    negative       0.39      0.36      0.37       302
+     neutral       0.68      0.89      0.77      1375
+    positive       0.65      0.19      0.29       570
+
+    accuracy                           0.64      2247
+   macro avg       0.57      0.48      0.48      2247
+weighted avg       0.63      0.64      0.60      2247
+</pre></div>
+</div>
+<img alt="../../../_images/ef1cfcfd77e418a7442ba73ce3b0d42dc18a682f9eccc9472922493941935f3a.png" src="../../../_images/ef1cfcfd77e418a7442ba73ce3b0d42dc18a682f9eccc9472922493941935f3a.png" />
+</div>
+</div>
+</section>
+<section id="instantiating-a-transformer-classficiation-model-with-financial-phrasebank-dataset">
+<h2>Instantiating a transformer classficiation model with <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset<a class="headerlink" href="#instantiating-a-transformer-classficiation-model-with-financial-phrasebank-dataset" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">overrides</span><span class="o">=</span><span class="p">[</span>
+    <span class="s1">&#39;+model/transformer=classification&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;+model/transformer/pretrained=finbert&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">model_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s1">&#39;model/transformer=classification&#39;</span><span class="p">,</span> <span class="n">overrides</span><span class="p">)</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">ds_cfg</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_train_epochs</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_seq_length</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">train_batch_size</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eval_batch_size</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;positive&#39;</span><span class="p">,</span><span class="s1">&#39;neutral&#39;</span><span class="p">,</span><span class="s1">&#39;negative&#39;</span><span class="p">]</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">_method_</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">]</span>
+<span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">model_cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "99ea20c365ac4dca96c4794557af9980", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "dc67764ac12e4cf68ad0e526a6d2a224", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "cc788e2b28ee41f5a191c1efaff5cec5", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "fae3f20838b048c382f13a8340d1c782", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "69f8a99f58c449ea93df26824cb2deff", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "3fd4aaa114344a5c8a9dc9598612a45b", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "921c858862f541a0ad9fb06fed62501a", "version_major": 2, "version_minor": 0}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Bold -Color-Bold-Blue">wandb</span>: Currently logged in as: <span class=" -Color -Color-Yellow">entelecheia</span>. Use <span class=" -Color -Color-Bold">`wandb login --relogin`</span> to force relogin
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+</pre></div>
+</div>
+<div class="output text_html">Tracking run with wandb version 0.12.18</div><div class="output text_html">Run data is saved locally in <code>/workspace/projects/esgml/outputs/esgml-esgml/finbert/wandb/run-20220620_074520-24c3zvxp</code></div><div class="output text_html">Syncing run <strong><a href="https://wandb.ai/entelecheia/esgml-esgml/runs/24c3zvxp" target="_blank">peach-cosmos-3</a></strong> to <a href="https://wandb.ai/entelecheia/esgml-esgml" target="_blank">Weights & Biases</a> (<a href="https://wandb.me/run" target="_blank">docs</a>)<br/></div><script type="application/vnd.jupyter.widget-view+json">{"model_id": "03753ec2dc224bafa11fe604ce598903", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "ebd65d10a90b4e43b2512c54e4154e0c", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "31468807d541493aa4b455c9490a8c63", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "b8a8899477f04eac837d400a74995516", "version_major": 2, "version_minor": 0}</script><div class="output text_html">Finishing last run (ID:24c3zvxp) before initializing another...</div><div class="output text_html">Waiting for W&B process to finish... <strong style="color:green">(success).</strong></div><script type="application/vnd.jupyter.widget-view+json">{"model_id": "", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><style>
+    table.wandb td:nth-child(1) { padding: 0 10px; text-align: left ; width: auto;} td:nth-child(2) {text-align: left ; width: 100%}
+    .wandb-row { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; width: 100% }
+    .wandb-col { display: flex; flex-direction: column; flex-basis: 100%; flex: 1; padding: 10px; }
+    </style>
+<div class="wandb-row"><div class="wandb-col"><h3>Run history:</h3><br/><table class="wandb"><tr><td>Training loss</td><td>▁</td></tr><tr><td>acc</td><td>▁█</td></tr><tr><td>eval_loss</td><td>█▁</td></tr><tr><td>global_step</td><td>▁▂█</td></tr><tr><td>lr</td><td>▁</td></tr><tr><td>mcc</td><td>▁█</td></tr><tr><td>train_loss</td><td>█▁</td></tr></table><br/></div><div class="wandb-col"><h3>Run summary:</h3><br/><table class="wandb"><tr><td>Training loss</td><td>0.5406</td></tr><tr><td>acc</td><td>0.91436</td></tr><tr><td>eval_loss</td><td>0.29525</td></tr><tr><td>global_step</td><td>92</td></tr><tr><td>lr</td><td>2e-05</td></tr><tr><td>mcc</td><td>0.84103</td></tr><tr><td>train_loss</td><td>0.17862</td></tr></table><br/></div></div></div><div class="output text_html">Synced <strong style="color:#cdcd00">peach-cosmos-3</strong>: <a href="https://wandb.ai/entelecheia/esgml-esgml/runs/24c3zvxp" target="_blank">https://wandb.ai/entelecheia/esgml-esgml/runs/24c3zvxp</a><br/>Synced 4 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)</div><div class="output text_html">Find logs at: <code>/workspace/projects/esgml/outputs/esgml-esgml/finbert/wandb/run-20220620_074520-24c3zvxp/logs</code></div><div class="output text_html">Successfully finished last run (ID:24c3zvxp). Initializing new run:<br/></div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+</pre></div>
+</div>
+<div class="output text_html">Tracking run with wandb version 0.12.18</div><div class="output text_html">Run data is saved locally in <code>/workspace/projects/esgml/outputs/esgml-esgml/finbert/wandb/run-20220620_074542-2s94lgmw</code></div><div class="output text_html">Syncing run <strong><a href="https://wandb.ai/entelecheia/esgml-esgml/runs/2s94lgmw" target="_blank">sage-fog-4</a></strong> to <a href="https://wandb.ai/entelecheia/esgml-esgml" target="_blank">Weights & Biases</a> (<a href="https://wandb.me/run" target="_blank">docs</a>)<br/></div><div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;ekorpkit.models.transformer.simple.SimpleClassification at 0x7f7987df2820&gt;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">overrides</span><span class="o">=</span><span class="p">[</span>
+    <span class="s1">&#39;+model/transformer=classification&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;+model/transformer/pretrained=finbert&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">model_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s1">&#39;model/transformer=classification&#39;</span><span class="p">,</span> <span class="n">overrides</span><span class="p">)</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">ds_cfg</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_train_epochs</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_seq_length</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">train_batch_size</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eval_batch_size</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;positive&#39;</span><span class="p">,</span><span class="s1">&#39;neutral&#39;</span><span class="p">,</span><span class="s1">&#39;negative&#39;</span><span class="p">]</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">_method_</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;eval&#39;</span><span class="p">]</span>
+<span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">model_cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b1b2bea8318f4cefb6002de850140222", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "3897e7645cbf4ebda38419bdab4f6768", "version_major": 2, "version_minor": 0}</script><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Accuracy:  0.9004424778761062
+Precison:  0.9067742606459421
+Recall:  0.9004424778761062
+F1 Score:  0.90187372379709
+Model Report: 
+___________________________________________________
+              precision    recall  f1-score   support
+
+    negative       0.94      0.80      0.87        61
+     neutral       0.96      0.93      0.94       277
+    positive       0.77      0.88      0.82       114
+
+    accuracy                           0.90       452
+   macro avg       0.89      0.87      0.88       452
+weighted avg       0.91      0.90      0.90       452
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;ekorpkit.models.transformer.simple.SimpleClassification at 0x7f78034b6670&gt;
+</pre></div>
+</div>
+<img alt="../../../_images/bdf351a7fa0ea587dde7f66ee284c130b642331520c1e213526796fcb9f49102.png" src="../../../_images/bdf351a7fa0ea587dde7f66ee284c130b642331520c1e213526796fcb9f49102.png" />
+</div>
+</div>
+</section>
+<section id="instantiating-a-t5-classficiation-model-with-financial-phrasebank-dataset">
+<h2>Instantiating a T5 classficiation model with <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset<a class="headerlink" href="#instantiating-a-t5-classficiation-model-with-financial-phrasebank-dataset" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">overrides</span><span class="o">=</span><span class="p">[</span>
+    <span class="s1">&#39;+model/transformer=t5_classification_with_simple&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;+model/transformer/pretrained=t5-base&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">model_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s1">&#39;model/transformer=t5_classification_with_simple&#39;</span><span class="p">,</span> <span class="n">overrides</span><span class="p">)</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">ds_cfg</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_train_epochs</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_seq_length</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">train_batch_size</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eval_batch_size</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;positive&#39;</span><span class="p">,</span><span class="s1">&#39;neutral&#39;</span><span class="p">,</span><span class="s1">&#39;negative&#39;</span><span class="p">]</span>
+<span class="n">model_cfg</span><span class="o">.</span><span class="n">_method_</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">]</span>
+<span class="c1"># model_cfg._method_ = [&#39;eval&#39;]</span>
+<span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">model_cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "ca43bc95b8cf431f8572b1206335cac7", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "c740583d3a444c758410385d81bf68f7", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "835b9ea9e3454172b0e7d4a178f2f1f6", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "e68a2fff0e2f4140ae8d3f2cee6c62b1", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "0433796edb784bad848fd0fee9e00593", "version_major": 2, "version_minor": 0}</script><div class="output text_html">Finishing last run (ID:2s94lgmw) before initializing another...</div><div class="output text_html">Waiting for W&B process to finish... <strong style="color:green">(success).</strong></div><script type="application/vnd.jupyter.widget-view+json">{"model_id": "", "version_major": 2, "version_minor": 0}</script><div class="output text_html">Synced <strong style="color:#cdcd00">sage-fog-4</strong>: <a href="https://wandb.ai/entelecheia/esgml-esgml/runs/2s94lgmw" target="_blank">https://wandb.ai/entelecheia/esgml-esgml/runs/2s94lgmw</a><br/>Synced 5 W&B file(s), 1 media file(s), 1 artifact file(s) and 0 other file(s)</div><div class="output text_html">Find logs at: <code>/workspace/projects/esgml/outputs/esgml-esgml/finbert/wandb/run-20220620_074542-2s94lgmw/logs</code></div><div class="output text_html">Successfully finished last run (ID:2s94lgmw). Initializing new run:<br/></div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+</pre></div>
+</div>
+<div class="output text_html">Tracking run with wandb version 0.12.18</div><div class="output text_html">Run data is saved locally in <code>/workspace/projects/esgml/outputs/esgml-esgml/t5-base/wandb/run-20220620_075003-eavxiyyi</code></div><div class="output text_html">Syncing run <strong><a href="https://wandb.ai/entelecheia/esgml-esgml/runs/eavxiyyi" target="_blank">eternal-breeze-5</a></strong> to <a href="https://wandb.ai/entelecheia/esgml-esgml" target="_blank">Weights & Biases</a> (<a href="https://wandb.me/run" target="_blank">docs</a>)<br/></div><script type="application/vnd.jupyter.widget-view+json">{"model_id": "6522227d2c40413791d70b3e8dd7f97f", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "ba60e1e4210a4d28b9ae83873f4739e2", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "6415f86090644bf2b408a6faaa83b0a9", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "b7d4a12a651d4bc6a6d4166af1d3811f", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "8e9491b4b53245b6adb6d3fe7ac56b7d", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "058ff96343da46f68a950d1c1d396e49", "version_major": 2, "version_minor": 0}</script><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;eval_loss&#39;: 0.07960319360503681}
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "de44e02b44074c87b19e632ada0d0403", "version_major": 2, "version_minor": 0}</script><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Accuracy:  0.9402654867256637
+Precison:  0.9406832105947149
+Recall:  0.9402654867256637
+F1 Score:  0.9395622196129697
+Model Report: 
+___________________________________________________
+              precision    recall  f1-score   support
+
+    negative       0.96      0.82      0.88        61
+     neutral       0.94      0.97      0.96       277
+    positive       0.93      0.93      0.93       114
+
+    accuracy                           0.94       452
+   macro avg       0.94      0.91      0.92       452
+weighted avg       0.94      0.94      0.94       452
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;ekorpkit.models.transformer.simple_t5.SimpleT5 at 0x7f7802a775e0&gt;
+</pre></div>
+</div>
+<img alt="../../../_images/c75c32715b40d64b5a8036e18afb8a58f35b4112b22456593c2ab2058c31d8ad.png" src="../../../_images/c75c32715b40d64b5a8036e18afb8a58f35b4112b22456593c2ab2058c31d8ad.png" />
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "entelecheia/ekorpkit",
+            ref: "main",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/models/sentiment"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="financial_phrasebank_lm.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Evaluate LM with financial phrasebank</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../transformers/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Transformers</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prepare-financial-phrasebank-dataset">Prepare <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instantiating-a-sentiment-analyser-class-with-financial-phrasebank-dataset">Instantiating a sentiment analyser class with <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instantiating-a-transformer-classficiation-model-with-financial-phrasebank-dataset">Instantiating a transformer classficiation model with <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instantiating-a-t5-classficiation-model-with-financial-phrasebank-dataset">Instantiating a T5 classficiation model with <code class="docutils literal notranslate"><span class="pre">financial_phrasebank</span></code> dataset</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By <a href="https://entelecheia.me">Young Joon Lee</a>
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

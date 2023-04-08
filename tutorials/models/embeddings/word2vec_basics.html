@@ -1,0 +1,1422 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Word2Vec Basics &#8212; ekorpkit</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-examples.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.bundle.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-shadow.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-punk.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-borderless.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/micromodal.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../../_static/tabs.js"></script>
+    <script src="../../../_static/js/hoverxref.js"></script>
+    <script src="../../../_static/js/tooltipster.bundle.min.js"></script>
+    <script src="../../../_static/js/micromodal.min.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"tex": {"macros": {"N": "\\mathbb{N}", "floor": ["\\lfloor#1\\rfloor", 1], "bmat": ["\\left[\\begin{array}"], "emat": ["\\end{array}\\right]"]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://unpkg.com/mermaid@9.4.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/models/embeddings/word2vec_basics';</script>
+    <link rel="canonical" href="https://ekorpkit.entelecheia.ai/tutorials/models/embeddings/word2vec_basics.html" />
+    <link rel="shortcut icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Evaluate pretrained embeddings" href="eval_vectors.html" />
+    <link rel="prev" title="Word Embeddings" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">ekorpkit</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Introduction
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Basics</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/index.html">Getting started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/usage.html">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/features/index.html">Key features</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/easy_config.html">Easy Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/no_boiler.html">No Boilerplate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/workflows.html">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/share.html">Sharable and Reproducible</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/plug.html">Pluggable Architece</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../config/index.html">Configuring ekorpkit</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../config/eKonf.html">Using eKonf class</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../datasets/index.html">Datasets</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/corpus.html">Build and Load Corpora</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/dataset.html">Build and Load Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/pipeline.html">Corpus task pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../automl/index.html">Auto ML</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Word Embeddings</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Word2Vec Basics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="eval_vectors.html">Evaluate pretrained embeddings</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../ngram/index.html">N-Grams</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ngram/ngram.html">N-Grams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ngram/ngram_for_lexicons.html">N-Gram model for ngram lexicon features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ngram/ngram_for_words.html">N-Gram model for unigram lexicon features</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../sentiment/index.html">Sentiment Analyers</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/lbsa_en.html">Lexicon-based Sentiment Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/financial_phrasebank_lm.html">Evaluate LM with financial phrasebank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/sentiment.html">LM Dictionary vs. finbert vs. T5</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../transformers/index.html">Transformers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../pipelines/index.html">Pipelines</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pipelines/pipeline.html">Instantiating pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../preprocessors/index.html">Preprocessors</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/normalizer/index.html">Normalizers</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/normalizer/normalizer.html">Normalizers</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/segmenter/index.html">Segmenters</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/segmenter/segmenter.html">Segmenters</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/tokenizer/index.html">Tokenizers</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/tokenizer/mecab.html">Mecab Tokenizer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../visualizers/index.html">Visualizers</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../visualizers/plot.html">Plots</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow/index.html">Workflows</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../datasets/ekorpkot_corpus.html">The eKorpkit Corpus</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://entelecheia.me">entelecheia.me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/index.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/cite.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-launch-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Launch interactive content">
+    <i class="fas fa-rocket"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://colab.research.google.com/github/entelecheia/ekorpkit/blob/main/book/tutorials/models/embeddings/word2vec_basics.ipynb" target="_blank"
+   class="btn btn-sm dropdown-item"
+   title="Launch onColab"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  
+    <img src="../../../_static/images/logo_colab.png">
+  </span>
+<span class="btn__text-container">Colab</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="initThebeSBT()"
+  class="btn btn-sm btn-launch-thebe dropdown-item"
+  title="Launch Thebe"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-play"></i>
+  </span>
+<span class="btn__text-container">Live Code</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit/issues/new?title=Issue%20on%20page%20%2Ftutorials/models/embeddings/word2vec_basics.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/tutorials/models/embeddings/word2vec_basics.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Word2Vec Basics</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#english-word2vec">English Word2Vec</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-fomc-corpus">Load FOMC Corpus</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#korean-word2vec">Korean Word2Vec</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-bok-minutes-corpus">Load BOK Minutes Corpus</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="word2vec-basics">
+<h1>Word2Vec Basics<a class="headerlink" href="#word2vec-basics" title="Permalink to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">ekorpkit</span> <span class="kn">import</span> <span class="n">eKonf</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">eKonf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.1.31+3.g3e40284.dirty
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gensim</span>
+<span class="n">gensim</span><span class="o">.</span><span class="n">__version__</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&#39;4.2.0&#39;
+</pre></div>
+</div>
+</div>
+</div>
+<section id="english-word2vec">
+<h2>English Word2Vec<a class="headerlink" href="#english-word2vec" title="Permalink to this heading">#</a></h2>
+<section id="load-fomc-corpus">
+<h3>Load FOMC Corpus<a class="headerlink" href="#load-fomc-corpus" title="Permalink to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corpus_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s1">&#39;corpus&#39;</span><span class="p">)</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;fomc&#39;</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="s1">&#39;https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/fomc.zip&#39;</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">corpus_cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">path</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">automerge</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">fomc</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">corpus_cfg</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">fomc</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Corpus : fomc
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fomc_minutes</span> <span class="o">=</span> <span class="n">fomc</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">fomc</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">content_type</span> <span class="o">==</span> <span class="s1">&#39;fomc_minutes&#39;</span><span class="p">]</span>
+<span class="n">fomc_minutes</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>text</th>
+      <th>timestamp</th>
+      <th>content_type</th>
+      <th>date</th>
+      <th>speaker</th>
+      <th>title</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>A meeting of the Federal Open Market Committee...</td>
+      <td>1993-02-03</td>
+      <td>fomc_minutes</td>
+      <td>1993-02-03</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>A meeting of the Federal Open Market Committee...</td>
+      <td>1993-03-23</td>
+      <td>fomc_minutes</td>
+      <td>1993-03-23</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>A meeting of the Federal Open Market Committee...</td>
+      <td>1993-05-18</td>
+      <td>fomc_minutes</td>
+      <td>1993-05-18</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>A meeting of the Federal Open Market Committee...</td>
+      <td>1993-07-07</td>
+      <td>fomc_minutes</td>
+      <td>1993-07-07</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+      <td>A meeting of the Federal Open Market Committee...</td>
+      <td>1993-08-17</td>
+      <td>fomc_minutes</td>
+      <td>1993-08-17</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tk_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s1">&#39;preprocessor/tokenizer=nltk&#39;</span><span class="p">)</span>
+<span class="n">tk_cfg</span><span class="o">.</span><span class="n">nltk</span><span class="o">.</span><span class="n">lemmatize</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">tk_cfg</span><span class="o">.</span><span class="n">nltk</span><span class="o">.</span><span class="n">stem</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s2">&quot;pipeline&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">_pipeline_</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tokenize&quot;</span><span class="p">,</span> <span class="s2">&quot;extract_tokens&quot;</span><span class="p">,</span> <span class="s2">&quot;explode_splits&quot;</span><span class="p">,</span><span class="s2">&quot;reset_index&quot;</span><span class="p">,</span> <span class="s2">&quot;save_dataframe&quot;</span><span class="p">]</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">tokenize</span><span class="o">.</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tk_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">extract_tokens</span><span class="o">.</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tk_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">extract_tokens</span><span class="o">.</span><span class="n">nouns_only</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">explode_splits</span><span class="o">.</span><span class="n">id_key</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">explode_splits</span><span class="o">.</span><span class="n">split_key</span> <span class="o">=</span> <span class="s2">&quot;sent_id&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">explode_splits</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">reset_index</span><span class="o">.</span><span class="n">drop_index</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">save_dataframe</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="s1">&#39;../data/fomc&#39;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">save_dataframe</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="s1">&#39;fomc_minutes.parquet&#39;</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">fomc_minutes</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "bca54ae90fc14e8a9cf0547eccd09cc6", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "5c43e33136eb4bf6a2030600120681b7", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>text</th>
+      <th>timestamp</th>
+      <th>content_type</th>
+      <th>date</th>
+      <th>speaker</th>
+      <th>title</th>
+      <th>sent_id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>meeting Federal Open Market Committee office B...</td>
+      <td>1993-02-03</td>
+      <td>fomc_minutes</td>
+      <td>1993-02-03</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td></td>
+      <td>1993-02-03</td>
+      <td>fomc_minutes</td>
+      <td>1993-02-03</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>PRESENT</td>
+      <td>1993-02-03</td>
+      <td>fomc_minutes</td>
+      <td>1993-02-03</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td></td>
+      <td>1993-02-03</td>
+      <td>fomc_minutes</td>
+      <td>1993-02-03</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>Mr. Greenspan Chairman Mr. Corrigan Vice Chair...</td>
+      <td>1993-02-03</td>
+      <td>fomc_minutes</td>
+      <td>1993-02-03</td>
+      <td>Alan Greenspan</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>43699</th>
+      <td>229</td>
+      <td>discussion policy normalization consideration ...</td>
+      <td>2021-12-15</td>
+      <td>fomc_minutes</td>
+      <td>2021-12-15</td>
+      <td>Jerome Powell</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>308</td>
+    </tr>
+    <tr>
+      <th>43700</th>
+      <td>229</td>
+      <td></td>
+      <td>2021-12-15</td>
+      <td>fomc_minutes</td>
+      <td>2021-12-15</td>
+      <td>Jerome Powell</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>309</td>
+    </tr>
+    <tr>
+      <th>43701</th>
+      <td>229</td>
+      <td>Board Governors Federal Reserve System</td>
+      <td>2021-12-15</td>
+      <td>fomc_minutes</td>
+      <td>2021-12-15</td>
+      <td>Jerome Powell</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>310</td>
+    </tr>
+    <tr>
+      <th>43702</th>
+      <td>229</td>
+      <td></td>
+      <td>2021-12-15</td>
+      <td>fomc_minutes</td>
+      <td>2021-12-15</td>
+      <td>Jerome Powell</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>311</td>
+    </tr>
+    <tr>
+      <th>43703</th>
+      <td>229</td>
+      <td>Street Constitution Avenue N.W. Washington DC</td>
+      <td>2021-12-15</td>
+      <td>fomc_minutes</td>
+      <td>2021-12-15</td>
+      <td>Jerome Powell</td>
+      <td>FOMC Meeting Minutes</td>
+      <td>312</td>
+    </tr>
+  </tbody>
+</table>
+<p>43704 rows × 8 columns</p>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total number of sentences : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)))</span>
+<span class="n">df</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of sentences : 21892
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0     meeting Federal Open Market Committee office B...
+2                                               PRESENT
+4     Mr. Greenspan Chairman Mr. Corrigan Vice Chair...
+6     Messrs. Broaddus Jordan Forrestal Parry Altern...
+8     Messrs. Hoenig Melzer Syron Presidents Federal...
+10    Mr. Kohn Secretary Economist Mr. Bernard Deput...
+12    Messrs. R. Davis Lang Lindsey Promisel Rosenbl...
+14     Mr. McDonough Manager System Open Market Account
+16         Ms. Greene Deputy Manager Foreign Operations
+18      Ms. Lovett,2 Deputy Manager Domestic Operations
+Name: text, dtype: object
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sentences</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">sentence</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">sentences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sentence</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gensim.models</span> <span class="kn">import</span> <span class="n">Word2Vec</span><span class="p">,</span> <span class="n">KeyedVectors</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Word2Vec</span><span class="p">(</span>
+    <span class="n">sentences</span><span class="o">=</span><span class="n">sentences</span><span class="p">,</span> <span class="n">vector_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">min_count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sg</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Word2Vec Parameters:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>vector_size : int, optional
+    Dimensionality of the word vectors.
+window : int, optional
+    Maximum distance between the current and predicted word within a sentence.
+min_count : int, optional
+    Ignores all words with total frequency lower than this.
+workers : int, optional
+    Use these many worker threads to train the model (=faster training with multicore machines).
+sg : {0, 1}, optional
+    Training algorithm: 1 for skip-gram; otherwise CBOW.
+</pre></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">wv</span><span class="o">.</span><span class="n">most_similar</span><span class="p">(</span><span class="s2">&quot;fomc&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_result</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[(&#39;meeting&#39;, 0.7261571884155273), (&#39;call&#39;, 0.7087838053703308), (&#39;conference&#39;, 0.706003725528717), (&#39;minute&#39;, 0.7013736963272095), (&#39;release&#39;, 0.6472852230072021), (&#39;press&#39;, 0.635810136795044), (&#39;videoconference&#39;, 0.6349100470542908), (&#39;statement&#39;, 0.6306827068328857), (&#39;announcement&#39;, 0.622832715511322), (&#39;morning&#39;, 0.6162055730819702)]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">wv</span><span class="o">.</span><span class="n">save_word2vec_format</span><span class="p">(</span><span class="s1">&#39;../data/fomc/fomc_w2v.mdl&#39;</span><span class="p">)</span>
+<span class="n">loaded_model</span> <span class="o">=</span> <span class="n">KeyedVectors</span><span class="o">.</span><span class="n">load_word2vec_format</span><span class="p">(</span><span class="s2">&quot;../data/fomc/fomc_w2v.mdl&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_result</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">most_similar</span><span class="p">(</span><span class="s2">&quot;fomc&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_result</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[(&#39;meeting&#39;, 0.7261571884155273), (&#39;call&#39;, 0.7087838053703308), (&#39;conference&#39;, 0.706003725528717), (&#39;minute&#39;, 0.7013736963272095), (&#39;release&#39;, 0.6472852230072021), (&#39;press&#39;, 0.635810136795044), (&#39;videoconference&#39;, 0.6349100470542908), (&#39;statement&#39;, 0.6306827068328857), (&#39;announcement&#39;, 0.622832715511322), (&#39;morning&#39;, 0.6162055730819702)]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="korean-word2vec">
+<h2>Korean Word2Vec<a class="headerlink" href="#korean-word2vec" title="Permalink to this heading">#</a></h2>
+<section id="load-bok-minutes-corpus">
+<h3>Load BOK Minutes Corpus<a class="headerlink" href="#load-bok-minutes-corpus" title="Permalink to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corpus_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s1">&#39;corpus&#39;</span><span class="p">)</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;bok_minutes&#39;</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="s1">&#39;https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/bok_minutes.zip&#39;</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">corpus_cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">path</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">automerge</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">bok</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">corpus_cfg</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bok</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Corpus : bok_minutes
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bok_minutes</span> <span class="o">=</span> <span class="n">bok</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">bok_minutes</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>text</th>
+      <th>mdate</th>
+      <th>rdate</th>
+      <th>filename</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>Economic Situation\n일부 위원은 반도체시장의 재고조정 지속으로 반도...</td>
+      <td>2005-03-10 10:00:00</td>
+      <td>2005-05-13 16:00:00</td>
+      <td>BOK_20050310_20050513</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>Economic Situation\n일부 위원은 소비회복의 시기와 폭을 가늠하기 위...</td>
+      <td>2005-04-07 10:00:00</td>
+      <td>2005-05-24 16:00:00</td>
+      <td>BOK_20050407_20050524</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>Economic Situation\n일부 위원은 지난해 풍작에 따른 효과와 금년초 ...</td>
+      <td>2005-05-12 10:00:00</td>
+      <td>2005-06-28 16:00:00</td>
+      <td>BOK_20050512_20050628</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>Economic Situation\n일부 위원은 최근 소비재판매액 증가세가 다소 둔...</td>
+      <td>2005-06-09 10:00:00</td>
+      <td>2005-07-26 16:00:00</td>
+      <td>BOK_20050609_20050726</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+      <td>Economic Situation\n일부 위원은 최근 이란의 새 대통령 취임 이후 ...</td>
+      <td>2005-07-07 10:00:00</td>
+      <td>2005-08-23 16:00:00</td>
+      <td>BOK_20050707_20050823</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tk_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s1">&#39;preprocessor/tokenizer=mecab_econ&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s2">&quot;pipeline&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">_pipeline_</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tokenize&quot;</span><span class="p">,</span> <span class="s2">&quot;extract_tokens&quot;</span><span class="p">,</span> <span class="s2">&quot;explode_splits&quot;</span><span class="p">,</span><span class="s2">&quot;reset_index&quot;</span><span class="p">,</span> <span class="s2">&quot;save_dataframe&quot;</span><span class="p">]</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">tokenize</span><span class="o">.</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tk_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">extract_tokens</span><span class="o">.</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tk_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">extract_tokens</span><span class="o">.</span><span class="n">nouns_only</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">explode_splits</span><span class="o">.</span><span class="n">id_key</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">explode_splits</span><span class="o">.</span><span class="n">split_key</span> <span class="o">=</span> <span class="s2">&quot;sent_id&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">explode_splits</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">reset_index</span><span class="o">.</span><span class="n">drop_index</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">save_dataframe</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="s1">&#39;../data/bok&#39;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">save_dataframe</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="s1">&#39;bok_minutes.parquet&#39;</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">bok_minutes</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "5a00e1b345054023b6309b45882c445c", "version_major": 2, "version_minor": 0}</script><script type="application/vnd.jupyter.widget-view+json">{"model_id": "dd551bb405cc4cbab0497036fcc8dbc2", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>text</th>
+      <th>mdate</th>
+      <th>rdate</th>
+      <th>filename</th>
+      <th>sent_id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>Economic Situation</td>
+      <td>2005-03-10 10:00:00</td>
+      <td>2005-05-13 16:00:00</td>
+      <td>BOK_20050310_20050513</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>일부 위원 반도체시장 재고조정 지속 반도체 가격 하락 불구 중 반도체 제조 장비 투...</td>
+      <td>2005-03-10 10:00:00</td>
+      <td>2005-05-13 16:00:00</td>
+      <td>BOK_20050310_20050513</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>관련 부서 반도체 경기 인식 것 반도체 가격 폭 하락 데 기인 것 가격 하락 반면 ...</td>
+      <td>2005-03-10 10:00:00</td>
+      <td>2005-05-13 16:00:00</td>
+      <td>BOK_20050310_20050513</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>위원 분기 중 경제성장률 당초 전망 수 보고 내용 관련 경우 GDP 마이너스 갭 축...</td>
+      <td>2005-03-10 10:00:00</td>
+      <td>2005-05-13 16:00:00</td>
+      <td>BOK_20050310_20050513</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>관련 부서 분기 중 경제성장률 경기회복 시기 경우 GDP 갭 축소 수요 측면 물가 ...</td>
+      <td>2005-03-10 10:00:00</td>
+      <td>2005-05-13 16:00:00</td>
+      <td>BOK_20050310_20050513</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>33852</th>
+      <td>162</td>
+      <td>앞 코로나 충격 회복 해외 완화적 통화정책 조정 것 예상</td>
+      <td>2021-11-25 10:00:00</td>
+      <td>2021-12-14 16:00:00</td>
+      <td>BOK_20211125_20211214</td>
+      <td>337</td>
+    </tr>
+    <tr>
+      <th>33853</th>
+      <td>162</td>
+      <td>글로벌 공급망 재편 기후변화 디지털 경제 전환 등 가속 화 가운데 미 중 갈등 중국...</td>
+      <td>2021-11-25 10:00:00</td>
+      <td>2021-12-14 16:00:00</td>
+      <td>BOK_20211125_20211214</td>
+      <td>338</td>
+    </tr>
+    <tr>
+      <th>33854</th>
+      <td>162</td>
+      <td>향후 경제 회복세 물가 흐름 금융시장 상황 경제 주체 들 수용 등 점검 금리 중립적...</td>
+      <td>2021-11-25 10:00:00</td>
+      <td>2021-12-14 16:00:00</td>
+      <td>BOK_20211125_20211214</td>
+      <td>339</td>
+    </tr>
+    <tr>
+      <th>33855</th>
+      <td>162</td>
+      <td></td>
+      <td>2021-11-25 10:00:00</td>
+      <td>2021-12-14 16:00:00</td>
+      <td>BOK_20211125_20211214</td>
+      <td>340</td>
+    </tr>
+    <tr>
+      <th>33856</th>
+      <td>162</td>
+      <td>Government s View</td>
+      <td>2021-11-25 10:00:00</td>
+      <td>2021-12-14 16:00:00</td>
+      <td>BOK_20211125_20211214</td>
+      <td>341</td>
+    </tr>
+  </tbody>
+</table>
+<p>33857 rows × 6 columns</p>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total number of sentences : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)))</span>
+<span class="n">df</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of sentences : 33027
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0                                   Economic Situation
+1    일부 위원 반도체시장 재고조정 지속 반도체 가격 하락 불구 중 반도체 제조 장비 투...
+2    관련 부서 반도체 경기 인식 것 반도체 가격 폭 하락 데 기인 것 가격 하락 반면 ...
+3    위원 분기 중 경제성장률 당초 전망 수 보고 내용 관련 경우 GDP 마이너스 갭 축...
+4    관련 부서 분기 중 경제성장률 경기회복 시기 경우 GDP 갭 축소 수요 측면 물가 ...
+5    위원 분기 중 국제유가 현재 브렌트유 기준 두바이유 기준 지속 소비자물가 중반 것 ...
+6    관련 부서 유가 현재 정도 상승 소비자물가 중반 상승 것 예상 이상기후 농수산물 가...
+7    일부 위원 관련 부서 작성 주요 경제지표 설비투자 작년 전년동기대비 증가세 이후 감...
+8    관련 부서 설비투자 작년 분기 증가세 전환 동안 대 증가세 유지 분기 감소세 수준면...
+9    위원 GDP 갭 관련 분기 분기 경제성장률 상승 정도 시차 GDP 갭 효과 것 성장...
+Name: text, dtype: object
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sentences</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">sentence</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">sentences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sentence</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gensim.models</span> <span class="kn">import</span> <span class="n">Word2Vec</span><span class="p">,</span> <span class="n">KeyedVectors</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Word2Vec</span><span class="p">(</span>
+    <span class="n">sentences</span><span class="o">=</span><span class="n">sentences</span><span class="p">,</span> <span class="n">vector_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">min_count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sg</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">wv</span><span class="o">.</span><span class="n">most_similar</span><span class="p">(</span><span class="s2">&quot;금통위&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_result</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[(&#39;회의&#39;, 0.8942065238952637), (&#39;금융통화위원회&#39;, 0.8351814150810242), (&#39;통방&#39;, 0.8271216750144958), (&#39;fomc&#39;, 0.8267607092857361), (&#39;개최&#39;, 0.7971529960632324), (&#39;지난번&#39;, 0.791086733341217), (&#39;한국은행&#39;, 0.7783183455467224), (&#39;결문&#39;, 0.7717291116714478), (&#39;지난달&#39;, 0.7497071623802185), (&#39;금번&#39;, 0.7485520243644714)]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">wv</span><span class="o">.</span><span class="n">save_word2vec_format</span><span class="p">(</span><span class="s1">&#39;../data/fomc/bok_w2v.mdl&#39;</span><span class="p">)</span>
+<span class="n">loaded_model</span> <span class="o">=</span> <span class="n">KeyedVectors</span><span class="o">.</span><span class="n">load_word2vec_format</span><span class="p">(</span><span class="s2">&quot;../data/fomc/bok_w2v.mdl&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_result</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">most_similar</span><span class="p">(</span><span class="s2">&quot;금통위&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_result</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[(&#39;회의&#39;, 0.8942065238952637), (&#39;금융통화위원회&#39;, 0.8351814150810242), (&#39;통방&#39;, 0.8271216750144958), (&#39;fomc&#39;, 0.8267607092857361), (&#39;개최&#39;, 0.7971529960632324), (&#39;지난번&#39;, 0.791086733341217), (&#39;한국은행&#39;, 0.7783183455467224), (&#39;결문&#39;, 0.7717291116714478), (&#39;지난달&#39;, 0.7497071623802185), (&#39;금번&#39;, 0.7485520243644714)]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_result</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">most_similar</span><span class="p">(</span><span class="s2">&quot;금리&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_result</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[(&#39;장기금리&#39;, 0.7175424695014954), (&#39;단기금리&#39;, 0.7011380791664124), (&#39;정책금리&#39;, 0.6988612413406372), (&#39;수신금리&#39;, 0.6762762665748596), (&#39;수익률곡선&#39;, 0.6748917102813721), (&#39;가산금리&#39;, 0.6711479425430298), (&#39;시장금리&#39;, 0.644707977771759), (&#39;대출금리&#39;, 0.6405514478683472), (&#39;지급준비율&#39;, 0.6337494254112244), (&#39;금리수준&#39;, 0.6313076019287109)]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "entelecheia/ekorpkit",
+            ref: "main",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/models/embeddings"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Word Embeddings</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="eval_vectors.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Evaluate pretrained embeddings</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#english-word2vec">English Word2Vec</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-fomc-corpus">Load FOMC Corpus</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#korean-word2vec">Korean Word2Vec</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load-bok-minutes-corpus">Load BOK Minutes Corpus</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By <a href="https://entelecheia.me">Young Joon Lee</a>
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1012 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>N-Grams &#8212; ekorpkit</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-examples.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.bundle.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-shadow.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-punk.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-borderless.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/micromodal.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../../_static/tabs.js"></script>
+    <script src="../../../_static/js/hoverxref.js"></script>
+    <script src="../../../_static/js/tooltipster.bundle.min.js"></script>
+    <script src="../../../_static/js/micromodal.min.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"tex": {"macros": {"N": "\\mathbb{N}", "floor": ["\\lfloor#1\\rfloor", 1], "bmat": ["\\left[\\begin{array}"], "emat": ["\\end{array}\\right]"]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="application/vnd.jupyter.widget-state+json">{"state": {"2121ba5ed3ea4fc6bb6a8c19428365d5": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "2388b4a7a5214c0691b12884bd00cbe3": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "3de43a7c455a4b51844e33d2745e6c26": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "42d2b104d1ae4d9994c440585e1a985b": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "6a07b8108fb14113a6f1077b89e26459": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_b80c5cb2c5af44609cec75868db8aff2", "IPY_MODEL_d40f958ef31147b7bdaa875143fd68ad", "IPY_MODEL_c6432eff63b2411f8dbec9dc4490415c"], "layout": "IPY_MODEL_2388b4a7a5214c0691b12884bd00cbe3"}}, "759944222fb542108cef600664d77832": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "816adaa566d249509b94f2b4255ce473": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "a2c5155a7a7a4317bf7ec48c7c8f2819": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "b80c5cb2c5af44609cec75868db8aff2": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_816adaa566d249509b94f2b4255ce473", "style": "IPY_MODEL_a2c5155a7a7a4317bf7ec48c7c8f2819", "value": "Tokenizing column: text: 100%"}}, "c6432eff63b2411f8dbec9dc4490415c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_759944222fb542108cef600664d77832", "style": "IPY_MODEL_3de43a7c455a4b51844e33d2745e6c26", "value": " 182/182 [00:54&lt;00:00,  2.16it/s]"}}, "d40f958ef31147b7bdaa875143fd68ad": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_42d2b104d1ae4d9994c440585e1a985b", "max": 182, "style": "IPY_MODEL_2121ba5ed3ea4fc6bb6a8c19428365d5", "value": 182}}}, "version_major": 2, "version_minor": 0}</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script crossorigin="anonymous" data-jupyter-widgets-cdn="https://cdn.jsdelivr.net/npm/" src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <script src="https://unpkg.com/mermaid@9.4.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/models/ngram/ngram';</script>
+    <link rel="canonical" href="https://ekorpkit.entelecheia.ai/tutorials/models/ngram/ngram.html" />
+    <link rel="shortcut icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="N-Gram model for ngram lexicon features" href="ngram_for_lexicons.html" />
+    <link rel="prev" title="N-Grams" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">ekorpkit</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Introduction
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Basics</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/index.html">Getting started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/usage.html">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/features/index.html">Key features</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/easy_config.html">Easy Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/no_boiler.html">No Boilerplate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/workflows.html">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/share.html">Sharable and Reproducible</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/plug.html">Pluggable Architece</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../config/index.html">Configuring ekorpkit</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../config/eKonf.html">Using eKonf class</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../datasets/index.html">Datasets</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/corpus.html">Build and Load Corpora</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/dataset.html">Build and Load Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/pipeline.html">Corpus task pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../automl/index.html">Auto ML</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../embeddings/index.html">Word Embeddings</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../embeddings/word2vec_basics.html">Word2Vec Basics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../embeddings/eval_vectors.html">Evaluate pretrained embeddings</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">N-Grams</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">N-Grams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ngram_for_lexicons.html">N-Gram model for ngram lexicon features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ngram_for_words.html">N-Gram model for unigram lexicon features</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../sentiment/index.html">Sentiment Analyers</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/lbsa_en.html">Lexicon-based Sentiment Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/financial_phrasebank_lm.html">Evaluate LM with financial phrasebank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/sentiment.html">LM Dictionary vs. finbert vs. T5</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../transformers/index.html">Transformers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../pipelines/index.html">Pipelines</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pipelines/pipeline.html">Instantiating pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../preprocessors/index.html">Preprocessors</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/normalizer/index.html">Normalizers</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/normalizer/normalizer.html">Normalizers</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/segmenter/index.html">Segmenters</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/segmenter/segmenter.html">Segmenters</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/tokenizer/index.html">Tokenizers</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/tokenizer/mecab.html">Mecab Tokenizer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../visualizers/index.html">Visualizers</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../visualizers/plot.html">Plots</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow/index.html">Workflows</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../datasets/ekorpkot_corpus.html">The eKorpkit Corpus</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://entelecheia.me">entelecheia.me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/index.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/cite.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-launch-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Launch interactive content">
+    <i class="fas fa-rocket"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://colab.research.google.com/github/entelecheia/ekorpkit/blob/main/book/tutorials/models/ngram/ngram.ipynb" target="_blank"
+   class="btn btn-sm dropdown-item"
+   title="Launch onColab"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  
+    <img src="../../../_static/images/logo_colab.png">
+  </span>
+<span class="btn__text-container">Colab</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="initThebeSBT()"
+  class="btn btn-sm btn-launch-thebe dropdown-item"
+  title="Launch Thebe"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-play"></i>
+  </span>
+<span class="btn__text-container">Live Code</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit/issues/new?title=Issue%20on%20page%20%2Ftutorials/models/ngram/ngram.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/tutorials/models/ngram/ngram.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>N-Grams</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tokenize-and-extract-tokens">Tokenize and extract tokens</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-ngrams">Train ngrams</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="n-grams">
+<h1>N-Grams<a class="headerlink" href="#n-grams" title="Permalink to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">ekorpkit</span> <span class="kn">import</span> <span class="n">eKonf</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">eKonf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.1.33+7.g877961c.dirty
+</pre></div>
+</div>
+</div>
+</div>
+<section id="tokenize-and-extract-tokens">
+<h2>Tokenize and extract tokens<a class="headerlink" href="#tokenize-and-extract-tokens" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corpus_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;corpus&quot;</span><span class="p">)</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;bok_minutes&quot;</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="s2">&quot;/workspace/data/datasets/corpus/ekorpkit&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tkn_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;preprocessor/tokenizer=mecab&quot;</span><span class="p">)</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;pipeline&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpus_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">_pipeline_</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tokenize&quot;</span><span class="p">,</span> <span class="s2">&quot;explode_splits&quot;</span><span class="p">,</span> <span class="s2">&quot;save_dataframe&quot;</span><span class="p">]</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">tokenize</span><span class="o">.</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tkn_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">explode_splits</span><span class="o">.</span><span class="n">id_key</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">explode_splits</span><span class="o">.</span><span class="n">split_key</span> <span class="o">=</span> <span class="s2">&quot;sent_id&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">explode_splits</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">save_dataframe</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;../data/bok&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">save_dataframe</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="s2">&quot;bok_minutes_tokenized.parquet&quot;</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "6a07b8108fb14113a6f1077b89e26459", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>text</th>
+      <th>split</th>
+      <th>sent_id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td>또한/MAJ /SP 글로벌/NNG /SP 공급/NNG 망/NNG /SP 재편/NNG...</td>
+      <td>train</td>
+      <td>321</td>
+    </tr>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td>향후/NNG /SP 경제/NNG 회복세/NNG 와/JC /SP 물가/NNG 의/JK...</td>
+      <td>train</td>
+      <td>322</td>
+    </tr>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td></td>
+      <td>train</td>
+      <td>323</td>
+    </tr>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td>Government/SL ’/SY s/SL /SP View/SL</td>
+      <td>train</td>
+      <td>324</td>
+    </tr>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td></td>
+      <td>train</td>
+      <td>325</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tkn_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;preprocessor/tokenizer=mecab_econ&quot;</span><span class="p">)</span>
+<span class="n">tkn_cfg</span><span class="o">.</span><span class="n">extract</span><span class="o">.</span><span class="n">strip_pos</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;pipeline&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="s2">&quot;../data/bok&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_file</span> <span class="o">=</span> <span class="s2">&quot;bok_minutes_tokenized.parquet&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">_pipeline_</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;extract_tokens&quot;</span><span class="p">,</span> <span class="s2">&quot;save_dataframe&quot;</span><span class="p">]</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">extract_tokens</span><span class="o">.</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tkn_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">extract_tokens</span><span class="o">.</span><span class="n">nouns_only</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">save_dataframe</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;../data/bok&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">save_dataframe</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="s2">&quot;bok_minutes_tokens.parquet&quot;</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "9baca07af8fb496f8354aef92b2c8630", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>text</th>
+      <th>split</th>
+      <th>sent_id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td>또한/MAJ 글로벌/NNG 공급/NNG 망/NNG 재편/NNG 기후/NNG 변화/N...</td>
+      <td>train</td>
+      <td>321</td>
+    </tr>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td>향후/NNG 경제/NNG 회복세/NNG 와/JC 물가/NNG 의/JKG 흐름/NNG...</td>
+      <td>train</td>
+      <td>322</td>
+    </tr>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td></td>
+      <td>train</td>
+      <td>323</td>
+    </tr>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td>Government/SL s/SL View/SL</td>
+      <td>train</td>
+      <td>324</td>
+    </tr>
+    <tr>
+      <th>181</th>
+      <td>181</td>
+      <td></td>
+      <td>train</td>
+      <td>325</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section id="train-ngrams">
+<h2>Train ngrams<a class="headerlink" href="#train-ngrams" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ngram_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;model/ngram=npmi&quot;</span><span class="p">)</span>
+<span class="n">ngram_cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="s2">&quot;../data/bok&quot;</span>
+<span class="n">ngram_cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_file</span> <span class="o">=</span> <span class="s2">&quot;bok_minutes_tokens.parquet&quot;</span>
+<span class="n">ngram_cfg</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">ngram_cfg</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">load</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">ngram_cfg</span><span class="o">.</span><span class="n">force</span><span class="o">.</span><span class="n">train</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">ngram_cfg</span><span class="o">.</span><span class="n">candidates</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">ngram</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">ngram_cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.base:instantiating ekorpkit.models.ngram.train.NgramTrainer...
+INFO:ekorpkit.preprocessors.tokenizer:instantiating ekorpkit.preprocessors.stopwords.Stopwords...
+INFO:ekorpkit.base:Calling initialize
+INFO:ekorpkit.io.file:Processing [1] files from [&#39;/workspace/projects/esgml/outputs/ngrams/ngram_npmi_scores.parquet&#39;]
+INFO:ekorpkit.io.file:Loading 1 dataframes from [&#39;/workspace/projects/esgml/outputs/ngrams/ngram_npmi_scores.parquet&#39;]
+INFO:ekorpkit.io.file:Loading data from /workspace/projects/esgml/outputs/ngrams/ngram_npmi_scores.parquet
+INFO:ekorpkit.io.file: &gt;&gt; elapsed time to load data: 0:00:00.038492
+INFO:ekorpkit.models.ngram.ngram:loaded 42627 candidates
+INFO:ekorpkit.base:instantiating ekorpkit.pipelines.data.Data...
+INFO:ekorpkit.io.file:Processing [1] files from [&#39;bok_minutes_tokens.parquet&#39;]
+INFO:ekorpkit.io.file:Loading 1 dataframes from [&#39;../data/bok/bok_minutes_tokens.parquet&#39;]
+INFO:ekorpkit.io.file:Loading data from ../data/bok/bok_minutes_tokens.parquet
+9930it [00:09, 1036.58it/s]INFO:ekorpkit.models.ngram.score:pruned out 210818 tokens with count &lt;=2 (before 263398, after 52580)
+19929it [00:21, 864.90it/s]INFO:ekorpkit.models.ngram.score:pruned out 257768 tokens with count &lt;=2 (before 343124, after 85356)
+29911it [00:32, 1097.02it/s]INFO:ekorpkit.models.ngram.score:pruned out 191234 tokens with count &lt;=2 (before 293933, after 102699)
+36191it [00:38, 945.55it/s] 
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>learning ngrams was done. memory= 0.564 Gb
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|██████████| 46494/46494 [00:00&lt;00:00, 118903.01it/s]
+INFO:ekorpkit.io.file:Saving dataframe to /workspace/projects/esgml/outputs/ngrams/ngram_npmi_scores.parquet
+INFO:ekorpkit.io.file: &gt;&gt; elapsed time to save data: 0:00:00.107443
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ngram</span><span class="o">.</span><span class="n">_ngrams</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">ngram</span><span class="o">.</span><span class="n">candidates</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>46494 42627
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">postag_rules</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;/NN&quot;</span><span class="p">,</span> <span class="s2">&quot;/J&quot;</span><span class="p">,</span> <span class="s2">&quot;/NN&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;/XP&quot;</span><span class="p">,</span> <span class="s2">&quot;/NN&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;/XP&quot;</span><span class="p">,</span> <span class="s2">&quot;/NN&quot;</span><span class="p">,</span> <span class="s2">&quot;/NN&quot;</span><span class="p">]]</span>
+
+<span class="n">ngram</span><span class="o">.</span><span class="n">export_ngrams</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">postag_rules</span><span class="o">=</span><span class="n">postag_rules</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[((&#39;민/XPN&#39;, &#39;감도/NNG&#39;),
+  score(words=&#39;민/XPN;감도/NNG&#39;, length=46494, frequency=27, score=0.990604973436752)),
+ ((&#39;신/XPN&#39;, &#39;흥국/NNG&#39;),
+  score(words=&#39;신/XPN;흥국/NNG&#39;, length=46494, frequency=1022, score=0.9603989288750724)),
+ ((&#39;문안/NNG&#39;, &#39;을/JKO&#39;, &#39;작성/NNG&#39;),
+  score(words=&#39;문안/NNG;을/JKO;작성/NNG&#39;, length=46494, frequency=49, score=0.9549515116468318)),
+ ((&#39;예/NNG&#39;, &#39;의/JKG&#39;, &#39;주시/NNG&#39;),
+  score(words=&#39;예/NNG;의/JKG;주시/NNG&#39;, length=46494, frequency=212, score=0.952727184984961)),
+ ((&#39;한국/NNP&#39;, &#39;은/JX&#39;, &#39;행법/NNG&#39;),
+  score(words=&#39;한국/NNP;은/JX;행법/NNG&#39;, length=46494, frequency=13, score=0.9163779678011934)),
+ ((&#39;한/NNP&#39;, &#39;은/JX&#39;, &#39;법/NNG&#39;),
+  score(words=&#39;한/NNP;은/JX;법/NNG&#39;, length=46494, frequency=15, score=0.9038684845812752)),
+ ((&#39;취지/NNG&#39;, &#39;로/JKB&#39;, &#39;발언/NNG&#39;),
+  score(words=&#39;취지/NNG;로/JKB;발언/NNG&#39;, length=46494, frequency=38, score=0.8748905201033002)),
+ ((&#39;신/XPN&#39;, &#39;용스/NNP&#39;, &#39;프레드/NNP&#39;),
+  score(words=&#39;신/XPN;용스/NNP;프레드/NNP&#39;, length=46494, frequency=112, score=0.8671915785294462)),
+ ((&#39;차관/NNG&#39;, &#39;에게/JKB&#39;, &#39;발언/NNG&#39;),
+  score(words=&#39;차관/NNG;에게/JKB;발언/NNG&#39;, length=46494, frequency=31, score=0.8615166170202944)),
+ ((&#39;양질/NNG&#39;, &#39;의/JKG&#39;, &#39;일자리/NNG&#39;),
+  score(words=&#39;양질/NNG;의/JKG;일자리/NNG&#39;, length=46494, frequency=15, score=0.8568614320936532)),
+ ((&#39;시일/NNG&#39;, &#39;이/JKS&#39;, &#39;소요/NNG&#39;),
+  score(words=&#39;시일/NNG;이/JKS;소요/NNG&#39;, length=46494, frequency=28, score=0.8522311395365183)),
+ ((&#39;고부/NNG&#39;, &#39;가/JKS&#39;, &#39;가치/NNG&#39;),
+  score(words=&#39;고부/NNG;가/JKS;가치/NNG&#39;, length=46494, frequency=10, score=0.8419083361774105)),
+ ((&#39;저점/NNG&#39;, &#39;을/JKO&#39;, &#39;통과/NNG&#39;),
+  score(words=&#39;저점/NNG;을/JKO;통과/NNG&#39;, length=46494, frequency=13, score=0.8208059041912359)),
+ ((&#39;북한/NNP&#39;, &#39;의/JKG&#39;, &#39;미사일/NNG&#39;),
+  score(words=&#39;북한/NNP;의/JKG;미사일/NNG&#39;, length=46494, frequency=11, score=0.813089753035318)),
+ ((&#39;재/XPN&#39;, &#39;정취/NNG&#39;, &#39;약국/NNG&#39;),
+  score(words=&#39;재/XPN;정취/NNG;약국/NNG&#39;, length=46494, frequency=14, score=0.8102225991026599)),
+ ((&#39;결시/NNG&#39;, &#39;까지/JX&#39;, &#39;콜/NNG&#39;),
+  score(words=&#39;결시/NNG;까지/JX;콜/NNG&#39;, length=46494, frequency=25, score=0.8063747933078849)),
+ ((&#39;끝/NNG&#39;, &#39;으로/JKB&#39;, &#39;동/NNG&#39;),
+  score(words=&#39;끝/NNG;으로/JKB;동/NNG&#39;, length=46494, frequency=61, score=0.8030470926229916))]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">ngram</span><span class="o">.</span><span class="n">sentences</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">ngram</span><span class="o">.</span><span class="n">ngramize_sentence</span><span class="p">(</span><span class="n">sentence</span><span class="p">,</span> <span class="n">strip_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">surface_delim</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>이/NP 에/JKB 대해/VV+EC 관련/NNG 부서/NNG 에서/JKB 는/JX 실업/NNG 률/XSN 과/JC 경기/NNG 지수/NNG 와/JKB 의/JKG 상관/NNG 관계/NNG 는/JX 그렇게/MAG 높/VA 지/EC 않/VX 은/ETM 것/NNB 으로/JKB 나타나/VV 며/EC 통계청/NNG 에서/JKB 발표/NNG 하/XSV 는/ETM 공식/NNG 적/XSN 인/VCP+ETM 실업/NNG 률/XSN 을/JKO 구직/NNG 단념/NNG 자/XSN 를/JKO 포함/NNG 한/XSA+ETM 광의/NNG 의/JKG 실업/NNG 률/XSN 로/JKB 전환/NNG 할/XSV+ETM 경우/NNG 오히려/MAJ 경기/NNG 와/JKB 의/JKG 연관/NNG 성/XSN 이/JKS 좀/MAG 더/MAG 높/VA 은/ETM 것/NNB 으로/JKB 분석/NNG 되/XSV 므로/EC 경기/NNG 상환/NNG 판단/NNG 을/JKO 위해서/VV+EC 는/JX 공식/NNG 적/XSN 인/VCP+ETM 실업/NNG 률/XSN 보다/JKB 는/JX 광의/NNG 의/JKG 실업/NNG 률/XSN 을/JKO 이용/NNG 하/XSV 는/ETM 것/NNB 이/JKS 더/MAG 좋/VA 을/ETM 것/NNB 같/VA 다고/EC 설명/NNG 하/XSV 였/EP 음/ETN
+[&#39;이/NP&#39;, &#39;에/JKB&#39;, &#39;대해/VV+&#39;, &#39;관련/NNG;부서/NNG&#39;, &#39;에서/JKB&#39;, &#39;는/JX&#39;, &#39;실업/NNG;률/XSN&#39;, &#39;과/JC&#39;, &#39;경기/NNG&#39;, &#39;지수/NNG&#39;, &#39;와/JKB&#39;, &#39;의/JKG&#39;, &#39;상관/NNG;관계/NNG&#39;, &#39;는/JX&#39;, &#39;그렇게/MAG&#39;, &#39;높/VA&#39;, &#39;지/EC;않/VX&#39;, &#39;은/ETM&#39;, &#39;것/NNB;으로/JKB&#39;, &#39;나타나/VV&#39;, &#39;며/EC&#39;, &#39;통계청/NNG;에서/JKB&#39;, &#39;발표/NNG&#39;, &#39;하/XSV;는/ETM&#39;, &#39;공식/NNG&#39;, &#39;적/XSN;인/VCP&#39;, &#39;실업/NNG;률/XSN&#39;, &#39;을/JKO&#39;, &#39;구직/NNG&#39;, &#39;단념/NNG&#39;, &#39;자/XSN&#39;, &#39;를/JKO&#39;, &#39;포함/NNG;한/XSA&#39;, &#39;광의/NNG;의/JKG;실업/NNG&#39;, &#39;률/XSN&#39;, &#39;로/JKB;전환/NNG&#39;, &#39;할/XSV;경우/NNG&#39;, &#39;오히려/MAJ&#39;, &#39;경기/NNG;와/JKB;의/JKG&#39;, &#39;연관/NNG&#39;, &#39;성/XSN;이/JKS&#39;, &#39;좀/MAG;더/MAG&#39;, &#39;높/VA;은/ETM&#39;, &#39;것/NNB;으로/JKB&#39;, &#39;분석/NNG&#39;, &#39;되/XSV&#39;, &#39;므로/EC&#39;, &#39;경기/NNG&#39;, &#39;상환/NNG&#39;, &#39;판단/NNG&#39;, &#39;을/JKO&#39;, &#39;위해서/VV+;는/JX&#39;, &#39;공식/NNG&#39;, &#39;적/XSN;인/VCP&#39;, &#39;실업/NNG;률/XSN&#39;, &#39;보다/JKB;는/JX&#39;, &#39;광의/NNG;의/JKG;실업/NNG&#39;, &#39;률/XSN&#39;, &#39;을/JKO&#39;, &#39;이용/NNG&#39;, &#39;하/XSV&#39;, &#39;는/ETM;것/NNB&#39;, &#39;이/JKS&#39;, &#39;더/MAG&#39;, &#39;좋/VA&#39;, &#39;을/ETM;것/NNB&#39;, &#39;같/VA&#39;, &#39;다고/EC&#39;, &#39;설명/NNG&#39;, &#39;하/XSV&#39;, &#39;였/EP;음/ETN&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tokens</span> <span class="o">=</span> <span class="n">ngram</span><span class="p">[</span><span class="n">sentence</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;이&#39;, &#39;에&#39;, &#39;대해&#39;, &#39;관련부서&#39;, &#39;에서&#39;, &#39;는&#39;, &#39;실업률&#39;, &#39;과&#39;, &#39;경기&#39;, &#39;지수&#39;, &#39;와&#39;, &#39;의&#39;, &#39;상관관계&#39;, &#39;는&#39;, &#39;그렇게&#39;, &#39;높&#39;, &#39;지않&#39;, &#39;은&#39;, &#39;것으로&#39;, &#39;나타나&#39;, &#39;며&#39;, &#39;통계청에서&#39;, &#39;발표&#39;, &#39;하는&#39;, &#39;공식&#39;, &#39;적인&#39;, &#39;실업률&#39;, &#39;을&#39;, &#39;구직&#39;, &#39;단념&#39;, &#39;자&#39;, &#39;를&#39;, &#39;포함한&#39;, &#39;광의의실업&#39;, &#39;률&#39;, &#39;로전환&#39;, &#39;할경우&#39;, &#39;오히려&#39;, &#39;경기와의&#39;, &#39;연관&#39;, &#39;성이&#39;, &#39;좀더&#39;, &#39;높은&#39;, &#39;것으로&#39;, &#39;분석&#39;, &#39;되&#39;, &#39;므로&#39;, &#39;경기&#39;, &#39;상환&#39;, &#39;판단&#39;, &#39;을&#39;, &#39;위해서는&#39;, &#39;공식&#39;, &#39;적인&#39;, &#39;실업률&#39;, &#39;보다는&#39;, &#39;광의의실업&#39;, &#39;률&#39;, &#39;을&#39;, &#39;이용&#39;, &#39;하&#39;, &#39;는것&#39;, &#39;이&#39;, &#39;더&#39;, &#39;좋&#39;, &#39;을것&#39;, &#39;같&#39;, &#39;다고&#39;, &#39;설명&#39;, &#39;하&#39;, &#39;였음&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_ngrams</span> <span class="o">=</span> <span class="n">ngram</span><span class="o">.</span><span class="n">find_ngrams</span><span class="p">(</span>
+    <span class="n">ngram</span><span class="o">.</span><span class="n">sentences</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span>
+    <span class="n">strip_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">surface_delim</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">apply_postag_rules</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">_ngrams</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.models.ngram.ngram:found 25 ngrams
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;동/MM;위원/NNG&#39;: {&#39;score&#39;: 0.8568080788235676, &#39;count&#39;: 1},
+ &#39;관련/NNG;하/XSV;여/EC&#39;: {&#39;score&#39;: 0.6744817132834611, &#39;count&#39;: 1},
+ &#39;고용/NNG;사정/NNG&#39;: {&#39;score&#39;: 0.6440199999085726, &#39;count&#39;: 1},
+ &#39;지/EC;않/VX&#39;: {&#39;score&#39;: 0.9294521637628269, &#39;count&#39;: 2},
+ &#39;우리/NP;나라/NNG&#39;: {&#39;score&#39;: 0.8562398240331328, &#39;count&#39;: 2},
+ &#39;실업/NNG;률/XSN&#39;: {&#39;score&#39;: 0.6494435441593894, &#39;count&#39;: 3},
+ &#39;에/JKB;비해/VV+&#39;: {&#39;score&#39;: 0.5012251931663576, &#39;count&#39;: 2},
+ &#39;지/EC;못하/VX&#39;: {&#39;score&#39;: 0.7024120167866501, &#39;count&#39;: 1},
+ &#39;구조/NNG;적/XSN;요인/NNG&#39;: {&#39;score&#39;: 0.546126756666045, &#39;count&#39;: 3},
+ &#39;적/XSN;인/VCP&#39;: {&#39;score&#39;: 0.7342274264210907, &#39;count&#39;: 1},
+ &#39;측면/NNG;에서/JKB&#39;: {&#39;score&#39;: 0.5471802970887485, &#39;count&#39;: 2},
+ &#39;해/XSV;보/VX;면/EC&#39;: {&#39;score&#39;: 0.7278386924178137, &#39;count&#39;: 1},
+ &#39;방향/NNG;으로/JKB;가/VV&#39;: {&#39;score&#39;: 0.5214619840461885, &#39;count&#39;: 2},
+ &#39;는/ETM;것/NNB&#39;: {&#39;score&#39;: 0.5236409165544453, &#39;count&#39;: 1},
+ &#39;다는/ETM;견해/NNG&#39;: {&#39;score&#39;: 0.7309617813933906, &#39;count&#39;: 1},
+ &#39;활동/NNG;참가/NNG&#39;: {&#39;score&#39;: 0.7741200525059377, &#39;count&#39;: 1},
+ &#39;기/ETN;때문/NNB&#39;: {&#39;score&#39;: 0.8196906558080235, &#39;count&#39;: 1},
+ &#39;같/VA;은/ETM&#39;: {&#39;score&#39;: 0.7999751061740198, &#39;count&#39;: 1},
+ &#39;과/JKB;함께/MAG&#39;: {&#39;score&#39;: 0.6284362488292308, &#39;count&#39;: 1},
+ &#39;좀/MAG;더/MAG&#39;: {&#39;score&#39;: 0.8453728443412079, &#39;count&#39;: 1},
+ &#39;심/VV;도/EC&#39;: {&#39;score&#39;: 0.9942257464499541, &#39;count&#39;: 1},
+ &#39;해/XSV;보/VX&#39;: {&#39;score&#39;: 0.7018456967682065, &#39;count&#39;: 1},
+ &#39;필요/NNG;가/JKS;있/VA&#39;: {&#39;score&#39;: 0.8839755298206097, &#39;count&#39;: 1},
+ &#39;의견/NNG;을/JKO;제시/NNG&#39;: {&#39;score&#39;: 0.7695350089945394, &#39;count&#39;: 1},
+ &#39;였/EP;음/ETN&#39;: {&#39;score&#39;: 0.8196123192196287, &#39;count&#39;: 1}}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "entelecheia/ekorpkit",
+            ref: "main",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/models/ngram"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">N-Grams</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="ngram_for_lexicons.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">N-Gram model for ngram lexicon features</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tokenize-and-extract-tokens">Tokenize and extract tokens</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-ngrams">Train ngrams</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By <a href="https://entelecheia.me">Young Joon Lee</a>
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

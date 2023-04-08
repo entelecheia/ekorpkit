@@ -1,0 +1,1144 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Instantiating pipeline &#8212; ekorpkit</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-examples.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster.custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster.bundle.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster-sideTip-shadow.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster-sideTip-punk.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster-sideTip-borderless.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/micromodal.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../_static/tabs.js"></script>
+    <script src="../../_static/js/hoverxref.js"></script>
+    <script src="../../_static/js/tooltipster.bundle.min.js"></script>
+    <script src="../../_static/js/micromodal.min.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"tex": {"macros": {"N": "\\mathbb{N}", "floor": ["\\lfloor#1\\rfloor", 1], "bmat": ["\\left[\\begin{array}"], "emat": ["\\end{array}\\right]"]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://unpkg.com/mermaid@9.4.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/pipelines/pipeline';</script>
+    <link rel="canonical" href="https://ekorpkit.entelecheia.ai/tutorials/pipelines/pipeline.html" />
+    <link rel="shortcut icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Preprocessors" href="../preprocessors/index.html" />
+    <link rel="prev" title="Pipelines" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">ekorpkit</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Introduction
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Basics</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../basics/index.html">Getting started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/usage.html">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../basics/features/index.html">Key features</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/features/easy_config.html">Easy Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/features/no_boiler.html">No Boilerplate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/features/workflows.html">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/features/share.html">Sharable and Reproducible</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basics/features/plug.html">Pluggable Architece</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../config/index.html">Configuring ekorpkit</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../config/eKonf.html">Using eKonf class</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../datasets/index.html">Datasets</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../corpora/corpus.html">Build and Load Corpora</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/dataset.html">Build and Load Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../corpora/pipeline.html">Corpus task pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../models/index.html">Models</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../models/automl/index.html">Auto ML</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../models/embeddings/index.html">Word Embeddings</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/embeddings/word2vec_basics.html">Word2Vec Basics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/embeddings/eval_vectors.html">Evaluate pretrained embeddings</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../models/ngram/index.html">N-Grams</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/ngram/ngram.html">N-Grams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/ngram/ngram_for_lexicons.html">N-Gram model for ngram lexicon features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/ngram/ngram_for_words.html">N-Gram model for unigram lexicon features</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../models/sentiment/index.html">Sentiment Analyers</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../models/sentiment/lbsa_en.html">Lexicon-based Sentiment Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/sentiment/financial_phrasebank_lm.html">Evaluate LM with financial phrasebank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../models/sentiment/sentiment.html">LM Dictionary vs. finbert vs. T5</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../models/transformers/index.html">Transformers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Pipelines</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Instantiating pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../preprocessors/index.html">Preprocessors</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../preprocessors/normalizer/index.html">Normalizers</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../preprocessors/normalizer/normalizer.html">Normalizers</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../preprocessors/segmenter/index.html">Segmenters</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../preprocessors/segmenter/segmenter.html">Segmenters</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../preprocessors/tokenizer/index.html">Tokenizers</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../preprocessors/tokenizer/mecab.html">Mecab Tokenizer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../visualizers/index.html">Visualizers</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../visualizers/plot.html">Plots</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow/index.html">Workflows</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../datasets/ekorpkot_corpus.html">The eKorpkit Corpus</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://entelecheia.me">entelecheia.me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about/index.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about/cite.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-launch-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Launch interactive content">
+    <i class="fas fa-rocket"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://colab.research.google.com/github/entelecheia/ekorpkit/blob/main/book/tutorials/pipelines/pipeline.ipynb" target="_blank"
+   class="btn btn-sm dropdown-item"
+   title="Launch onColab"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  
+    <img src="../../_static/images/logo_colab.png">
+  </span>
+<span class="btn__text-container">Colab</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="initThebeSBT()"
+  class="btn btn-sm btn-launch-thebe dropdown-item"
+  title="Launch Thebe"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-play"></i>
+  </span>
+<span class="btn__text-container">Live Code</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit/issues/new?title=Issue%20on%20page%20%2Ftutorials/pipelines/pipeline.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/tutorials/pipelines/pipeline.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Instantiating pipeline</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-data">Load data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#process-a-pipeline-with-the-ekorpkit-configs">Process a pipeline  with the ekorpkit configs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#melt">Melt</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pivot">Pivot</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="instantiating-pipeline">
+<h1>Instantiating pipeline<a class="headerlink" href="#instantiating-pipeline" title="Permalink to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">ekorpkit</span> <span class="kn">import</span> <span class="n">eKonf</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;version:&quot;</span><span class="p">,</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;is notebook?&quot;</span><span class="p">,</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">is_notebook</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;is colab?&quot;</span><span class="p">,</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">is_colab</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;evironment varialbles:&quot;</span><span class="p">)</span>
+<span class="n">eKonf</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">eKonf</span><span class="o">.</span><span class="n">env</span><span class="p">()</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.base:IPython version: (6, 9, 0), client: jupyter_client
+INFO:ekorpkit.base:Google Colab not detected.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>version: 0.1.33+21.gf33ff55.dirty
+is notebook? True
+is colab? False
+evironment varialbles:
+{&#39;EKORPKIT_CONFIG_DIR&#39;: &#39;/workspace/projects/ekorpkit-book/config&#39;,
+ &#39;EKORPKIT_DATA_DIR&#39;: None,
+ &#39;EKORPKIT_PROJECT&#39;: &#39;ekorpkit-book&#39;,
+ &#39;EKORPKIT_WORKSPACE_ROOT&#39;: &#39;/workspace&#39;,
+ &#39;NUM_WORKERS&#39;: 230}
+</pre></div>
+</div>
+</div>
+</div>
+<section id="load-data">
+<h2>Load data<a class="headerlink" href="#load-data" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/edgar.zip&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">cached_path</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+=</span> <span class="s2">&quot;/edgar&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data_file</span> <span class="o">=</span> <span class="s2">&quot;edgar.parquet&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:cached_path:cache of https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/edgar.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted
+INFO:cached_path:cache of https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/edgar.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted
+INFO:cached_path:cache of https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/edgar.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted
+INFO:ekorpkit.io.file:Processing [1] files from [&#39;edgar.parquet&#39;]
+INFO:ekorpkit.io.file:Loading 1 dataframes from [&#39;/workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted/edgar/edgar.parquet&#39;]
+INFO:ekorpkit.io.file:Loading data from /workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted/edgar/edgar.parquet
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Data: edgar.parquet&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;pipeline=blank&quot;</span><span class="p">)</span>
+<span class="n">df_cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;edgar_sample&quot;</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">df_cfg</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING:ekorpkit.pipelines.pipe:No pipeline specified
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>filename</th>
+      <th>item</th>
+      <th>text</th>
+      <th>cik</th>
+      <th>company</th>
+      <th>filing_type</th>
+      <th>filing_date</th>
+      <th>period_of_report</th>
+      <th>sic</th>
+      <th>state_of_inc</th>
+      <th>state_location</th>
+      <th>fiscal_year_end</th>
+      <th>filing_html_index</th>
+      <th>htm_filing_link</th>
+      <th>complete_text_filing_link</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1410</th>
+      <td>1534</td>
+      <td>1999/320193_10K_1999_0000912057-99-010244.json</td>
+      <td>item_1</td>
+      <td>ITEM 1. \nBUSINESS GENERAL Apple Computer, Inc...</td>
+      <td>320193</td>
+      <td>APPLE COMPUTER INC</td>
+      <td>10-K</td>
+      <td>1999-12-22</td>
+      <td>1999-09-25</td>
+      <td>3571</td>
+      <td>CA</td>
+      <td>CA</td>
+      <td>0930</td>
+      <td>https://www.sec.gov/Archives/edgar/data/320193...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/320193...</td>
+    </tr>
+    <tr>
+      <th>1560</th>
+      <td>1697</td>
+      <td>1999/21344_10K_1999_0000021344-00-000009.json</td>
+      <td>item_1</td>
+      <td>ITEM 1. \nBUSINESS The Coca-Cola Company (toge...</td>
+      <td>21344</td>
+      <td>COCA COLA CO</td>
+      <td>10-K</td>
+      <td>2000-03-09</td>
+      <td>1999-12-31</td>
+      <td>2080</td>
+      <td>DE</td>
+      <td>GA</td>
+      <td>1231</td>
+      <td>https://www.sec.gov/Archives/edgar/data/21344/...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/21344/...</td>
+    </tr>
+    <tr>
+      <th>2746</th>
+      <td>2977</td>
+      <td>1999/70858_10K_1999_0000950168-00-000621.json</td>
+      <td>item_1</td>
+      <td>Item 1. \nBUSINESS General Bank of America Cor...</td>
+      <td>70858</td>
+      <td>BANK OF AMERICA CORP /DE/</td>
+      <td>10-K</td>
+      <td>2000-03-20</td>
+      <td>1999-12-31</td>
+      <td>6021</td>
+      <td>DE</td>
+      <td>NC</td>
+      <td>1231</td>
+      <td>https://www.sec.gov/Archives/edgar/data/70858/...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/70858/...</td>
+    </tr>
+    <tr>
+      <th>3762</th>
+      <td>4088</td>
+      <td>1999/80424_10K_1999_0000080424-99-000027.json</td>
+      <td>item_1</td>
+      <td>Item 1. \nBusiness. \n--------- General Develo...</td>
+      <td>80424</td>
+      <td>PROCTER &amp; GAMBLE CO</td>
+      <td>10-K</td>
+      <td>1999-09-15</td>
+      <td>1999-06-30</td>
+      <td>2840</td>
+      <td>OH</td>
+      <td>OH</td>
+      <td>0630</td>
+      <td>https://www.sec.gov/Archives/edgar/data/80424/...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/80424/...</td>
+    </tr>
+    <tr>
+      <th>4806</th>
+      <td>5211</td>
+      <td>1999/1018724_10K_1999_0000891020-00-000622.json</td>
+      <td>item_1</td>
+      <td>ITEM 1. \nBUSINESS This Annual Report on Form ...</td>
+      <td>1018724</td>
+      <td>AMAZON COM INC</td>
+      <td>10-K</td>
+      <td>2000-03-29</td>
+      <td>1999-12-31</td>
+      <td>5961</td>
+      <td>DE</td>
+      <td>WA</td>
+      <td>1231</td>
+      <td>https://www.sec.gov/Archives/edgar/data/101872...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/101872...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;pipeline=blank&quot;</span><span class="p">)</span>
+<span class="n">df_cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;edgar_sample&quot;</span>
+<span class="n">df_cfg</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/edgar.zip&quot;</span>
+<span class="n">df_cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">df_cfg</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">cached_path</span>
+<span class="n">df_cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">+=</span> <span class="s2">&quot;/edgar&quot;</span>
+<span class="n">df_cfg</span><span class="o">.</span><span class="n">data_file</span> <span class="o">=</span> <span class="s2">&quot;edgar.parquet&quot;</span>
+<span class="n">df_cfg</span><span class="o">.</span><span class="n">data_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="s2">&quot;cik&quot;</span><span class="p">,</span> <span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">]</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">df_cfg</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:cached_path:cache of https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/edgar.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted
+INFO:cached_path:cache of https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/edgar.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted
+INFO:cached_path:cache of https://github.com/entelecheia/ekorpkit-book/raw/main/assets/data/edgar.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted
+INFO:ekorpkit.io.file:Processing [1] files from [&#39;edgar.parquet&#39;]
+INFO:ekorpkit.io.file:Loading 1 dataframes from [&#39;/workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted/edgar/edgar.parquet&#39;]
+INFO:ekorpkit.io.file:Loading data from /workspace/.cache/cached_path/8c227c4424ceaa42eb7e3b82c158ea7c8ca6c27910f5f4b29c52d7376c610708.e471900481c811e176bb6ea493388979a9def601f2f456f660131000c602f18b-extracted/edgar/edgar.parquet
+WARNING:ekorpkit.pipelines.pipe:No pipeline specified
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>filename</th>
+      <th>item</th>
+      <th>text</th>
+      <th>cik</th>
+      <th>company</th>
+      <th>filing_type</th>
+      <th>filing_date</th>
+      <th>period_of_report</th>
+      <th>sic</th>
+      <th>state_of_inc</th>
+      <th>state_location</th>
+      <th>fiscal_year_end</th>
+      <th>filing_html_index</th>
+      <th>htm_filing_link</th>
+      <th>complete_text_filing_link</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1410</th>
+      <td>1534</td>
+      <td>1999/320193_10K_1999_0000912057-99-010244.json</td>
+      <td>item_1</td>
+      <td>ITEM 1. \nBUSINESS GENERAL Apple Computer, Inc...</td>
+      <td>320193</td>
+      <td>APPLE COMPUTER INC</td>
+      <td>10-K</td>
+      <td>1999-12-22</td>
+      <td>1999-09-25</td>
+      <td>3571</td>
+      <td>CA</td>
+      <td>CA</td>
+      <td>0930</td>
+      <td>https://www.sec.gov/Archives/edgar/data/320193...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/320193...</td>
+    </tr>
+    <tr>
+      <th>1560</th>
+      <td>1697</td>
+      <td>1999/21344_10K_1999_0000021344-00-000009.json</td>
+      <td>item_1</td>
+      <td>ITEM 1. \nBUSINESS The Coca-Cola Company (toge...</td>
+      <td>21344</td>
+      <td>COCA COLA CO</td>
+      <td>10-K</td>
+      <td>2000-03-09</td>
+      <td>1999-12-31</td>
+      <td>2080</td>
+      <td>DE</td>
+      <td>GA</td>
+      <td>1231</td>
+      <td>https://www.sec.gov/Archives/edgar/data/21344/...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/21344/...</td>
+    </tr>
+    <tr>
+      <th>2746</th>
+      <td>2977</td>
+      <td>1999/70858_10K_1999_0000950168-00-000621.json</td>
+      <td>item_1</td>
+      <td>Item 1. \nBUSINESS General Bank of America Cor...</td>
+      <td>70858</td>
+      <td>BANK OF AMERICA CORP /DE/</td>
+      <td>10-K</td>
+      <td>2000-03-20</td>
+      <td>1999-12-31</td>
+      <td>6021</td>
+      <td>DE</td>
+      <td>NC</td>
+      <td>1231</td>
+      <td>https://www.sec.gov/Archives/edgar/data/70858/...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/70858/...</td>
+    </tr>
+    <tr>
+      <th>3762</th>
+      <td>4088</td>
+      <td>1999/80424_10K_1999_0000080424-99-000027.json</td>
+      <td>item_1</td>
+      <td>Item 1. \nBusiness. \n--------- General Develo...</td>
+      <td>80424</td>
+      <td>PROCTER &amp; GAMBLE CO</td>
+      <td>10-K</td>
+      <td>1999-09-15</td>
+      <td>1999-06-30</td>
+      <td>2840</td>
+      <td>OH</td>
+      <td>OH</td>
+      <td>0630</td>
+      <td>https://www.sec.gov/Archives/edgar/data/80424/...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/80424/...</td>
+    </tr>
+    <tr>
+      <th>4806</th>
+      <td>5211</td>
+      <td>1999/1018724_10K_1999_0000891020-00-000622.json</td>
+      <td>item_1</td>
+      <td>ITEM 1. \nBUSINESS This Annual Report on Form ...</td>
+      <td>1018724</td>
+      <td>AMAZON COM INC</td>
+      <td>10-K</td>
+      <td>2000-03-29</td>
+      <td>1999-12-31</td>
+      <td>5961</td>
+      <td>DE</td>
+      <td>WA</td>
+      <td>1231</td>
+      <td>https://www.sec.gov/Archives/edgar/data/101872...</td>
+      <td>None</td>
+      <td>https://www.sec.gov/Archives/edgar/data/101872...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section id="process-a-pipeline-with-the-ekorpkit-configs">
+<h2>Process a pipeline  with the ekorpkit configs<a class="headerlink" href="#process-a-pipeline-with-the-ekorpkit-configs" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corpus_cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;corpus&quot;</span><span class="p">)</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;bok_minutes&quot;</span>
+<span class="n">corpus_cfg</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="s2">&quot;../data&quot;</span>
+<span class="n">eKonf</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">corpus_cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;_target_&#39;: &#39;ekorpkit.datasets.corpus.Corpus&#39;,
+ &#39;auto&#39;: {&#39;load&#39;: True, &#39;merge&#39;: False},
+ &#39;column_info&#39;: {&#39;_target_&#39;: &#39;ekorpkit.info.column.CorpusInfo&#39;,
+                 &#39;columns&#39;: {&#39;id&#39;: &#39;id&#39;,
+                             &#39;merge_meta_on&#39;: &#39;id&#39;,
+                             &#39;text&#39;: &#39;text&#39;,
+                             &#39;timestamp&#39;: None},
+                 &#39;data&#39;: {&#39;id&#39;: &#39;int&#39;, &#39;text&#39;: &#39;str&#39;},
+                 &#39;datetime&#39;: {&#39;columns&#39;: None,
+                              &#39;format&#39;: None,
+                              &#39;rcParams&#39;: None},
+                 &#39;meta&#39;: None,
+                 &#39;segment_separator&#39;: &#39;\\n\\n&#39;,
+                 &#39;sentence_separator&#39;: &#39;\\n&#39;,
+                 &#39;timestamp&#39;: {&#39;format&#39;: None, &#39;key&#39;: None, &#39;rcParams&#39;: None}},
+ &#39;data_dir&#39;: &#39;../data&#39;,
+ &#39;filetype&#39;: None,
+ &#39;force&#39;: {&#39;build&#39;: False},
+ &#39;metadata_dir&#39;: None,
+ &#39;name&#39;: &#39;bok_minutes&#39;,
+ &#39;path&#39;: {&#39;cache&#39;: {&#39;cache_dir&#39;: &#39;/workspace/.cache&#39;,
+                    &#39;extract_archive&#39;: True,
+                    &#39;force_extract&#39;: False,
+                    &#39;path&#39;: None,
+                    &#39;return_parent_dir&#39;: True,
+                    &#39;uri&#39;: None,
+                    &#39;verbose&#39;: False},
+          &#39;cached_path&#39;: None,
+          &#39;columns&#39;: None,
+          &#39;concat_data&#39;: False,
+          &#39;data_columns&#39;: None,
+          &#39;data_dir&#39;: &#39;../data&#39;,
+          &#39;data_file&#39;: None,
+          &#39;filetype&#39;: None,
+          &#39;name&#39;: &#39;bok_minutes&#39;,
+          &#39;output_dir&#39;: None,
+          &#39;output_file&#39;: None,
+          &#39;root&#39;: &#39;/workspace/data/bok_minutes&#39;,
+          &#39;suffix&#39;: None,
+          &#39;verbose&#39;: False},
+ &#39;use_name_as_subdir&#39;: True,
+ &#39;verbose&#39;: False}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;pipeline&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpus_cfg</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">_pipeline_</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;summary_stats&quot;</span><span class="p">]</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">summary_stats</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;../data/output&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">summary_stats</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="s2">&quot;bok_minutes_stats.yaml&quot;</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.datasets.base:Loaded info file: ../data/bok_minutes/info-bok_minutes.yaml
+INFO:ekorpkit.io.file:Processing [1] files from [&#39;bok_minutes-train.parquet&#39;]
+INFO:ekorpkit.io.file:Loading 1 dataframes from [&#39;../data/bok_minutes/bok_minutes-train.parquet&#39;]
+INFO:ekorpkit.io.file:Loading data from ../data/bok_minutes/bok_minutes-train.parquet
+INFO:ekorpkit.info.column:index: index, index of data: None, columns: [&#39;id&#39;, &#39;text&#39;], id: [&#39;id&#39;]
+INFO:ekorpkit.info.column:Adding id [split] to [&#39;id&#39;]
+INFO:ekorpkit.info.column:Added id [split], now [&#39;id&#39;, &#39;split&#39;]
+INFO:ekorpkit.info.column:Added a column [split] with value [train]
+INFO:ekorpkit.io.file:Processing [1] files from [&#39;meta-bok_minutes-train.parquet&#39;]
+INFO:ekorpkit.io.file:Loading 1 dataframes from [&#39;../data/bok_minutes/meta-bok_minutes-train.parquet&#39;]
+INFO:ekorpkit.io.file:Loading data from ../data/bok_minutes/meta-bok_minutes-train.parquet
+INFO:ekorpkit.info.column:Added a column [split] with value [train]
+INFO:ekorpkit.info.column:No timestamp key found
+INFO:ekorpkit.io.file:Concatenating 1 dataframes
+INFO:ekorpkit.pipelines.pipe:Applying pipeline: OrderedDict([(&#39;summary_stats&#39;, &#39;summary_stats&#39;)])
+INFO:ekorpkit.base:Applying pipe: functools.partial(&lt;function summary_stats at 0x7f7f8a58bf70&gt;)
+INFO:ekorpkit.base:Using batcher with minibatch size: 1
+INFO:ekorpkit.utils.batch.batcher: backend: joblib  minibatch_size: 1  procs: 230  input_split: False  merge_output: True  len(data): 1 len(args): 5
+apply len_bytes to num_bytes: 100%|██████████| 1/1 [00:08&lt;00:00,  8.51s/it]
+INFO:ekorpkit.pipelines.pipe:Saving summary stats: ../data/output/bok_minutes_stats.yaml
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">summary_stats</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">summary_stats</span><span class="o">.</span><span class="n">output_file</span><span class="p">)</span>
+<span class="n">eKonf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;num_examples&#39;: 1, &#39;num_bytes&#39;: 88934, &#39;num_bytes_median&#39;: 88934.0, &#39;num_bytes_max&#39;: 88934, &#39;num_bytes_min&#39;: 88934, &#39;human_bytes&#39;: &#39;86.85 KiB&#39;}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="melt">
+<h2>Melt<a class="headerlink" href="#melt" title="Permalink to this heading">#</a></h2>
+</section>
+<section id="pivot">
+<h2>Pivot<a class="headerlink" href="#pivot" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_dir</span> <span class="o">=</span> <span class="s2">&quot;../data/fomc&quot;</span>
+<span class="n">fomc_sentiments</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="s1">&#39;fomc_sentiments.parquet&#39;</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s2">&quot;pipeline/pivot&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="s2">&quot;recent_meeting&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="s2">&quot;content_type&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;polarity_mean&quot;</span><span class="p">,</span> <span class="s2">&quot;polarity_diffusion&quot;</span><span class="p">,</span> <span class="s2">&quot;num_examples&quot;</span><span class="p">]</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">pipe</span><span class="p">(</span><span class="n">fomc_sentiments</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span>
+<span class="n">data</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "entelecheia/ekorpkit",
+            ref: "main",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/pipelines"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Pipelines</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../preprocessors/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Preprocessors</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-data">Load data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#process-a-pipeline-with-the-ekorpkit-configs">Process a pipeline  with the ekorpkit configs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#melt">Melt</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pivot">Pivot</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By <a href="https://entelecheia.me">Young Joon Lee</a>
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1176 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Evaluate pretrained embeddings &#8212; ekorpkit</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-examples.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.bundle.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-shadow.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-punk.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster-sideTip-borderless.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/micromodal.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../../_static/tabs.js"></script>
+    <script src="../../../_static/js/hoverxref.js"></script>
+    <script src="../../../_static/js/tooltipster.bundle.min.js"></script>
+    <script src="../../../_static/js/micromodal.min.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../../../_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"tex": {"macros": {"N": "\\mathbb{N}", "floor": ["\\lfloor#1\\rfloor", 1], "bmat": ["\\left[\\begin{array}"], "emat": ["\\end{array}\\right]"]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://unpkg.com/mermaid@9.4.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/models/embeddings/eval_vectors';</script>
+    <link rel="canonical" href="https://ekorpkit.entelecheia.ai/tutorials/models/embeddings/eval_vectors.html" />
+    <link rel="shortcut icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="N-Grams" href="../ngram/index.html" />
+    <link rel="prev" title="Word2Vec Basics" href="word2vec_basics.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">ekorpkit</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Introduction
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Basics</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/index.html">Getting started</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/usage.html">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../basics/features/index.html">Key features</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/easy_config.html">Easy Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/no_boiler.html">No Boilerplate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/workflows.html">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/share.html">Sharable and Reproducible</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basics/features/plug.html">Pluggable Architece</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../config/index.html">Configuring ekorpkit</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../config/eKonf.html">Using eKonf class</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../datasets/index.html">Datasets</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/corpus.html">Build and Load Corpora</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/dataset.html">Build and Load Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../corpora/pipeline.html">Corpus task pipelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../automl/index.html">Auto ML</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Word Embeddings</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="word2vec_basics.html">Word2Vec Basics</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Evaluate pretrained embeddings</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../ngram/index.html">N-Grams</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ngram/ngram.html">N-Grams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ngram/ngram_for_lexicons.html">N-Gram model for ngram lexicon features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ngram/ngram_for_words.html">N-Gram model for unigram lexicon features</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../sentiment/index.html">Sentiment Analyers</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/lbsa_en.html">Lexicon-based Sentiment Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/financial_phrasebank_lm.html">Evaluate LM with financial phrasebank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sentiment/sentiment.html">LM Dictionary vs. finbert vs. T5</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../transformers/index.html">Transformers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../pipelines/index.html">Pipelines</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pipelines/pipeline.html">Instantiating pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../preprocessors/index.html">Preprocessors</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/normalizer/index.html">Normalizers</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/normalizer/normalizer.html">Normalizers</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/segmenter/index.html">Segmenters</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/segmenter/segmenter.html">Segmenters</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../preprocessors/tokenizer/index.html">Tokenizers</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../preprocessors/tokenizer/mecab.html">Mecab Tokenizer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../visualizers/index.html">Visualizers</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../visualizers/plot.html">Plots</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow/index.html">Workflows</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../datasets/ekorpkot_corpus.html">The eKorpkit Corpus</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://entelecheia.me">entelecheia.me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/index.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/cite.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-launch-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Launch interactive content">
+    <i class="fas fa-rocket"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://colab.research.google.com/github/entelecheia/ekorpkit/blob/main/book/tutorials/models/embeddings/eval_vectors.ipynb" target="_blank"
+   class="btn btn-sm dropdown-item"
+   title="Launch onColab"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  
+    <img src="../../../_static/images/logo_colab.png">
+  </span>
+<span class="btn__text-container">Colab</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="initThebeSBT()"
+  class="btn btn-sm btn-launch-thebe dropdown-item"
+  title="Launch Thebe"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-play"></i>
+  </span>
+<span class="btn__text-container">Live Code</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/entelecheia/ekorpkit/issues/new?title=Issue%20on%20page%20%2Ftutorials/models/embeddings/eval_vectors.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/tutorials/models/embeddings/eval_vectors.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Evaluate pretrained embeddings</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-glove-vectors">Load GloVE Vectors</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wikipedia">Wikipedia</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#twitter-data">Twitter Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-crawl">Common Crawl</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-embeddings">Evaluate embeddings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualize-embeddings">Visualize Embeddings</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-analogy-examples">Plot Analogy Examples</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="evaluate-pretrained-embeddings">
+<h1>Evaluate pretrained embeddings<a class="headerlink" href="#evaluate-pretrained-embeddings" title="Permalink to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">config</span> InlineBackend.figure_format=&#39;retina&#39;
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">ekorpkit</span> <span class="kn">import</span> <span class="n">eKonf</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">eKonf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.1.32+1.gcf6615f.dirty
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_dir</span> <span class="o">=</span> <span class="s2">&quot;../data/embeddings&quot;</span>
+<span class="n">save_dataframe</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+    <span class="n">config_group</span><span class="o">=</span><span class="s2">&quot;_func_/save_dataframe&quot;</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="n">data_dir</span>
+<span class="p">)</span>
+<span class="n">load_dataframe</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s2">&quot;_func_/load_dataframe&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="load-glove-vectors">
+<h2>Load GloVE Vectors<a class="headerlink" href="#load-glove-vectors" title="Permalink to this heading">#</a></h2>
+<section id="wikipedia">
+<h3>Wikipedia<a class="headerlink" href="#wikipedia" title="Permalink to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s2">&quot;model/embedding&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;glove_wiki&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">corpus</span> <span class="o">=</span> <span class="s2">&quot;Wikipedia&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;https://nlp.stanford.edu/data/glove.6B.zip&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model_dir</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">path</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model_file</span> <span class="o">=</span> <span class="s2">&quot;glove.6B.300d.txt&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;glove&quot;</span>
+<span class="n">wv_wiki</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">wv_wiki</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:cached_path:cache of https://nlp.stanford.edu/data/glove.6B.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/d97dcf99e9ed61e3b07a5a87dd5dea7b6a4815ba6eb1ac87f529bfe6e2ba4ccf.f9662ccb99e715467e6da0c85a047cfc51888321958f9440eb5a15f7189c140f-extracted
+INFO:cached_path:cache of https://nlp.stanford.edu/data/glove.6B.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/d97dcf99e9ed61e3b07a5a87dd5dea7b6a4815ba6eb1ac87f529bfe6e2ba4ccf.f9662ccb99e715467e6da0c85a047cfc51888321958f9440eb5a15f7189c140f-extracted
+INFO:cached_path:cache of https://raw.githubusercontent.com/RaRe-Technologies/gensim/develop/gensim/test/test_data/questions-words.txt is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /root/.ekorpkit/.cache/cached_path/7568e1428a2ba53a33f67dea7e276f212c065b07d102aafc177a507d244161f6.f60f7f82aaacf3a534d93013617bcfead46a795268096ff1990608b16115b566
+INFO:gensim.models.keyedvectors:loading projection weights from /workspace/.cache/cached_path/d97dcf99e9ed61e3b07a5a87dd5dea7b6a4815ba6eb1ac87f529bfe6e2ba4ccf.f9662ccb99e715467e6da0c85a047cfc51888321958f9440eb5a15f7189c140f-extracted/glove.6B.300d.txt
+INFO:gensim.utils:KeyedVectors lifecycle event {&#39;msg&#39;: &#39;loaded (400000, 300) matrix of type float32 from /workspace/.cache/cached_path/d97dcf99e9ed61e3b07a5a87dd5dea7b6a4815ba6eb1ac87f529bfe6e2ba4ccf.f9662ccb99e715467e6da0c85a047cfc51888321958f9440eb5a15f7189c140f-extracted/glove.6B.300d.txt&#39;, &#39;binary&#39;: False, &#39;encoding&#39;: &#39;utf8&#39;, &#39;datetime&#39;: &#39;2022-06-08T10:14:23.606212&#39;, &#39;gensim&#39;: &#39;4.2.0&#39;, &#39;python&#39;: &#39;3.8.12 (default, Jan 14 2022, 01:33:56) \n[GCC 7.5.0]&#39;, &#39;platform&#39;: &#39;Linux-5.4.0-58-generic-x86_64-with-glibc2.27&#39;, &#39;event&#39;: &#39;load_word2vec_format&#39;}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">wiki_results</span> <span class="o">=</span> <span class="n">wv_wiki</span><span class="o">.</span><span class="n">evaluate_word_analogies</span><span class="p">(</span><span class="n">analogies</span><span class="o">=</span><span class="s2">&quot;google&quot;</span><span class="p">)</span>
+<span class="n">wiki_results</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:gensim.models.keyedvectors:Evaluating word analogies for top 300000 words in the model on /root/.ekorpkit/.cache/cached_path/7568e1428a2ba53a33f67dea7e276f212c065b07d102aafc177a507d244161f6.f60f7f82aaacf3a534d93013617bcfead46a795268096ff1990608b16115b566
+INFO:gensim.models.keyedvectors:capital-common-countries: 94.9% (480/506)
+INFO:gensim.models.keyedvectors:capital-world: 96.0% (4342/4524)
+INFO:gensim.models.keyedvectors:currency: 17.1% (138/808)
+INFO:gensim.models.keyedvectors:city-in-state: 59.3% (1463/2467)
+INFO:gensim.models.keyedvectors:family: 88.1% (446/506)
+INFO:gensim.models.keyedvectors:gram1-adjective-to-adverb: 22.6% (224/992)
+INFO:gensim.models.keyedvectors:gram2-opposite: 27.3% (222/812)
+INFO:gensim.models.keyedvectors:gram3-comparative: 88.1% (1174/1332)
+INFO:gensim.models.keyedvectors:gram4-superlative: 72.2% (810/1122)
+INFO:gensim.models.keyedvectors:gram5-present-participle: 70.0% (739/1056)
+INFO:gensim.models.keyedvectors:gram6-nationality-adjective: 92.6% (1480/1599)
+INFO:gensim.models.keyedvectors:gram7-past-tense: 61.2% (954/1560)
+INFO:gensim.models.keyedvectors:gram8-plural: 78.1% (1040/1332)
+INFO:gensim.models.keyedvectors:gram9-plural-verbs: 58.5% (509/870)
+INFO:gensim.models.keyedvectors:Quadruplets with out-of-vocabulary words: 0.3%
+INFO:gensim.models.keyedvectors:NB: analogies containing OOV words were skipped from evaluation! To change this behavior, use &quot;dummy4unknown=True&quot;
+INFO:gensim.models.keyedvectors:Total accuracy: 72.0% (14021/19486)
+INFO:ekorpkit.models.embeddings.wordvec:Evaluation score: 0.7195422354510931
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>dict_keys([&#39;score&#39;, &#39;summary&#39;, &#39;correct&#39;, &#39;incorrect&#39;])
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="twitter-data">
+<h3>Twitter Data<a class="headerlink" href="#twitter-data" title="Permalink to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s2">&quot;model/embedding&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;glove_twitter&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">corpus</span> <span class="o">=</span> <span class="s2">&quot;Twitter&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;https://nlp.stanford.edu/data/glove.twitter.27B.zip&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model_dir</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">path</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model_file</span> <span class="o">=</span> <span class="s2">&quot;glove.twitter.27B.200d.txt&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;glove&quot;</span>
+<span class="n">wv_twt</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">wv_twt</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:cached_path:cache of https://nlp.stanford.edu/data/glove.twitter.27B.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/d08f2221566196fe3fd6f557a2b67e9ffd5cf4b7c500918d98581a52f349a804.7417464dae8ba25e69e639021d320765d2d18bb24f73391ef423756069dc8078-extracted
+INFO:cached_path:cache of https://nlp.stanford.edu/data/glove.twitter.27B.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/d08f2221566196fe3fd6f557a2b67e9ffd5cf4b7c500918d98581a52f349a804.7417464dae8ba25e69e639021d320765d2d18bb24f73391ef423756069dc8078-extracted
+INFO:cached_path:cache of https://raw.githubusercontent.com/RaRe-Technologies/gensim/develop/gensim/test/test_data/questions-words.txt is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /root/.ekorpkit/.cache/cached_path/7568e1428a2ba53a33f67dea7e276f212c065b07d102aafc177a507d244161f6.f60f7f82aaacf3a534d93013617bcfead46a795268096ff1990608b16115b566
+INFO:gensim.models.keyedvectors:loading projection weights from /workspace/.cache/cached_path/d08f2221566196fe3fd6f557a2b67e9ffd5cf4b7c500918d98581a52f349a804.7417464dae8ba25e69e639021d320765d2d18bb24f73391ef423756069dc8078-extracted/glove.twitter.27B.200d.txt
+INFO:gensim.utils:KeyedVectors lifecycle event {&#39;msg&#39;: &#39;loaded (1193514, 200) matrix of type float32 from /workspace/.cache/cached_path/d08f2221566196fe3fd6f557a2b67e9ffd5cf4b7c500918d98581a52f349a804.7417464dae8ba25e69e639021d320765d2d18bb24f73391ef423756069dc8078-extracted/glove.twitter.27B.200d.txt&#39;, &#39;binary&#39;: False, &#39;encoding&#39;: &#39;utf8&#39;, &#39;datetime&#39;: &#39;2022-06-08T09:15:08.452346&#39;, &#39;gensim&#39;: &#39;4.2.0&#39;, &#39;python&#39;: &#39;3.8.12 (default, Jan 14 2022, 01:33:56) \n[GCC 7.5.0]&#39;, &#39;platform&#39;: &#39;Linux-5.4.0-58-generic-x86_64-with-glibc2.27&#39;, &#39;event&#39;: &#39;load_word2vec_format&#39;}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">twt_results</span> <span class="o">=</span> <span class="n">wv_twt</span><span class="o">.</span><span class="n">evaluate_word_analogies</span><span class="p">(</span><span class="n">analogies</span><span class="o">=</span><span class="s2">&quot;google&quot;</span><span class="p">)</span>
+<span class="n">twt_results</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:gensim.models.keyedvectors:Evaluating word analogies for top 300000 words in the model on /root/.ekorpkit/.cache/cached_path/7568e1428a2ba53a33f67dea7e276f212c065b07d102aafc177a507d244161f6.f60f7f82aaacf3a534d93013617bcfead46a795268096ff1990608b16115b566
+INFO:gensim.models.keyedvectors:capital-common-countries: 70.6% (357/506)
+INFO:gensim.models.keyedvectors:capital-world: 74.6% (1639/2198)
+INFO:gensim.models.keyedvectors:currency: 3.3% (15/458)
+INFO:gensim.models.keyedvectors:city-in-state: 35.6% (879/2467)
+INFO:gensim.models.keyedvectors:family: 79.5% (302/380)
+INFO:gensim.models.keyedvectors:gram1-adjective-to-adverb: 12.7% (118/930)
+INFO:gensim.models.keyedvectors:gram2-opposite: 30.8% (185/600)
+INFO:gensim.models.keyedvectors:gram3-comparative: 74.2% (989/1332)
+INFO:gensim.models.keyedvectors:gram4-superlative: 64.0% (718/1122)
+INFO:gensim.models.keyedvectors:gram5-present-participle: 66.4% (701/1056)
+INFO:gensim.models.keyedvectors:gram6-nationality-adjective: 72.7% (894/1229)
+INFO:gensim.models.keyedvectors:gram7-past-tense: 53.1% (787/1482)
+INFO:gensim.models.keyedvectors:gram8-plural: 76.0% (1012/1332)
+INFO:gensim.models.keyedvectors:gram9-plural-verbs: 52.0% (452/870)
+INFO:gensim.models.keyedvectors:Quadruplets with out-of-vocabulary words: 18.3%
+INFO:gensim.models.keyedvectors:NB: analogies containing OOV words were skipped from evaluation! To change this behavior, use &quot;dummy4unknown=True&quot;
+INFO:gensim.models.keyedvectors:Total accuracy: 56.7% (9048/15962)
+INFO:ekorpkit.models.embeddings.wordvec:Evaluation score: 0.5668462598671845
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>dict_keys([&#39;score&#39;, &#39;summary&#39;, &#39;correct&#39;, &#39;incorrect&#39;])
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="common-crawl">
+<h3>Common Crawl<a class="headerlink" href="#common-crawl" title="Permalink to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s2">&quot;model/embedding&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;glove_commoncrawl&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">corpus</span> <span class="o">=</span> <span class="s2">&quot;Common Crawl&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;https://nlp.stanford.edu/data/glove.42B.300d.zip&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model_dir</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">path</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model_file</span> <span class="o">=</span> <span class="s2">&quot;glove.42B.300d.txt&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;glove&quot;</span>
+<span class="n">wv_cc</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">wv_cc</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:cached_path:cache of https://nlp.stanford.edu/data/glove.42B.300d.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/1b77e307d0976680276bd5eddffac55a83164787611dccb81aaaab9c4c79073b.d4304a004cdd3b0267ad688b5fc4d6c9d43c622a571ee2ba8b39604fc257faed-extracted
+INFO:cached_path:cache of https://nlp.stanford.edu/data/glove.42B.300d.zip is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /workspace/.cache/cached_path/1b77e307d0976680276bd5eddffac55a83164787611dccb81aaaab9c4c79073b.d4304a004cdd3b0267ad688b5fc4d6c9d43c622a571ee2ba8b39604fc257faed-extracted
+INFO:cached_path:cache of https://raw.githubusercontent.com/RaRe-Technologies/gensim/develop/gensim/test/test_data/questions-words.txt is up-to-date
+INFO:ekorpkit.io.cached_path:cached path: /root/.ekorpkit/.cache/cached_path/7568e1428a2ba53a33f67dea7e276f212c065b07d102aafc177a507d244161f6.f60f7f82aaacf3a534d93013617bcfead46a795268096ff1990608b16115b566
+INFO:gensim.models.keyedvectors:loading projection weights from /workspace/.cache/cached_path/1b77e307d0976680276bd5eddffac55a83164787611dccb81aaaab9c4c79073b.d4304a004cdd3b0267ad688b5fc4d6c9d43c622a571ee2ba8b39604fc257faed-extracted/glove.42B.300d.txt
+INFO:gensim.utils:KeyedVectors lifecycle event {&#39;msg&#39;: &#39;loaded (1917494, 300) matrix of type float32 from /workspace/.cache/cached_path/1b77e307d0976680276bd5eddffac55a83164787611dccb81aaaab9c4c79073b.d4304a004cdd3b0267ad688b5fc4d6c9d43c622a571ee2ba8b39604fc257faed-extracted/glove.42B.300d.txt&#39;, &#39;binary&#39;: False, &#39;encoding&#39;: &#39;utf8&#39;, &#39;datetime&#39;: &#39;2022-06-08T09:22:21.176032&#39;, &#39;gensim&#39;: &#39;4.2.0&#39;, &#39;python&#39;: &#39;3.8.12 (default, Jan 14 2022, 01:33:56) \n[GCC 7.5.0]&#39;, &#39;platform&#39;: &#39;Linux-5.4.0-58-generic-x86_64-with-glibc2.27&#39;, &#39;event&#39;: &#39;load_word2vec_format&#39;}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cc_results</span> <span class="o">=</span> <span class="n">wv_cc</span><span class="o">.</span><span class="n">evaluate_word_analogies</span><span class="p">(</span><span class="n">analogies</span><span class="o">=</span><span class="s2">&quot;google&quot;</span><span class="p">)</span>
+<span class="n">cc_results</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:gensim.models.keyedvectors:Evaluating word analogies for top 300000 words in the model on /root/.ekorpkit/.cache/cached_path/7568e1428a2ba53a33f67dea7e276f212c065b07d102aafc177a507d244161f6.f60f7f82aaacf3a534d93013617bcfead46a795268096ff1990608b16115b566
+INFO:gensim.models.keyedvectors:capital-common-countries: 95.1% (481/506)
+INFO:gensim.models.keyedvectors:capital-world: 94.0% (4178/4446)
+INFO:gensim.models.keyedvectors:currency: 17.6% (142/808)
+INFO:gensim.models.keyedvectors:city-in-state: 78.1% (1926/2467)
+INFO:gensim.models.keyedvectors:family: 90.9% (460/506)
+INFO:gensim.models.keyedvectors:gram1-adjective-to-adverb: 30.2% (300/992)
+INFO:gensim.models.keyedvectors:gram2-opposite: 35.6% (289/812)
+INFO:gensim.models.keyedvectors:gram3-comparative: 85.6% (1140/1332)
+INFO:gensim.models.keyedvectors:gram4-superlative: 84.0% (942/1122)
+INFO:gensim.models.keyedvectors:gram5-present-participle: 80.9% (854/1056)
+INFO:gensim.models.keyedvectors:gram6-nationality-adjective: 88.3% (1412/1599)
+INFO:gensim.models.keyedvectors:gram7-past-tense: 49.3% (769/1560)
+INFO:gensim.models.keyedvectors:gram8-plural: 84.9% (1131/1332)
+INFO:gensim.models.keyedvectors:gram9-plural-verbs: 64.1% (558/870)
+INFO:gensim.models.keyedvectors:Quadruplets with out-of-vocabulary words: 0.7%
+INFO:gensim.models.keyedvectors:NB: analogies containing OOV words were skipped from evaluation! To change this behavior, use &quot;dummy4unknown=True&quot;
+INFO:gensim.models.keyedvectors:Total accuracy: 75.1% (14582/19408)
+INFO:ekorpkit.models.embeddings.wordvec:Evaluation score: 0.7513396537510305
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>dict_keys([&#39;score&#39;, &#39;summary&#39;, &#39;correct&#39;, &#39;incorrect&#39;])
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="evaluate-embeddings">
+<h2>Evaluate embeddings<a class="headerlink" href="#evaluate-embeddings" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">eval_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">wiki_results</span><span class="p">[</span><span class="s2">&quot;summary&quot;</span><span class="p">],</span> <span class="n">twt_results</span><span class="p">[</span><span class="s2">&quot;summary&quot;</span><span class="p">],</span> <span class="n">cc_results</span><span class="p">[</span><span class="s2">&quot;summary&quot;</span><span class="p">]]</span>
+<span class="p">)</span>
+<span class="n">save_dataframe</span><span class="p">(</span><span class="n">eval_summary</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="s2">&quot;eval_summary.parquet&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.io.file:Saving dataframe as ../data/embeddings/eval_summary.parquet
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_summary</span> <span class="o">=</span> <span class="n">load_dataframe</span><span class="p">(</span><span class="n">data_file</span><span class="o">=</span><span class="s2">&quot;eval_summary.parquet&quot;</span><span class="p">)</span>
+<span class="n">eval_summary</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.io.file:Loading data from ../data/embeddings/eval_summary.parquet
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Category</th>
+      <th>Correct</th>
+      <th>Incorrect</th>
+      <th>Samples</th>
+      <th>Average</th>
+      <th>Corpus</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Capitals</td>
+      <td>480</td>
+      <td>26</td>
+      <td>506</td>
+      <td>0.948617</td>
+      <td>Wikipedia</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Capitals RoW</td>
+      <td>4342</td>
+      <td>182</td>
+      <td>4524</td>
+      <td>0.959770</td>
+      <td>Wikipedia</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Currency</td>
+      <td>138</td>
+      <td>670</td>
+      <td>808</td>
+      <td>0.170792</td>
+      <td>Wikipedia</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>City-State</td>
+      <td>1463</td>
+      <td>1004</td>
+      <td>2467</td>
+      <td>0.593028</td>
+      <td>Wikipedia</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Famliy</td>
+      <td>446</td>
+      <td>60</td>
+      <td>506</td>
+      <td>0.881423</td>
+      <td>Wikipedia</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">config_group</span><span class="o">=</span><span class="s2">&quot;visualize/plot=barplot&quot;</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;Category&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;Average&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">plots</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hue</span> <span class="o">=</span> <span class="s2">&quot;Corpus&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">ytickmajorformatterfunc</span> <span class="o">=</span> <span class="s2">&quot;lambda y, _: &#39;</span><span class="si">{:.0%}</span><span class="s2">&#39;.format(y)&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">ylabel</span> <span class="o">=</span> <span class="s2">&quot;Accuracy&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">fontsize</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Word Vector Accuracy by Glove Source: Twitter: </span><span class="si">{</span><span class="n">twt_results</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">, Wiki: </span><span class="si">{</span><span class="n">wiki_results</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">, Crawl: </span><span class="si">{</span><span class="n">cc_results</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">eKonf</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">eval_summary</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.visualize.plot:Plotting barplot with {&#39;x&#39;: &#39;Category&#39;, &#39;y&#39;: &#39;Average&#39;, &#39;hue&#39;: &#39;Corpus&#39;}
+INFO:ekorpkit.visualize.plot:Saved figure to ./figs/plot_BarPlot.png
+</pre></div>
+</div>
+<img alt="../../../_images/d18ca3d98c465059f54f7573de8207b2384a384eaa9ad39af778225036eb12e1.png" src="../../../_images/d18ca3d98c465059f54f7573de8207b2384a384eaa9ad39af778225036eb12e1.png" />
+</div>
+</div>
+</section>
+<section id="visualize-embeddings">
+<h2>Visualize Embeddings<a class="headerlink" href="#visualize-embeddings" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">wv_wiki</span><span class="o">.</span><span class="n">reduce_embeddings_2d</span><span class="p">(</span><span class="n">restrict_vocab</span><span class="o">=</span><span class="mi">100_000</span><span class="p">)</span>
+<span class="n">vectors</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;vectors&quot;</span><span class="p">]</span>
+<span class="n">word2idx</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;word2idx&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.models.embeddings.wordvec:dimensions: (100000, 300)
+INFO:ekorpkit.models.embeddings.wordvec:explained variance: [0.02604632 0.01293811]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">best_analogies</span> <span class="o">=</span> <span class="n">wv_wiki</span><span class="o">.</span><span class="n">find_most_similar_analogies</span><span class="p">(</span>
+    <span class="n">wiki_results</span><span class="p">[</span><span class="s2">&quot;correct&quot;</span><span class="p">],</span> <span class="n">word2idx</span><span class="p">,</span> <span class="n">vectors</span>
+<span class="p">)</span>
+<span class="n">best_analogies</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>wordpairs</th>
+      <th>word2idx</th>
+      <th>similarity</th>
+    </tr>
+    <tr>
+      <th>category</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Adj-Adverb</th>
+      <td>(fortunate, fortunately, lucky, luckily)</td>
+      <td>(11156, 11584, 5065, 19955)</td>
+      <td>1.998511</td>
+    </tr>
+    <tr>
+      <th>Capitals</th>
+      <td>(london, england, paris, france)</td>
+      <td>(516, 563, 1035, 387)</td>
+      <td>1.780721</td>
+    </tr>
+    <tr>
+      <th>Capitals RoW</th>
+      <td>(vienna, austria, brussels, belgium)</td>
+      <td>(4094, 2640, 3879, 2975)</td>
+      <td>1.996072</td>
+    </tr>
+    <tr>
+      <th>City-State</th>
+      <td>(chicago, illinois, omaha, nebraska)</td>
+      <td>(1147, 2884, 12159, 6087)</td>
+      <td>1.971419</td>
+    </tr>
+    <tr>
+      <th>Comparative</th>
+      <td>(long, longer, heavy, heavier)</td>
+      <td>(173, 1078, 1106, 11613)</td>
+      <td>1.932268</td>
+    </tr>
+    <tr>
+      <th>Currency</th>
+      <td>(usa, dollar, russia, ruble)</td>
+      <td>(2396, 678, 412, 17506)</td>
+      <td>1.834880</td>
+    </tr>
+    <tr>
+      <th>Famliy</th>
+      <td>(sons, daughters, stepfather, stepmother)</td>
+      <td>(2912, 4321, 20624, 26903)</td>
+      <td>1.999805</td>
+    </tr>
+    <tr>
+      <th>Nationality</th>
+      <td>(switzerland, swiss, israel, israeli)</td>
+      <td>(2311, 1849, 315, 406)</td>
+      <td>1.999926</td>
+    </tr>
+    <tr>
+      <th>Opposite</th>
+      <td>(tasteful, distasteful, likely, unlikely)</td>
+      <td>(43255, 41259, 647, 2993)</td>
+      <td>1.954353</td>
+    </tr>
+    <tr>
+      <th>Past Tense</th>
+      <td>(sitting, sat, hitting, hit)</td>
+      <td>(2995, 3223, 3141, 416)</td>
+      <td>1.999999</td>
+    </tr>
+    <tr>
+      <th>Plural</th>
+      <td>(eye, eyes, donkey, donkeys)</td>
+      <td>(2090, 2251, 20328, 35193)</td>
+      <td>1.999876</td>
+    </tr>
+    <tr>
+      <th>Plural Verbs</th>
+      <td>(talk, talks, estimate, estimates)</td>
+      <td>(1077, 370, 3470, 2886)</td>
+      <td>1.739114</td>
+    </tr>
+    <tr>
+      <th>Pres. Part.</th>
+      <td>(write, writing, read, reading)</td>
+      <td>(2432, 1649, 1465, 2185)</td>
+      <td>1.999959</td>
+    </tr>
+    <tr>
+      <th>Superlative</th>
+      <td>(weak, weakest, big, biggest)</td>
+      <td>(2690, 15655, 365, 882)</td>
+      <td>0.663122</td>
+    </tr>
+    <tr>
+      <th>Total accuracy</th>
+      <td>(sitting, sat, hitting, hit)</td>
+      <td>(2995, 3223, 3141, 416)</td>
+      <td>1.999999</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<section id="plot-analogy-examples">
+<h3>Plot Analogy Examples<a class="headerlink" href="#plot-analogy-examples" title="Permalink to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">wv_wiki</span><span class="o">.</span><span class="n">plot_similar_analogies</span><span class="p">(</span><span class="n">best_analogies</span><span class="p">,</span> <span class="n">vectors</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:ekorpkit.visualize.plot:No data to plot
+INFO:ekorpkit.visualize.plot:No plots to plot
+INFO:ekorpkit.visualize.plot:Saved figure to ./figs/plot_plot.png
+</pre></div>
+</div>
+<img alt="../../../_images/78fd5bd8e6a2299238d54bc41ee4d279c42f4823fd8058d688a59a8fea9452f7.png" src="../../../_images/78fd5bd8e6a2299238d54bc41ee4d279c42f4823fd8058d688a59a8fea9452f7.png" />
+</div>
+</div>
+</section>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "entelecheia/ekorpkit",
+            ref: "main",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./tutorials/models/embeddings"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="word2vec_basics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Word2Vec Basics</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../ngram/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">N-Grams</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-glove-vectors">Load GloVE Vectors</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wikipedia">Wikipedia</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#twitter-data">Twitter Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-crawl">Common Crawl</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-embeddings">Evaluate embeddings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualize-embeddings">Visualize Embeddings</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-analogy-examples">Plot Analogy Examples</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By <a href="https://entelecheia.me">Young Joon Lee</a>
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
