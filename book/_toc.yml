@@ -1,0 +1,77 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+parts:
+  - caption: Basics
+    chapters:
+      - file: basics/index
+        sections:
+          - file: basics/install.md
+          - file: basics/usage.md
+      - file: basics/features/index
+        sections:
+          - file: basics/features/easy_config.md
+          - file: basics/features/no_boiler.md
+          - file: basics/features/workflows.md
+          - file: basics/features/share.md
+          - file: basics/features/plug.md
+  - caption: Tutorials
+    chapters:
+      - file: tutorials/config/index
+        sections:
+          - file: tutorials/config/eKonf.ipynb
+      - file: tutorials/datasets/index
+        sections:
+          - file: tutorials/corpora/corpus.ipynb
+          - file: tutorials/datasets/dataset.ipynb
+          - file: tutorials/corpora/pipeline.ipynb
+          # - file: tutorials/corpora/filter_and_save.ipynb
+      - file: tutorials/models/index
+        sections:
+          - file: tutorials/models/automl/index
+          - file: tutorials/models/embeddings/index
+            sections:
+              - file: tutorials/models/embeddings/word2vec_basics.ipynb
+              - file: tutorials/models/embeddings/eval_vectors.ipynb
+          - file: tutorials/models/ngram/index
+            sections:
+              - file: tutorials/models/ngram/ngram.ipynb
+              - file: tutorials/models/ngram/ngram_for_lexicons.ipynb
+              - file: tutorials/models/ngram/ngram_for_words.ipynb
+          - file: tutorials/models/sentiment/index
+            sections:
+              - file: tutorials/models/sentiment/lbsa_en.ipynb
+              - file: tutorials/models/sentiment/financial_phrasebank_lm.ipynb
+              - file: tutorials/models/sentiment/sentiment.ipynb
+          - file: tutorials/models/transformers/index
+      - file: tutorials/pipelines/index
+        sections:
+          - file: tutorials/pipelines/pipeline
+      - file: tutorials/preprocessors/index
+        sections:
+          - file: tutorials/preprocessors/normalizer/index
+            sections:
+              - file: tutorials/preprocessors/normalizer/normalizer.ipynb
+          - file: tutorials/preprocessors/segmenter/index
+            sections:
+              - file: tutorials/preprocessors/segmenter/segmenter.ipynb
+          - file: tutorials/preprocessors/tokenizer/index
+            sections:
+              - file: tutorials/preprocessors/tokenizer/mecab.ipynb
+      - file: tutorials/visualizers/index
+        sections:
+          - file: tutorials/visualizers/plot.ipynb
+      - file: tutorials/workflow/index
+
+  - caption: Datasets
+    chapters:
+      - file: datasets/ekorpkot_corpus.md
+
+  - caption: About
+    chapters:
+      - url: https://entelecheia.me
+        title: entelecheia.me
+      - file: about/index
+      - file: about/cite

@@ -1,0 +1,13 @@
+jupyter-book
+pydata-sphinx-theme==0.13.1
+sphinx-book-theme
+matplotlib
+numpy
+sphinx-inline-tabs
+sphinx-examples
+sphinx-proof
+sphinx-hoverxref
+sphinxcontrib-youtube
+sphinxcontrib-video
+sphinx-thebe
+sphinxcontrib-mermaid

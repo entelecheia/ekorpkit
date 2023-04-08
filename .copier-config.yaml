@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier; do NOT edit manually
+_commit: v0.1.10
+_src_path: gh:entelecheia/hyperfast-python-template
+author: Young Joon Lee
+copyright_year: 2022
+documentaion_tool: jupyter-book
+documentation_url: https://entelecheia.cc
+email: entelecheia@hotmail.com
+friendly_name: ekorpkit
+github_repo_name: ekorpkit
+github_username: entelecheia
+package_name: ekorpkit
+project_description: eKorpkit provides a flexible interface for NLP and ML research
+    pipelines such as extraction, transformation, tokenization, training, and visualization.
+    Its powerful config composition is backed by Hydra.
+project_license: MIT
+project_name: ekorpkit
+project_short_description: eKonomic Research Python Toolkit
+
