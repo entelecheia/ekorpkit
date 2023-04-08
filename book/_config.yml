@@ -8,7 +8,7 @@
 title: "ekorpkit" # The title of the book. Will be placed in the left navbar.
 author: <a href="https://entelecheia.me">Young Joon Lee</a>
 copyright: "2022" # Copyright year to be placed in the footer
-# logo: ekorpkit.png # A path to the book logo
+logo: ekorpkit.png # A path to the book logo
 
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
