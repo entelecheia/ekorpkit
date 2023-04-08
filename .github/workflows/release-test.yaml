@@ -4,9 +4,9 @@ name: semantic-release-test
 on:
   workflow_call:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
+  # pull_request:
+  #   branches:
+  #     - main
 
 permissions:
   contents: write
