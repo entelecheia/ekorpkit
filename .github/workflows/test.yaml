@@ -43,6 +43,6 @@ jobs:
         run: pytest -m "not local and not gpu"
 
       - name: "Upload coverage to codecov"
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           files: test_results/coverage/coverage.xml
