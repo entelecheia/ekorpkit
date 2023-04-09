@@ -2,7 +2,7 @@ from hyfi import about, global_config
 
 from . import _version
 from .ekonf import eKonf
-from _version import __version__
+from ._version import __version__
 
 about.name = "ekorpkit"
 about.author = "Young Joon Lee"

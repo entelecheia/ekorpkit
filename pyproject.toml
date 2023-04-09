@@ -18,7 +18,7 @@ transformers = "^4.27.4"
 huggingface-hub = ">=0.8.1"
 scikit-learn = ">=1.0.0"
 ftfy = "^6.1.1"
-# pytablewriter = ">=0.64.0"
+pytablewriter = ">=0.64.0"
 
 [tool.poetry.group.dev.dependencies]
 python-semantic-release = "^7.33.1"
@@ -30,6 +30,7 @@ mypy = "^1.0.0"
 flake8-pyproject = "^1.2.2"
 pytest = "^7.2.1"
 pytest-cov = "^4.0.0"
+ipykernel = "^6.22.0"
 
 [tool.black]
 exclude = ['_version.py', 'node_modules', '_build', 'docs', 'tests', 'venv', '.copier-template', '.refs']
