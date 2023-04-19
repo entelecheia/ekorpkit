@@ -8,7 +8,7 @@ from hyfi.utils.func import elapsed_timer
 from ekorpkit import eKonf
 from ekorpkit.pipelines.pipe import apply_pipeline
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def build_corpus(**args):
@@ -96,7 +96,7 @@ class DatasetBuilder(BaseConfigModel):
         if self.summary_info:
             self.summary_info.save()
 
-        log.info(
+        logger.info(
             f"\nCorpus [{self.name}] is built to [{self.data_dir}] from [{self.fetch_dir}]"
         )
 
@@ -122,7 +122,7 @@ class DatasetBuilder(BaseConfigModel):
         if not eKonf.exists(_data_path_.filepath) or self.force.build:
             with elapsed_timer(format_time=True) as elapsed:
                 df = eKonf.instantiate(self.loader, split_name=split_name)
-                log.info(f" >> elapsed time to load and parse data: {elapsed()}")
+                logger.info(f" >> elapsed time to load and parse data: {elapsed()}")
 
             if df is None:
                 raise ValueError("dataframe is None")
@@ -132,7 +132,7 @@ class DatasetBuilder(BaseConfigModel):
                 print(df.shape)
 
             if self.transform_pipeline and len(self.transform_pipeline) > 0:
-                log.info(
+                logger.info(
                     f"\nTransforming dataframe with pipeline: {self.transform_pipeline}"
                 )
                 df = apply_pipeline(df, self.transform_pipeline, self._pipeline_)
@@ -155,16 +155,18 @@ class DatasetBuilder(BaseConfigModel):
                 self.summary_info.init_stats(df=df, split_name=split_name, stats=stats)
 
         else:
-            log.info(f"{_data_path_.filepath} already exists")
+            logger.info(f"{_data_path_.filepath} already exists")
             if self.force.summarize or self.force.preprocess:
                 df = eKonf.load_data(**_data_path_)
 
         if df is None:
-            log.warning("No datasets found")
+            logger.warning("No datasets found")
             return None
 
         if self.process_pipeline and len(self.process_pipeline) > 0:
-            log.info(f"\nProcessing dataframe with pipeline: {self.process_pipeline}")
+            logger.info(
+                f"\nProcessing dataframe with pipeline: {self.process_pipeline}"
+            )
             df = apply_pipeline(df, self.process_pipeline, self._pipeline_)
 
         if self.force.summarize and self.summary_info:
