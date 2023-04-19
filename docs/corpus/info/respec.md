@@ -28,7 +28,7 @@ data_files:
   train: respec-train.parquet
 meta_files:
   train: meta-respec-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

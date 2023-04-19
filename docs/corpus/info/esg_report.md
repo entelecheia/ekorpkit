@@ -27,7 +27,7 @@ data_files:
   train: esg_report-train.parquet
 meta_files:
   train: meta-esg_report-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

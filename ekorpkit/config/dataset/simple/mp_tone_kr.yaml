@@ -1,0 +1,54 @@
+defaults:
+  - _build
+  - /preprocessor/normalizer: formal_ko
+  - /io/fetcher: dataframe
+
+name: mp_tone_kr
+domain: econ
+task: classification
+lang: ko
+features: 
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    topic: str
+    date: str
+    labels: int
+    text: str
+
+io:
+  data_sources: 
+    train: train.csv
+    test: test.csv
+    dev: dev.csv
+  fetcher:
+    output_file: mp_tone_kr.csv
+    pipeline:
+      _pipeline_:
+        - load_dataframe
+        - rename_columns
+        - drop_duplicates
+        - reset_index
+        - split_sampling
+      rename_columns:
+        new_names:
+          category: labels
+      split_sampling:
+        stratify_on: labels
+        dev_size: 0.2
+        test_size: 0.2
+        unique_key: id
+        output_dir: ${..data_dir}
+        train_file: train.csv
+        test_file: test.csv
+        dev_file: dev.csv
+
+pipeline:
+  _transform_:
+  _preprocess_:  
+    - normalize
+  normalize:
+    preprocessor:
+      normalizer: ${dataset.simple.preprocessor.normalizer}

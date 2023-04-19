@@ -16,7 +16,7 @@ data_files:
   train: JNLPBA-train.csv
   dev: JNLPBA-dev.csv
   test: JNLPBA-test.csv
-column_info:
+features:
   columns:
     id: id
     text: input_text

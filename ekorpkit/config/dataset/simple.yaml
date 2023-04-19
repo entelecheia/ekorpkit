@@ -1,0 +1,10 @@
+defaults:
+  - default
+
+_target_: ekorpkit.datasets.dataset.Dataset
+name: ${oc.select:.simple.name, ''}
+data_dir: ${oc.select:.simple.data_dir, ${path.datasets}/simple}
+# filetype: ${oc.select:.simple.filetype, .parquet}
+# features:
+#   columns: ${oc.select:..simple.features.columns:, ${.keys}}
+#   data: ${oc.select:..simple.features.data, null}

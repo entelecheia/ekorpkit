@@ -1,0 +1,17 @@
+defaults:
+  - /columns: corpus
+
+data:
+  id: int
+  text: str
+meta:
+datetime:
+  key:
+  format:
+  rcParams:
+timestamp:
+  key:
+  format:
+  rcParams:
+segment_separator: ${oc.select:..segment_separator, '\n\n'}
+sentence_separator: ${oc.select:..sentence_separator, '\n'}

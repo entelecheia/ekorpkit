@@ -38,7 +38,7 @@ meta_files:
   train: meta-bigpatent-train.parquet
   test: meta-bigpatent-test.parquet
   val: meta-bigpatent-val.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

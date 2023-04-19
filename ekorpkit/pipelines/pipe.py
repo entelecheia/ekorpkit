@@ -1186,13 +1186,13 @@ def save_metadata(df, args):
     verbose = args.get("verbose", False)
     _path = args[eKonf.Keys.PATH][eKonf.Keys.OUTPUT]
     # filetype = args.get("filetype", None)
-    column_info = args.get("column_info", None)
+    features = args.get("features", None)
     split_name = args.get("split_name", None)
 
     if verbose:
         log.info(f"Saving metadata: {args}")
 
-    meta_info = column_info.get("meta", None)
+    meta_info = features.get("meta", None)
     meta_columns = []
     if isinstance(meta_info, dict):
         meta_columns = list(meta_info.keys())
@@ -1201,7 +1201,7 @@ def save_metadata(df, args):
         df_meta = df[meta_columns]
         eKonf.save_data(df_meta, **_path)
 
-    data_info = column_info.get("data", None)
+    data_info = features.get("data", None)
     if isinstance(data_info, dict):
         data_keys = list(data_info.keys())
         data_columns = [

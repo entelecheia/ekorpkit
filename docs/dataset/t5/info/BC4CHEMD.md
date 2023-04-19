@@ -16,7 +16,7 @@ data_files:
   train: BC4CHEMD-train.csv
   dev: BC4CHEMD-dev.csv
   test: BC4CHEMD-test.csv
-column_info:
+features:
   columns:
     id: id
     text: input_text

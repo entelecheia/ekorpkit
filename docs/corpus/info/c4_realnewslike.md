@@ -32,7 +32,7 @@ data_files:
 meta_files:
   train: meta-c4_realnewslike-train.parquet
   test: meta-c4_realnewslike-test.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

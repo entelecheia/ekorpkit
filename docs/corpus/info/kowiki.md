@@ -28,7 +28,7 @@ data_files:
   train: kowiki-train.parquet
 meta_files:
   train: meta-kowiki-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

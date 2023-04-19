@@ -1,0 +1,8 @@
+defaults:
+  - default
+
+name: ${oc.select:.t5.name, ''}
+data_dir: ${oc.select:.t5.data_dir, ${path.datasets}/t5}
+# features:
+#   columns: ${oc.select:..t5.features.columns:, ${.keys}}
+#   data: ${oc.select:..t5.features.data, null}

@@ -31,7 +31,7 @@ data_files:
   test: courtlistener-test.parquet
   valid: courtlistener-valid.parquet
 meta_files: {}
-column_info:
+features:
   columns:
     id: id
     text: text

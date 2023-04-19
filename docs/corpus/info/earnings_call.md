@@ -28,7 +28,7 @@ data_files:
   train: earnings_call-train.parquet
 meta_files:
   train: meta-earnings_call-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

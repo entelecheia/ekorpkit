@@ -26,7 +26,7 @@ info_updated: '2022-02-26 03:06:08'
 data_files:
   train: oscar_ko-train.parquet
 meta_files: {}
-column_info:
+features:
   columns:
     id: id
     text: text

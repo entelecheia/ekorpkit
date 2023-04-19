@@ -1,0 +1,35 @@
+defaults:
+  - _build
+  - /io/fetcher: bok
+  - /preprocessor/normalizer: formal_ko
+  - override /io/loader: dataframe
+
+io:
+  data_sources:
+    train: ${..fetcher.output_file}
+
+pipeline:
+  _transform_:
+    - combine_columns
+    - aggregate_columns
+    - reset_index
+  _preprocess_:
+    - fillna
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  combine_columns:
+    into: text
+    columns:
+      - section
+      - text
+    separator: '\n'
+  aggregate_columns:
+    onto: text
+    groupby:
+      - mdate
+      - rdate
+      - filename
+    separator: '\n\n'

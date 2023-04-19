@@ -1,0 +1,12 @@
+defaults:
+  - _default
+
+_transform_:
+  - reset_index
+  - save_metadata
+_preprocess_:
+  - fillna
+  - filter_length
+  - drop_duplicates
+apply_to: ${oc.select:..features.columns:.text, text}
+data_dir:

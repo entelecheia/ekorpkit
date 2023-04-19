@@ -30,7 +30,7 @@ class Corpora(BaseSet):
         self.meta_files = self.args.get("meta_files", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
-        self.load_column_info()
+        self.load_features()
 
         self._metadata = None
 

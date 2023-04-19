@@ -1,0 +1,62 @@
+defaults:
+  - _build
+  - /io/fetcher: _dummy
+  - /preprocessor/normalizer: formal_ko
+  - override /io/loader: dataframe
+
+name: bok_minutes
+fullname: BOK MPB Minutes
+lang: ko
+category: formal
+domain: econ
+description: BOK Minutes Corpus
+license: "Bank of Korea"
+homepage: https://www.bok.or.kr
+version: 1.0.0
+features:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    mdate: str
+    rdate: str
+    filename: str
+
+
+io:
+  data_dir: ${oc.select:..data_dir, .}
+  data_sources: 
+    train: ${..fetcher.output_file}
+
+pipeline:
+  _transform_:
+    - combine_columns
+    - aggregate_columns
+    - reset_index
+  _preprocess_:
+    - fillna
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  combine_columns:
+    into: text
+    columns:
+      - section
+      - text
+    separator: '\n'
+  aggregate_columns:
+    onto: text
+    groupby:
+      - mdate
+      - rdate
+      - filename
+    separator: '\n\n'
+  save_samples:
+    num_samples_to_save: 1
+    sample_length_to_print: 100

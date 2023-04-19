@@ -28,7 +28,7 @@ data_files:
   train: namuwiki-train.parquet
 meta_files:
   train: meta-namuwiki-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

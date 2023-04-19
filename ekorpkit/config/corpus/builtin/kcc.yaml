@@ -1,0 +1,47 @@
+defaults:
+  - _build
+  - /io/fetcher: kcc
+  - /preprocessor/normalizer: formal_ko
+  - override /io/loader/parser: plaintext_split
+
+name: kcc
+lang: ko
+category: formal
+domain: mixed
+fullname: Korean Contemporary Corpus of Written Sentences
+description: KCC150, KCCq28, KCC940 -- Korean Contemporary Corpus of Written Sentences
+  Total 732 million words (48,878,948 sentences)
+license: MIT License
+homepage: http://nlp.kookmin.ac.kr/kcc/
+version: 1.0.0
+features:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+
+io:
+  data_dir: ${path.datasets}/source/${..name}
+  data_sources:
+    train: '*.tar.gz'
+  loader:
+    multiprocessing_at: parse_data
+    filetype: 
+    data:
+      field: 
+      item:
+        lineno: lineno
+        text: text
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 10

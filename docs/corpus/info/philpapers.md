@@ -33,7 +33,7 @@ meta_files:
   train: null
   test: null
   valid: null
-column_info:
+features:
   columns:
     id: id
     text: text

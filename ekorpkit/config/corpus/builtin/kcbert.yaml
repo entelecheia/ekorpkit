@@ -1,0 +1,47 @@
+defaults:
+  - _build
+  - /io/fetcher: kcbert
+  - /preprocessor/normalizer: informal_ko
+  - /preprocessor/segmenter: kss_merge_article
+  - override /io/loader/parser: plaintext_split
+
+name: kcbert
+lang: ko
+category: informal
+domain: social
+fullname: KcBERT Pre-Training Corpus
+description: KcBERT Pre-Training Corpus (Korean News Comments)
+license: MIT License
+homepage: https://github.com/Beomi/KcBERT
+version: 1.0.0
+features:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+
+io:
+  data_sources:
+    train: '20190101_20200611_v2.txt'
+  loader:
+    multiprocessing_at: parse_data    
+    filetype: 
+    data:
+      field: 
+      item:
+        lineno: lineno
+        text: text
+
+pipeline:        
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 30

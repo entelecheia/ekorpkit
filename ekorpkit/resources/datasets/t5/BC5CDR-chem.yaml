@@ -11,7 +11,7 @@ data_files:
   train: BC5CDR-chem-train.csv
   dev: BC5CDR-chem-dev.csv
   test: BC5CDR-chem-test.csv
-column_info:
+features:
   columns:
     id: id
     text: input_text

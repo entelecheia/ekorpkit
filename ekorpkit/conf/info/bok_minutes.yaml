@@ -1,0 +1,19 @@
+name: bok_minutes
+fullname: BOK MPB Minutes
+lang: ko
+category: formal
+domain: econ
+description: BOK Minutes Corpus
+license: "Bank of Korea"
+homepage: https://www.bok.or.kr
+version: 1.0.0
+features:
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    mdate: str
+    rdate: str
+    filename: str
+

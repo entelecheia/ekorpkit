@@ -30,7 +30,7 @@ data_files:
 meta_files:
   train: meta-aihub_koen_sci-train.parquet
   test: meta-aihub_koen_sci-test.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

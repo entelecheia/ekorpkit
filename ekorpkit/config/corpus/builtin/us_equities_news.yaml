@@ -1,0 +1,50 @@
+defaults:
+  - _build
+  - /preprocessor/normalizer: formal_en
+  - /preprocessor/segmenter: pysbd
+  - override /io/loader: dataframe
+
+name: us_equities_news
+fullname: US Historical Financial News Archive
+lang: en
+category: news
+domain: econ
+description: 'Historical Financial News Archive: This data represents the historical news archive for the last 12 years of the US equities publicly traded on NYSE/NASDAQ which still has a price higher than 10$ per share.'
+license: 'This dataset was collected from investing.com website which allows data usage but with attribution of the author.'
+homepage: https://www.kaggle.com/gennadiyr/us-equities-news-data
+version: 1.0.0
+features:
+  columns:
+    id: id
+    text: text
+    split: 
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    ticker: str
+    title: str
+    category: str
+    release_date: str
+    provider: str
+    url: str
+    article_id: str
+
+io:
+  data_sources:
+    train: '*.csv'
+
+
+pipeline:
+  _transform_:
+    - rename_columns
+  _preprocess_:
+    - normalize
+    - segment
+    - filter_length
+    - drop_duplicates
+
+  rename_columns:
+    new_names:
+      content: text

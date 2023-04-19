@@ -1,0 +1,5 @@
+defaults:
+  - __init__
+
+task_name: ${oc.env:EKORPKIT_PROJECT_NAME,datasets}
+use_huggingface_hub: true

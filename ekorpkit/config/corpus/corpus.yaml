@@ -1,0 +1,8 @@
+defaults:
+  - default
+
+_target_: ekorpkit.datasets.corpus.Corpus
+features:
+  columns: ${oc.select:..builtin.features.columns:, ${.keys}}
+  data: ${oc.select:..builtin.features.data, null}
+  meta: ${oc.select:..builtin.features.meta, null}

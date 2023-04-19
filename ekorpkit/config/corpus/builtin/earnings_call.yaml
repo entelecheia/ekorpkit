@@ -1,0 +1,32 @@
+defaults:
+  - _build
+  - /io/fetcher: earnings_call 
+  - /preprocessor/normalizer: formal_en
+  - override /io/loader: dataframe
+
+name: earnings_call
+fullname: Seeking Alpha Earnings Transcripts
+description: Seeking Alpha Earnings Transcripts
+license: © 2021 Seeking Alpha
+homepage: https://seekingalpha.com/earnings/earnings-call-transcripts
+version: 1.0.0
+lang: en
+category: formal
+domain: econ
+features:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    title: str
+    filename: str
+    nos: str
+
+io:
+  data_dir:  ${path.datasets}/source/${.name}
+  data_sources: 
+    train: ${..fetcher.output_file}

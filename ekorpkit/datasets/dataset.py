@@ -21,7 +21,7 @@ class Dataset(BaseDatasetConfig):
             self.data_dir = os.path.join(self.data_dir, self.name)
 
         self.load_info()
-        self.load_column_info()
+        self.load_features()
 
         if self.auto.build:
             if self.force.build or not eKonf.exists(

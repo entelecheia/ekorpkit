@@ -31,7 +31,7 @@ data_files:
   train: us_equities_news-train.parquet
 meta_files:
   train: meta-us_equities_news-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

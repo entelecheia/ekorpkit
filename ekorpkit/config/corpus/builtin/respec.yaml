@@ -1,0 +1,66 @@
+defaults:
+  - _build
+  - /io/fetcher: respec
+  - /preprocessor/normalizer: formal_en
+  - /preprocessor/segmenter: pysbd
+  - /io/loader/decompressor: gzip
+  - override /io/loader/parser: redif
+
+name: respec
+fullname: RePEc (Research Papers in Economics)
+description: RePEc (Research Papers in Economics)
+license: RePEc is guaranteed to remain free for all parties.
+homepage: http://repec.org
+version: 1.0.0
+lang: en
+category: academic
+domain: econ
+features:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    year: str
+    title: str
+    handle: str
+
+io:
+  # data_dir: ${path.datasets}/source/${.name}
+  data_sources:
+    train: '**/*'
+
+  loader:
+    decode_before_parse: true
+    filetype:
+    data:
+      field: 
+      item:
+        year: year
+        title: title
+        handle: handle
+        text: abstract
+
+pipeline:
+  _transform_:
+    # - aggregate_columns
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 30
+    max_length: 50_000
+  drop_duplicates:
+    apply_to:
+      - text
+  segment:
+    segmenter:
+      merge_lines: true
+      merge_level: article

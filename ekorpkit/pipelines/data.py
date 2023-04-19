@@ -7,7 +7,6 @@ from ekorpkit.datasets.datasets import Datasets
 
 class Data:
     def __init__(self, data=None, **args):
-
         args = eKonf.to_config(args)
         self.args = args
         self._data = None
@@ -20,11 +19,11 @@ class Data:
         elif eKonf.is_config(args):
             self.load(**args)
 
-        self._column_info = self.args.column_info
-        if self._column_info is None:
+        self._features = self.args.features
+        if self._features is None:
             raise ValueError("Column info can't be None")
         if self._column is None:
-            self._column = eKonf.instantiate(self._column_info)
+            self._column = eKonf.instantiate(self._features)
 
     def load(self, **args):
         _corpus = args.get(eKonf.Keys.CORPUS) or {}

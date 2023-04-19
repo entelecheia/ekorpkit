@@ -1,10 +1,11 @@
-import os
 import logging
+import os
 from abc import ABCMeta
-from sklearn import preprocessing
-from ekorpkit.pipelines.pipe import apply_pipeline
-from ekorpkit import eKonf
 
+from sklearn import preprocessing
+
+from ekorpkit import eKonf
+from ekorpkit.pipelines.pipe import apply_pipeline
 
 log = logging.getLogger(__name__)
 
@@ -70,11 +71,11 @@ class BaseSet:
                 self.SPLITS.TEST.value: f"{self.name}-test{self.filetype}",
             }
 
-    def load_column_info(self):
-        self._column_info = self.args.get("column_info")
-        if self._column_info is None:
+    def load_features(self):
+        self._features = self.args.get("features")
+        if self._features is None:
             raise ValueError("Column info can't be None")
-        self._column = eKonf.instantiate(self._column_info)
+        self._column = eKonf.instantiate(self._features)
 
     def __str__(self):
         classname = self.__class__.__name__
@@ -171,7 +172,7 @@ class BaseSet:
                 verbose=self.verbose,
             )
         if self.summary_info is not None:
-            self.summary_info.save(info={"column_info": self.COLUMN.INFO})
+            self.summary_info.save(info={"features": self.COLUMN.INFO})
 
     def save_as(self, name):
         if not self._loaded:

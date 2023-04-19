@@ -1,0 +1,9 @@
+defaults:
+  - /_func_: save_metadata
+  - /path: output
+
+filepath:
+filetype:
+features: ${oc.select:corpus.features, null}
+split_name:
+verbose: ${oc.select:..verbose, true}

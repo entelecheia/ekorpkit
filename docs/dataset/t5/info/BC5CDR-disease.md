@@ -16,7 +16,7 @@ data_files:
   train: BC5CDR-disease-train.csv
   dev: BC5CDR-disease-dev.csv
   test: BC5CDR-disease-test.csv
-column_info:
+features:
   columns:
     id: id
     text: input_text

@@ -95,4 +95,4 @@ class FeatureSet(Dataset):
                 verbose=self.verbose,
             )
         if self.summary_info is not None:
-            self.summary_info.save(info={"column_info": self.COLUMN.INFO})
+            self.summary_info.save(info={"features": self.COLUMN.INFO})

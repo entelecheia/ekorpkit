@@ -1,0 +1,64 @@
+defaults:
+  - _build
+  - /preprocessor/normalizer: formal_ko
+  - /preprocessor/segmenter: kss
+
+name: aihub_patent2
+fullname: AIHub Patent Section Summary
+description: AIHub/논문자료 요약/특허섹션만
+license: Attribution-NonCommercial (CC-By-NC v3)
+homepage: https://aihub.or.kr
+lang: ko
+category: paper
+domain: patent
+version: 1.0.0
+features:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    split: str
+    doc_type: str
+    doc_id: str
+    title: str
+    date: str
+    reg_no: str
+    ipc: str
+
+io:
+  data_dir:  ${path.archive}/datasets/source/aihub/논문자료 요약
+  data_sources: 
+    train: Training/training_특허섹션만.zip
+    test: Validation/validation_특허섹션만.zip
+  loader:
+    multiprocessing_at: parse_json
+    filetype: json
+    data:
+      field: data
+      item:
+        doc_type: doc_type
+        doc_id: doc_id
+        title: title
+        date: date
+        reg_no: reg_no
+        ipc: ipc
+        text: 
+          - summary_section[0].orginal_text
+          - summary_section[0].summary_text
+      item_separator: '\n\n'
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 10

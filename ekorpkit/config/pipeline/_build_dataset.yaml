@@ -1,0 +1,8 @@
+defaults:
+  - _default
+ 
+_transform_:
+  - reset_index
+_preprocess_:
+  - save_samples
+apply_to: ${oc.select:..features.columns:.text, text}

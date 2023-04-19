@@ -20,7 +20,7 @@ info_updated: '2022-02-26 03:06:09'
 data_files:
   train: kcc-train.parquet
 meta_files: {}
-column_info:
+features:
   columns:
     id: id
     text: text

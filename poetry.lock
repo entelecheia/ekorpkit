@@ -1148,6 +1148,42 @@ files = [
 wcwidth = ">=0.2.5"
 
 [[package]]
+name = "fugashi"
+version = "1.2.1"
+description = "A Cython MeCab wrapper for fast, pythonic Japanese tokenization."
+category = "main"
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "fugashi-1.2.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:98779cb9d7c28b5b65a8f7ace77c657dcc81d5f7affb8babe409cc6b5fef9a60"},
+    {file = "fugashi-1.2.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f62a59aac8a39f0d3fd74e9fd8f030491566ebe805f18015d3382cc48619f6e5"},
+    {file = "fugashi-1.2.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8282a1669f976e466ca8577d578356109e87d8efabc4f7413eb34fb89d5c7c5a"},
+    {file = "fugashi-1.2.1-cp310-cp310-win_amd64.whl", hash = "sha256:2d0e08b130e2e3fd354d9b513623bfe8e17ca569e08b85f2c93cb3b096d70c23"},
+    {file = "fugashi-1.2.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6d67b8e7007ae9883a7888139c177f054da64d003d15dc22943b9a983d876404"},
+    {file = "fugashi-1.2.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b670f95d8210975a0343883e5a37a514388b0c879d219ef37746e169d03c3b84"},
+    {file = "fugashi-1.2.1-cp311-cp311-win_amd64.whl", hash = "sha256:1391cadd916237b7b8b498380cc421340b32c6c4265f0ef4d14b19be3e7ce9ed"},
+    {file = "fugashi-1.2.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:9d5391aa6ee4860fdf765b206e0104d0de5aff20cc2149ecd00e0acc7860ee9a"},
+    {file = "fugashi-1.2.1-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ad9a9a9c780d0771195c23f343dff9c3e626d1fb6b0b87c3bb9ebc39ad654130"},
+    {file = "fugashi-1.2.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c689951c7946eeac290b3f184916e40c7ac2653f6090d7544117c9057d1ac890"},
+    {file = "fugashi-1.2.1-cp37-cp37m-win_amd64.whl", hash = "sha256:b4ce85c3fc48ce90ebbc7974b470dbb3c1f53d89cf1ee4305e84612d7beee1e9"},
+    {file = "fugashi-1.2.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:68e0f9491487a16a173a6c0d6d5a2369ff9e276f1d8cd7f476515f0f1391ad5b"},
+    {file = "fugashi-1.2.1-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:07d50bb39b1e47f974335cc999107bad97ee1028699d86d6f12bd11308b91930"},
+    {file = "fugashi-1.2.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ed08bf98620f25204f40fe759340cecfa25e2f8e66b6c91ff2f2500dbf5be817"},
+    {file = "fugashi-1.2.1-cp38-cp38-win_amd64.whl", hash = "sha256:82f53673e3b811dad8b6607f15997014af18179124dfbd7f49df4a1d66c3c7a5"},
+    {file = "fugashi-1.2.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:a0fca2040219ccd4e30e853828e9296a05efed796274b526bac8f3f87f02e9ae"},
+    {file = "fugashi-1.2.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:09d0746b21cf5825b572d03e681fef7e60f85f8203498a6d84a67d8bc7b69d69"},
+    {file = "fugashi-1.2.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a905395c5ff32a505947a4a549ab77ed6987a558023abe8ecb4b8a867bd8c9c2"},
+    {file = "fugashi-1.2.1-cp39-cp39-win_amd64.whl", hash = "sha256:a30caae5dce0c02e2a5020e6b15e55861782a51088669de69814632f33b8e2e7"},
+    {file = "fugashi-1.2.1-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:badc89f57997fbb7efba62c73b608f097bcf2414b01a9344f97951534af46aa5"},
+    {file = "fugashi-1.2.1-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:fc0a81e10197ac055bb20489e55d3669c082df5b76123aeb4dcc692031578434"},
+    {file = "fugashi-1.2.1.tar.gz", hash = "sha256:e7c7aea6684006af223b5145b96c071c2e10353afb9df6712df4458003cf62d3"},
+]
+
+[package.extras]
+unidic = ["unidic"]
+unidic-lite = ["unidic-lite"]
+
+[[package]]
 name = "gdown"
 version = "4.4.0"
 description = "Google Drive direct download of big files."
@@ -1469,33 +1505,35 @@ packaging = "*"
 
 [[package]]
 name = "hyfi"
-version = "0.2.3"
+version = "0.2.4"
 description = "Hydra Fast Interface (Hydra and Pydantic based interface framework)"
 category = "main"
 optional = false
-python-versions = ">=3.8.1,<3.12"
-files = [
-    {file = "hyfi-0.2.3-py3-none-any.whl", hash = "sha256:79b2ff8717fd9f3640e8ad84c41147b540a279c00cdabb16a224102ab9ca74cc"},
-    {file = "hyfi-0.2.3.tar.gz", hash = "sha256:16d2904a0b9e625c2f07c88476c86003cda2681bc2aaf2b5238b2c93dd40661e"},
-]
+python-versions = "^3.8.1, <3.12"
+files = []
+develop = true
 
 [package.dependencies]
-cached-path = ">=1.3.3,<2.0.0"
+cached-path = "^1.3.3"
 chardet = "<=4.0.0"
 gdown = "<=4.4.0"
-hydra-colorlog = ">=1.2.0,<2.0.0"
-hydra-core = ">=1.3.2,<2.0.0"
+hydra-colorlog = "^1.2.0"
+hydra-core = "^1.3.2"
 matplotlib = "<=3.5.3"
 numpy = "<1.24"
 pandas = "<1.4.0"
 pydantic = "<=1.10.5"
-python-dotenv = ">=1.0.0,<2.0.0"
+python-dotenv = "^1.0.0"
 requests = "<=2.25.1"
 scipy = "<=1.8"
-tqdm = ">=4.64.1,<5.0.0"
+tqdm = "^4.64.1"
 
 [package.extras]
 ipython = ["ipython (<=7.9.0)", "ipython-autotime (>=0.3.1,<0.4.0)", "pygments (<=2.6.1)", "rich (>=11.1)"]
+
+[package.source]
+type = "directory"
+url = "../hyfi"
 
 [[package]]
 name = "idna"
@@ -1511,14 +1549,14 @@ files = [
 
 [[package]]
 name = "importlib-metadata"
-version = "6.2.0"
+version = "6.3.0"
 description = "Read metadata from Python packages"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "importlib_metadata-6.2.0-py3-none-any.whl", hash = "sha256:8388b74023a138c605fddd0d47cb81dd706232569f56c9aca7d9c7fdb54caeba"},
-    {file = "importlib_metadata-6.2.0.tar.gz", hash = "sha256:9127aad2f49d7203e7112098c12b92e4fd1061ccd18548cdfdc49171a8c073cc"},
+    {file = "importlib_metadata-6.3.0-py3-none-any.whl", hash = "sha256:8f8bd2af397cf33bd344d35cfe7f489219b7d14fc79a3f854b75b8417e9226b0"},
+    {file = "importlib_metadata-6.3.0.tar.gz", hash = "sha256:23c2bcae4762dfb0bbe072d358faec24957901d75b6c4ab11172c0c982532402"},
 ]
 
 [package.dependencies]
@@ -2027,6 +2065,54 @@ files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
 ]
+
+[[package]]
+name = "mecab-ko-dic"
+version = "1.0.0"
+description = "mecab-ko-dic packaged for Python"
+category = "main"
+optional = true
+python-versions = "*"
+files = [
+    {file = "mecab-ko-dic-1.0.0.tar.gz", hash = "sha256:3ba22858736e02e8a0e92f2a7f099528c733ae47701b29d12c75e982a85d1f11"},
+]
+
+[[package]]
+name = "mecab-python3"
+version = "1.0.6"
+description = "Python wrapper for the MeCab morphological analyzer for Japanese"
+category = "main"
+optional = true
+python-versions = "*"
+files = [
+    {file = "mecab-python3-1.0.6.tar.gz", hash = "sha256:16f38ace484020bd3446a10054829678c1e7b97f1740b58b00a31d595cff025e"},
+    {file = "mecab_python3-1.0.6-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:0fb9f5a06f9cd9c5724608956128b91f5330248a78e9de322a0abd5beaba24a3"},
+    {file = "mecab_python3-1.0.6-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6c99ec5f5581e4b56c8b68b4eeac4c6b59c6de12e66a2cfe4b1c6f8e87d38bd7"},
+    {file = "mecab_python3-1.0.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:30177272efa6ba26909b540e3816659c9f93ee49a5cc2b8ea47c17eff05c686b"},
+    {file = "mecab_python3-1.0.6-cp310-cp310-win_amd64.whl", hash = "sha256:fd10ba05f94dea7fe5e281336b7a4d07f79062c25139077d935833d0db303450"},
+    {file = "mecab_python3-1.0.6-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:023cfd4efa26fc61563ee185e8ac3d5fcdffcaba01931bbae34aa0ec06814875"},
+    {file = "mecab_python3-1.0.6-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3eb8655d4eb7e17dbe7f409b8dda327539de9ee8cf06ebe338aa595bb597b53d"},
+    {file = "mecab_python3-1.0.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a455f0f1830392548366aae56819a22fa0f5786c39c4cf6cf84fe438a5fc7cbc"},
+    {file = "mecab_python3-1.0.6-cp311-cp311-win_amd64.whl", hash = "sha256:e28997040b5ea9df3cf8969c5d28e7ba730ef4f924badac0548cd14383e56c66"},
+    {file = "mecab_python3-1.0.6-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:2958a94ee7ed521e95c333a7b66adcead9973db3d4f4873789c425d41726e52c"},
+    {file = "mecab_python3-1.0.6-cp36-cp36m-win_amd64.whl", hash = "sha256:c80e58dcc90da095b64799950046dc4b9db3fb6bf30a8f817d1639cdaf601ba1"},
+    {file = "mecab_python3-1.0.6-cp37-cp37m-macosx_10_15_x86_64.whl", hash = "sha256:8f0c5fe224c28ebd6fad2199be129755246091310de71eb9a43d88473d5b8950"},
+    {file = "mecab_python3-1.0.6-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e049805f8342020b559357f4ea2b69b7d4faf8681c979ffd868d4d25d3a89021"},
+    {file = "mecab_python3-1.0.6-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b56692cef89cd8ad0179bd2f989e4b3209686eb59124e0191167d9a3e64cd1a0"},
+    {file = "mecab_python3-1.0.6-cp37-cp37m-win_amd64.whl", hash = "sha256:68334cbc6e0442ccd57770137ece585de9a512f01405bd2ad074fd28578180f8"},
+    {file = "mecab_python3-1.0.6-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:ef43e4ab82396d1a59f4d8e2237c4136e09391e8e8ba623af4b52e6b52377fdd"},
+    {file = "mecab_python3-1.0.6-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fde76ebc2fcf4f375b520a706af316f88be304302f5e5d36105992a1ecd3ea1b"},
+    {file = "mecab_python3-1.0.6-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:849aa7cfb828f0fb65340666fb2ae281855f5319699291121e116f43f478401c"},
+    {file = "mecab_python3-1.0.6-cp38-cp38-win_amd64.whl", hash = "sha256:d1061bcd3d5567d6522e8794773689e6f9dedadcd3d3b1652893142f6334ec95"},
+    {file = "mecab_python3-1.0.6-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:b2a3b6243d709ccf6672d54c9c17cb6281a17737626caaafb0219944835d6b9c"},
+    {file = "mecab_python3-1.0.6-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b8c995629aeb6bdddf37eee1c4049549ff1993e3888e28eb6cc59c8dce79de41"},
+    {file = "mecab_python3-1.0.6-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e00f0c329c7708b6cf5e5b2b1772535de3d6d69f99e6105a1acf40b94c62afe5"},
+    {file = "mecab_python3-1.0.6-cp39-cp39-win_amd64.whl", hash = "sha256:9c3eeb4adf864a74ced9a1c5443b174f1e851323143ca6f24391fb6db8d44110"},
+]
+
+[package.extras]
+unidic = ["unidic"]
+unidic-lite = ["unidic-lite"]
 
 [[package]]
 name = "more-itertools"
@@ -4161,7 +4247,10 @@ files = [
 docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
 testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)"]
 
+[extras]
+tokenizers = ["fugashi", "mecab-ko-dic", "mecab-python3"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<3.12"
-content-hash = "f1a4563354de5653a12480b83518cf454177b783c25691084a3f070fb174dbc2"
+content-hash = "776775473669f34df3eb086fbf21218c14c8d475f2c9852c013e4edacfa7fdb3"

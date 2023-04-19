@@ -28,7 +28,7 @@ data_files:
   train: pmc_comm-train.parquet
 meta_files:
   train: meta-pmc_comm-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

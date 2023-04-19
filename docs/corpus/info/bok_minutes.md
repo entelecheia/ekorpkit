@@ -28,7 +28,7 @@ data_files:
   train: bok_minutes-train.parquet
 meta_files:
   train: meta-bok_minutes-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

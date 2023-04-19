@@ -1,9 +1,11 @@
-import os
 import logging
-import pandas as pd
-from ekorpkit import eKonf
-from .base import BaseSet
+import os
 
+import pandas as pd
+
+from ekorpkit import eKonf
+
+from .base import BaseSet
 
 DESCRIPTION = "ekorpkit datasets"
 LICENSE = "Copyright of the dataset is owned by the authors."
@@ -28,7 +30,7 @@ class Corpus(BaseSet):
                 self.metadata_dir = os.path.join(self.metadata_dir, self.name)
 
         self.load_info()
-        self.load_column_info()
+        self.load_features()
 
         self.meta_files = self.args.get("meta_files", None)
         self._metadata = None
@@ -90,7 +92,7 @@ class Corpus(BaseSet):
             data = self.COLUMN.init_info(data)
             self._splits[split] = data
         self._metadata_merged = True
-        log.info(f"Metadata merged to data")
+        log.info("Metadata merged to data")
         if self.verbose:
             print(self._data.head(3))
             print(self._data.tail(3))

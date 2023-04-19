@@ -1,0 +1,10 @@
+defaults:
+  - default
+  - override /features: feature
+  - override /auto: load_build
+  - override /info: _build_feature
+
+_target_: ekorpkit.datasets.feature.FeatureSet
+name:
+data_dir: ${path.datasets}/features
+data_file:

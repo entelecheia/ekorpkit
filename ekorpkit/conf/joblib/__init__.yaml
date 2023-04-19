@@ -1,0 +1,11 @@
+distributed_framework:
+  backend: joblib
+  initialize: true
+  num_workers: ${oc.select:num_workers,50}
+batcher:
+  procs: ${oc.select:..distributed_framework.num_workers,50}
+  minibatch_size: 1_000
+  backend: ${..distributed_framework.backend}
+  task_num_cpus: 1
+  task_num_gpus: 0
+  verbose: 10

@@ -1,9 +1,0 @@
-defaults:
-  - /_func_: save_metadata
-  - /path: output
-
-filepath:
-filetype:
-column_info: ${oc.select:corpus.column_info, null}
-split_name:
-verbose: ${oc.select:..verbose, true}

@@ -1,0 +1,121 @@
+defaults:
+  - _build
+  - /io/fetcher: edgar
+  - /preprocessor/normalizer: formal_en
+  - /preprocessor/segmenter: pysbd_merge_article
+
+name: edgar
+fullname: EDGAR Corpus
+description: "EDGAR-CORPUS: Billions of Tokens Make The World Go Round (10-K filings)"
+license: Open Access
+homepage: https://zenodo.org/record/5589195
+version: 1.0.0
+lang: en
+category: formal
+domain: econ
+features:
+  columns:
+    id: id
+    text: text
+    merge_meta_on: filename
+  data:
+    id: int
+    filename: str
+    item: str
+    text: str
+  meta:
+    # id: int
+    cik: str
+    company: str
+    filing_type: str
+    filing_date: str
+    period_of_report: str
+    sic: str
+    state_of_inc: str
+    state_location: str
+    fiscal_year_end: str
+    filing_html_index: str
+    htm_filing_link: str
+    complete_text_filing_link: str
+    filename: str
+
+io:
+  data_sources:
+    train: '*.zip'
+  loader:
+    data:
+      field:
+      item:
+        cik: cik
+        company: company
+        filing_type: filing_type
+        filing_date: filing_date
+        period_of_report: period_of_report
+        sic: sic
+        state_of_inc: state_of_inc
+        state_location: state_location
+        fiscal_year_end: fiscal_year_end
+        filing_html_index: filing_html_index
+        htm_filing_link: htm_filing_link
+        complete_text_filing_link: complete_text_filing_link
+        filename: filename
+        item_1: item_1
+        item_1A: item_1A
+        item_1B: item_1B
+        item_2: item_2
+        item_3: item_3
+        item_4: item_4
+        item_7: item_7
+        item_7A: item_7A
+        item_9: item_9
+        item_9A: item_9A
+        item_9B: item_9B
+        item_10: item_10
+
+pipeline:
+  _transform_:
+    - drop_duplicates
+    - save_metadata
+    - melt
+  _preprocess_:
+    - reset_index
+    - normalize
+    - filter_length
+    - segment
+    # - drop_duplicates
+  drop_duplicates:
+    apply_to: filename
+  melt:
+    id_vars:
+      - filename
+    value_vars:
+      - item_1
+      - item_1A
+      - item_1B
+      - item_2
+      - item_3
+      - item_4
+      # - item_5
+      # - item_6
+      - item_7
+      - item_7A
+      # - item_8
+      - item_9
+      - item_9A
+      - item_9B
+      - item_10
+      # - item_11
+      # - item_12
+      # - item_13
+      # - item_14
+      # - item_15
+    var_name: item
+    value_name: text
+  filter_length:
+    min_length: 300
+  normalize:
+    preprocessor:
+      normalizer: ${corpus.builtin.preprocessor.normalizer}
+  segment:
+    preprocessor:
+      segmenter: ${corpus.builtin.preprocessor.segmenter}

@@ -1,0 +1,40 @@
+defaults:
+  - _build
+  - /preprocessor/normalizer: formal_en_parantheses
+  - /preprocessor/segmenter: pysbd_merge_segment
+  - override /io/loader: the_pile
+
+name: hacker_news
+fullname: Hacker News
+description: 'Hacker News is a link aggregator operated by Y Combinator, a startup incubator and investment fund. Users submit articles defined as “anything that gratifies one’s intellectual curiosity,” but sub- mitted articles tend to focus on topics in computer science and entrepreneurship.'
+license: MIT License
+homepage: https://news.ycombinator.com
+lang: en
+category: dialogue
+domain: general
+version: 1.0.0
+features:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+
+io:
+  data_dir:  ${path.archive}/datasets/source/the_pile
+  data_sources: 
+    train: train
+    test: test
+    valid: valid
+  loader:
+    name: HackerNews
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    # - filter_length
+    # - segment
+    # - drop_duplicates

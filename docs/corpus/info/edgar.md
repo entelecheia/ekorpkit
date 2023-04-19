@@ -28,7 +28,7 @@ data_files:
   train: edgar-train.parquet
 meta_files:
   train: meta-edgar-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

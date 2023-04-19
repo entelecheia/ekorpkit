@@ -11,7 +11,6 @@ log = logging.getLogger(__name__)
 
 
 class Datasets(BaseSet):
-
     SPLITS = eKonf.SPLITS
 
     def __init__(self, **args):
@@ -34,7 +33,7 @@ class Datasets(BaseSet):
         self._method_ = self.args.get("_method_", None)
         use_name_as_subdir = args.get("use_name_as_subdir", True)
 
-        self.load_column_info()
+        self.load_features()
 
         self._datasets_concatenated = False
 
@@ -142,4 +141,4 @@ class Datasets(BaseSet):
                 summary_info.init_stats(split_name=split, stats=stats)
                 summary_info.calculate_stats(data, split)
         if summary_info:
-            summary_info.save(info={"column_info": self.COLUMN.INFO})
+            summary_info.save(info={"features": self.COLUMN.INFO})

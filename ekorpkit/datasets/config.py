@@ -1,27 +1,45 @@
-import os
 import logging
-import pandas as pd
-import numpy as np
-from pandas import DataFrame
-from random import sample
+import os
 from glob import glob
 from pathlib import Path
-from tqdm.auto import tqdm
-from omegaconf import DictConfig
-from pydantic import BaseModel, Field, validator
-from typing import Optional, List, Dict, Union
-from datasets import load_dataset, DatasetDict
-from sklearn.model_selection import train_test_split
-from sklearn import preprocessing
-from ekorpkit import eKonf
+from random import sample
+from typing import Dict, List, Optional, Union
+
+import numpy as np
+import pandas as pd
+from datasets import DatasetDict, load_dataset
 from hyfi.config import BaseConfigModel
-from ekorpkit.base import _SPLITS as SPLITS
+from omegaconf import DictConfig
+from pandas import DataFrame
+from pydantic import BaseModel, Field, validator
+from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
+from tqdm.auto import tqdm
+
+from ekorpkit import eKonf
 from ekorpkit.info.column import BaseInfo
 from ekorpkit.info.stat import SummaryInfo
 from ekorpkit.pipelines.pipe import apply_pipeline
 
+from ..ekonf import SPLITS
 
 log = logging.getLogger(__name__)
+
+
+class CorpusColumns(BaseModel):
+    id: str = Field(alias="id")
+    text: str = Field(alias="text")
+    merge_meta_on: str = Field(alias="merge_meta_on")
+    timestamp: str = Field(alias="timestamp")
+
+    class Config:
+        allow_population_by_field_name = True
+        fields = {
+            "id": "id",
+            "text": "text",
+            "merge_meta_on": "merge_meta_on",
+            "timestamp": "timestamp",
+        }
 
 
 class PipelineConfig(BaseModel):
@@ -43,7 +61,7 @@ class PipelineConfig(BaseModel):
 
 class BaseDatasetConfig(BaseConfigModel):
     info: DictConfig = None
-    column_info: DictConfig = None
+    features: DictConfig = None
     data_dir: str = None
     data_files: Dict[str, str] = None
     filetype: str = None
@@ -108,8 +126,8 @@ class BaseDatasetConfig(BaseConfigModel):
                 SPLITS.TEST.value: f"{self.name}-test.{self.filetype}",
             }
 
-    def load_column_info(self):
-        self.__column__ = eKonf.instantiate(self.column_info)
+    def load_features(self):
+        self.__column__ = eKonf.instantiate(self.features)
 
     def __str__(self):
         classname = self.__class__.__name__
@@ -205,7 +223,7 @@ class BaseDatasetConfig(BaseConfigModel):
                 verbose=self.verbose,
             )
         if self.summary_info is not None:
-            self.summary_info.save(info={"column_info": self.COLUMN.INFO})
+            self.summary_info.save(info={"features": self.COLUMN.INFO})
 
     def save_as(self, name):
         if not self.__loaded__:
@@ -677,7 +695,6 @@ def check_data_file(
     file_extension=None,
     allowed_file_extensions=["csv", "parquet"],
 ):
-
     if data_file.startswith("http"):
         file_extension = data_file.split(".")[-1]
         if file_extension not in allowed_file_extensions:
@@ -830,7 +847,6 @@ class DataframeConfig(BaseModel):
         label_column_name=None,
         class_column_name=None,
     ) -> dict:
-
         raw_datasets = {}
         if data is not None:
             if isinstance(data, DataFrame):

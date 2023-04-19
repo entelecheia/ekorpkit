@@ -28,7 +28,7 @@ data_files:
   train: aihub_law_case-train.parquet
 meta_files:
   train: meta-aihub_law_case-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

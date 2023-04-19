@@ -21,7 +21,7 @@ data_files:
   train: nikl_spoken-train.parquet
 meta_files:
   train: meta-nikl_spoken-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

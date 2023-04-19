@@ -30,7 +30,7 @@ data_files:
 meta_files:
   train: meta-aihub_formal2-train.parquet
   test: meta-aihub_formal2-test.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

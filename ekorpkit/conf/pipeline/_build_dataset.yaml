@@ -1,8 +1,0 @@
-defaults:
-  - _default
- 
-_transform_:
-  - reset_index
-_preprocess_:
-  - save_samples
-apply_to: ${oc.select:..column_info.columns:.text, text}

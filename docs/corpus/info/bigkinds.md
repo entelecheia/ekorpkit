@@ -27,7 +27,7 @@ data_files:
   train: bigkinds-train.parquet
 meta_files:
   train: meta-bigkinds-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

@@ -1,0 +1,5 @@
+defaults:
+  - _build
+  - override /features: _build_simple_classification
+
+task: classification

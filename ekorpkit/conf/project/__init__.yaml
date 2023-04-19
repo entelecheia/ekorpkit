@@ -1,0 +1,13 @@
+defaults:
+  - /dotenv: __init__
+  - /joblib: __init__
+  - /path: __init__
+
+project_name: ${oc.env:EKORPKIT_PROJECT_NAME,ekorpkit-project}
+task_name: ${oc.env:EKORPKIT_TASK_NAME,default-task}
+project_root: ${.path.project}
+workspace_root: ${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.path.home}/.ekorpkit}
+description:
+use_huggingface_hub: false
+use_wandb: false
+verbose: false

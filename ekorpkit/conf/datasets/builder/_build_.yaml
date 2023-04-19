@@ -1,0 +1,25 @@
+defaults:
+  - /batch: default
+  - /project: language-modeling
+  - /path: _batch_
+  - /features: corpus
+  - /io: _build_corpus
+  - /info: _build_corpus
+  - /pipeline: _build_corpus
+  - /auto: load
+
+_target_: ekorpkit.datasets.build.DatasetBuilder
+name:
+data_dir: ${path.corpus}/${.name}
+# data_dir: ${path.archive}/datasets/lmdata/${.name}
+filetype: .parquet
+num_workers: ${oc.select:num_workers, 1}
+verbose: ${oc.select:..verbose, true}
+
+pipeline:
+  normalize:
+    preprocessor:
+      normalizer: ${oc.select:corpus.builtin.preprocessor.normalizer,null}
+  segment:
+    preprocessor:
+      segmenter: ${oc.select:corpus.builtin.preprocessor.segmenter,null}

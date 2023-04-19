@@ -1,0 +1,81 @@
+defaults:
+  - _build
+  - /io/fetcher: sec_report
+  - /preprocessor/normalizer: formal_ko
+  - /preprocessor/segmenter: kss
+  - override /io/loader: dataframe
+
+name: sec_report
+fullname: Korean Financial Analyst Report Corpus
+lang: ko
+category: formal
+domain: econ
+description: Analyst Reports Corpus
+license: All Rights Reserved.
+homepage: https://www.fnguide.com
+version: 1.0.0
+features:
+  columns:
+    id: id
+    text: text
+    timestamp: rdate
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    rid: str
+    rdate: str
+    type: str
+    subtype: str
+    RPT_ID: str
+    ANL_DT: str
+    CMP_CD: str
+    SEC_CD: str
+    BRK_CD: str
+    RPT_TYP: str
+    RPT_SUB_TYP: str
+    ISS_FRQ_TYP: str
+    RECOM_TYP: str
+    RECOMM: str
+    BAS_YYMM: str
+    FS_MN: str
+    TARGET_PRC: float
+    TARGET_PRC_PRD: str
+    RPT_TITLE: str
+    COMMENT: str
+    PAGE_CNT: int
+    FILE_ATTACH_YN: str
+    FILE_NM: str
+    RECOMM_ACTION_TYP: str
+    PRC_ACTION_TYP: str
+    EPS_ACTION_TYP: str
+    EPS: float
+    PRE_EPS: float
+    PRE_RECOMM: str
+    PRE_TARGET_PRC: float
+    PRE_REG_DT: str
+    WORK_DT: str
+    TRD_DT: str
+
+io:
+  data_sources:
+    train: ${..fetcher.output_file}
+
+pipeline:
+  data_dir: ${..fetch.data_dir}
+  _transform_:
+    - merge_dataframe
+    - reset_index
+  _preprocess_:
+    - normalize
+    - segment
+    - filter_length
+    - drop_duplicates
+
+  merge_dataframe:
+    data_dir: ${..data_dir}
+    data_file: TT_EST_REPORT.parquet
+    how: left
+    left_on: rid
+    right_on: RPT_ID

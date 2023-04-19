@@ -104,7 +104,10 @@ clean-book-build: ## remove output files from mkdocs
 clean-pycache: ## remove __pycache__ directories
 	@find . -name __pycache__ -type d -exec rm -rf {} +
 
-clean: clean-cov clean-book-build clean-pycache ## run all clean commands
+clean-ipynb: ## remove .ipynb_checkpoints directories
+	@find . -name .ipynb_checkpoints -type d -exec rm -rf {} +
+
+clean: clean-cov clean-book-build clean-pycache clean-ipynb ## run all clean commands
 
 ##@ Releases
 
@@ -184,3 +187,9 @@ initialize: install-precommit ## install pre-commit hooks
 
 reinit-project: install-copier ## reinitialize the project
 	@copier --answers-file .copier-config.yaml gh:entelecheia/hyperfast-python-template .
+
+add-optional-deps: ## add optional dependencies
+	mecab-ko-dic@poetry add --optional fugashi mecab-ko-dic mecab-python3
+
+add-editable-hyfi: ## add editable hyperfast python
+	@poetry add --group dev --editable ../hyfi

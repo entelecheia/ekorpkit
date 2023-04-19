@@ -16,7 +16,7 @@ data_files:
   train: linnaeus-train.csv
   dev: linnaeus-dev.csv
   test: linnaeus-test.csv
-column_info:
+features:
   columns:
     id: id
     text: input_text

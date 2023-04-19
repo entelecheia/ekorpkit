@@ -1,0 +1,70 @@
+defaults:
+  - _build
+  - /preprocessor/normalizer: formal_ko
+  - /preprocessor/segmenter: kss
+
+name: nikl_news
+fullname: NIKL Newspaper Corpus
+description: National Institute of the Korean Language Corpus - Newspaper
+license: Korea Open Government License, Category 4
+homepage: https://corpus.korean.go.kr
+lang: ko
+category: formal
+domain: news
+version: 2.0.0
+features:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+  meta:
+    id: int
+    doc_id: str
+    title: str
+    author: str
+    publisher: str
+    date: str
+    topic: str
+    original_topic: str
+    category: str
+
+io:    
+  data_dir: ${path.archive}/datasets/source/nikl
+  data_sources: 
+    train: 
+      - NIKL_NEWSPAPER_v2.0.zip
+      - NIKL_NEWSPAPER_2020_v1.1.zip
+  loader:
+    multiprocessing_at: _load_archive
+    filetype: json
+    data:
+      field: document
+      item:
+        doc_id: id
+        title: metadata.title
+        author: metadata.author
+        publisher: metadata.publisher
+        date: metadata.date
+        topic: metadata.topic
+        original_topic: metadata.original_topic
+        text: 
+          - paragraph[*].form
+      item_separator: '\n'
+    meta:
+      field: metadata
+      item:
+        category: category
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    # - segment
+    - filter_length
+    - drop_duplicates
+
+  filter_length:
+    min_length: 10

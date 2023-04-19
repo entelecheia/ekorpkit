@@ -1,0 +1,41 @@
+defaults:
+  - _build
+  - /preprocessor/normalizer: formal_en_parantheses
+  - /preprocessor/segmenter: pysbd_merge_article_filter_len
+  - override /io/loader: the_pile
+
+name: courtlistener
+fullname: CourtListener
+lang: en
+category: formal
+domain: law
+description: 'CourtListener is a free legal research website containing millions of legal opinions from federal and state courts. With CourtListener, lawyers, journalists, academics, and the public can research an important case, stay up to date with new opinions as they are filed, or do deep analysis using our raw data.'
+license: MIT License
+homepage: https://www.courtlistener.com/
+version: 1.0.0
+features:
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+
+io:
+  data_dir:  ${path.archive}/datasets/source/the_pile
+  data_sources: 
+    train: train
+    test: test
+    valid: valid
+  loader:
+    name: FreeLaw
+
+pipeline:
+  _transform_:
+    - reset_index
+  _preprocess_:  
+    - normalize
+    - segment
+    # - filter_length
+    - drop_duplicates
+

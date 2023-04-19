@@ -19,6 +19,13 @@ huggingface-hub = ">=0.8.1"
 scikit-learn = ">=1.0.0"
 ftfy = "^6.1.1"
 pytablewriter = ">=0.64.0"
+fugashi = { version = "^1.2.1", optional = true }
+mecab-ko-dic = { version = "^1.0.0", optional = true }
+mecab-python3 = { version = "^1.0.6", optional = true }
+
+[tool.poetry.extras]
+tokenizers = ["fugashi", "mecab-ko-dic", "mecab-python3"]
+
 
 [tool.poetry.group.dev.dependencies]
 python-semantic-release = "^7.33.1"
@@ -31,22 +38,66 @@ flake8-pyproject = "^1.2.2"
 pytest = "^7.2.1"
 pytest-cov = "^4.0.0"
 ipykernel = "^6.22.0"
+hyfi = { path = "../hyfi", develop = true }
+
+
+# [[tool.poetry.source]]
+# name = "torch==1.11.0+cu113"
+# url = "https://download.pytorch.org/whl/cu113"
+# default = false
+# secondary = false
 
 [tool.black]
-exclude = ['_version.py', 'node_modules', '_build', 'docs', 'tests', 'venv', '.copier-template', '.refs']
+exclude = [
+    '_version.py',
+    'node_modules',
+    '_build',
+    'docs',
+    'tests',
+    'venv',
+    '.copier-template',
+    '.refs',
+]
 
 [tool.isort]
 profile = "black"
-skip = ['_version.py', 'node_modules', '_build', 'docs', 'tests', 'venv', '.copier-template', '.refs']
+skip = [
+    '_version.py',
+    'node_modules',
+    '_build',
+    'docs',
+    'tests',
+    'venv',
+    '.copier-template',
+    '.refs',
+]
 
 [tool.flake8]
 ignore = ['F401', 'E501', 'W503']
-exclude = ["node_modules", "_build", "docs", "tests", "venv", ".copier-template", ".refs"]
+exclude = [
+    "node_modules",
+    "_build",
+    "docs",
+    "tests",
+    "venv",
+    ".copier-template",
+    ".refs",
+]
 per-file-ignores = ['__init__.py:F401', '_version.py:W292']
 
 [tool.mypy]
 namespace_packages = true
-exclude = ["node_modules", "build", "_build", "dist", "docs", "tests", "venv", ".copier-template", ".refs"]
+exclude = [
+    "node_modules",
+    "build",
+    "_build",
+    "dist",
+    "docs",
+    "tests",
+    "venv",
+    ".copier-template",
+    ".refs",
+]
 # 3rd party import
 ignore_missing_imports = true
 # dynamic typing
@@ -93,7 +144,7 @@ branch = "main"
 version_toml = "pyproject.toml:tool.poetry.version"
 version_variable = "ekorpkit/_version.py:__version__"
 version_source = "tag"
-commit_version_number = true # required for version_source = "tag"
+commit_version_number = true                                    # required for version_source = "tag"
 commit_subject = "chore(release): :rocket: {version} [skip ci]"
 prerelease_tag = "rc"
 major_on_zero = true
@@ -102,7 +153,7 @@ changelog_file = "CHANGELOG.md"
 upload_to_repository = true
 upload_to_release = true
 build_command = "poetry build --no-cache"
-hvcs = "github" # hosting version control system, gitlab is also supported
+hvcs = "github"                                                 # hosting version control system, gitlab is also supported
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools>=45", "setuptools_scm[toml]>=6.2"]

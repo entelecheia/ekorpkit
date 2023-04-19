@@ -28,7 +28,7 @@ data_files:
   train: gd_review-train.parquet
 meta_files:
   train: meta-gd_review-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

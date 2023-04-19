@@ -1,0 +1,15 @@
+defaults:
+  - /features: corpus
+  - /path: default
+
+_target_: ekorpkit.pipelines.data.Data
+name: ${iif:${iif:${oc.select:corpus.name, null}, ${oc.select:corpus.name, null}, ${oc.select:dataset.name, null}},${iif:${oc.select:corpus.name, null}, ${oc.select:corpus.name, null}, ${oc.select:dataset.name, null}},data}
+corpus: ${oc.select:corpus,null}
+dataset: ${oc.select:dataset,null}
+data_dir: ${oc.select:..data_dir, null}
+data_file: ${oc.select:..data_file, null}
+concat_data: false
+data_columns: ${oc.select:..data_columns, null}
+output_dir: ${oc.select:..output_dir, ${dir.output}/${.name}}
+output_file: ${oc.select:..output_file, null}
+verbose: ${oc.select:..verbose, false}

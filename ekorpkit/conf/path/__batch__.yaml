@@ -1,0 +1,7 @@
+defaults:
+  - __default__
+
+batch_name: ${oc.select:..batch.batch_name, demo}
+verbose: ${oc.select:..batch.verbose, false}
+
+batch_dir: ${.output_dir}/${.batch_name}

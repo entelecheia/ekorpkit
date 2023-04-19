@@ -28,7 +28,7 @@ data_files:
   train: aida_paper-train.parquet
 meta_files:
   train: meta-aida_paper-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

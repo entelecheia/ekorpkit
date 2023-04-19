@@ -1,8 +1,12 @@
 import logging
-from ekorpkit import eKonf
-from hyfi.utils.func import elapsed_timer
-from ekorpkit.pipelines.pipe import apply_pipeline
 
+from hyfi.config import BaseConfigModel
+from hyfi.utils.func import elapsed_timer
+
+# from pydantic import BaseModel, Field
+
+from ekorpkit import eKonf
+from ekorpkit.pipelines.pipe import apply_pipeline
 
 log = logging.getLogger(__name__)
 
@@ -28,14 +32,19 @@ def build_simple(**args):
         DatasetBuilder(**cfg)
 
 
-class DatasetBuilder:
+class DatasetBuilder(BaseConfigModel):
+    name: str
+    data_dir: str
+    filetype: str = ".parquet"
+    features: dict = {}
+
     def __init__(self, **args) -> None:
         args = eKonf.to_config(args)
         self.args = args
         self.name = args.name
         self.data_dir = args.data_dir
         self.data_filetype = args.get("filetype", ".parquet")
-        self.column_info = self.args.column_info
+        self.features = self.args.features
         self.verbose = self.args.get("verbose", False)
         self.auto = self.args.auto
 
@@ -92,7 +101,6 @@ class DatasetBuilder:
         )
 
     def _process_split(self, split_name):
-
         _data_path_ = self._io_.data.path[split_name]
         _meta_path_ = self._io_.meta.path[split_name]
         _sample_path_ = self._io_.sample.path[split_name]
@@ -102,7 +110,7 @@ class DatasetBuilder:
             if pipe not in self.transform_pipeline:
                 self.transform_pipeline.append(pipe)
             self._pipeline_[pipe].path.output = _meta_path_
-            self._pipeline_[pipe].column_info = self.column_info
+            self._pipeline_[pipe].features = self.features
             self._pipeline_[pipe].split_name = split_name
         pipe = "save_samples"
         if pipe in self._pipeline_:
@@ -130,7 +138,7 @@ class DatasetBuilder:
                 df = apply_pipeline(df, self.transform_pipeline, self._pipeline_)
 
             # Saving data
-            columns = self.column_info.data
+            columns = self.features.data
             if columns:
                 columns = list(columns.keys())
             _data_path_.columns = columns

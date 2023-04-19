@@ -1,0 +1,49 @@
+defaults:
+  - _build
+  - /io/fetcher: dataframe
+
+name: esg_topics
+domain: econ
+task: classification
+lang: ko
+features: 
+  columns:
+    id: id
+    text: text
+  data:
+    id: int
+    text: str
+    labels: str
+    class: int
+    example_id: str
+    count: int
+
+io:
+  data_sources: 
+    train: train.csv
+    test: test.csv
+    dev: dev.csv
+  fetcher:
+    output_file: esg_topics.csv
+    pipeline:
+      _pipeline_:
+        - load_dataframe
+        - filter_query
+        - rename_columns
+        - split_sampling
+      rename_columns:
+        new_names:
+          content: text
+          classname: labels
+      filter_query:
+        query: 
+          - classname != 'UNKNOWN'
+      split_sampling:
+        stratify_on: labels
+        dev_size: 0.1
+        test_size: 0.1
+        unique_key: example_id
+        output_dir: ${..data_dir}
+        train_file: train.csv
+        test_file: test.csv
+        dev_file: dev.csv

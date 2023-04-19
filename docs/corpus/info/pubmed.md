@@ -28,7 +28,7 @@ data_files:
   train: pubmed-train.parquet
 meta_files:
   train: meta-pubmed-train.parquet
-column_info:
+features:
   columns:
     id: id
     text: text

@@ -16,7 +16,7 @@ data_files:
   train: BC2GM-train.csv
   dev: BC2GM-dev.csv
   test: BC2GM-test.csv
-column_info:
+features:
   columns:
     id: id
     text: input_text
