@@ -16,14 +16,14 @@ class DatasetBuilder(BaseBatchModel):
     class Config:
         underscore_attrs_are_private = False
 
-    def __init__(self, **args) -> None:
-        args = eKonf.to_config(args)
-        self.args = args
-        self.name = args.name
-        self.data_dir = args.data_dir
-        self.data_filetype = args.get("filetype", ".parquet")
+    def __init__(self, config_name: str = "_build_", **args):
+        config_group = f"datasets/builder={config_name}"
+        super().__init__(config_name=config_name, config_group=config_group, **args)
+
+    def initialize_configs(self, **args):
+        super().initialize_configs(**args)
+
         self.features = self.args.features
-        self.verbose = self.args.get("verbose", False)
         self.auto = self.args.auto
 
         self._io_ = args.io

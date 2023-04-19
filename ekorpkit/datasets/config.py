@@ -8,10 +8,10 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 from datasets import DatasetDict, load_dataset
-from hyfi.config import BaseConfigModel
 from omegaconf import DictConfig
 from pandas import DataFrame
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel as PydanticBaseModel
+from pydantic import Field, validator
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from tqdm.auto import tqdm
@@ -20,26 +20,26 @@ from ekorpkit import eKonf
 from ekorpkit.info.column import BaseInfo
 from ekorpkit.info.stat import SummaryInfo
 from ekorpkit.pipelines.pipe import apply_pipeline
+from hyfi.config import BaseConfigModel
 
 from ..ekonf import SPLITS
 
 log = logging.getLogger(__name__)
 
 
-class CorpusColumns(BaseModel):
-    id: str = Field(alias="id")
-    text: str = Field(alias="text")
-    merge_meta_on: str = Field(alias="merge_meta_on")
-    timestamp: str = Field(alias="timestamp")
-
+class BaseModel(PydanticBaseModel):
     class Config:
-        allow_population_by_field_name = True
-        fields = {
-            "id": "id",
-            "text": "text",
-            "merge_meta_on": "merge_meta_on",
-            "timestamp": "timestamp",
-        }
+        arbitrary_types_allowed = True
+        validate_assignment = True
+        underscore_attrs_are_private = True
+        extra = "allow"
+
+
+class CorpusColumns(BaseModel):
+    id: str
+    text: str
+    merge_meta_on: str
+    timestamp: str = None
 
 
 class PipelineConfig(BaseModel):
@@ -47,11 +47,6 @@ class PipelineConfig(BaseModel):
     use_batcher: bool = True
     verbose: bool = False
     _pipeline_: list = None
-
-    class Config:
-        arbitrary_types_allowed = True
-        underscore_attrs_are_private = False
-        extra = "allow"
 
     def __init__(self, **args):
         super().__init__(**args)
@@ -79,10 +74,6 @@ class BaseDatasetConfig(BaseConfigModel):
     __le__ = None
 
     class Config:
-        arbitrary_types_allowed = True
-        validate_assignment = True
-        underscore_attrs_are_private = True
-        extra = "allow"
         enum_values_are_str = True
 
     def __init__(self, **args):
