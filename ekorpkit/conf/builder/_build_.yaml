@@ -6,13 +6,13 @@ defaults:
   - /io: _build_corpus
   - /info: _build_corpus
   - /pipeline: _build_corpus
-  - /auto: load
 
 _target_: ekorpkit.datasets.build.DatasetBuilder
 name:
 path:
   data_dir: ${.corpus}/${..name}
 filetype: .parquet
+autoload: true
 
 pipeline:
   normalize:

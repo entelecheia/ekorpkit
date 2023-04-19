@@ -42,6 +42,16 @@ class CorpusColumns(BaseModel):
     timestamp: str = None
 
 
+class CorpusFeatures(BaseModel):
+    columns: CorpusColumns
+    data: dict
+    meta: dict = None
+    datetime: dict = None
+    timestamp: str = None
+    segment_separator: str = "\n\n"
+    sentence_separator: str = "\n"
+
+
 class PipelineConfig(BaseModel):
     name: str = None
     use_batcher: bool = True

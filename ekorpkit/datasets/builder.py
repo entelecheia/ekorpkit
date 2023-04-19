@@ -4,6 +4,7 @@ from ekorpkit import eKonf
 from ekorpkit.pipelines.pipe import apply_pipeline
 from hyfi.config import BaseBatchModel
 from hyfi.utils.func import elapsed_timer
+from .config import CorpusFeatures
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,8 @@ logger = logging.getLogger(__name__)
 class DatasetBuilder(BaseBatchModel):
     name: str
     filetype: str = ".parquet"
-    features: dict = {}
+    features: CorpusFeatures
+    autoload: bool = False
 
     class Config:
         underscore_attrs_are_private = False
@@ -22,9 +24,6 @@ class DatasetBuilder(BaseBatchModel):
 
     def initialize_configs(self, **args):
         super().initialize_configs(**args)
-
-        self.features = self.args.features
-        self.auto = self.args.auto
 
         self._io_ = args.io
         self.fetch_dir = self._io_.get("data_dir", None)
@@ -50,7 +49,7 @@ class DatasetBuilder(BaseBatchModel):
         if self.process_pipeline is None:
             self.process_pipeline = []
 
-        if self.auto.load:
+        if self.autoload:
             self.build()
 
     def build(self):
