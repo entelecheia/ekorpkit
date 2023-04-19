@@ -521,16 +521,75 @@ document.write(`
 <h1>Build and Load Corpora<a class="headerlink" href="#build-and-load-corpora" title="Permalink to this heading">#</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">ekorpkit</span> <span class="kn">import</span> <span class="n">eKonf</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ekorpkit</span> <span class="kn">import</span> <span class="n">eKonf</span>
 
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">eKonf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">is_colab</span><span class="p">():</span>
+    <span class="n">eKonf</span><span class="o">.</span><span class="n">mount_google_drive</span><span class="p">()</span>
+<span class="n">ws</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">init_workspace</span><span class="p">(</span>
+    <span class="n">workspace</span><span class="o">=</span><span class="s2">&quot;/workspace&quot;</span><span class="p">,</span>
+    <span class="n">project</span><span class="o">=</span><span class="s2">&quot;ekorpkit/exmaples&quot;</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;corpus&quot;</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;version:&quot;</span><span class="p">,</span> <span class="n">ws</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;project_dir:&quot;</span><span class="p">,</span> <span class="n">ws</span><span class="o">.</span><span class="n">project_dir</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.1.32+22.g1490fd9.dirty
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/home/yjlee/.cache/pypoetry/virtualenvs/ekorpkit-rYHZMHZH-py3.8/lib/python3.8/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>version: 0.1.41
+project_dir: /workspace/projects/ekorpkit/exmaples
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">eKonf</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="s1">&#39;task/datasets=builder&#39;</span><span class="p">)</span>
+<span class="n">cfg</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;batch&#39;: {&#39;batch_name&#39;: &#39;${oc.select:..name,demo-batch}&#39;, &#39;batch_num&#39;: None, &#39;output_dir&#39;: &#39;${oc.select:..path.output_dir,null}&#39;, &#39;output_suffix&#39;: None, &#39;output_extention&#39;: None, &#39;random_seed&#39;: True, &#39;seed&#39;: None, &#39;resume_run&#39;: False, &#39;resume_latest&#39;: False, &#39;run_to_resume&#39;: &#39;latest&#39;, &#39;verbose&#39;: &#39;${oc.select:..project.verbose,false}&#39;, &#39;num_workers&#39;: &#39;${oc.select:num_workers,1}&#39;, &#39;device&#39;: &#39;cpu&#39;, &#39;num_devices&#39;: None}, &#39;project&#39;: {&#39;dotenv&#39;: {&#39;dotenv_path&#39;: &#39;${oc.select:..path.dotenv_path,.env}&#39;}, &#39;joblib&#39;: {&#39;distributed_framework&#39;: {&#39;backend&#39;: &#39;joblib&#39;, &#39;initialize&#39;: True, &#39;num_workers&#39;: &#39;${oc.select:num_workers,50}&#39;}, &#39;batcher&#39;: {&#39;procs&#39;: &#39;${oc.select:..distributed_framework.num_workers,50}&#39;, &#39;minibatch_size&#39;: 1000, &#39;backend&#39;: &#39;${..distributed_framework.backend}&#39;, &#39;task_num_cpus&#39;: 1, &#39;task_num_gpus&#39;: 0, &#39;verbose&#39;: 10}}, &#39;path&#39;: {&#39;dotenv_path&#39;: &#39;${.runtime}/.env&#39;, &#39;workspace&#39;: &#39;${oc.select:..workspace_root,${.home}/.ekorpkit}&#39;, &#39;project&#39;: &#39;${.workspace}/projects/${oc.select:..project_name,${oc.env:EKORPKIT_PROJECT_NAME,ekorpkit-default}}&#39;, &#39;data&#39;: &#39;${alt:${oc.env:EKORPKIT_DATA_ROOT,null},${.workspace}/data}&#39;, &#39;home&#39;: &#39;${__home_path__:}&#39;, &#39;hyfi&#39;: &#39;${__hyfi_path__:}&#39;, &#39;ekorpkit&#39;: &#39;${__ekorpkit_path__:}&#39;, &#39;resources&#39;: &#39;${alt:${oc.env:EKORPKIT_RESOURCE_DIR,null},${.ekorpkit}/resources}&#39;, &#39;runtime&#39;: &#39;${get_original_cwd:}&#39;, &#39;archive&#39;: &#39;${.data}/archive&#39;, &#39;datasets&#39;: &#39;${.data}/datasets&#39;, &#39;logs&#39;: &#39;${.project}/logs&#39;, &#39;models&#39;: &#39;${.data}/models&#39;, &#39;outputs&#39;: &#39;${.project}/outputs&#39;, &#39;cache&#39;: &#39;${.workspace}/.cache&#39;, &#39;tmp&#39;: &#39;${.workspace}/.tmp&#39;, &#39;library&#39;: &#39;${join_path:${.data}, libs}&#39;}, &#39;project_name&#39;: &#39;${oc.env:EKORPKIT_PROJECT_NAME,hyfi-project}&#39;, &#39;task_name&#39;: &#39;${oc.env:EKORPKIT_PROJECT_NAME,datasets}&#39;, &#39;project_root&#39;: &#39;${.path.project}&#39;, &#39;workspace_root&#39;: &#39;${alt:${oc.env:EKORPKIT_WORKSPACE_ROOT,null},${.path.home}/.hyfi}&#39;, &#39;description&#39;: None, &#39;use_huggingface_hub&#39;: True, &#39;use_wandb&#39;: False, &#39;verbose&#39;: False}, &#39;path&#39;: {&#39;task_name&#39;: &#39;${oc.select:..project.task_name, default-task}&#39;, &#39;root&#39;: &#39;${join_path:${oc.select:..project.project_root,${oc.env:EKORPKIT_PROJECT_ROOT,./}}, ${.task_name}}&#39;, &#39;verbose&#39;: &#39;${oc.select:..batch.verbose, false}&#39;, &#39;output_dir&#39;: &#39;${join_path:${.root}, outputs}&#39;, &#39;data_dir&#39;: &#39;${join_path:${.root}, data}&#39;, &#39;library_dir&#39;: &#39;${join_path:${.root}, libs}&#39;, &#39;model_dir&#39;: &#39;${join_path:${.root}, models}&#39;, &#39;cache_dir&#39;: &#39;${oc.select:..project.path.cache,${join_path:${.root}, cache}}&#39;, &#39;tmp_dir&#39;: &#39;${oc.select:..project.path.tmp,${join_path:${.root}, tmp}}&#39;, &#39;log_dir&#39;: &#39;${oc.select:..project.path.logs,${join_path:${.root}, logs}}&#39;, &#39;batch_name&#39;: &#39;${oc.select:..batch.batch_name, demo}&#39;, &#39;batch_dir&#39;: &#39;${.output_dir}/${.batch_name}&#39;}, &#39;_target_&#39;: &#39;ekorpkit.datasets.builder.DatasetBuilder&#39;, &#39;name&#39;: &#39;dataset-builder&#39;, &#39;auto&#39;: True, &#39;force&#39;: False, &#39;verbose&#39;: &#39;${oc.select:..verbose, false}&#39;}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ekorpkit.datasets.builder</span> <span class="kn">import</span> <span class="n">DatasetBuilder</span>
+
+<span class="n">builder</span> <span class="o">=</span> <span class="n">DatasetBuilder</span><span class="p">(</span><span class="o">**</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span><span class="o">.</span><span class="n">force</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&#39;False&#39;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>config_name=None config_group=None name=&#39;dataset-builder&#39; path=PathConfig(task_name=&#39;datasets&#39;, root=&#39;/home/yjlee/.hyfi/projects/hyfi-project/datasets&#39;, batch_name=&#39;dataset-builder&#39;, verbose=False) project=ProjectConfig(config_name=&#39;__init__&#39;, project_name=&#39;hyfi-project&#39;, task_name=&#39;datasets&#39;, workspace_root=&#39;/home/yjlee/.hyfi&#39;, project_root=&#39;/home/yjlee/.hyfi/projects/hyfi-project&#39;, description=None, use_huggingface_hub=True, use_wandb=False, verbose=False, dotenv=DotEnvConfig(HYFI_WORKSPACE_ROOT=&#39;/workspace&#39;, HYFI_PROJECT_NAME=&#39;ekorpkit/exmaples&#39;, HYFI_TASK_NAME=&#39;corpus&#39;, HYFI_PROJECT_ROOT=&#39;/workspace/projects/ekorpkit/exmaples&#39;, HYFI_DATA_ROOT=&#39;/workspace/data&#39;, HYFI_RESOURCE_DIR=None, HYFI_LOG_LEVEL=&#39;WARNING&#39;, HYFI_VERBOSE=True, NUM_WORKERS=None, CACHED_PATH_CACHE_ROOT=&#39;/workspace/.cache/cached_path&#39;, CUDA_DEVICE_ORDER=None, CUDA_VISIBLE_DEVICES=None, WANDB_PROJECT=&#39;ekorpkit-exmaples&#39;, WANDB_DISABLED=None, WANDB_DIR=&#39;/workspace/projects/ekorpkit/exmaples/logs&#39;, WANDB_NOTEBOOK_NAME=&#39;/workspace/projects/ekorpkit/exmaples/logs/corpus-nb&#39;, WANDB_SILENT=False, LABEL_STUDIO_SERVER=None, KMP_DUPLICATE_LIB_OK=&#39;True&#39;, TOKENIZERS_PARALLELISM=False, WANDB_API_KEY=None, HUGGING_FACE_HUB_TOKEN=None, ECOS_API_KEY=None, FRED_API_KEY=None, NASDAQ_API_KEY=None, HF_USER_ACCESS_TOKEN=None, LABEL_STUDIO_USER_TOKEN=None, dotenv_path=&#39;/workspace/projects/ekorpkit/book/tutorials/corpora/.env&#39;), joblib=JobLibConfig(config_name=&#39;__init__&#39;, distributed_framework=DistFramwork(backend=&#39;joblib&#39;, initialize=True, num_workers=50), batcher=BatcherConfig(procs=50, minibatch_size=1000, backend=&#39;joblib&#39;, task_num_cpus=1, task_num_gpus=0, verbose=10)), path=PathConfig(config_name=&#39;__init__&#39;, dotenv_path=&#39;/workspace/projects/ekorpkit/book/tutorials/corpora/.env&#39;, workspace=&#39;/home/yjlee/.hyfi&#39;, project=&#39;/home/yjlee/.hyfi/projects/hyfi-project&#39;, data=&#39;/home/yjlee/.hyfi/data&#39;, home=&#39;/home/yjlee&#39;, hyfi=&#39;/home/yjlee/.cache/pypoetry/virtualenvs/ekorpkit-rYHZMHZH-py3.8/lib/python3.8/site-packages/hyfi&#39;, resources=&#39;/workspace/projects/ekorpkit/ekorpkit/resources&#39;, runtime=&#39;/workspace/projects/ekorpkit/book/tutorials/corpora&#39;, archive=&#39;/home/yjlee/.hyfi/data/archive&#39;, corpus=None, datasets=&#39;/home/yjlee/.hyfi/data/datasets&#39;, logs=&#39;/home/yjlee/.hyfi/projects/hyfi-project/logs&#39;, models=&#39;/home/yjlee/.hyfi/data/models&#39;, outputs=&#39;/home/yjlee/.hyfi/projects/hyfi-project/outputs&#39;, cache=&#39;/home/yjlee/.hyfi/.cache&#39;, tmp=&#39;/home/yjlee/.hyfi/.tmp&#39;, library=&#39;/home/yjlee/.hyfi/data/libs&#39;, verbose=False, ekorpkit=&#39;/workspace/projects/ekorpkit/ekorpkit&#39;)) module=None auto=&#39;True&#39; force=&#39;False&#39; autoload=False version=&#39;0.0.0&#39; batch=BaseBatchConfig(batch_name=&#39;dataset-builder&#39;, batch_num=0, output_dir=PosixPath(&#39;/home/yjlee/.hyfi/projects/hyfi-project/datasets/outputs&#39;), output_suffix=None, output_extention=&#39;&#39;, random_seed=True, seed=2974550991, resume_run=False, resume_latest=False, num_workers=1, device=&#39;cpu&#39;, num_devices=None, verbose=False, config_yaml=&#39;config.yaml&#39;, config_json=&#39;config.json&#39;, config_dirname=&#39;configs&#39;) filetype=&#39;.parquet&#39; features={} _target_=&#39;ekorpkit.datasets.builder.DatasetBuilder&#39; verbose=False root_dir=None batch_num=0
 </pre></div>
 </div>
 </div>
