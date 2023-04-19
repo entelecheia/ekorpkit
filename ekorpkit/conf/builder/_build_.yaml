@@ -3,7 +3,8 @@ defaults:
   - /project: language-modeling
   - /path: _batch_
   - /features: corpus
-  - /io: _build_corpus
+  - /fetcher: null
+  - /loader: parser
   - /info: _build_corpus
   - /pipeline: _build_corpus
 
